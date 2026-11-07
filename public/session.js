@@ -472,12 +472,51 @@
   renderChat=renderSessionChat;
   renderTools=function(query=""){
     baseRenderTools(query);
-    const calc=$("#toolGroups [data-feature='tool-25']");if(calc){
-      calc.setAttribute("aria-label","Простой калькулятор, работает без ИИ");
-      const status=calc.querySelector("small");if(status)status.textContent="Работает";
+    const working=new Set([1,2,3,4,5,6,7,8,11,13,14,25,40,41,42,44,45]);
+    const partial=new Set([9,10,15,16,43]);
+    for(const card of document.querySelectorAll("#toolGroups [data-feature^='tool-']")){
+      const id=Number(card.dataset.feature.slice(5));
+      const status=card.querySelector("small");
+      if(working.has(id)){
+        if(status)status.textContent="Работает";
+        card.setAttribute("aria-label",card.querySelector("strong")?.textContent||"Инструмент");
+      }else if(partial.has(id)){
+        if(status)status.textContent="Частично";
+        card.setAttribute("aria-label",(card.querySelector("strong")?.textContent||"Инструмент")+", частично реализовано");
+      }
     }
   };
   showFeature=function(key){
+    if(key.startsWith("tool-")){
+      const number=Number(key.slice(5)),chat=selected();
+      if(number===1){sessionNewChat();return}
+      if(number===2||number===3){showScreen("history");if(number===3)$("#historySearch").focus();return}
+      if([4,5,6,8,9,11,13,14].includes(number)){
+        if(!chat){showScreen("history");notify("Сначала создайте чат.");return}
+        const lastUser=[...chat.messages].reverse().find(m=>m.role==="user");
+        const lastAssistant=[...chat.messages].reverse().find(m=>m.role==="assistant");
+        if(number===4)return handle("rename-chat",chat.id);
+        if(number===5)return handle("delete-chat",chat.id);
+        if(number===6)return handle("pin-chat",chat.id);
+        if(number===8&&lastUser){showScreen("chat");return handle("edit-message",lastUser.id)}
+        if(number===9&&lastAssistant){showScreen("chat");return handle("retry-answer",lastAssistant.id)}
+        if(number===11&&(lastAssistant||lastUser)){return handle("copy-message",(lastAssistant||lastUser).id)}
+        if(number===14&&(lastAssistant||lastUser)){return handle("branch-message",(lastAssistant||lastUser).id)}
+        if(number===13){showScreen("chat");notify("Оценка ответа находится под сообщением ИИ.");return}
+        notify("Сначала напишите сообщение.");return;
+      }
+      if(number===7){showScreen("projects");return}
+      if(number===10){if(abort)abort.abort();else notify("Сейчас нет активного ответа.");return}
+      if(number===15){showScreen("welcome");$("#messageInput").focus();return}
+      if(number===16){togglePopover("reason");return}
+      if(number===25){showCalculator();return}
+      if(number===40)return handle("instructions");
+      if(number===41){showScreen("settings");$("#sessionTemporary").focus();return}
+      if(number===42){toggleTheme();return}
+      if(number===43){togglePopover("language",$("#languageToggle"));return}
+      if(number===44){showScreen("settings");togglePopover("font");return}
+      if(number===45)return handle("export");
+    }
     if(key==="tool-25"){showCalculator();return}
     if(key==="export"){handle("export");return}
     if(key==="instructions"){handle("instructions");return}

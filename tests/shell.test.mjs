@@ -13,3 +13,8 @@ test('four levels visible, deep stays locked',()=>{for(const key of ['low','medi
 test('no accidental live AI, Google or data persistence',()=>{assert.doesNotMatch(js,/fetch\s*\(|localStorage|sessionStorage|indexedDB|google\.accounts|workers\.ai/i);assert.match(html,/Демо интерфейса/);assert.match(js,/никакие данные аккаунта не запрашиваются/);});
 test('responsive layouts including phones and reduced motion',()=>{assert.match(css,/@media\(max-width:760px\)/);assert.match(css,/@media\(max-width:390px\)/);assert.match(css,/prefers-reduced-motion/);assert.match(css,/safe-area-inset-bottom/);});
 test('no external CDN or remote script injection',()=>{assert.doesNotMatch(html,/<script[^>]+src="https?:/);assert.doesNotMatch(html,/<link[^>]+href="https?:/);assert.doesNotMatch(js,/innerHTML\s*=/);});
+
+test('reason selector initialization uses a collection of buttons',()=>{
+  assert.match(js,/\$\$\("\[data-reason=medium\]"\)\.forEach\(/);
+  assert.doesNotMatch(js,/\$\("\[data-reason=medium\]"\)\.forEach\(/);
+});

@@ -32,3 +32,14 @@ test('custom Kaz AI wordmark is styled and language slogan removed',()=>{
   assert.match(preview,/<style>[\s\S]*?hero-wordmark/);
   assert.match(preview,/<script>[\s\S]*?FEATURE_GROUPS/);
 });
+
+test('photographic Earth design remains separate from functioning UI',()=>{
+ const preview=readFileSync('public/preview.html','utf8');
+ assert.match(html,/class="earth-sphere"/);
+ assert.match(html,/class="hero-logo-line"/);
+ assert.doesNotMatch(html,/id="earthFill"/);
+ assert.match(css,/url\("\.\/earth\.webp"\)/);
+ assert.match(preview,/url\("\.\/earth\.webp"\)/);
+ assert.doesNotMatch(html,/Ваш помощник на казахском, русском и английском языках/);
+ assert.doesNotMatch(html,/class="feature-cards"/);
+});

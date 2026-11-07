@@ -56,8 +56,9 @@ test('validated requests reach GPT-OSS 120B with selected reasoning effort',asyn
   }
   assert.equal(calls.length,3);
   assert.ok(calls.every(([model])=>model==='@cf/openai/gpt-oss-120b'));
-  assert.deepEqual(calls.map(([,x])=>x.reasoning.effort),['low','medium','high']);
-  assert.equal(calls[0][1].input.at(-1).content,good.messages[0].content);
+  assert.deepEqual(calls.map(([,x])=>x.reasoning_effort),['low','medium','high']);
+  assert.equal(calls[0][1].messages.at(-1).content,good.messages[0].content);
+  assert.equal(calls[0][1].max_tokens,1200);
 });
 test('rejects reserved deeper reasoning and system-message injection',async()=>{
   const {env,calls}=envWithAI();

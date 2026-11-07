@@ -337,9 +337,11 @@
       sessionNewChat(Boolean($("#sessionTemporary").checked));return;
     }
     if(action==="export"){
-      const c=selected();
-      if(!c||!c.messages.length){notify("Для экспорта сначала добавьте сообщения.");return}
-      download("Kaz-AI-chat.txt",exportText(c),"text/plain;charset=utf-8");notify("Переписка скачана.");return;
+      const saved=threads.filter(c=>!c.temporary&&c.messages.length);
+      if(!saved.length){notify("Для экспорта пока нет переписок.");return}
+      const text=saved.map(exportText).join("\n\n"+"=".repeat(45)+"\n\n");
+      download("Kaz-AI-history.txt",text,"text/plain;charset=utf-8");
+      notify("История текущей вкладки скачана. Временные чаты не включены.");return;
     }
     if(action==="ai-access"){configureAccess();return}
     if(action==="instructions"){

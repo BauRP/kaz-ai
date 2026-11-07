@@ -25,11 +25,12 @@
     state.draftTitle=c?c.title:"Новый чат";
   };
   const composeText=()=>$("#messageInput").value.trim();
-  function showStatus(text,quota=false){
+  function showStatus(text,quota=false,retryable=false){
     const banner=$("#statusBanner");
     banner.textContent=text;
     banner.classList.toggle("is-quota",quota);
     banner.hidden=!text;
+    const retry=$("#sessionRetry");if(retry)retry.hidden=!retryable;
   }
   const baseRenderChat=renderChat;
   const baseRenderTools=renderTools;
@@ -235,7 +236,7 @@
       if(!response.ok){
         if(data?.code==="AI_QUOTA_EXHAUSTED")showStatus("Лимит ИИ исчерпан. Бесплатный дневной лимит закончился. Попробуйте позже, когда он обновится.",true);
         else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
-        else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.");
+        else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
         return;
       }
       if(abort!==controller||!threads.includes(chat))return;
@@ -250,8 +251,8 @@
       showStatus("");
     }catch(e){
       if(abort!==controller)return;
-      if(e?.name==="AbortError")showStatus(controller.signal.reason==="timeout"?"ИИ не ответил за 45 секунд. Попробуйте повторить запрос.":"Генерация ответа остановлена.");
-      else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.");
+      if(e?.name==="AbortError")showStatus(controller.signal.reason==="timeout"?"ИИ не ответил за 45 секунд. Попробуйте повторить запрос.":"Генерация ответа остановлена.",false,controller.signal.reason==="timeout");
+      else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.",false,true);
     }finally{
       clearTimeout(timeout);
       if(abort===controller){abort=null;pending=null;stop.hidden=true;resizeInput()}
@@ -367,6 +368,13 @@
       }
     }
     if(action==="stop"){abort?.abort("manual");return}
+    if(action==="retry-request"){
+      if(abort){notify("Дождитесь завершения текущего запроса.");return}
+      const c=selected(),last=c?.messages.at(-1);
+      if(last?.role==="user"){showStatus("");runAI(c)}
+      else notify("Не найден вопрос для повторной отправки.");
+      return;
+    }
     if(action==="temp-toggle"){
       sessionNewChat(Boolean($("#sessionTemporary").checked));return;
     }
@@ -461,6 +469,9 @@
     const stop=button("Остановить","stop",null,"session-stop");
     stop.id="sessionStop";stop.hidden=true;
     $("#sendButton").parentElement.insertBefore(stop,$("#sendButton"));
+    const retry=button("Повторить запрос","retry-request",null,"session-retry");
+    retry.id="sessionRetry";retry.hidden=true;
+    $("#statusBanner").insertAdjacentElement("afterend",retry);
     document.addEventListener("click",e=>{
       const target=e.target.closest("[data-session]");if(!target)return;
       const action=target.dataset.session;

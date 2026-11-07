@@ -843,7 +843,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   };
   const threads=[];
   const projects=[];
-  let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="";
+  let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="";
   const nextId=()=>String(++serial);
   const selected=()=>threads.find(c=>c.id===current)||null;
   const displayThread=c=>{
@@ -1016,10 +1016,30 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       && !/raw\.githack\.com|github\.io|htmlpreview\.github\.io|github\.com|raw\.githubusercontent\.com/.test(hostname)
       && !location.pathname.endsWith("/preview.html");
   };
+  function configureAccess(afterSave){
+    openDialog("Доступ к GPT-OSS 120B",
+      "Защитный ключ задаётся владельцем в Cloudflare. Он действует только в этой открытой вкладке и не сохраняется на устройстве.",body=>{
+      const field=make("input","session-input");field.type="password";field.autocomplete="off";
+      field.placeholder="Ключ доступа";field.setAttribute("aria-label","Ключ доступа");
+      body.append(field);
+      const save=button("Подключить","dialog-save",null,"session-primary");
+      save.addEventListener("click",()=>{
+        if(field.value.trim().length<24){notify("Введите ключ не короче 24 символов.");return}
+        aiAccessKey=field.value.trim();field.value="";closeDialog();
+        notify("Ключ принят для текущей вкладки. Проверка происходит при запросе.");
+        if(typeof afterSave==="function")afterSave();
+      });
+      body.append(save);
+    });
+  }
   async function runAI(chat){
     if(!allowRemote()){
       showStatus("Предпросмотр: настоящий GPT-OSS 120B ещё не подключён. Сообщения никуда не отправляются.");
       return;
+    }
+    if(!aiAccessKey){
+      showStatus("Для подключения ИИ укажи приватный ключ доступа.");
+      configureAccess(()=>runAI(chat));return;
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
     const controller=new AbortController();abort=controller;pending=chat.id;
@@ -1029,14 +1049,14 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       .map(m=>({role:m.role,content:m.content.slice(0,4000)}));
     try{
       const response=await fetch("/api/chat",{
-        method:"POST",headers:{"content-type":"application/json"},
+        method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+aiAccessKey},
         credentials:"same-origin",signal:controller.signal,
         body:JSON.stringify({messages:history,effort:state.reason,instructions:personalInstructions})
       });
       let data=null;try{data=await response.json()}catch{}
       if(!response.ok){
         if(data?.code==="AI_QUOTA_EXHAUSTED")showStatus("Лимит ИИ исчерпан. Бесплатный дневной лимит закончился. Попробуйте позже, когда он обновится.",true);
-        else if(data?.code==="ACCESS_REQUIRED")showStatus("Для настоящего ИИ необходим защищённый доступ. Сейчас модель недоступна.");
+        else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
         else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.");
         return;
       }
@@ -1148,6 +1168,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       if(!c||!c.messages.length){notify("Для экспорта сначала добавьте сообщения.");return}
       download("Kaz-AI-chat.txt",exportText(c),"text/plain;charset=utf-8");notify("Переписка скачана.");return;
     }
+    if(action==="ai-access"){configureAccess();return}
     if(action==="instructions"){
       openDialog("Личные инструкции","Правила действуют только в этой вкладке. Они передаются модели вместе с вашим запросом при подключённом ИИ.",body=>{
         const area=make("textarea","session-textarea");area.value=personalInstructions;area.maxLength=2000;
@@ -1218,6 +1239,10 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const checkbox=make("input","");checkbox.type="checkbox";checkbox.id="sessionTemporary";
     label.append(checkbox,make("span","","Включить"));tempRow.append(label);
     settings?.append(tempRow);
+    const aiRow=make("div","setting-item"),info=make("div","");
+    info.append(make("h2","","Доступ к текстовому ИИ"),make("p","","GPT-OSS 120B. Для личного тестирования на Cloudflare нужен защитный ключ."));
+    aiRow.append(info,button("Настроить ключ","ai-access",null,"setting-control"));
+    settings?.append(aiRow);
     const overlay=make("div","session-overlay");overlay.id="sessionOverlay";overlay.hidden=true;
     const dialog=make("section","session-dialog");dialog.setAttribute("role","dialog");dialog.setAttribute("aria-modal","true");dialog.setAttribute("aria-labelledby","sessionTitle");
     const close=button("×","dialog-close",null,"session-dialog-close");close.id="sessionClose";

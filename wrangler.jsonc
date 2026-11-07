@@ -3,11 +3,14 @@
   "compatibility_date": "2026-11-08",
   "assets": {
     "directory": "./public",
-    "not_found_handling": "single-page-application",
+    "not_found_handling": "404-page",
     "binding": "ASSETS",
     "run_worker_first": [
-      "/api/*"
-    ]
+      "/api/*",
+      "/robots.txt",
+      "/sitemap.xml"
+    ],
+    "html_handling": "auto-trailing-slash"
   },
   "main": "./src/index.js",
   "ai": {

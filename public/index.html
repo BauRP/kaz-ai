@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#041021">
+  <meta name="description" content="Kaz AI — казахстанский ИИ-помощник. Предварительная версия интерфейса.">
+  <title>Kaz AI — Орбитальный орнамент</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" class="svg-library" aria-hidden="true">
+  <symbol id="logo-mark" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3.1" stroke-linejoin="round"><path d="M24 3 34 13 24 23 14 13Z"/><path d="M45 24 35 34 25 24 35 14Z"/><path d="M24 45 14 35 24 25 34 35Z"/><path d="M3 24 13 14 23 24 13 34Z"/></g></symbol>
+  <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+  <symbol id="ic-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="ic-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
+  <symbol id="ic-arrow" viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></symbol>
+  <symbol id="ic-arrow-right" viewBox="0 0 24 24"><path d="M4 12h16m-7-7 7 7-7 7"/></symbol>
+  <symbol id="ic-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="ic-chat" viewBox="0 0 24 24"><path d="M20 11.5a8 8 0 0 1-8 8 8.6 8.6 0 0 1-3.5-.8L4 20l1.3-4.4A8 8 0 1 1 20 11.5Z"/></symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2.1 2H19a2 2 0 0 1 2 2v10H3Z"/></symbol>
+  <symbol id="ic-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="ic-settings" viewBox="0 0 24 24"><path d="M9.6 3h4.8l.6 2.3 1.8 1 2.3-.7 2.4 4.2-1.7 1.7v2l1.7 1.7-2.4 4.2-2.3-.7-1.8 1-.6 2.3H9.6L9 19.7l-1.8-1-2.3.7-2.4-4.2 1.7-1.7v-2L2.5 9.8l2.4-4.2 2.3.7 1.8-1Z"/><circle cx="12" cy="12.5" r="3"/></symbol>
+  <symbol id="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+  <symbol id="ic-moon" viewBox="0 0 24 24"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></symbol>
+  <symbol id="ic-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-4 4-4 14 0 18m0-18c4 4 4 14 0 18"/></symbol>
+  <symbol id="ic-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21m-4 0h8"/></symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></symbol>
+  <symbol id="ic-clip" viewBox="0 0 24 24"><path d="m8 13 6.8-6.8a3.5 3.5 0 0 1 5 5l-9.6 9.6a5.5 5.5 0 0 1-7.8-7.8L12 3.4"/></symbol>
+  <symbol id="ic-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.3" cy="8.3" r="1.5"/><path d="m4 18 6-6 4 4 3-3 4 4"/></symbol>
+  <symbol id="ic-spark" viewBox="0 0 24 24"><path d="m12 2 2.3 7.7L22 12l-7.7 2.3L12 22l-2.3-7.7L2 12l7.7-2.3Z"/></symbol>
+  <symbol id="ic-brain" viewBox="0 0 24 24"><path d="M12 6a4 4 0 0 0-7-2 4.3 4.3 0 0 0-1.2 5.2 4.5 4.5 0 0 0 .6 8 4 4 0 0 0 7.6.8V6Zm0 0a4 4 0 0 1 7-2 4.3 4.3 0 0 1 1.2 5.2 4.5 4.5 0 0 1-.6 8 4 4 0 0 1-7.6.8V6Z"/><path d="M8 9c2 1 2 3 1 4m7-4c-2 1-2 3-1 4"/></symbol>
+  <symbol id="ic-edit" viewBox="0 0 24 24"><path d="M4 20h5l11-11-5-5L4 15v5Zm9-14 5 5"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></symbol>
+  <symbol id="ic-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="ic-file" viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6Z"/><path d="M14 2v6h5M9 13h7m-7 4h7"/></symbol>
+  <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></symbol>
+  <symbol id="ic-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+</svg>
+<div class="app-shell">
+  <div id="drawerScrim" class="drawer-scrim" hidden></div>
+  <aside class="sidebar" id="sidebar" aria-label="Боковое меню">
+    <div class="sidebar-header">
+      <button type="button" class="brand" data-action="home" aria-label="На главную Kaz AI">
+        <svg class="brand-mark"><use href="#logo-mark"/></svg><span>Kaz <b>AI</b></span>
+      </button>
+      <button type="button" class="icon-button close-sidebar" data-action="close-sidebar" aria-label="Закрыть меню"><svg class="icon"><use href="#ic-close"/></svg></button>
+    </div>
+    <button class="new-chat-button" type="button" data-action="new-chat"><svg class="icon"><use href="#ic-plus"/></svg><span>Новый чат</span><svg class="icon button-tail"><use href="#ic-arrow-right"/></svg></button>
+    <nav class="primary-nav" aria-label="Разделы">
+      <button type="button" data-screen="history" class="nav-item"><svg class="icon"><use href="#ic-chat"/></svg><span>Чаты</span></button>
+      <button type="button" data-screen="projects" class="nav-item"><svg class="icon"><use href="#ic-folder"/></svg><span>Проекты</span></button>
+      <button type="button" data-screen="tools" class="nav-item"><svg class="icon"><use href="#ic-grid"/></svg><span>Инструменты</span><span class="nav-count">44</span></button>
+      <button type="button" data-screen="settings" class="nav-item"><svg class="icon"><use href="#ic-settings"/></svg><span>Настройки</span></button>
+    </nav>
+    <div class="sidebar-recent">
+      <div class="sidebar-recent-header"><span>НЕДАВНИЕ ЧАТЫ</span><svg class="icon"><use href="#ic-clock"/></svg></div>
+      <div id="recentChats"><div class="sidebar-empty">Здесь появятся ваши разговоры</div></div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="ornament-line" aria-hidden="true"></div>
+      <button type="button" class="google-button" data-feature="google"><span class="google-g">G</span><span>Войти через Google</span><svg class="icon"><use href="#ic-arrow-right"/></svg></button>
+      <div class="footer-note"><span class="online-dot"></span>Предварительный интерфейс</div>
+    </div>
+  </aside>
+  <div class="main-area">
+    <header class="topbar">
+      <div class="topbar-start">
+        <button type="button" class="icon-button menu-button" data-action="toggle-sidebar" aria-label="Открыть меню" aria-controls="sidebar" aria-expanded="false"><svg class="icon"><use href="#ic-menu"/></svg></button>
+        <span id="pageTitle" class="topbar-title">Kaz AI</span>
+        <span class="preview-pill"><span class="online-dot"></span>Демо оболочки</span>
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="icon-button" data-action="toggle-theme" aria-label="Переключить тему" title="Переключить тему"><svg class="icon icon-theme"><use href="#ic-sun"/></svg></button>
+        <button type="button" class="language-pill" data-feature="languages" aria-label="Выбор языка интерфейса"><svg class="icon"><use href="#ic-globe"/></svg><span>Русский</span><svg class="icon tiny"><use href="#ic-chevron"/></svg></button>
+      </div>
+    </header>
+    <main class="main-content" id="mainContent">
+      <section id="view-welcome" class="view view-welcome" aria-label="Главная Kaz AI">
+        <div class="hero-visual" aria-hidden="true">
+          <div class="starfield"></div>
+          <div class="nebula"></div>
+          <svg class="orbit-art" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <radialGradient id="earthFill" cx="38%" cy="28%" r="75%"><stop offset="0" stop-color="#3cbded"/><stop offset=".23" stop-color="#107dbf"/><stop offset=".56" stop-color="#073d81"/><stop offset=".83" stop-color="#041a43"/><stop offset="1" stop-color="#010c23"/></radialGradient>
+              <linearGradient id="atmos" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9df9ff"/><stop offset=".5" stop-color="#17b5ec"/><stop offset="1" stop-color="#153bbb"/></linearGradient>
+              <clipPath id="worldClip"><circle cx="480" cy="282" r="175"/></clipPath>
+              <filter id="glowFilter" x="-55%" y="-55%" width="210%" height="210%"><feGaussianBlur stdDeviation="12"/></filter>
+            </defs>
+            <circle cx="480" cy="282" r="180" fill="#00c7ff" opacity=".28" filter="url(#glowFilter)"/>
+            <circle cx="480" cy="282" r="175" fill="url(#earthFill)" stroke="url(#atmos)" stroke-width="2.7"/>
+            <g clip-path="url(#worldClip)">
+              <g fill="none" stroke="#65d6ff" stroke-width="1" opacity=".3">
+                <ellipse cx="480" cy="282" rx="75" ry="175"/><ellipse cx="480" cy="282" rx="135" ry="175"/>
+                <path d="M305 282h350M325 220h310M325 344h310M367 160h226M367 402h226"/>
+              </g>
+              <g fill="#24a4a6" opacity=".42" stroke="#85f6ea" stroke-width=".9">
+                <path d="M358 154q32-35 74-26l23 23-12 23 19 20-11 30-37 4-11 32-29-5-18-35-27-13-9-28Z"/>
+                <path d="M457 250q28 7 42 30l-10 32-21 27-6 50-20 34-19-8-6-42-23-26 4-46 30-19Z"/>
+                <path d="M491 132q65-41 129 4l-7 34 30 14-13 38-41-7-12 20-28-11-14 25-27-10-22-36-29-3-10-35Z"/>
+                <path d="M559 278q24-10 54 11l-12 32-34 4-19-24Z"/>
+                <path d="M554 355q34-21 70 8l-9 42-43 8-23-23Z"/>
+              </g>
+              <path d="M317 222q62-101 179-103" fill="none" stroke="#c6ffff" stroke-width="12" opacity=".12"/>
+              <circle cx="480" cy="282" r="175" fill="url(#earthFill)" opacity=".11"/>
+            </g>
+            <ellipse cx="480" cy="280" rx="360" ry="87" transform="rotate(-15 480 280)" fill="none" stroke="#2da9ff" stroke-width="1.7" opacity=".55"/>
+            <ellipse cx="480" cy="280" rx="365" ry="99" transform="rotate(17 480 280)" fill="none" stroke="#46d7ef" stroke-width="1.3" opacity=".32"/>
+            <g fill="#8eefff"><circle cx="135" cy="320" r="3.2"/><circle cx="809" cy="196" r="3.3"/><circle cx="274" cy="154" r="2"/><circle cx="714" cy="390" r="2.2"/></g>
+            <g stroke="#59dfff" fill="none" stroke-width="1.3" opacity=".7">
+              <path d="m168 285 13-13 13 13-13 13Z"/><path d="m194 285 13-13 13 13-13 13Z"/>
+              <path d="m753 291 13-13 13 13-13 13Z"/><path d="m779 291 13-13 13 13-13 13Z"/>
+            </g>
+          </svg>
+          <div class="ornament ornament-left"><svg viewBox="0 0 110 200"><g fill="none" stroke="currentColor" stroke-width="2.5"><path d="M0 28Q38-4 69 29T109 90M0 75q38 36 70 0t40-12M0 122q38-38 70 0t40 35M0 178q38-36 70 0"/><path d="m40 30 18 18-18 18-18-18Z M48 108l18 18-18 18-18-18Z M40 160l18 18-18 18-18-18Z"/></g></svg></div>
+          <div class="ornament ornament-right"><svg viewBox="0 0 110 200"><g fill="none" stroke="currentColor" stroke-width="2.5"><path d="M0 28Q38-4 69 29T109 90M0 75q38 36 70 0t40-12M0 122q38-38 70 0t40 35M0 178q38-36 70 0"/><path d="m40 30 18 18-18 18-18-18Z M48 108l18 18-18 18-18-18Z M40 160l18 18-18 18-18-18Z"/></g></svg></div>
+        </div>
+        <div class="hero-copy">
+          <div class="hero-emblem"><svg class="brand-mark"><use href="#logo-mark"/></svg></div>
+          <h1>Kaz <span>AI</span></h1>
+          <p class="hero-heading">Интеллект нового поколения</p>
+          <p class="hero-subtitle">Ваш помощник на казахском, русском и английском языках</p>
+          <span class="hero-accent"><span></span><svg class="brand-mark"><use href="#logo-mark"/></svg><span></span></span>
+        </div>
+        <p class="hero-bottom-note">Задайте вопрос, чтобы начать разговор</p>
+      </section>
+      <section id="view-chat" class="view view-chat" hidden aria-label="Переписка"><div id="chatMessages" class="chat-messages" aria-live="polite"></div></section>
+      <section id="view-history" class="view view-panel" hidden aria-labelledby="historyHeading">
+        <div class="panel-heading"><span class="eyebrow">ПЕРЕПИСКИ</span><h1 id="historyHeading">История чатов</h1><p>Все разговоры будут отображаться здесь.</p></div>
+        <div class="search-bar"><svg class="icon"><use href="#ic-search"/></svg><input id="historySearch" type="search" placeholder="Поиск по перепискам" autocomplete="off" aria-label="Поиск по перепискам"></div>
+        <div id="historyList" class="panel-items"><div class="empty-card"><svg class="icon"><use href="#ic-chat"/></svg><h2>Пока нет разговоров</h2><p>Начните новый чат, чтобы увидеть, как будет выглядеть история.</p><button data-action="new-chat" class="subtle-cta">Новый чат</button></div></div>
+      </section>
+      <section id="view-projects" class="view view-panel" hidden aria-labelledby="projectsHeading">
+        <div class="panel-heading"><span class="eyebrow">ПРОСТРАНСТВО ДЛЯ ИДЕЙ</span><h1 id="projectsHeading">Проекты</h1><p>В будущем здесь будут папки для группировки разговоров.</p></div>
+        <div class="empty-card"><svg class="icon"><use href="#ic-folder"/></svg><h2>Ваши будущие проекты</h2><p>Обычные папки, без общей памяти и сложных настроек. Создание проектов подключим на следующем этапе.</p><button data-feature="projects" class="subtle-cta">+ Новый проект <span class="small-soon">Скоро</span></button></div>
+      </section>
+      <section id="view-tools" class="view view-panel" hidden aria-labelledby="toolsHeading">
+        <div class="panel-heading"><span class="eyebrow">КАРТА ВОЗМОЖНОСТЕЙ</span><h1 id="toolsHeading">Инструменты Kaz AI</h1><p>Все запланированные возможности собраны здесь. Пока это только оболочка: функции будут подключаться поэтапно.</p></div>
+        <div class="search-bar"><svg class="icon"><use href="#ic-search"/></svg><input id="toolsSearch" type="search" placeholder="Найти функцию" autocomplete="off" aria-label="Найти функцию"></div>
+        <div id="toolGroups" class="tools-groups"></div>
+      </section>
+      <section id="view-settings" class="view view-panel" hidden aria-labelledby="settingsHeading">
+        <div class="panel-heading"><span class="eyebrow">ЛИЧНОЕ ПРОСТРАНСТВО</span><h1 id="settingsHeading">Настройки</h1><p>Основные параметры вашего будущего Kaz AI.</p></div>
+        <div class="settings-list">
+          <div class="setting-item"><div><h2>Оформление</h2><p>Светлая или тёмная тема</p></div><button class="setting-control" data-action="toggle-theme"><svg class="icon"><use href="#ic-sun"/></svg><span id="themeLabel">Тёмная</span></button></div>
+          <div class="setting-item"><div><h2>Язык интерфейса</h2><p>Русский, қазақша, English</p></div><button class="setting-control" data-feature="languages">Русский <svg class="icon"><use href="#ic-chevron"/></svg></button></div>
+          <div class="setting-item"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><button class="setting-control" data-feature="font">Обычный <svg class="icon"><use href="#ic-chevron"/></svg></button></div>
+          <div class="setting-item"><div><h2>Личные инструкции</h2><p>Как ИИ должен отвечать именно вам</p></div><button class="setting-control" data-feature="instructions">Настроить <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
+          <div class="setting-item"><div><h2>Память ИИ</h2><p>Запоминание предпочтений — позже</p></div><button class="setting-control" data-feature="memory">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
+          <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать свои переписки — позже</p></div><button class="setting-control" data-feature="export">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
+          <div class="setting-item"><div><h2>Аккаунт</h2><p>Вход через Google будет подключён позже</p></div><button class="setting-control" data-feature="google">Войти <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
+        </div>
+      </section>
+    </main>
+    <div class="composer-region" id="composerRegion">
+      <div id="statusBanner" class="status-banner" hidden role="status" aria-live="polite"></div>
+      <div class="composer" id="composer">
+        <label class="sr-only" for="messageInput">Ваше сообщение Kaz AI</label>
+        <textarea id="messageInput" rows="1" maxlength="4000" placeholder="Напишите сообщение..." aria-describedby="composerNote"></textarea>
+        <div class="composer-toolbar">
+          <div class="composer-left">
+            <div class="popover-anchor">
+              <button type="button" class="composer-icon plus-button" id="attachToggle" data-action="toggle-attach" aria-label="Добавить файл или изображение" aria-expanded="false" aria-controls="attachMenu"><svg class="icon"><use href="#ic-plus"/></svg></button>
+              <div id="attachMenu" class="popover-menu attach-menu" hidden>
+                <button type="button" data-feature="file"><svg class="icon"><use href="#ic-clip"/></svg>Прикрепить файл <span>Позже</span></button>
+                <button type="button" data-feature="photo"><svg class="icon"><use href="#ic-image"/></svg>Прикрепить фото <span>Позже</span></button>
+                <button type="button" data-feature="image-create"><svg class="icon"><use href="#ic-spark"/></svg>Создать картинку <span>Позже</span></button>
+                <button type="button" data-feature="audio"><svg class="icon"><use href="#ic-mic"/></svg>Аудиозапись <span>Позже</span></button>
+              </div>
+            </div>
+            <span class="composer-hint">Kaz AI</span>
+          </div>
+          <div class="composer-right">
+            <div class="popover-anchor">
+              <button type="button" id="reasonToggle" data-action="toggle-reason" class="reason-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="reasonMenu"><svg class="icon"><use href="#ic-brain"/></svg><span id="currentReason">Средний</span><svg class="icon tiny"><use href="#ic-chevron"/></svg></button>
+              <div id="reasonMenu" class="popover-menu reason-menu" hidden role="group" aria-label="Уровень рассуждения">
+                <p class="popover-title">Усилие рассуждения</p>
+                <button type="button" class="reason-option" data-reason="low"><span><b>Низкий</b><small>Быстрые ответы</small></span><svg class="icon reason-check"><use href="#ic-check"/></svg></button>
+                <button type="button" class="reason-option" data-reason="medium"><span><b>Средний</b><small>Баланс скорости и анализа</small></span><svg class="icon reason-check"><use href="#ic-check"/></svg></button>
+                <button type="button" class="reason-option" data-reason="high"><span><b>Высокий</b><small>Подробные рассуждения</small></span><svg class="icon reason-check"><use href="#ic-check"/></svg></button>
+                <button type="button" class="reason-option is-locked" data-feature="deep-reason"><span><b>Углублённый <em>Скоро</em></b><small>Максимально глубокий анализ</small></span><svg class="icon"><use href="#ic-lock"/></svg></button>
+              </div>
+            </div>
+            <button type="button" class="composer-icon mic-button" data-feature="mic" title="Голосовой ввод — позже" aria-label="Голосовой ввод — позже"><svg class="icon"><use href="#ic-mic"/></svg></button>
+            <button type="button" class="send-button" id="sendButton" aria-label="Отправить сообщение" disabled><svg class="icon"><use href="#ic-arrow"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <p id="composerNote" class="composer-note">Демо интерфейса. ИИ, Google-вход и сохранение истории пока не подключены.</p>
+    </div>
+  </div>
+</div>
+<div id="modalOverlay" class="modal-overlay" hidden>
+  <div class="feature-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDescription">
+    <button type="button" class="icon-button modal-close" data-action="close-modal" aria-label="Закрыть"><svg class="icon"><use href="#ic-close"/></svg></button>
+    <div class="modal-icon"><svg class="icon"><use href="#ic-spark"/></svg></div>
+    <span class="eyebrow">В ПЛАНЕ РАЗРАБОТКИ</span>
+    <h2 id="modalTitle">Функция появится позже</h2>
+    <p id="modalDescription">Сейчас разрабатывается только оболочка Kaz AI.</p>
+    <button type="button" class="modal-ok" data-action="close-modal">Понятно</button>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

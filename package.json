@@ -1,0 +1,15 @@
+{
+  "name": "kaz-ai-shell",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kaz AI interface shell (no AI or auth connectivity yet)",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check public/app.js && node --test tests/*.test.mjs",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

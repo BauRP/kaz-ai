@@ -51,14 +51,14 @@ export default {
   async fetch(request,env){
     const url=new URL(request.url);
     if(url.pathname==="/robots.txt"&&request.method==="GET"){
-      return new Response("User-agent: *\\nAllow: /\\nDisallow: /api/\\nDisallow: /preview.html\\nSitemap: "+url.origin+"/sitemap.xml\\n",{
+      return new Response("User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /preview.html\nSitemap: "+url.origin+"/sitemap.xml\n",{
         headers:{"content-type":"text/plain; charset=utf-8","cache-control":"public, max-age=3600","x-content-type-options":"nosniff"}
       });
     }
     if(url.pathname==="/sitemap.xml"&&request.method==="GET"){
       const urls=["/","/about/","/capabilities/","/questions/","/privacy/","/kk/","/en/"];
       const entries=urls.map(path=>"<url><loc>"+url.origin+path+"</loc></url>").join("");
-      return new Response('<?xml version="1.0" encoding="UTF-8"?>\\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+entries+'</urlset>',{
+      return new Response('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+entries+'</urlset>',{
         headers:{"content-type":"application/xml; charset=utf-8","cache-control":"public, max-age=3600","x-content-type-options":"nosniff"}
       });
     }

@@ -74,7 +74,16 @@
       </div>
       <div class="topbar-actions">
         <button type="button" class="icon-button" data-action="toggle-theme" aria-label="Переключить тему" title="Переключить тему"><svg class="icon icon-theme"><use href="#ic-sun"/></svg></button>
-        <button type="button" class="language-pill" data-feature="languages" aria-label="Выбор языка интерфейса"><svg class="icon"><use href="#ic-globe"/></svg><span>Русский</span><svg class="icon tiny"><use href="#ic-chevron"/></svg></button>
+        <div class="popover-anchor language-anchor">
+          <button type="button" class="language-pill" id="languageToggle" data-action="toggle-language" aria-label="Выбор языка интерфейса" aria-expanded="false" aria-controls="languageMenu"><svg class="icon"><use href="#ic-globe"/></svg><span class="language-current">Русский</span><svg class="icon tiny"><use href="#ic-chevron"/></svg></button>
+          <div id="languageMenu" class="popover-menu language-menu" hidden>
+                <p class="popover-title">Язык интерфейса</p>
+                <button type="button" data-language="ru" class="language-option selected"><span class="language-code">RU</span><span><strong>Русский</strong><small>Русский язык</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <button type="button" data-language="kk" class="language-option"><span class="language-code">KZ</span><span><strong>Қазақша</strong><small>Қазақ тілі</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <button type="button" data-language="en" class="language-option"><span class="language-code">EN</span><span><strong>English</strong><small>English language</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <p class="popover-hint">Пока меняется только выбранный язык. Полный перевод будет добавлен позже.</p>
+          </div>
+        </div>
       </div>
     </header>
     <main class="main-content" id="mainContent">
@@ -133,8 +142,13 @@
         <div class="panel-heading"><span class="eyebrow">ЛИЧНОЕ ПРОСТРАНСТВО</span><h1 id="settingsHeading">Настройки</h1><p>Основные параметры вашего будущего Kaz AI.</p></div>
         <div class="settings-list">
           <div class="setting-item"><div><h2>Оформление</h2><p>Светлая или тёмная тема</p></div><button class="setting-control" data-action="toggle-theme"><svg class="icon"><use href="#ic-sun"/></svg><span id="themeLabel">Тёмная</span></button></div>
-          <div class="setting-item"><div><h2>Язык интерфейса</h2><p>Русский, қазақша, English</p></div><button class="setting-control" data-feature="languages">Русский <svg class="icon"><use href="#ic-chevron"/></svg></button></div>
-          <div class="setting-item"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><button class="setting-control" data-feature="font">Обычный <svg class="icon"><use href="#ic-chevron"/></svg></button></div>
+          <div class="setting-item"><div><h2>Язык интерфейса</h2><p>Русский, қазақша, English</p></div><div class="popover-anchor settings-popover-anchor language-anchor"><button type="button" class="setting-control" id="settingsLanguageToggle" data-action="toggle-language" aria-expanded="false" aria-controls="settingsLanguageMenu"><span class="language-current">Русский</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div id="settingsLanguageMenu" class="popover-menu language-menu" hidden>
+                <p class="popover-title">Язык интерфейса</p>
+                <button type="button" data-language="ru" class="language-option selected"><span class="language-code">RU</span><span><strong>Русский</strong><small>Русский язык</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <button type="button" data-language="kk" class="language-option"><span class="language-code">KZ</span><span><strong>Қазақша</strong><small>Қазақ тілі</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <button type="button" data-language="en" class="language-option"><span class="language-code">EN</span><span><strong>English</strong><small>English language</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <p class="popover-hint">Пока меняется только выбранный язык. Полный перевод будет добавлен позже.</p></div></div></div>
+          <div class="setting-item"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><div class="popover-anchor settings-popover-anchor"><button type="button" class="setting-control" data-action="toggle-font" id="fontToggle" aria-expanded="false" aria-controls="fontMenu"><span id="fontLabel">Обычный</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div class="popover-menu font-menu" id="fontMenu" hidden><p class="popover-title">Размер текста</p><button type="button" data-font="small">Компактный</button><button type="button" data-font="normal" class="selected">Обычный</button><button type="button" data-font="large">Крупный</button><p class="popover-hint">Пример оформления для проверки дизайна.</p></div></div></div>
           <div class="setting-item"><div><h2>Личные инструкции</h2><p>Как ИИ должен отвечать именно вам</p></div><button class="setting-control" data-feature="instructions">Настроить <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
           <div class="setting-item"><div><h2>Память ИИ</h2><p>Запоминание предпочтений — позже</p></div><button class="setting-control" data-feature="memory">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
           <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать свои переписки — позже</p></div><button class="setting-control" data-feature="export">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
@@ -188,6 +202,17 @@
     <h2 id="modalTitle">Функция появится позже</h2>
     <p id="modalDescription">Сейчас разрабатывается только оболочка Kaz AI.</p>
     <button type="button" class="modal-ok" data-action="close-modal">Понятно</button>
+  </div>
+</div>
+<div id="googleOverlay" class="modal-overlay" hidden>
+  <div class="google-dialog" role="dialog" aria-modal="true" aria-labelledby="googleDialogTitle" aria-describedby="googleDialogText">
+    <button type="button" class="icon-button google-close" data-action="close-google" aria-label="Закрыть окно входа"><svg class="icon"><use href="#ic-close"/></svg></button>
+    <div class="google-dialog-logo"><svg class="brand-mark"><use href="#logo-mark"/></svg></div>
+    <h2 id="googleDialogTitle">Добро пожаловать в Kaz AI</h2>
+    <p id="googleDialogText">Войдите, чтобы в будущем сохранять свои переписки и настройки.</p>
+    <button type="button" class="google-continue" data-action="google-demo"><span class="google-g">G</span> Продолжить с Google</button>
+    <div class="google-dialog-note">Это только макет окна входа. Мы не запрашиваем данные Google и ничего не отправляем.</div>
+    <button type="button" class="google-cancel" data-action="close-google">Вернуться к сайту</button>
   </div>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>

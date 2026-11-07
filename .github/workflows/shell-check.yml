@@ -18,7 +18,7 @@ jobs:
       - name: Check JavaScript syntax
         run: node --check public/app.js && node --check public/session.js && node --check public/i18n.js && node --check src/index.js
       - name: Verify shell requirements
-        run: node --test tests/shell.test.mjs tests/api.test.mjs
+        run: node --test tests/shell.test.mjs tests/api.test.mjs tests/progress.test.mjs
       - name: Install browser test tool
         run: npm install --no-save --ignore-scripts playwright-core
       - name: Check real desktop and mobile browser interactions

@@ -135,3 +135,104 @@ body.light .space-corner{color:#087cba;text-shadow:0 0 12px rgba(26,185,238,.32)
  .earth-sphere{height:330px}
  .hero-copy h1.hero-wordmark{font-size:clamp(46px,6vw,70px)}
 }
+
+/* Visual repair 2026-11-08: finish the Earth rather than stretching a thin strip. */
+.view-welcome{
+  min-height:100%;justify-content:center;padding:20px 24px 26px;
+  background:
+   radial-gradient(ellipse 35% 63% at 98% 24%,rgba(0,117,191,.23),transparent 89%),
+   radial-gradient(ellipse 58% 78% at 48% 3%,rgba(5,74,149,.35),transparent 86%),
+   linear-gradient(155deg,#030b23,#020e27 58%,#02091c);
+}
+.hero-visual{
+  overflow:hidden;
+  background:
+   radial-gradient(ellipse 15% 43% at 100% 24%,rgba(0,203,251,.26),transparent),
+   radial-gradient(ellipse 29% 45% at 95% 14%,rgba(0,73,174,.24),transparent);
+}
+.earth-sphere{
+  width:min(105%,1120px);
+  height:clamp(380px,65vh,620px);
+  left:50%;top:clamp(-45px,-3vh,-12px);
+  transform:translateX(-50%);
+  border-radius:50%;
+  overflow:hidden;
+  background:
+   radial-gradient(ellipse 61% 45% at 50% 13%,rgba(21,132,230,.18),transparent 85%),
+   radial-gradient(ellipse 69% 70% at 50% 1%,#104383 7%,#062857 35%,#031334 63%,rgba(1,8,25,.18) 91%,transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 53% 51% at 50% 37%,#000 63%,rgba(0,0,0,.82) 79%,transparent 99%);
+  mask-image:radial-gradient(ellipse 53% 51% at 50% 37%,#000 63%,rgba(0,0,0,.82) 79%,transparent 99%);
+  box-shadow:inset 0 11px 35px rgba(32,192,255,.17);
+}
+.earth-photo{
+  position:absolute;inset:0;height:100%;
+  background-image:url("./earth.webp");
+  background-position:50% 0;
+  background-repeat:no-repeat;
+  background-size:100% auto;
+  mix-blend-mode:screen;
+  filter:saturate(1.18) contrast(1.08) brightness(1.13);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 12%,rgba(0,0,0,.88) 17%,rgba(0,0,0,.35) 23%,transparent 34%);
+  mask-image:linear-gradient(to bottom,#000 0%,#000 12%,rgba(0,0,0,.88) 17%,rgba(0,0,0,.35) 23%,transparent 34%);
+}
+.earth-shade{
+  background:
+  radial-gradient(ellipse 76% 72% at 48% 30%,transparent 42%,rgba(0,10,32,.23) 72%,rgba(0,6,19,.62) 100%),
+  linear-gradient(180deg,transparent 2%,transparent 22%,rgba(1,13,42,.1) 36%,rgba(1,7,26,.55) 83%);
+}
+.orbit-art{
+  z-index:2;width:min(108%,1150px);height:auto;top:33%;
+  opacity:.68;
+  filter:drop-shadow(0 0 7px rgba(9,190,255,.42));
+  -webkit-mask-image:radial-gradient(ellipse 32% 29% at 50% 43%,transparent 47%,rgba(0,0,0,.2) 70%,#000 93%);
+  mask-image:radial-gradient(ellipse 32% 29% at 50% 43%,transparent 47%,rgba(0,0,0,.2) 70%,#000 93%);
+}
+.hero-copy{
+  position:relative;z-index:5;margin:0 auto;
+  padding:30px 62px;
+  background:radial-gradient(ellipse 69% 62% at 50% 50%,rgba(0,14,38,.61),rgba(0,14,38,.14) 68%,transparent 90%);
+  text-shadow:0 3px 22px #020e24;
+  transform:translateY(-4%);
+}
+.hero-logo-line{gap:clamp(11px,2vw,28px);white-space:nowrap}
+.hero-logo-mark{width:clamp(53px,6vw,86px);height:clamp(53px,6vw,86px)}
+.hero-copy h1.hero-wordmark{font-size:clamp(60px,7vw,106px)}
+.hero-copy .hero-accent{margin-top:18px;opacity:.67}
+.orbit-ribbon{position:absolute;z-index:3;top:10%;left:17%;width:min(36%,390px);height:auto;transform:rotate(-10deg);opacity:.72;filter:drop-shadow(0 0 6px rgba(28,227,255,.45))}
+.kaz-corner{position:absolute;z-index:6;width:clamp(55px,6vw,104px);height:auto;pointer-events:none;color:#33d7fb;opacity:.8;filter:drop-shadow(0 0 5px rgba(17,183,255,.65))}
+.kaz-corner-tl{top:0;left:0}.kaz-corner-tr{top:0;right:0;transform:scaleX(-1)}
+.kaz-corner-bl{bottom:0;left:0;transform:scaleY(-1)}
+.kaz-corner-br{bottom:0;right:0;transform:scale(-1)}
+.space-corner,.orbit-ornament{display:none}
+.ornament{opacity:.12;bottom:0}
+.hero-visual:after{
+  bottom:-30%;height:50%;
+  background:linear-gradient(0deg,rgba(2,10,29,.78) 5%,rgba(2,10,29,.2) 67%,transparent 100%);
+}
+.starfield{opacity:.78}
+body.light .view-welcome{
+ background:radial-gradient(ellipse 60% 65% at 50% 4%,rgba(116,202,255,.4),transparent 85%),#e6f2fb
+}
+body.light .hero-copy{
+ background:radial-gradient(ellipse 70% 65% at 50% 50%,rgba(226,244,255,.88),rgba(226,244,255,.24) 70%,transparent)
+}
+body.light .earth-sphere{opacity:.5}
+body.light .hero-visual:after{background:linear-gradient(0deg,#e6f2fb 13%,transparent)}
+body.light .kaz-corner{color:#0d9ed1;filter:drop-shadow(0 0 4px rgba(38,138,220,.26))}
+@media(max-width:760px){
+ .view-welcome{padding:22px 8px}
+ .earth-sphere{width:145%;height:clamp(290px,57vh,490px);top:-2%}
+ .earth-photo{background-size:100% auto}
+ .hero-copy{padding:24px 8px;width:100%;transform:translateY(-3%)}
+ .hero-logo-mark{width:clamp(38px,10vw,62px);height:clamp(38px,10vw,62px)}
+ .hero-copy h1.hero-wordmark{font-size:clamp(40px,10vw,70px)}
+ .orbit-art{width:160%;top:29%}
+ .orbit-ribbon{top:16%;left:8%;width:50%}
+ .kaz-corner{width:58px}
+}
+@media(max-height:650px) and (min-width:761px){
+ .view-welcome{padding:10px}
+ .earth-sphere{height:clamp(320px,78vh,520px);top:-15%}
+ .hero-copy{padding:13px 38px}
+ .hero-copy h1.hero-wordmark{font-size:clamp(48px,7vw,82px)}
+}

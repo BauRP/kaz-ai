@@ -51,7 +51,7 @@ export default {
   async fetch(request,env){
     const url=new URL(request.url);
     if(url.pathname==="/robots.txt"&&request.method==="GET"){
-      return new Response("User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /preview.html\nSitemap: "+url.origin+"/sitemap.xml\n",{
+      return new Response("User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: "+url.origin+"/sitemap.xml\n",{
         headers:{"content-type":"text/plain; charset=utf-8","cache-control":"public, max-age=3600","x-content-type-options":"nosniff"}
       });
     }

@@ -410,3 +410,8 @@ body.light .session-dialog-close{color:#2f6385}
  .session-chat-ops .session-button{flex:1;min-width:70px}
  .session-dialog{padding:26px 18px}
 }
+
+/* Retry failed text requests without creating duplicate questions. */
+.session-retry{align-self:flex-start;margin:8px 0 2px 6px;padding:7px 13px;border:1px solid rgba(68,213,249,.54);border-radius:10px;background:rgba(8,111,165,.22);color:var(--text);font-size:12px;cursor:pointer}
+.session-retry:hover{background:rgba(14,160,214,.32)}
+.session-retry[hidden]{display:none}

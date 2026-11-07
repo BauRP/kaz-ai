@@ -344,6 +344,13 @@ body.light .language-menu .language-option small{color:#597a93}
  .google-dialog{padding:35px 22px 24px}
 }
 
+/* Popovers in settings must paint above neighbouring rows and stay clickable. */
+.settings-list{overflow:visible}
+.setting-item{position:relative}
+.setting-item:has(.popover-menu:not([hidden])){z-index:40}
+.setting-item .popover-anchor{z-index:1}
+.setting-item:has(.popover-menu:not([hidden])) .popover-anchor{z-index:41}
+
 </style>
   
 </head>

@@ -621,7 +621,7 @@ const REASONS = Object.freeze({
 });
 const state = {screen:"welcome",reason:"medium",chat:[],draftTitle:"Новый чат",light:false,dialogTrigger:null,toastTimer:null};
 const $ = selector => document.querySelector(selector);
-const $ = selector => Array.from(document.querySelectorAll(selector));
+const $$ = selector => Array.from(document.querySelectorAll(selector));
 const viewNames = ["welcome","chat","history","projects","tools","settings"];
 const viewLabels = {welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки"};
 function icon(id){const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","icon");svg.setAttribute("aria-hidden","true");const use = document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href","#ic-"+id);svg.append(use);return svg}
@@ -641,7 +641,7 @@ function togglePopover(kind,trigger){
   if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
 }
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
-function showScreen(screen){if(!viewNames.includes(screen))return;state.screen=screen;viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0}
+function showScreen(screen){if(!viewNames.includes(screen))return;state.screen=screen;viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0}
 function newChat(){state.chat=[];state.draftTitle="Новый чат";$("#statusBanner").hidden=true;renderChat();renderHistory();showScreen("welcome");$("#messageInput").value="";resizeInput();$("#messageInput").focus()}
 function resizeInput(){const input=$("#messageInput");input.style.height="auto";input.style.height=Math.min(input.scrollHeight,176)+"px";$("#sendButton").disabled=!input.value.trim()}
 function addChatMessage(role,content){const item={role,content};state.chat.push(item);renderChat();renderHistory();return item}
@@ -649,14 +649,14 @@ function renderChat(){const target=$("#chatMessages");target.replaceChildren();f
 function submitMessage(){const input=$("#messageInput");const value=input.value.trim();if(!value)return;if(state.chat.length===0)state.draftTitle=value.slice(0,52);addChatMessage("user",value);input.value="";resizeInput();showScreen("chat");const banner=$("#statusBanner");banner.textContent="Оболочка готова. Ответ нейросети пока недоступен: GPT-OSS 120B подключим на следующем этапе.";banner.hidden=false;notify("Сообщение показано только в демо. На сервер ничего не отправлено.");$("#mainContent").scrollTop=$("#mainContent").scrollHeight}
 function renderHistory(){const target=$("#historyList"),recent=$("#recentChats");recent.replaceChildren();const search=($("#historySearch").value||"").trim().toLocaleLowerCase();const has=state.chat.some(m=>m.role==="user")&&state.draftTitle.toLocaleLowerCase().includes(search);if(!has){const empty=node("div","empty-card");empty.append(icon("chat"),node("h2","","Пока нет сохранённых переписок"),node("p","","На этом этапе разговоры существуют только в текущем открытом сеансе. Постоянное хранение подключим позже."));target.replaceChildren(empty);const hint=node("div","sidebar-empty","История пока не сохраняется");recent.append(hint);return}const card=node("button","history-card subtle-cta",state.draftTitle+" · демо-сеанс");card.type="button";card.addEventListener("click",()=>showScreen("chat"));target.replaceChildren(card);const entry=node("button","recent-item");entry.type="button";entry.append(icon("chat"),node("span","",state.draftTitle));entry.addEventListener("click",()=>showScreen("chat"));recent.append(entry)}
 function renderTools(query=""){const target=$("#toolGroups");target.replaceChildren();const value=query.toLocaleLowerCase().trim();let total=0;for(const group of FEATURE_GROUPS){const list=group.items.filter(item=>(item[1]+" "+item[2]).toLocaleLowerCase().includes(value));if(!list.length)continue;total+=list.length;const section=node("section","tool-group");const title=node("h2","tool-group-title");title.append(node("span","",group.title),node("small","",list.length+" функций"));section.append(title);const grid=node("div","tool-grid");for(const [number,name,description,iconName] of list){const card=node("button","tool-card");card.type="button";card.dataset.feature="tool-"+number;card.setAttribute("aria-label",name+", функция будет подключена позже");const head=node("div","tool-card-top");head.append(icon(iconName),node("small","","В плане"));card.append(head,node("strong","",name),node("p","",description));grid.append(card)}section.append(grid);target.append(section)}if(!total)target.append(node("p","","Ничего не найдено"))}
-function selectReason(value){if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return}state.reason=value;$("#currentReason").textContent=REASONS[value].name;$("[data-reason]").forEach(btn=>btn.classList.toggle("selected",btn.dataset.reason===value));closePopovers();notify("Выбран уровень «"+REASONS[value].name+"». Подключение к модели — на следующем этапе.")}
-function toggleTheme(){state.light=!state.light;document.body.classList.toggle("light",state.light);$("#themeLabel").textContent=state.light?"Светлая":"Тёмная";$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"))}
+function selectReason(value){if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return}state.reason=value;$("#currentReason").textContent=REASONS[value].name;$$("[data-reason]").forEach(btn=>btn.classList.toggle("selected",btn.dataset.reason===value));closePopovers();notify("Выбран уровень «"+REASONS[value].name+"». Подключение к модели — на следующем этапе.")}
+function toggleTheme(){state.light=!state.light;document.body.classList.toggle("light",state.light);$("#themeLabel").textContent=state.light?"Светлая":"Тёмная";$$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"))}
 const languages={ru:"Русский",kk:"Қазақша",en:"English"};
 function selectLanguage(value){
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
   state.language=value;
-  $(".language-current").forEach(el=>{el.textContent=languages[value]});
-  $("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
+  $$(".language-current").forEach(el=>{el.textContent=languages[value]});
+  $$("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
   closePopovers();
   notify("Выбран язык «"+languages[value]+"». Это предварительный просмотр выбора, перевод интерфейса будет позже.");
 }
@@ -665,7 +665,7 @@ function selectFont(value){
   document.body.classList.remove("font-small","font-large");
   if(value!=="normal")document.body.classList.add("font-"+value);
   $("#fontLabel").textContent={small:"Компактный",normal:"Обычный",large:"Крупный"}[value];
-  $("[data-font]").forEach(el=>el.classList.toggle("selected",el.dataset.font===value));
+  $$("[data-font]").forEach(el=>el.classList.toggle("selected",el.dataset.font===value));
   closePopovers();
   notify("Выбран размер текста для предпросмотра.");
 }
@@ -728,12 +728,12 @@ document.addEventListener("click",event=>{
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape"){if(!$("#googleOverlay").hidden){closeGoogle();return}if(!$("#modalOverlay").hidden){closeModal();return}closePopovers();setDrawer(false)}
   if(!$("#googleOverlay").hidden&&event.key==="Tab"){
-    const controls=$("#googleOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];
+    const controls=$$("#googleOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];
     if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
     return;
   }
-  if(!$("#modalOverlay").hidden&&event.key==="Tab"){const controls=$("#modalOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}
+  if(!$("#modalOverlay").hidden&&event.key==="Tab"){const controls=$$("#modalOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}
 });
 $("#drawerScrim").addEventListener("click",()=>setDrawer(false));
 $("#messageInput").addEventListener("input",resizeInput);
@@ -743,7 +743,7 @@ $("#historySearch").addEventListener("input",renderHistory);
 $("#toolsSearch").addEventListener("input",event=>renderTools(event.target.value));
 const banner=$("#statusBanner");
 $("#messageInput").addEventListener("input",()=>{banner.hidden=true});
-renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$("[data-reason=medium]").forEach(button=>button.classList.add("selected"));resizeInput();showScreen("welcome");
+renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$$("[data-reason=medium]").forEach(button=>button.classList.add("selected"));resizeInput();showScreen("welcome");
 
 </script>
 </body>

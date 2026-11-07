@@ -124,4 +124,4 @@ $("#historySearch").addEventListener("input",renderHistory);
 $("#toolsSearch").addEventListener("input",event=>renderTools(event.target.value));
 const banner=$("#statusBanner");
 $("#messageInput").addEventListener("input",()=>{banner.hidden=true});
-renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$("[data-reason=medium]").forEach(button=>button.classList.add("selected"));resizeInput();showScreen("welcome");
+renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$$("[data-reason=medium]").forEach(button=>button.classList.add("selected"));resizeInput();showScreen("welcome");

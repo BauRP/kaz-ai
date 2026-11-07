@@ -15,6 +15,7 @@ test('responsive layouts including phones and reduced motion',()=>{assert.match(
 test('no external CDN or remote script injection',()=>{assert.doesNotMatch(html,/<script[^>]+src="https?:/);assert.doesNotMatch(html,/<link[^>]+href="https?:/);assert.doesNotMatch(js,/innerHTML\s*=/);});
 
 test('reason selector initialization uses a collection of buttons',()=>{
-  assert.match(js,/\$\$\("\[data-reason=medium\]"\)\.forEach\(/);
-  assert.doesNotMatch(js,/\$\("\[data-reason=medium\]"\)\.forEach\(/);
+  assert.ok(js.includes('$$("[data-reason=medium]").forEach('));
+  assert.ok(!js.includes('; $("[data-reason=medium]").forEach('));
+  assert.ok(!js.includes(';$("[data-reason=medium]").forEach('));
 });

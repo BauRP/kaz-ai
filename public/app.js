@@ -71,8 +71,19 @@ const viewLabels = {welcome:"Kaz AI",chat:"Переписка",history:"Чаты
 function icon(id){const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","icon");svg.setAttribute("aria-hidden","true");const use = document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href","#ic-"+id);svg.append(use);return svg}
 function node(tag,className,text){const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e}
 function notify(message){const toast=$("#toast");clearTimeout(state.toastTimer);toast.textContent=message;toast.hidden=false;state.toastTimer=setTimeout(()=>{toast.hidden=true},3800)}
-function closePopovers(){ $("#attachMenu").hidden=true;$("#reasonMenu").hidden=true;$("#attachToggle").setAttribute("aria-expanded","false");$("#reasonToggle").setAttribute("aria-expanded","false")}
-function togglePopover(kind){const opening=$("#"+kind+"Menu").hidden;closePopovers();if(opening){$("#"+kind+"Menu").hidden=false;$("#"+(kind==="attach"?"attachToggle":"reasonToggle")).setAttribute("aria-expanded","true")}}
+function closePopovers(){
+  for(const id of ["attachMenu","reasonMenu","languageMenu","settingsLanguageMenu","fontMenu"]){const panel=$("#"+id);if(panel)panel.hidden=true}
+  for(const id of ["attachToggle","reasonToggle","languageToggle","settingsLanguageToggle","fontToggle"]){const button=$("#"+id);if(button)button.setAttribute("aria-expanded","false")}
+}
+function togglePopover(kind,trigger){
+  let menuId,button;
+  if(kind==="language"){button=trigger&&trigger.closest('[data-action="toggle-language"]')||$("#languageToggle");menuId=button.id==="settingsLanguageToggle"?"settingsLanguageMenu":"languageMenu"}
+  else if(kind==="font"){button=$("#fontToggle");menuId="fontMenu"}
+  else{menuId=kind+"Menu";button=$("#"+(kind==="attach"?"attachToggle":"reasonToggle"))}
+  const menu=$("#"+menuId);if(!menu||!button)return;
+  const opening=menu.hidden;closePopovers();
+  if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
+}
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
 function showScreen(screen){if(!viewNames.includes(screen))return;state.screen=screen;viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0}
 function newChat(){state.chat=[];state.draftTitle="Новый чат";$("#statusBanner").hidden=true;renderChat();renderHistory();showScreen("welcome");$("#messageInput").value="";resizeInput();$("#messageInput").focus()}
@@ -84,6 +95,35 @@ function renderHistory(){const target=$("#historyList"),recent=$("#recentChats")
 function renderTools(query=""){const target=$("#toolGroups");target.replaceChildren();const value=query.toLocaleLowerCase().trim();let total=0;for(const group of FEATURE_GROUPS){const list=group.items.filter(item=>(item[1]+" "+item[2]).toLocaleLowerCase().includes(value));if(!list.length)continue;total+=list.length;const section=node("section","tool-group");const title=node("h2","tool-group-title");title.append(node("span","",group.title),node("small","",list.length+" функций"));section.append(title);const grid=node("div","tool-grid");for(const [number,name,description,iconName] of list){const card=node("button","tool-card");card.type="button";card.dataset.feature="tool-"+number;card.setAttribute("aria-label",name+", функция будет подключена позже");const head=node("div","tool-card-top");head.append(icon(iconName),node("small","","В плане"));card.append(head,node("strong","",name),node("p","",description));grid.append(card)}section.append(grid);target.append(section)}if(!total)target.append(node("p","","Ничего не найдено"))}
 function selectReason(value){if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return}state.reason=value;$("#currentReason").textContent=REASONS[value].name;$$("[data-reason]").forEach(btn=>btn.classList.toggle("selected",btn.dataset.reason===value));closePopovers();notify("Выбран уровень «"+REASONS[value].name+"». Подключение к модели — на следующем этапе.")}
 function toggleTheme(){state.light=!state.light;document.body.classList.toggle("light",state.light);$("#themeLabel").textContent=state.light?"Светлая":"Тёмная";$$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"))}
+const languages={ru:"Русский",kk:"Қазақша",en:"English"};
+function selectLanguage(value){
+  if(!Object.prototype.hasOwnProperty.call(languages,value))return;
+  state.language=value;
+  $$(".language-current").forEach(el=>{el.textContent=languages[value]});
+  $$("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
+  closePopovers();
+  notify("Выбран язык «"+languages[value]+"». Это предварительный просмотр выбора, перевод интерфейса будет позже.");
+}
+function selectFont(value){
+  if(!["small","normal","large"].includes(value))return;
+  document.body.classList.remove("font-small","font-large");
+  if(value!=="normal")document.body.classList.add("font-"+value);
+  $("#fontLabel").textContent={small:"Компактный",normal:"Обычный",large:"Крупный"}[value];
+  $$("[data-font]").forEach(el=>el.classList.toggle("selected",el.dataset.font===value));
+  closePopovers();
+  notify("Выбран размер текста для предпросмотра.");
+}
+function openGoogle(){
+  state.dialogTrigger=document.activeElement;
+  closePopovers();
+  $("#googleOverlay").hidden=false;
+  $(".google-close").focus();
+}
+function closeGoogle(){
+  $("#googleOverlay").hidden=true;
+  if(state.dialogTrigger&&typeof state.dialogTrigger.focus==="function")state.dialogTrigger.focus();
+  state.dialogTrigger=null;
+}
 const featureDescriptions={
   google:["Вход через Google","Здесь будет настоящая регистрация через Google. Пока авторизация не подключена: никакие данные аккаунта не запрашиваются."],
   languages:["Выбор языка","Интерфейс на русском, казахском и английском добавим после согласования текстов и навигации."],
@@ -101,19 +141,42 @@ const featureDescriptions={
 };
 function featureModal(title,description){state.dialogTrigger=document.activeElement;$("#modalTitle").textContent=title;$("#modalDescription").textContent=description;$("#modalOverlay").hidden=false;closePopovers();$(".modal-close").focus()}
 function closeModal(){$("#modalOverlay").hidden=true;if(state.dialogTrigger&&typeof state.dialogTrigger.focus==="function")state.dialogTrigger.focus();state.dialogTrigger=null}
-function showFeature(key){const data=featureDescriptions[key];if(data)featureModal(...data);else if(key.startsWith("tool-")){const n=Number(key.slice(5));const item=FEATURE_GROUPS.flatMap(g=>g.items).find(i=>i[0]===n);if(item)featureModal(item[1],item[2]+". Сейчас подготовлена только кнопка и место в интерфейсе. Реализация — на согласованном этапе.")}else featureModal("Функция появится позже","Сейчас разрабатывается только оболочка сайта.")}
-function handleAction(action){switch(action){case"home":showScreen("welcome");break;case"new-chat":newChat();break;case"close-sidebar":setDrawer(false);break;case"toggle-sidebar":setDrawer(!$("#sidebar").classList.contains("open"));break;case"toggle-theme":toggleTheme();break;case"toggle-attach":togglePopover("attach");break;case"toggle-reason":togglePopover("reason");break;case"close-modal":closeModal();break}}
+function showFeature(key){if(key==="google"){openGoogle();return}if(key==="languages"){togglePopover("language",$("#languageToggle"));return}const data=featureDescriptions[key];if(data)featureModal(...data);else if(key.startsWith("tool-")){const n=Number(key.slice(5));const item=FEATURE_GROUPS.flatMap(g=>g.items).find(i=>i[0]===n);if(item)featureModal(item[1],item[2]+". Сейчас подготовлена только кнопка и место в интерфейсе. Реализация — на согласованном этапе.")}else featureModal("Функция появится позже","Сейчас разрабатывается только оболочка сайта.")}
+function handleAction(action,trigger){switch(action){
+  case"home":showScreen("welcome");break;
+  case"new-chat":newChat();break;
+  case"close-sidebar":setDrawer(false);break;
+  case"toggle-sidebar":setDrawer(!$("#sidebar").classList.contains("open"));break;
+  case"toggle-theme":toggleTheme();break;
+  case"toggle-attach":togglePopover("attach",trigger);break;
+  case"toggle-reason":togglePopover("reason",trigger);break;
+  case"toggle-language":togglePopover("language",trigger);break;
+  case"toggle-font":togglePopover("font",trigger);break;
+  case"close-modal":closeModal();break;
+  case"close-google":closeGoogle();break;
+  case"google-demo":notify("Это демонстрация. Вход через Google пока не подключён.");break;
+}}
 document.addEventListener("click",event=>{
   const action=event.target.closest("[data-action]");const screen=event.target.closest("[data-screen]");const reason=event.target.closest("[data-reason]");const feature=event.target.closest("[data-feature]");
-  if(action){handleAction(action.dataset.action);return}
+  const lang=event.target.closest("[data-language]");const font=event.target.closest("[data-font]");
+  if(lang){selectLanguage(lang.dataset.language);return}
+  if(font){selectFont(font.dataset.font);return}
+  if(action){handleAction(action.dataset.action,action);return}
   if(screen){showScreen(screen.dataset.screen);return}
   if(reason){selectReason(reason.dataset.reason);return}
   if(feature){showFeature(feature.dataset.feature);return}
   if(event.target===$("#modalOverlay")){closeModal();return}
+  if(event.target===$("#googleOverlay")){closeGoogle();return}
   if(!event.target.closest(".popover-anchor"))closePopovers();
 });
 document.addEventListener("keydown",event=>{
-  if(event.key==="Escape"){if(!$("#modalOverlay").hidden){closeModal();return}closePopovers();setDrawer(false)}
+  if(event.key==="Escape"){if(!$("#googleOverlay").hidden){closeGoogle();return}if(!$("#modalOverlay").hidden){closeModal();return}closePopovers();setDrawer(false)}
+  if(!$("#googleOverlay").hidden&&event.key==="Tab"){
+    const controls=$$("#googleOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+    return;
+  }
   if(!$("#modalOverlay").hidden&&event.key==="Tab"){const controls=$$("#modalOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}
 });
 $("#drawerScrim").addEventListener("click",()=>setDrawer(false));

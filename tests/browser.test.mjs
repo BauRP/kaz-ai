@@ -322,3 +322,25 @@ test('keyboard modal: focus stays inside dialog and returns to opening control',
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('SEO pages remain readable with JavaScript disabled and responsive layout',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    for(const [pagePath,heading] of [
+      ['about','Что такое Kaz AI'],['capabilities','Что умеет Kaz AI'],['questions','Частые вопросы'],
+      ['privacy','Конфиденциальность'],['kk','Kaz AI дегеніміз не'],['en','What is Kaz AI']
+    ]){
+      const page=await browser.newPage({viewport:{width:390,height:844},javaScriptEnabled:false});
+      const errors=[];page.on('pageerror',e=>errors.push(e.message));
+      await page.goto(pathToFileURL(resolve('public',pagePath,'index.html')).href);
+      assert.ok((await page.locator('main').innerText()).includes(heading));
+      assert.ok((await page.locator('main').innerText()).length>400);
+      assert.ok(await page.locator('main h1').isVisible());
+      assert.equal(await page.locator('main script').count(),0);
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
+      assert.deepEqual(errors,[]);
+      await page.close();
+    }
+  }finally{await browser.close()}
+});

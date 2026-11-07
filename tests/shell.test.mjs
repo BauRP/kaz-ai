@@ -55,3 +55,28 @@ test('cinematic Earth is not a clipped photographic strip',()=>{
  assert.doesNotMatch(html,/Ваш помощник на казахском, русском и английском языках/);
  assert.ok(preview.includes('earth-photo'));
 });
+
+test('standalone preview preserves exact active CSS and JavaScript',()=>{
+  const preview=readFileSync('public/preview.html','utf8');
+  assert.ok(preview.includes(css),'Preview must contain the current stylesheet without modification');
+  assert.ok(preview.includes(js),'Preview must contain the current JavaScript without modification');
+  assert.ok(js.includes('$$("[data-reason=medium]").forEach'),'Startup must select a collection');
+  assert.ok(preview.includes('$$("[data-reason=medium]").forEach'),'Preview must keep double-dollar selector');
+});
+test('design preview provides interactive menus and an accessible Google dialog',()=>{
+  const preview=readFileSync('public/preview.html','utf8');
+  for(const id of ['languageToggle','languageMenu','settingsLanguageToggle','settingsLanguageMenu','fontMenu','googleOverlay','googleDialogTitle','reasonMenu','attachMenu']){
+    assert.match(html,new RegExp('id="'+id+'"'));
+    assert.match(preview,new RegExp('id="'+id+'"'));
+  }
+  assert.match(html,/data-language="ru"/);
+  assert.match(html,/data-language="kk"/);
+  assert.match(html,/data-language="en"/);
+  assert.match(html,/data-font="large"/);
+  assert.match(html,/data-action="google-demo"/);
+  assert.match(js,/function openGoogle\(/);
+  assert.match(js,/function selectLanguage\(/);
+  assert.match(js,/function selectFont\(/);
+  assert.match(css,/body:not\(\.light\) \.view-welcome/);
+  assert.match(css,/\.view-welcome \.hero-visual\{display:none!important\}/);
+});

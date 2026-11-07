@@ -23,3 +23,5 @@ jobs:
         run: npm install --no-save --ignore-scripts playwright-core
       - name: Check real desktop and mobile browser interactions
         run: node --test tests/browser.test.mjs
+      - name: Check Cloudflare Worker build (no deployment)
+        run: npx wrangler deploy --dry-run --outdir /tmp/kaz-ai-build

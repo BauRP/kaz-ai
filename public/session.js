@@ -69,8 +69,9 @@
     target.append(actions);
   };
   function sessionNewChat(temporary=false){
-    if(abort)abort.abort();
+    if(abort)abort.abort("navigation");
     abort=null;pending=null;
+    $("#sessionStop").hidden=true;
     for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary)threads.splice(i,1);
     current=null;
     state.chat=[];state.draftTitle="Новый чат";
@@ -208,6 +209,7 @@
     });
   }
   async function runAI(chat,replaceId=null){
+    if(!threads.includes(chat))return;
     if(!allowRemote()){
       showStatus("Предпросмотр: настоящий GPT-OSS 120B ещё не подключён. Сообщения никуда не отправляются.");
       return;
@@ -218,6 +220,7 @@
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
     const controller=new AbortController();abort=controller;pending=chat.id;
+    const timeout=setTimeout(()=>controller.abort("timeout"),45000);
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
     const history=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
@@ -235,7 +238,7 @@
         else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.");
         return;
       }
-      if(abort!==controller)return;
+      if(abort!==controller||!threads.includes(chat))return;
       if(!data||typeof data.text!=="string"||!data.text.trim())throw new Error("EMPTY_RESPONSE");
       if(replaceId){
         const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
@@ -247,9 +250,10 @@
       showStatus("");
     }catch(e){
       if(abort!==controller)return;
-      if(e?.name==="AbortError")showStatus("Генерация ответа остановлена.");
+      if(e?.name==="AbortError")showStatus(controller.signal.reason==="timeout"?"ИИ не ответил за 45 секунд. Попробуйте повторить запрос.":"Генерация ответа остановлена.");
       else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.");
     }finally{
+      clearTimeout(timeout);
       if(abort===controller){abort=null;pending=null;stop.hidden=true;resizeInput()}
     }
   }
@@ -284,6 +288,9 @@
     const project=projects.find(p=>p.id===id);
     if(action==="open-chat"&&chat){
       if(current!==chat.id){
+        if(abort)abort.abort("navigation");
+        abort=null;pending=null;$("#sessionStop").hidden=true;
+        showStatus("");
         const old=selected();
         if(old?.temporary){
           const i=threads.indexOf(old);
@@ -295,6 +302,7 @@
     if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{chat.title=v;renderHistory();renderSessionProjects()});return}
     if(action==="pin-chat"&&chat){chat.pinned=!chat.pinned;renderHistory();return}
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
+      if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;$("#sessionStop").hidden=true;showStatus("")}
       const i=threads.indexOf(chat);threads.splice(i,1);
       if(current===chat.id){displayThread(null);showScreen("welcome");renderChat()}
       renderHistory();renderSessionProjects();
@@ -358,7 +366,7 @@
         notify("Создана независимая ветка переписки.");return;
       }
     }
-    if(action==="stop"){abort?.abort();return}
+    if(action==="stop"){abort?.abort("manual");return}
     if(action==="temp-toggle"){
       sessionNewChat(Boolean($("#sessionTemporary").checked));return;
     }

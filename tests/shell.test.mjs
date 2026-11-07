@@ -103,7 +103,7 @@ test('GPT-OSS route is server-side and requires private access key',()=>{
   const config=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
   assert.equal(config.main,'./src/index.js');
   assert.equal(config.ai.binding,'AI');
-  assert.deepEqual(config.assets.run_worker_first,['/api/*']);
+  assert.deepEqual(config.assets.run_worker_first,['/api/*','/robots.txt','/sitemap.xml']);
   assert.match(worker,/env\.KAZ_AI_ACCESS_KEY/);
   assert.match(worker,/@cf\/openai\/gpt-oss-120b/);
   assert.doesNotMatch(html,/KAZ_AI_ACCESS_KEY|CLOUDFLARE_API_TOKEN/);

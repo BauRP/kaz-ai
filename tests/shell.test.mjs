@@ -80,3 +80,29 @@ test('design preview provides interactive menus and an accessible Google dialog'
   assert.match(css,/body:not\(\.light\) \.view-welcome/);
   assert.match(css,/\.view-welcome \.hero-visual\{display:none!important\}/);
 });
+
+test('safely bundled session features are present without persistent storage',()=>{
+  const session=readFileSync('public/session.js','utf8');
+  const preview=readFileSync('public/preview.html','utf8');
+  assert.ok(html.includes('src="./session.js"'));
+  assert.ok(preview.includes(session),'Preview session code must exactly match live session module');
+  assert.ok(preview.includes(js),'Preview shell script must exactly match live shell module');
+  assert.ok(preview.includes(css),'Preview styles must exactly match live styles');
+  assert.doesNotMatch(session,/localStorage|sessionStorage|indexedDB|document\.cookie/);
+  assert.match(session,/function renderSessionProjects\(/);
+  assert.match(session,/function renderSessionHistory\(/);
+  assert.match(session,/function showCalculator\(/);
+  assert.match(session,/function configureAccess\(/);
+  assert.match(session,/!c\.temporary/);
+});
+test('GPT-OSS route is server-side and requires private access key',()=>{
+  const worker=readFileSync('src/index.js','utf8');
+  const config=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
+  assert.equal(config.main,'./src/index.js');
+  assert.equal(config.ai.binding,'AI');
+  assert.deepEqual(config.assets.run_worker_first,['/api/*']);
+  assert.match(worker,/env\.KAZ_AI_ACCESS_KEY/);
+  assert.match(worker,/@cf\/openai\/gpt-oss-120b/);
+  assert.doesNotMatch(html,/KAZ_AI_ACCESS_KEY|CLOUDFLARE_API_TOKEN/);
+  assert.doesNotMatch(readFileSync('public/preview.html','utf8'),/CLOUDFLARE_API_TOKEN/);
+});

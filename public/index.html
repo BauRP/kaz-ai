@@ -127,16 +127,16 @@
       </section>
       <section id="view-chat" class="view view-chat" hidden aria-label="Переписка"><div id="chatMessages" class="chat-messages" aria-live="polite"></div></section>
       <section id="view-history" class="view view-panel" hidden aria-labelledby="historyHeading">
-        <div class="panel-heading"><span class="eyebrow">ПЕРЕПИСКИ</span><h1 id="historyHeading">История чатов</h1><p>Все разговоры будут отображаться здесь.</p></div>
+        <div class="panel-heading"><span class="eyebrow">ПЕРЕПИСКИ</span><h1 id="historyHeading">История чатов</h1><p>Разговоры доступны до обновления вкладки.</p></div>
         <div class="search-bar"><svg class="icon"><use href="#ic-search"/></svg><input id="historySearch" type="search" placeholder="Поиск по перепискам" autocomplete="off" aria-label="Поиск по перепискам"></div>
         <div id="historyList" class="panel-items"><div class="empty-card"><svg class="icon"><use href="#ic-chat"/></svg><h2>Пока нет разговоров</h2><p>Начните новый чат, чтобы увидеть, как будет выглядеть история.</p><button data-action="new-chat" class="subtle-cta">Новый чат</button></div></div>
       </section>
       <section id="view-projects" class="view view-panel" hidden aria-labelledby="projectsHeading">
-        <div class="panel-heading"><span class="eyebrow">ПРОСТРАНСТВО ДЛЯ ИДЕЙ</span><h1 id="projectsHeading">Проекты</h1><p>В будущем здесь будут папки для группировки разговоров.</p></div>
+        <div class="panel-heading"><span class="eyebrow">ПРОСТРАНСТВО ДЛЯ ИДЕЙ</span><h1 id="projectsHeading">Проекты</h1><p>Создавайте простые папки и объединяйте переписки по темам.</p></div>
         <div class="empty-card"><svg class="icon"><use href="#ic-folder"/></svg><h2>Ваши будущие проекты</h2><p>Обычные папки, без общей памяти и сложных настроек. Создание проектов подключим на следующем этапе.</p><button data-feature="projects" class="subtle-cta">+ Новый проект <span class="small-soon">Скоро</span></button></div>
       </section>
       <section id="view-tools" class="view view-panel" hidden aria-labelledby="toolsHeading">
-        <div class="panel-heading"><span class="eyebrow">КАРТА ВОЗМОЖНОСТЕЙ</span><h1 id="toolsHeading">Инструменты Kaz AI</h1><p>Все запланированные возможности собраны здесь. Пока это только оболочка: функции будут подключаться поэтапно.</p></div>
+        <div class="panel-heading"><span class="eyebrow">КАРТА ВОЗМОЖНОСТЕЙ</span><h1 id="toolsHeading">Инструменты Kaz AI</h1><p>Часть инструментов уже работает. Остальные подключаются поэтапно.</p></div>
         <div class="search-bar"><svg class="icon"><use href="#ic-search"/></svg><input id="toolsSearch" type="search" placeholder="Найти функцию" autocomplete="off" aria-label="Найти функцию"></div>
         <div id="toolGroups" class="tools-groups"></div>
       </section>
@@ -153,7 +153,7 @@
           <div class="setting-item"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><div class="popover-anchor settings-popover-anchor"><button type="button" class="setting-control" data-action="toggle-font" id="fontToggle" aria-expanded="false" aria-controls="fontMenu"><span id="fontLabel">Обычный</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div class="popover-menu font-menu" id="fontMenu" hidden><p class="popover-title">Размер текста</p><button type="button" data-font="small">Компактный</button><button type="button" data-font="normal" class="selected">Обычный</button><button type="button" data-font="large">Крупный</button><p class="popover-hint">Пример оформления для проверки дизайна.</p></div></div></div>
           <div class="setting-item"><div><h2>Личные инструкции</h2><p>Как ИИ должен отвечать именно вам</p></div><button class="setting-control" data-feature="instructions">Настроить <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
           <div class="setting-item"><div><h2>Память ИИ</h2><p>Запоминание предпочтений — позже</p></div><button class="setting-control" data-feature="memory">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
-          <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать свои переписки — позже</p></div><button class="setting-control" data-feature="export">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
+          <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать историю текущей вкладки</p></div><button class="setting-control" data-feature="export">Скачать <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
           <div class="setting-item"><div><h2>Аккаунт</h2><p>Вход через Google будет подключён позже</p></div><button class="setting-control" data-feature="google">Войти <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
         </div>
       </section>
@@ -192,7 +192,7 @@
           </div>
         </div>
       </div>
-      <p id="composerNote" class="composer-note">Демо интерфейса. ИИ, Google-вход и сохранение истории пока не подключены.</p>
+      <p id="composerNote" class="composer-note">История временная. Настоящие ответы ИИ требуют настройки защищённого Cloudflare.</p>
     </div>
   </div>
 </div>

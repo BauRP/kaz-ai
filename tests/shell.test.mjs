@@ -86,6 +86,9 @@ test('safely bundled session features are present without persistent storage',()
   const preview=readFileSync('public/preview.html','utf8');
   assert.ok(html.includes('src="./session.js"'));
   assert.ok(preview.includes(session),'Preview session code must exactly match live session module');
+  const i18n=readFileSync('public/i18n.js','utf8');
+  assert.ok(preview.includes(i18n),'Preview localization code must exactly match live module');
+  assert.match(html,/src="\.\/i18n\.js"/);
   assert.ok(preview.includes(js),'Preview shell script must exactly match live shell module');
   assert.ok(preview.includes(css),'Preview styles must exactly match live styles');
   assert.doesNotMatch(session,/localStorage|sessionStorage|indexedDB|document\.cookie/);

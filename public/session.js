@@ -134,7 +134,7 @@
         const up=button("👍","rate-up",message.id),down=button("👎","rate-down",message.id);
         if(message.rating==="up")up.classList.add("selected");
         if(message.rating==="down")down.classList.add("selected");
-        actions.append(up,down);
+        actions.append(up,down,button("Повторить ответ","retry-answer",message.id));
       }
       actions.append(button("Ответвить","branch-message",message.id));
       bubble.append(actions);
@@ -304,7 +304,7 @@
       for(const c of threads)if(c.projectId===project.id)c.projectId=null;
       renderSessionProjects();renderHistory();
     });return}
-    if(action==="copy-message"||action==="edit-message"||action==="rate-up"||action==="rate-down"||action==="branch-message"){
+    if(action==="copy-message"||action==="edit-message"||action==="rate-up"||action==="rate-down"||action==="branch-message"||action==="retry-answer"){
       const c=selected(),index=c?.messages.findIndex(m=>m.id===id)??-1;
       if(index<0)return;
       const m=c.messages[index];
@@ -320,6 +320,14 @@
             showStatus("Сообщение изменено. Отправьте новый запрос, чтобы получить новый ответ.");
           });body.append(save);
         });return;
+      }
+      if(action==="retry-answer"){
+        if(m.role!=="assistant"||index!==c.messages.length-1){notify("Повторить можно только последний ответ.");return}
+        c.messages.pop();displayThread(c);renderChat();
+        const last=c.messages.at(-1);
+        if(last?.role==="user")runAI(c);
+        else showStatus("Не удалось определить вопрос для повторного ответа.");
+        return;
       }
       if(action==="rate-up"||action==="rate-down"){
         m.rating=m.rating===(action==="rate-up"?"up":"down")?null:(action==="rate-up"?"up":"down");renderChat();return

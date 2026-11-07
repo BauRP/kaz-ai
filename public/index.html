@@ -82,44 +82,35 @@
         <div class="hero-visual" aria-hidden="true">
           <div class="starfield"></div>
           <div class="nebula"></div>
+          <div class="earth-sphere" aria-hidden="true"><div class="earth-photo"></div><div class="earth-shade"></div></div>
           <svg class="orbit-art" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid meet">
             <defs>
-              <radialGradient id="earthFill" cx="38%" cy="28%" r="75%"><stop offset="0" stop-color="#3cbded"/><stop offset=".23" stop-color="#107dbf"/><stop offset=".56" stop-color="#073d81"/><stop offset=".83" stop-color="#041a43"/><stop offset="1" stop-color="#010c23"/></radialGradient>
-              <linearGradient id="atmos" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9df9ff"/><stop offset=".5" stop-color="#17b5ec"/><stop offset="1" stop-color="#153bbb"/></linearGradient>
-              <clipPath id="worldClip"><circle cx="480" cy="282" r="175"/></clipPath>
-              <filter id="glowFilter" x="-55%" y="-55%" width="210%" height="210%"><feGaussianBlur stdDeviation="12"/></filter>
+              <linearGradient id="orbit-cyan" x1="0" x2="1"><stop stop-color="#149cff" stop-opacity=".12"/><stop offset=".4" stop-color="#6ffaff" stop-opacity=".96"/><stop offset="1" stop-color="#009cff" stop-opacity=".32"/></linearGradient>
+              <linearGradient id="orbit-gold" x1="0" x2="1"><stop stop-color="#f7ac41" stop-opacity=".08"/><stop offset=".58" stop-color="#ffd578" stop-opacity=".8"/><stop offset="1" stop-color="#ffc45c" stop-opacity=".08"/></linearGradient>
             </defs>
-            <circle cx="480" cy="282" r="180" fill="#00c7ff" opacity=".28" filter="url(#glowFilter)"/>
-            <circle cx="480" cy="282" r="175" fill="url(#earthFill)" stroke="url(#atmos)" stroke-width="2.7"/>
-            <g clip-path="url(#worldClip)">
-              <g fill="none" stroke="#65d6ff" stroke-width="1" opacity=".3">
-                <ellipse cx="480" cy="282" rx="75" ry="175"/><ellipse cx="480" cy="282" rx="135" ry="175"/>
-                <path d="M305 282h350M325 220h310M325 344h310M367 160h226M367 402h226"/>
-              </g>
-              <g fill="#24a4a6" opacity=".42" stroke="#85f6ea" stroke-width=".9">
-                <path d="M358 154q32-35 74-26l23 23-12 23 19 20-11 30-37 4-11 32-29-5-18-35-27-13-9-28Z"/>
-                <path d="M457 250q28 7 42 30l-10 32-21 27-6 50-20 34-19-8-6-42-23-26 4-46 30-19Z"/>
-                <path d="M491 132q65-41 129 4l-7 34 30 14-13 38-41-7-12 20-28-11-14 25-27-10-22-36-29-3-10-35Z"/>
-                <path d="M559 278q24-10 54 11l-12 32-34 4-19-24Z"/>
-                <path d="M554 355q34-21 70 8l-9 42-43 8-23-23Z"/>
-              </g>
-              <path d="M317 222q62-101 179-103" fill="none" stroke="#c6ffff" stroke-width="12" opacity=".12"/>
-              <circle cx="480" cy="282" r="175" fill="url(#earthFill)" opacity=".11"/>
+            <ellipse cx="480" cy="234" rx="420" ry="116" transform="rotate(-11 480 234)" fill="none" stroke="url(#orbit-cyan)" stroke-width="1.4"/>
+            <ellipse cx="480" cy="234" rx="415" ry="112" transform="rotate(12 480 234)" fill="none" stroke="url(#orbit-gold)" stroke-width="1.1"/>
+            <ellipse cx="480" cy="234" rx="386" ry="112" transform="rotate(6 480 234)" fill="none" stroke="#30c8ff" stroke-width=".8" opacity=".35"/>
+            <g fill="#7cfaff" stroke="#5cecff" stroke-width="2">
+              <circle cx="92" cy="285" r="3.8"/><circle cx="868" cy="189" r="3.5"/>
+              <circle cx="673" cy="119" r="2.3"/><circle cx="277" cy="341" r="2.3"/>
             </g>
-            <ellipse cx="480" cy="280" rx="360" ry="87" transform="rotate(-15 480 280)" fill="none" stroke="#2da9ff" stroke-width="1.7" opacity=".55"/>
-            <ellipse cx="480" cy="280" rx="365" ry="99" transform="rotate(17 480 280)" fill="none" stroke="#46d7ef" stroke-width="1.3" opacity=".32"/>
-            <g fill="#8eefff"><circle cx="135" cy="320" r="3.2"/><circle cx="809" cy="196" r="3.3"/><circle cx="274" cy="154" r="2"/><circle cx="714" cy="390" r="2.2"/></g>
-            <g stroke="#59dfff" fill="none" stroke-width="1.3" opacity=".7">
-              <path d="m168 285 13-13 13 13-13 13Z"/><path d="m194 285 13-13 13 13-13 13Z"/>
-              <path d="m753 291 13-13 13 13-13 13Z"/><path d="m779 291 13-13 13 13-13 13Z"/>
+            <g fill="#ffd272"><circle cx="205" cy="128" r="3.3"/><circle cx="802" cy="310" r="2.5"/></g>
+            <g stroke="#a7f9ff" stroke-width=".8" opacity=".8">
+              <path d="M92 272v26m-13-13h26M868 176v26m-13-13h26M205 116v24m-12-12h24"/>
             </g>
+            <path d="M155 211q130-117 277-126" fill="none" stroke="#42eeff" stroke-width="3" opacity=".65" stroke-dasharray="1 5"/>
           </svg>
+          <div class="orbit-ornament" aria-hidden="true">❖ ❧ ❖ ❧ ❖ ❧ ❖</div>
+          <div class="space-corner space-corner-tl" aria-hidden="true">❧</div>
+          <div class="space-corner space-corner-tr" aria-hidden="true">❧</div>
+          <div class="space-corner space-corner-bl" aria-hidden="true">❧</div>
+          <div class="space-corner space-corner-br" aria-hidden="true">❧</div>
           <div class="ornament ornament-left"><svg viewBox="0 0 110 200"><g fill="none" stroke="currentColor" stroke-width="2.5"><path d="M0 28Q38-4 69 29T109 90M0 75q38 36 70 0t40-12M0 122q38-38 70 0t40 35M0 178q38-36 70 0"/><path d="m40 30 18 18-18 18-18-18Z M48 108l18 18-18 18-18-18Z M40 160l18 18-18 18-18-18Z"/></g></svg></div>
           <div class="ornament ornament-right"><svg viewBox="0 0 110 200"><g fill="none" stroke="currentColor" stroke-width="2.5"><path d="M0 28Q38-4 69 29T109 90M0 75q38 36 70 0t40-12M0 122q38-38 70 0t40 35M0 178q38-36 70 0"/><path d="m40 30 18 18-18 18-18-18Z M48 108l18 18-18 18-18-18Z M40 160l18 18-18 18-18-18Z"/></g></svg></div>
         </div>
         <div class="hero-copy">
-          <div class="hero-emblem"><svg class="brand-mark"><use href="#logo-mark"/></svg></div>
-          <h1 class="hero-wordmark">Kaz <span>AI</span></h1>
+          <div class="hero-logo-line"><svg class="hero-logo-mark" aria-hidden="true"><use href="#logo-mark"/></svg><h1 class="hero-wordmark">Kaz <span>AI</span></h1></div>
           <p class="hero-heading">Интеллект нового поколения</p>
           <span class="hero-accent"><span></span><svg class="brand-mark"><use href="#logo-mark"/></svg><span></span></span>
         </div>

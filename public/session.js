@@ -205,20 +205,20 @@
       body.append(save);
     });
   }
-  async function runAI(chat){
+  async function runAI(chat,replaceId=null){
     if(!allowRemote()){
       showStatus("Предпросмотр: настоящий GPT-OSS 120B ещё не подключён. Сообщения никуда не отправляются.");
       return;
     }
     if(!aiAccessKey){
       showStatus("Для подключения ИИ укажи приватный ключ доступа.");
-      configureAccess(()=>runAI(chat));return;
+      configureAccess(()=>runAI(chat,replaceId));return;
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
     const controller=new AbortController();abort=controller;pending=chat.id;
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
-    const history=chat.messages.filter(m=>m.role==="user"||m.role==="assistant").slice(-16)
+    const history=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
       .map(m=>({role:m.role,content:m.content.slice(0,4000)}));
     try{
       const response=await fetch("/api/chat",{
@@ -234,7 +234,12 @@
         return;
       }
       if(!data||typeof data.text!=="string"||!data.text.trim())throw new Error("EMPTY_RESPONSE");
-      chat.messages.push({id:nextId(),role:"assistant",content:data.text.trim()});
+      if(replaceId){
+        const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
+        if(existing){existing.content=data.text.trim();existing.rating=null}
+      }else{
+        chat.messages.push({id:nextId(),role:"assistant",content:data.text.trim()});
+      }
       if(current===chat.id){displayThread(chat);renderChat()}
       showStatus("");
     }catch(e){
@@ -322,10 +327,9 @@
         });return;
       }
       if(action==="retry-answer"){
+        if(abort){notify("Дождитесь завершения предыдущего запроса.");return}
         if(m.role!=="assistant"||index!==c.messages.length-1){notify("Повторить можно только последний ответ.");return}
-        c.messages.pop();displayThread(c);renderChat();
-        const last=c.messages.at(-1);
-        if(last?.role==="user")runAI(c);
+        if(c.messages[index-1]?.role==="user")runAI(c,m.id);
         else showStatus("Не удалось определить вопрос для повторного ответа.");
         return;
       }

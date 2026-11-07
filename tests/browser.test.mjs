@@ -295,3 +295,30 @@ test('real browser: retry a failed request without duplicating question; cancel 
     assert.equal(count,3);
   }finally{await browser.close()}
 });
+
+test('keyboard modal: focus stays inside dialog and returns to opening control',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({
+    ...(executablePath?{executablePath}:{channel:'chrome'}),
+    headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
+  });
+  try{
+    const page=await browser.newPage({viewport:{width:1200,height:780}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    const trigger=page.locator('[data-feature="instructions"]');
+    await trigger.click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    assert.equal(await page.locator('#sessionBody textarea').evaluate(el=>document.activeElement===el),true);
+    await page.locator('#sessionBody [data-session="dialog-save"]').focus();
+    await page.keyboard.press('Tab');
+    assert.equal(await page.locator('#sessionClose').evaluate(el=>document.activeElement===el),true);
+    await page.keyboard.press('Shift+Tab');
+    assert.equal(await page.locator('#sessionBody [data-session="dialog-save"]').evaluate(el=>document.activeElement===el),true);
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+    assert.equal(await trigger.evaluate(el=>document.activeElement===el),true);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

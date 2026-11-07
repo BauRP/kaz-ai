@@ -482,7 +482,18 @@
     checkbox.addEventListener("change",()=>handle("temp-toggle"));
     overlay.addEventListener("click",e=>{if(e.target===overlay)closeDialog()});
     document.addEventListener("keydown",e=>{
-      if(e.key==="Escape"&&!overlay.hidden){e.preventDefault();e.stopImmediatePropagation();closeDialog()}
+      if(overlay.hidden)return;
+      if(e.key==="Escape"){e.preventDefault();e.stopImmediatePropagation();closeDialog();return}
+      if(e.key!=="Tab")return;
+      const focusable=Array.from(dialog.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),a[href]'))
+        .filter(el=>!el.hidden&&el.getClientRects().length>0);
+      if(!focusable.length){e.preventDefault();dialog.focus();return}
+      const first=focusable[0],last=focusable[focusable.length-1];
+      if(e.shiftKey&&(document.activeElement===first||!dialog.contains(document.activeElement))){
+        e.preventDefault();last.focus();
+      }else if(!e.shiftKey&&(document.activeElement===last||!dialog.contains(document.activeElement))){
+        e.preventDefault();first.focus();
+      }
     },true);
     window.addEventListener("beforeunload",()=>{abort?.abort()});
     renderHistory();renderSessionProjects();

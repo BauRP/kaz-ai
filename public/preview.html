@@ -421,6 +421,11 @@ body.light .session-dialog-close{color:#2f6385}
  .session-dialog{padding:26px 18px}
 }
 
+/* Retry failed text requests without creating duplicate questions. */
+.session-retry{align-self:flex-start;margin:8px 0 2px 6px;padding:7px 13px;border:1px solid rgba(68,213,249,.54);border-radius:10px;background:rgba(8,111,165,.22);color:var(--text);font-size:12px;cursor:pointer}
+.session-retry:hover{background:rgba(14,160,214,.32)}
+.session-retry[hidden]{display:none}
+
 </style>
   
   
@@ -854,11 +859,12 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     state.draftTitle=c?c.title:"Новый чат";
   };
   const composeText=()=>$("#messageInput").value.trim();
-  function showStatus(text,quota=false){
+  function showStatus(text,quota=false,retryable=false){
     const banner=$("#statusBanner");
     banner.textContent=text;
     banner.classList.toggle("is-quota",quota);
     banner.hidden=!text;
+    const retry=$("#sessionRetry");if(retry)retry.hidden=!retryable;
   }
   const baseRenderChat=renderChat;
   const baseRenderTools=renderTools;
@@ -898,8 +904,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     target.append(actions);
   };
   function sessionNewChat(temporary=false){
-    if(abort)abort.abort();
+    if(abort)abort.abort("navigation");
     abort=null;pending=null;
+    $("#sessionStop").hidden=true;
     for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary)threads.splice(i,1);
     current=null;
     state.chat=[];state.draftTitle="Новый чат";
@@ -1037,6 +1044,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     });
   }
   async function runAI(chat,replaceId=null){
+    if(!threads.includes(chat))return;
     if(!allowRemote()){
       showStatus("Предпросмотр: настоящий GPT-OSS 120B ещё не подключён. Сообщения никуда не отправляются.");
       return;
@@ -1047,6 +1055,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
     const controller=new AbortController();abort=controller;pending=chat.id;
+    const timeout=setTimeout(()=>controller.abort("timeout"),45000);
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
     const history=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
@@ -1061,10 +1070,10 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       if(!response.ok){
         if(data?.code==="AI_QUOTA_EXHAUSTED")showStatus("Лимит ИИ исчерпан. Бесплатный дневной лимит закончился. Попробуйте позже, когда он обновится.",true);
         else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
-        else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.");
+        else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
         return;
       }
-      if(abort!==controller)return;
+      if(abort!==controller||!threads.includes(chat))return;
       if(!data||typeof data.text!=="string"||!data.text.trim())throw new Error("EMPTY_RESPONSE");
       if(replaceId){
         const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
@@ -1076,9 +1085,10 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       showStatus("");
     }catch(e){
       if(abort!==controller)return;
-      if(e?.name==="AbortError")showStatus("Генерация ответа остановлена.");
-      else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.");
+      if(e?.name==="AbortError")showStatus(controller.signal.reason==="timeout"?"ИИ не ответил за 45 секунд. Попробуйте повторить запрос.":"Генерация ответа остановлена.",false,controller.signal.reason==="timeout");
+      else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.",false,true);
     }finally{
+      clearTimeout(timeout);
       if(abort===controller){abort=null;pending=null;stop.hidden=true;resizeInput()}
     }
   }
@@ -1113,6 +1123,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const project=projects.find(p=>p.id===id);
     if(action==="open-chat"&&chat){
       if(current!==chat.id){
+        if(abort)abort.abort("navigation");
+        abort=null;pending=null;$("#sessionStop").hidden=true;
+        showStatus("");
         const old=selected();
         if(old?.temporary){
           const i=threads.indexOf(old);
@@ -1124,6 +1137,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{chat.title=v;renderHistory();renderSessionProjects()});return}
     if(action==="pin-chat"&&chat){chat.pinned=!chat.pinned;renderHistory();return}
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
+      if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;$("#sessionStop").hidden=true;showStatus("")}
       const i=threads.indexOf(chat);threads.splice(i,1);
       if(current===chat.id){displayThread(null);showScreen("welcome");renderChat()}
       renderHistory();renderSessionProjects();
@@ -1187,7 +1201,14 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         notify("Создана независимая ветка переписки.");return;
       }
     }
-    if(action==="stop"){abort?.abort();return}
+    if(action==="stop"){abort?.abort("manual");return}
+    if(action==="retry-request"){
+      if(abort){notify("Дождитесь завершения текущего запроса.");return}
+      const c=selected(),last=c?.messages.at(-1);
+      if(last?.role==="user"){showStatus("");runAI(c)}
+      else notify("Не найден вопрос для повторной отправки.");
+      return;
+    }
     if(action==="temp-toggle"){
       sessionNewChat(Boolean($("#sessionTemporary").checked));return;
     }
@@ -1282,6 +1303,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const stop=button("Остановить","stop",null,"session-stop");
     stop.id="sessionStop";stop.hidden=true;
     $("#sendButton").parentElement.insertBefore(stop,$("#sendButton"));
+    const retry=button("Повторить запрос","retry-request",null,"session-retry");
+    retry.id="sessionRetry";retry.hidden=true;
+    $("#statusBanner").insertAdjacentElement("afterend",retry);
     document.addEventListener("click",e=>{
       const target=e.target.closest("[data-session]");if(!target)return;
       const action=target.dataset.session;

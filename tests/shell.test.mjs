@@ -43,3 +43,15 @@ test('photographic Earth design remains separate from functioning UI',()=>{
  assert.doesNotMatch(html,/Ваш помощник на казахском, русском и английском языках/);
  assert.doesNotMatch(html,/class="feature-cards"/);
 });
+
+test('cinematic Earth is not a clipped photographic strip',()=>{
+ const preview=readFileSync('public/preview.html','utf8');
+ assert.match(html,/class="earth-sphere"/);
+ assert.match(css,/\.earth-photo\{[\s\S]*?height:100%/);
+ assert.match(css,/mask-image:linear-gradient\(to bottom/);
+ assert.match(html,/class="kaz-corner kaz-corner-tl"/);
+ assert.match(html,/class="orbit-ribbon"/);
+ assert.doesNotMatch(html,/Интеллект нового поколения/);
+ assert.doesNotMatch(html,/Ваш помощник на казахском, русском и английском языках/);
+ assert.ok(preview.includes('earth-photo'));
+});

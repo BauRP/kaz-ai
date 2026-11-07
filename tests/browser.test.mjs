@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
 const appUrl = pathToFileURL(resolve('public/preview.html')).href;
@@ -159,5 +159,95 @@ test('real browser: session chats, search, project folders, editing, branch, exp
     assert.ok(!(await page.locator('#historyList').innerText()).includes('Временный текст'));
     assert.deepEqual(errors,[]);
     await page.close();
+  }finally{await browser.close()}
+});
+
+test('real browser: Russian English Kazakh navigation and safe temporary chats', async () => {
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({
+    ...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),
+    headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
+  });
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    assert.equal(await page.locator('.primary-nav [data-screen="history"] span').first().innerText(),'Chats');
+    assert.equal(await page.locator('#messageInput').getAttribute('placeholder'),'Type a message...');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    assert.equal(await page.locator('#settingsHeading').innerText(),'Settings');
+    await page.locator('#settingsLanguageToggle').click();
+    await page.locator('#settingsLanguageMenu [data-language="kk"]').click();
+    assert.equal(await page.locator('.primary-nav [data-screen="history"] span').first().innerText(),'Чаттар');
+    assert.equal(await page.locator('#settingsHeading').innerText(),'Баптаулар');
+    assert.equal(await page.locator('#messageInput').getAttribute('placeholder'),'Хабарлама жазыңыз...');
+    await page.locator('#settingsLanguageToggle').click();
+    await page.locator('#settingsLanguageMenu [data-language="ru"]').click();
+    assert.equal(await page.locator('#settingsHeading').innerText(),'Настройки');
+
+    await page.locator('#sessionTemporary').check();
+    await page.locator('#messageInput').fill('Секретный временный вопрос');
+    await page.locator('#sendButton').click();
+    let current=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(current.threads.filter(c=>c.temporary).length,1);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    assert.ok(!(await page.locator('#historyList').innerText()).includes('Секретный временный вопрос'));
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    current=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(current.threads.filter(c=>c.temporary).length,0);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('real browser: failed GPT answer retry retains original reply and editing regenerates', async () => {
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({
+    ...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),
+    headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
+  });
+  try{
+    const page=await browser.newPage({viewport:{width:1200,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      const url=new URL(route.request().url());
+      if(url.pathname==='/api/chat'){
+        calls++;
+        const payload=route.request().postDataJSON();
+        assert.ok(['low','medium','high'].includes(payload.effort));
+        assert.ok(route.request().headers().authorization.startsWith('Bearer '));
+        if(calls===2)return route.fulfill({
+          status:503,contentType:'application/json',
+          body:JSON.stringify({code:'AI_UNAVAILABLE',message:'Тестовая ошибка ответа'})
+        });
+        return route.fulfill({
+          status:200,contentType:'application/json',
+          body:JSON.stringify({text:calls===1?'Первый успешный ответ':calls===3?'Повторный успешный ответ':'Новый ответ после редактирования'})
+        });
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Первая задача');
+    await page.locator('#sendButton').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    await page.locator('#sessionBody input').fill('test-secret-1234567890123456789');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Первый успешный ответ'));
+    await page.locator('[data-session="retry-answer"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Тестовая ошибка ответа'));
+    assert.ok((await page.locator('#chatMessages').innerText()).includes('Первый успешный ответ'),'failed retry must not delete previous answer');
+    await page.locator('[data-session="retry-answer"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Повторный успешный ответ'));
+    assert.ok(!(await page.locator('#chatMessages').innerText()).includes('Первый успешный ответ'));
+    await page.locator('[data-session="edit-message"]').first().click();
+    await page.locator('#sessionBody textarea').fill('Исправленный вопрос');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Новый ответ после редактирования'));
+    assert.equal(calls,4);
+    assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });

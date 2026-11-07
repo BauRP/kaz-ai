@@ -56,7 +56,7 @@ test('sitemap has only real HTML URLs at the current origin',async()=>{
   assert.equal((xml.match(/<loc>/g)||[]).length,7);
   assert.doesNotMatch(xml,/preview\.html|\/api\/chat|404\.html/);
 });
-test('robots enables meaningful pages and excludes API and standalone preview',async()=>{
+test('robots allows reading preview noindex while excluding API',async()=>{
   const origin='https://kazai-check.example.test';
   const response=await worker.fetch(new Request(origin+'/robots.txt'),{});
   assert.equal(response.status,200);
@@ -64,6 +64,6 @@ test('robots enables meaningful pages and excludes API and standalone preview',a
   const robots=await response.text();
   assert.match(robots,/^User-agent: \*\nAllow: \/\n/);
   assert.match(robots,/Disallow: \/api\/\n/);
-  assert.match(robots,/Disallow: \/preview\.html\n/);
+  assert.doesNotMatch(robots,/Disallow: \/preview\.html/);
   assert.ok(robots.includes('Sitemap: '+origin+'/sitemap.xml\n'));
 });

@@ -1,11 +1,16 @@
 <!doctype html>
 <html lang="ru">
 <head>
+<meta name="robots" content="noindex,follow">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#041021">
-  <meta name="description" content="Kaz AI — казахстанский ИИ-помощник. Предварительная версия интерфейса.">
-  <title>Kaz AI — Орбитальный орнамент</title>
+  <meta name="description" content="Kaz AI — казахстанский проект сайта искусственного интеллекта. Попробуйте чаты, проекты и настройки; реальные ИИ-модели подключаются поэтапно.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Kaz AI — казахстанский проект искусственного интеллекта">
+  <meta property="og:description" content="Казахстанский проект ИИ-сервиса. Демонстрация чатов и проектов, планы по GPT-OSS 120B и генерации изображений.">
+  <meta name="twitter:card" content="summary">
+  <title>Kaz AI — казахстанский проект искусственного интеллекта</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" type="image/svg+xml">
   <style>
 :root{color-scheme:dark;--bg:#030c1e;--panel:#061832;--panel2:#092344;--line:rgba(112,201,255,.14);--line-strong:rgba(68,218,251,.36);--text:#eaf7ff;--muted:#96b2cb;--dim:#6889a8;--accent:#42e2fa;--accent2:#1f7eff;--gold:#f5d28c;--shadow:0 14px 55px rgba(0,0,0,.35);--glass:rgba(8,31,61,.73);--radius:18px;--sidebar-width:262px;--topbar-height:70px;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-synthesis:none}
@@ -426,6 +431,12 @@ body.light .session-dialog-close{color:#2f6385}
 .session-retry:hover{background:rgba(14,160,214,.32)}
 .session-retry[hidden]{display:none}
 
+/* Search engine crawlable, human-visible info links; keep chat controls unchanged. */
+.info-links{display:flex;flex-wrap:wrap;gap:5px 11px;padding:9px 2px 0;line-height:1.5}
+.info-links a{color:var(--muted);font-size:10px;text-decoration:none}
+.info-links a:hover{color:var(--accent);text-decoration:underline}
+.info-links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
 </style>
   
   
@@ -484,6 +495,7 @@ body.light .session-dialog-close{color:#2f6385}
       <div class="ornament-line" aria-hidden="true"></div>
       <button type="button" class="google-button" data-feature="google"><span class="google-g">G</span><span>Войти через Google</span><svg class="icon"><use href="#ic-arrow-right"/></svg></button>
       <div class="footer-note"><span class="online-dot"></span>Предварительный интерфейс</div>
+      <nav class="info-links" aria-label="Информация о проекте"><a href="./about/">О Kaz AI</a><a href="./capabilities/">Возможности</a><a href="./questions/">Вопросы</a><a href="./kk/">Қазақша</a><a href="./en/">English</a><a href="./privacy/">Конфиденциальность</a></nav>
     </div>
   </aside>
   <div class="main-area">

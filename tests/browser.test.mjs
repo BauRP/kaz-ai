@@ -251,3 +251,47 @@ test('real browser: failed GPT answer retry retains original reply and editing r
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('real browser: retry a failed request without duplicating question; cancel stale reply on new chat',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({
+    ...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),
+    headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
+  });
+  try{
+    const page=await browser.newPage({viewport:{width:1200,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    let count=0;
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',async(route)=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        count++;
+        if(count===1)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({code:'AI_UNAVAILABLE',message:'Временный сбой'})});
+        if(count===2)return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Повтор удался'})});
+        await new Promise(resolve=>setTimeout(resolve,700));
+        try{return await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Запоздавший ответ'})})}catch{return}
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Задача после сбоя');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input').fill('test-key-12345678901234567890123');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('#sessionRetry').waitFor({state:'visible'});
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),1);
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Повтор удался'));
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),2);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),false);
+    await page.locator('#messageInput').fill('Отменённый вопрос');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.locator('[data-action="new-chat"]').first().click();
+    assert.equal(await page.locator('#sessionStop').isVisible(),false);
+    await page.waitForTimeout(850);
+    assert.equal(await page.locator('.message-assistant').count(),0);
+    assert.deepEqual(errors,[]);
+    assert.equal(count,3);
+  }finally{await browser.close()}
+});

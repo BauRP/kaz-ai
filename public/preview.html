@@ -7,7 +7,8 @@
   <meta name="description" content="Kaz AI — казахстанский ИИ-помощник. Предварительная версия интерфейса.">
   <title>Kaz AI — Орбитальный орнамент</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" type="image/svg+xml">
-  <style>:root{color-scheme:dark;--bg:#030c1e;--panel:#061832;--panel2:#092344;--line:rgba(112,201,255,.14);--line-strong:rgba(68,218,251,.36);--text:#eaf7ff;--muted:#96b2cb;--dim:#6889a8;--accent:#42e2fa;--accent2:#1f7eff;--gold:#f5d28c;--shadow:0 14px 55px rgba(0,0,0,.35);--glass:rgba(8,31,61,.73);--radius:18px;--sidebar-width:262px;--topbar-height:70px;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-synthesis:none}
+  <style>
+:root{color-scheme:dark;--bg:#030c1e;--panel:#061832;--panel2:#092344;--line:rgba(112,201,255,.14);--line-strong:rgba(68,218,251,.36);--text:#eaf7ff;--muted:#96b2cb;--dim:#6889a8;--accent:#42e2fa;--accent2:#1f7eff;--gold:#f5d28c;--shadow:0 14px 55px rgba(0,0,0,.35);--glass:rgba(8,31,61,.73);--radius:18px;--sidebar-width:262px;--topbar-height:70px;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-synthesis:none}
 *{box-sizing:border-box}html{height:100%;scroll-behavior:smooth}body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-size:14px}button,input,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button:disabled{cursor:not-allowed}button,textarea,input{ -webkit-tap-highlight-color:transparent}button svg{pointer-events:none}.svg-library{position:absolute;width:0;height:0;overflow:hidden}.icon{width:19px;height:19px;flex:none;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}.icon.tiny{width:14px;height:14px}.brand-mark{height:31px;width:31px;color:#3eeaff;filter:drop-shadow(0 0 8px rgba(15,226,255,.24))}.sr-only{position:absolute!important;height:1px;width:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}[hidden]{display:none!important}
 .app-shell{display:flex;min-height:100vh;min-height:100dvh;max-height:100dvh;overflow:hidden;position:relative;background:radial-gradient(ellipse at 67% -35%,rgba(3,116,203,.18),transparent 55%),var(--bg)}.sidebar{width:var(--sidebar-width);flex:none;position:relative;z-index:30;display:flex;flex-direction:column;padding:25px 16px 17px;border-right:1px solid rgba(101,208,255,.16);background:linear-gradient(180deg,rgba(6,29,59,.99),rgba(4,20,44,.99) 65%,rgba(2,15,33,.99));box-shadow:5px 0 30px rgba(0,0,0,.1)}.sidebar:before{content:"";position:absolute;bottom:16%;left:0;right:0;height:140px;pointer-events:none;background:radial-gradient(ellipse at 40% 100%,rgba(14,102,165,.10),transparent 74%)}.sidebar-header{display:flex;align-items:center;justify-content:space-between;margin:2px 6px 28px}.brand{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--text);font-weight:700;font-size:22px;letter-spacing:-.6px;padding:0}.brand b{color:#67e9ff}.icon-button{width:37px;height:37px;border:1px solid transparent;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);background:transparent;transition:background .2s,color .2s,border .2s}.icon-button:hover,.composer-icon:hover,.reason-trigger:hover{color:var(--text);background:rgba(91,192,246,.11)}.close-sidebar{display:none}.new-chat-button{height:46px;width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:0 14px;background:linear-gradient(100deg,rgba(8,117,182,.32),rgba(7,55,111,.55));color:var(--text);border:1px solid rgba(39,221,248,.6);border-radius:12px;box-shadow:inset 0 0 18px rgba(33,192,240,.09),0 0 16px rgba(17,180,230,.1);font-weight:600}.new-chat-button:hover{background:linear-gradient(100deg,rgba(8,136,205,.42),rgba(7,72,131,.66));border-color:var(--accent)}.new-chat-button .button-tail{margin-left:auto;width:16px;height:16px;opacity:.65}.primary-nav{display:grid;gap:7px;margin-top:24px}.nav-item{display:flex;align-items:center;gap:14px;width:100%;min-height:42px;padding:0 13px;background:transparent;border:1px solid transparent;color:#b3cee1;text-align:left;border-radius:11px;font-weight:500;transition:background .18s,color .18s}.nav-item:hover,.nav-item.active{background:rgba(51,159,217,.14);color:var(--text)}.nav-item.active{border-color:rgba(51,159,217,.2)}.nav-count{margin-left:auto;color:var(--dim);font-size:11px;border:1px solid var(--line);padding:2px 7px;border-radius:9px}.sidebar-recent{margin-top:32px;min-height:0;flex:1;overflow:auto}.sidebar-recent-header{display:flex;align-items:center;justify-content:space-between;padding:0 11px 14px;color:#6f93b1;font-size:10px;letter-spacing:1.45px;font-weight:700}.sidebar-recent-header .icon{width:14px}.sidebar-empty{padding:9px 11px;line-height:1.6;color:#698aa6;font-size:12px}.recent-item{display:flex;align-items:center;gap:10px;width:100%;background:transparent;border:0;border-radius:10px;color:var(--muted);padding:10px;text-align:left;font-size:12px;overflow:hidden}.recent-item:hover{background:rgba(51,159,217,.12)}.recent-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.recent-item .icon{width:15px}.sidebar-footer{position:relative;z-index:1;margin-top:auto;padding:4px 3px 0}.ornament-line{height:21px;margin-bottom:14px;opacity:.65;background:repeating-linear-gradient(90deg,transparent 0 16px,rgba(60,202,241,.3) 16px 18px,transparent 18px 32px);mask-image:linear-gradient(90deg,transparent,black 30%,black 70%,transparent)}.google-button{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:44px;border:1px solid rgba(113,203,252,.3);background:rgba(8,31,57,.72);color:var(--text);border-radius:13px;font-size:12px;font-weight:600}.google-button .icon{width:14px;margin-left:auto;opacity:.65}.google-g{font-family:Arial,sans-serif;font-size:22px;font-weight:700;background:conic-gradient(#4285f4 0 95deg,#34a853 96deg 165deg,#fbbc05 166deg 232deg,#ea4335 233deg 290deg,#4285f4 291deg);background-clip:text;-webkit-background-clip:text;color:transparent}.footer-note{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;color:#718fa7;font-size:11px}.online-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
 .main-area{display:flex;flex:1;min-width:0;min-height:0;flex-direction:column;position:relative;isolation:isolate}.main-area:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 50% 40%,rgba(1,79,138,.07),transparent 65%)}.topbar{min-height:var(--topbar-height);padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:14px;z-index:11;position:relative;border-bottom:1px solid rgba(90,194,250,.07)}.topbar-start,.topbar-actions{display:flex;align-items:center;gap:13px}.topbar-title{font-size:15px;font-weight:700;letter-spacing:.1px}.preview-pill{display:inline-flex;align-items:center;gap:8px;font-size:10px;color:#9ac8dd;border:1px solid rgba(52,191,249,.22);border-radius:40px;padding:6px 9px;background:rgba(43,169,222,.06)}.topbar-actions{gap:9px}.language-pill{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:20px;color:#b9d5e8;background:rgba(7,36,71,.65);padding:9px 12px;font-size:12px}.language-pill:hover{border-color:var(--line-strong)}.language-pill .icon{width:16px}.menu-button{display:none}.main-content{flex:1;min-height:0;position:relative;overflow:auto;overscroll-behavior:contain}.view{min-height:100%;width:100%}.view-welcome{display:flex;position:relative;flex-direction:column;align-items:center;justify-content:center;min-height:100%;overflow:hidden;padding:56px 25px 38px}.hero-visual{position:absolute;inset:0;overflow:hidden;pointer-events:none}.starfield{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 17% 21%,#88d6ff 90%,transparent),radial-gradient(1px 1px at 70% 9%,#a3dcff 90%,transparent),radial-gradient(2px 2px at 83% 47%,#c8eaff 70%,transparent),radial-gradient(1px 1px at 49% 69%,#7cceff 90%,transparent),radial-gradient(1px 1px at 92% 17%,#77bbfd 90%,transparent),radial-gradient(1px 1px at 6% 72%,#e0faff 90%,transparent);background-size:173px 187px;opacity:.65}.nebula{position:absolute;inset:0;background:radial-gradient(ellipse 45% 55% at 85% 48%,rgba(0,128,179,.17),transparent),radial-gradient(ellipse 38% 38% at 19% 19%,rgba(47,42,138,.18),transparent)}.orbit-art{width:min(100%,1040px);height:auto;position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);opacity:.74;filter:drop-shadow(0 0 30px rgba(10,100,200,.18))}.ornament{color:#44cfff;position:absolute;bottom:5%;width:110px;opacity:.23}.ornament svg{width:100%}.ornament-left{left:-10px}.ornament-right{right:-10px;transform:scaleX(-1)}.hero-visual:after{content:"";position:absolute;bottom:-35%;width:100%;height:58%;left:0;background:linear-gradient(0deg,var(--bg) 25%,transparent);pointer-events:none}.hero-copy{position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center;margin-top:42px;text-shadow:0 4px 28px rgba(0,0,0,.7)}.hero-emblem{width:73px;height:73px;border-radius:23px;background:rgba(1,37,67,.5);border:1px solid rgba(62,218,255,.23);display:grid;place-items:center;box-shadow:0 0 30px rgba(16,149,207,.18);backdrop-filter:blur(12px)}.hero-emblem .brand-mark{width:48px;height:48px}.hero-copy h1{font-size:clamp(53px,6vw,88px);letter-spacing:-4px;line-height:1.1;margin:15px 0 8px;font-weight:780}.hero-copy h1 span{color:#70efff}.hero-heading{font-size:clamp(17px,2vw,23px);font-weight:650;margin:0 0 10px}.hero-subtitle{margin:0;font-size:13px;color:#b7d6e6;line-height:1.7}.hero-accent{display:flex;align-items:center;gap:12px;margin-top:23px;opacity:.75}.hero-accent span{width:60px;height:1px;background:linear-gradient(90deg,transparent,#59d7ff)}.hero-accent span:last-child{transform:rotate(180deg)}.hero-accent .brand-mark{width:16px;height:16px}.hero-bottom-note{position:absolute;bottom:12px;color:#789eb5;font-size:12px;z-index:2}
@@ -245,6 +246,104 @@ body.light .kaz-corner{color:#0d9ed1;filter:drop-shadow(0 0 4px rgba(38,138,220,
  .hero-copy{padding:13px 38px}
  .hero-copy h1.hero-wordmark{font-size:clamp(48px,7vw,82px)}
 }
+
+
+/* Solid navy preview: deliberately remove the unfinished space artwork. */
+body:not(.light) .main-area,
+body:not(.light) .main-content,
+body:not(.light) .topbar,
+body:not(.light) .composer-region,
+body:not(.light) .view-welcome{
+  background:#061832!important;
+}
+body:not(.light) .view-welcome{
+  border-top:1px solid rgba(58,174,227,.1);
+  justify-content:center!important;
+  padding:20px 22px 34px!important;
+}
+.view-welcome .hero-visual{display:none!important}
+.view-welcome .hero-copy{
+  margin:0 auto!important;
+  padding:20px 18px!important;
+  transform:none!important;
+  background:none!important;
+  filter:none!important;
+  text-shadow:none!important;
+}
+.view-welcome .hero-logo-line{display:flex;align-items:center;justify-content:center;gap:clamp(13px,2vw,24px)}
+.view-welcome .hero-logo-mark{width:clamp(48px,6vw,85px);height:clamp(48px,6vw,85px)}
+.view-welcome .hero-copy h1.hero-wordmark{font-size:clamp(48px,6.8vw,90px)}
+.view-welcome .hero-accent{display:none!important}
+body.light .view-welcome,
+body.light .main-content,
+body.light .main-area,
+body.light .composer-region{background:#e6f2fb!important}
+.language-anchor{position:relative}
+.language-menu{top:calc(100% + 9px);bottom:auto;right:0;left:auto;width:282px;max-width:min(282px,calc(100vw - 26px));z-index:80}
+.language-menu .language-option{
+  display:flex;gap:11px;align-items:center;
+  padding:11px 12px;min-height:52px;
+}
+.language-menu .language-option>span:nth-child(2){
+  display:flex;flex-direction:column;align-items:flex-start;margin:0;gap:3px;
+  font-size:13px;color:#e3f7ff;
+}
+.language-option small{display:block;color:#7fa9c5;font-size:10px;font-weight:400}
+.language-option .language-code{
+  display:grid;place-items:center;min-width:37px;height:34px;border:1px solid rgba(70,180,234,.3);
+  border-radius:10px;color:#8beaff;font-size:11px;font-weight:750;
+  background:rgba(16,102,165,.19);
+}
+.language-option .language-check{margin-left:auto!important;opacity:0;color:#3cf0ef}
+.language-option.selected .language-check{opacity:1}
+.language-option.selected{background:rgba(13,155,204,.18)!important;border:1px solid rgba(72,221,247,.25)}
+.popover-hint{padding:9px 10px 2px;margin:0;color:#9ab8d1;font-size:11px;line-height:1.55}
+.settings-popover-anchor .language-menu{top:auto;bottom:calc(100% + 9px)}
+.font-menu{right:0;left:auto;width:210px;bottom:calc(100% + 9px)}
+.font-menu button.selected{background:rgba(37,174,222,.21);color:#63e9ff}
+.font-small .view-panel,.font-small .nav-item,.font-small .message{font-size:12px}
+.font-large .view-panel,.font-large .nav-item,.font-large .message{font-size:17px}
+.font-large .setting-item p,.font-large .panel-heading p{font-size:15px}
+.google-dialog{
+  position:relative;width:min(100%,470px);
+  border:1px solid rgba(71,213,248,.52);
+  border-radius:25px;padding:37px 33px 28px;text-align:center;
+  background:linear-gradient(150deg,#0d3056,#07172f 78%);
+  box-shadow:0 25px 100px rgba(0,0,0,.68),inset 0 1px 0 rgba(220,255,255,.10),0 0 34px rgba(24,181,239,.16)
+}
+.google-close{position:absolute;right:15px;top:15px}
+.google-dialog-logo{
+  width:74px;height:74px;margin:0 auto 19px;display:grid;place-items:center;
+  border-radius:22px;border:1px solid rgba(83,224,249,.4);
+  background:radial-gradient(circle,rgba(25,187,234,.2),rgba(9,60,103,.12));
+  box-shadow:0 0 23px rgba(28,188,255,.16)
+}
+.google-dialog-logo svg{width:50px;height:50px}
+.google-dialog h2{font-size:23px;line-height:1.3;color:#f3fcff;margin:0 0 11px}
+.google-dialog>p{font-size:13px;color:#a8d2e7;line-height:1.6;margin:0 auto 23px;max-width:340px}
+.google-continue{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:13px;
+  background:#f9fcff;color:#142f49;border:0;border-radius:13px;min-height:52px;
+  font-weight:650;font-size:14px;cursor:pointer
+}
+.google-continue:hover{background:#e3f6ff}
+.google-continue .google-g{font-size:24px;font-weight:800;color:#4285f4}
+.google-dialog-note{font-size:11px;color:#8baac4;line-height:1.5;margin:15px 0}
+.google-cancel{border:1px solid rgba(64,180,234,.35);border-radius:11px;background:transparent;color:#c8ebfd;min-height:41px;padding:0 20px;cursor:pointer}
+.google-cancel:hover{background:rgba(47,168,225,.13)}
+body.light .google-dialog{background:linear-gradient(140deg,#f9fdff,#dceefd);box-shadow:0 18px 70px rgba(13,61,111,.23)}
+body.light .google-dialog h2{color:#133d61}
+body.light .google-dialog>p,body.light .google-dialog-note{color:#4d718f}
+body.light .google-continue{border:1px solid #a4ccdf}
+body.light .google-cancel{color:#174f79}
+body.light .language-menu .language-option>span:nth-child(2){color:#154b77}
+body.light .language-menu .language-option small{color:#597a93}
+@media(max-width:760px){
+ .language-menu{right:0}
+ .view-welcome .hero-copy h1.hero-wordmark{font-size:clamp(42px,9.6vw,65px)}
+ .google-dialog{padding:35px 22px 24px}
+}
+
 </style>
   
 </head>
@@ -312,7 +411,16 @@ body.light .kaz-corner{color:#0d9ed1;filter:drop-shadow(0 0 4px rgba(38,138,220,
       </div>
       <div class="topbar-actions">
         <button type="button" class="icon-button" data-action="toggle-theme" aria-label="Переключить тему" title="Переключить тему"><svg class="icon icon-theme"><use href="#ic-sun"/></svg></button>
-        <button type="button" class="language-pill" data-feature="languages" aria-label="Выбор языка интерфейса"><svg class="icon"><use href="#ic-globe"/></svg><span>Русский</span><svg class="icon tiny"><use href="#ic-chevron"/></svg></button>
+        <div class="popover-anchor language-anchor">
+          <button type="button" class="language-pill" id="languageToggle" data-action="toggle-language" aria-label="Выбор языка интерфейса" aria-expanded="false" aria-controls="languageMenu"><svg class="icon"><use href="#ic-globe"/></svg><span class="language-current">Русский</span><svg class="icon tiny"><use href="#ic-chevron"/></svg></button>
+          <div id="languageMenu" class="popover-menu language-menu" hidden>
+                <p class="popover-title">Язык интерфейса</p>
+                <button type="button" data-language="ru" class="language-option selected"><span class="language-code">RU</span><span><strong>Русский</strong><small>Русский язык</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <button type="button" data-language="kk" class="language-option"><span class="language-code">KZ</span><span><strong>Қазақша</strong><small>Қазақ тілі</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <button type="button" data-language="en" class="language-option"><span class="language-code">EN</span><span><strong>English</strong><small>English language</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <p class="popover-hint">Пока меняется только выбранный язык. Полный перевод будет добавлен позже.</p>
+          </div>
+        </div>
       </div>
     </header>
     <main class="main-content" id="mainContent">
@@ -371,8 +479,13 @@ body.light .kaz-corner{color:#0d9ed1;filter:drop-shadow(0 0 4px rgba(38,138,220,
         <div class="panel-heading"><span class="eyebrow">ЛИЧНОЕ ПРОСТРАНСТВО</span><h1 id="settingsHeading">Настройки</h1><p>Основные параметры вашего будущего Kaz AI.</p></div>
         <div class="settings-list">
           <div class="setting-item"><div><h2>Оформление</h2><p>Светлая или тёмная тема</p></div><button class="setting-control" data-action="toggle-theme"><svg class="icon"><use href="#ic-sun"/></svg><span id="themeLabel">Тёмная</span></button></div>
-          <div class="setting-item"><div><h2>Язык интерфейса</h2><p>Русский, қазақша, English</p></div><button class="setting-control" data-feature="languages">Русский <svg class="icon"><use href="#ic-chevron"/></svg></button></div>
-          <div class="setting-item"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><button class="setting-control" data-feature="font">Обычный <svg class="icon"><use href="#ic-chevron"/></svg></button></div>
+          <div class="setting-item"><div><h2>Язык интерфейса</h2><p>Русский, қазақша, English</p></div><div class="popover-anchor settings-popover-anchor language-anchor"><button type="button" class="setting-control" id="settingsLanguageToggle" data-action="toggle-language" aria-expanded="false" aria-controls="settingsLanguageMenu"><span class="language-current">Русский</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div id="settingsLanguageMenu" class="popover-menu language-menu" hidden>
+                <p class="popover-title">Язык интерфейса</p>
+                <button type="button" data-language="ru" class="language-option selected"><span class="language-code">RU</span><span><strong>Русский</strong><small>Русский язык</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <button type="button" data-language="kk" class="language-option"><span class="language-code">KZ</span><span><strong>Қазақша</strong><small>Қазақ тілі</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <button type="button" data-language="en" class="language-option"><span class="language-code">EN</span><span><strong>English</strong><small>English language</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
+                <p class="popover-hint">Пока меняется только выбранный язык. Полный перевод будет добавлен позже.</p></div></div></div>
+          <div class="setting-item"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><div class="popover-anchor settings-popover-anchor"><button type="button" class="setting-control" data-action="toggle-font" id="fontToggle" aria-expanded="false" aria-controls="fontMenu"><span id="fontLabel">Обычный</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div class="popover-menu font-menu" id="fontMenu" hidden><p class="popover-title">Размер текста</p><button type="button" data-font="small">Компактный</button><button type="button" data-font="normal" class="selected">Обычный</button><button type="button" data-font="large">Крупный</button><p class="popover-hint">Пример оформления для проверки дизайна.</p></div></div></div>
           <div class="setting-item"><div><h2>Личные инструкции</h2><p>Как ИИ должен отвечать именно вам</p></div><button class="setting-control" data-feature="instructions">Настроить <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
           <div class="setting-item"><div><h2>Память ИИ</h2><p>Запоминание предпочтений — позже</p></div><button class="setting-control" data-feature="memory">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
           <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать свои переписки — позже</p></div><button class="setting-control" data-feature="export">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
@@ -428,8 +541,20 @@ body.light .kaz-corner{color:#0d9ed1;filter:drop-shadow(0 0 4px rgba(38,138,220,
     <button type="button" class="modal-ok" data-action="close-modal">Понятно</button>
   </div>
 </div>
+<div id="googleOverlay" class="modal-overlay" hidden>
+  <div class="google-dialog" role="dialog" aria-modal="true" aria-labelledby="googleDialogTitle" aria-describedby="googleDialogText">
+    <button type="button" class="icon-button google-close" data-action="close-google" aria-label="Закрыть окно входа"><svg class="icon"><use href="#ic-close"/></svg></button>
+    <div class="google-dialog-logo"><svg class="brand-mark"><use href="#logo-mark"/></svg></div>
+    <h2 id="googleDialogTitle">Добро пожаловать в Kaz AI</h2>
+    <p id="googleDialogText">Войдите, чтобы в будущем сохранять свои переписки и настройки.</p>
+    <button type="button" class="google-continue" data-action="google-demo"><span class="google-g">G</span> Продолжить с Google</button>
+    <div class="google-dialog-note">Это только макет окна входа. Мы не запрашиваем данные Google и ничего не отправляем.</div>
+    <button type="button" class="google-cancel" data-action="close-google">Вернуться к сайту</button>
+  </div>
+</div>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-<script>"use strict";
+<script>
+"use strict";
 /**
  * Kaz AI — interface-only prototype.
  * No AI/API/auth/database calls. No persistent chat or personal data.
@@ -502,8 +627,19 @@ const viewLabels = {welcome:"Kaz AI",chat:"Переписка",history:"Чаты
 function icon(id){const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","icon");svg.setAttribute("aria-hidden","true");const use = document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href","#ic-"+id);svg.append(use);return svg}
 function node(tag,className,text){const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e}
 function notify(message){const toast=$("#toast");clearTimeout(state.toastTimer);toast.textContent=message;toast.hidden=false;state.toastTimer=setTimeout(()=>{toast.hidden=true},3800)}
-function closePopovers(){ $("#attachMenu").hidden=true;$("#reasonMenu").hidden=true;$("#attachToggle").setAttribute("aria-expanded","false");$("#reasonToggle").setAttribute("aria-expanded","false")}
-function togglePopover(kind){const opening=$("#"+kind+"Menu").hidden;closePopovers();if(opening){$("#"+kind+"Menu").hidden=false;$("#"+(kind==="attach"?"attachToggle":"reasonToggle")).setAttribute("aria-expanded","true")}}
+function closePopovers(){
+  for(const id of ["attachMenu","reasonMenu","languageMenu","settingsLanguageMenu","fontMenu"]){const panel=$("#"+id);if(panel)panel.hidden=true}
+  for(const id of ["attachToggle","reasonToggle","languageToggle","settingsLanguageToggle","fontToggle"]){const button=$("#"+id);if(button)button.setAttribute("aria-expanded","false")}
+}
+function togglePopover(kind,trigger){
+  let menuId,button;
+  if(kind==="language"){button=trigger&&trigger.closest('[data-action="toggle-language"]')||$("#languageToggle");menuId=button.id==="settingsLanguageToggle"?"settingsLanguageMenu":"languageMenu"}
+  else if(kind==="font"){button=$("#fontToggle");menuId="fontMenu"}
+  else{menuId=kind+"Menu";button=$("#"+(kind==="attach"?"attachToggle":"reasonToggle"))}
+  const menu=$("#"+menuId);if(!menu||!button)return;
+  const opening=menu.hidden;closePopovers();
+  if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
+}
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
 function showScreen(screen){if(!viewNames.includes(screen))return;state.screen=screen;viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0}
 function newChat(){state.chat=[];state.draftTitle="Новый чат";$("#statusBanner").hidden=true;renderChat();renderHistory();showScreen("welcome");$("#messageInput").value="";resizeInput();$("#messageInput").focus()}
@@ -515,6 +651,35 @@ function renderHistory(){const target=$("#historyList"),recent=$("#recentChats")
 function renderTools(query=""){const target=$("#toolGroups");target.replaceChildren();const value=query.toLocaleLowerCase().trim();let total=0;for(const group of FEATURE_GROUPS){const list=group.items.filter(item=>(item[1]+" "+item[2]).toLocaleLowerCase().includes(value));if(!list.length)continue;total+=list.length;const section=node("section","tool-group");const title=node("h2","tool-group-title");title.append(node("span","",group.title),node("small","",list.length+" функций"));section.append(title);const grid=node("div","tool-grid");for(const [number,name,description,iconName] of list){const card=node("button","tool-card");card.type="button";card.dataset.feature="tool-"+number;card.setAttribute("aria-label",name+", функция будет подключена позже");const head=node("div","tool-card-top");head.append(icon(iconName),node("small","","В плане"));card.append(head,node("strong","",name),node("p","",description));grid.append(card)}section.append(grid);target.append(section)}if(!total)target.append(node("p","","Ничего не найдено"))}
 function selectReason(value){if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return}state.reason=value;$("#currentReason").textContent=REASONS[value].name;$("[data-reason]").forEach(btn=>btn.classList.toggle("selected",btn.dataset.reason===value));closePopovers();notify("Выбран уровень «"+REASONS[value].name+"». Подключение к модели — на следующем этапе.")}
 function toggleTheme(){state.light=!state.light;document.body.classList.toggle("light",state.light);$("#themeLabel").textContent=state.light?"Светлая":"Тёмная";$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"))}
+const languages={ru:"Русский",kk:"Қазақша",en:"English"};
+function selectLanguage(value){
+  if(!Object.prototype.hasOwnProperty.call(languages,value))return;
+  state.language=value;
+  $(".language-current").forEach(el=>{el.textContent=languages[value]});
+  $("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
+  closePopovers();
+  notify("Выбран язык «"+languages[value]+"». Это предварительный просмотр выбора, перевод интерфейса будет позже.");
+}
+function selectFont(value){
+  if(!["small","normal","large"].includes(value))return;
+  document.body.classList.remove("font-small","font-large");
+  if(value!=="normal")document.body.classList.add("font-"+value);
+  $("#fontLabel").textContent={small:"Компактный",normal:"Обычный",large:"Крупный"}[value];
+  $("[data-font]").forEach(el=>el.classList.toggle("selected",el.dataset.font===value));
+  closePopovers();
+  notify("Выбран размер текста для предпросмотра.");
+}
+function openGoogle(){
+  state.dialogTrigger=document.activeElement;
+  closePopovers();
+  $("#googleOverlay").hidden=false;
+  $(".google-close").focus();
+}
+function closeGoogle(){
+  $("#googleOverlay").hidden=true;
+  if(state.dialogTrigger&&typeof state.dialogTrigger.focus==="function")state.dialogTrigger.focus();
+  state.dialogTrigger=null;
+}
 const featureDescriptions={
   google:["Вход через Google","Здесь будет настоящая регистрация через Google. Пока авторизация не подключена: никакие данные аккаунта не запрашиваются."],
   languages:["Выбор языка","Интерфейс на русском, казахском и английском добавим после согласования текстов и навигации."],
@@ -532,19 +697,42 @@ const featureDescriptions={
 };
 function featureModal(title,description){state.dialogTrigger=document.activeElement;$("#modalTitle").textContent=title;$("#modalDescription").textContent=description;$("#modalOverlay").hidden=false;closePopovers();$(".modal-close").focus()}
 function closeModal(){$("#modalOverlay").hidden=true;if(state.dialogTrigger&&typeof state.dialogTrigger.focus==="function")state.dialogTrigger.focus();state.dialogTrigger=null}
-function showFeature(key){const data=featureDescriptions[key];if(data)featureModal(...data);else if(key.startsWith("tool-")){const n=Number(key.slice(5));const item=FEATURE_GROUPS.flatMap(g=>g.items).find(i=>i[0]===n);if(item)featureModal(item[1],item[2]+". Сейчас подготовлена только кнопка и место в интерфейсе. Реализация — на согласованном этапе.")}else featureModal("Функция появится позже","Сейчас разрабатывается только оболочка сайта.")}
-function handleAction(action){switch(action){case"home":showScreen("welcome");break;case"new-chat":newChat();break;case"close-sidebar":setDrawer(false);break;case"toggle-sidebar":setDrawer(!$("#sidebar").classList.contains("open"));break;case"toggle-theme":toggleTheme();break;case"toggle-attach":togglePopover("attach");break;case"toggle-reason":togglePopover("reason");break;case"close-modal":closeModal();break}}
+function showFeature(key){if(key==="google"){openGoogle();return}if(key==="languages"){togglePopover("language",$("#languageToggle"));return}const data=featureDescriptions[key];if(data)featureModal(...data);else if(key.startsWith("tool-")){const n=Number(key.slice(5));const item=FEATURE_GROUPS.flatMap(g=>g.items).find(i=>i[0]===n);if(item)featureModal(item[1],item[2]+". Сейчас подготовлена только кнопка и место в интерфейсе. Реализация — на согласованном этапе.")}else featureModal("Функция появится позже","Сейчас разрабатывается только оболочка сайта.")}
+function handleAction(action,trigger){switch(action){
+  case"home":showScreen("welcome");break;
+  case"new-chat":newChat();break;
+  case"close-sidebar":setDrawer(false);break;
+  case"toggle-sidebar":setDrawer(!$("#sidebar").classList.contains("open"));break;
+  case"toggle-theme":toggleTheme();break;
+  case"toggle-attach":togglePopover("attach",trigger);break;
+  case"toggle-reason":togglePopover("reason",trigger);break;
+  case"toggle-language":togglePopover("language",trigger);break;
+  case"toggle-font":togglePopover("font",trigger);break;
+  case"close-modal":closeModal();break;
+  case"close-google":closeGoogle();break;
+  case"google-demo":notify("Это демонстрация. Вход через Google пока не подключён.");break;
+}}
 document.addEventListener("click",event=>{
   const action=event.target.closest("[data-action]");const screen=event.target.closest("[data-screen]");const reason=event.target.closest("[data-reason]");const feature=event.target.closest("[data-feature]");
-  if(action){handleAction(action.dataset.action);return}
+  const lang=event.target.closest("[data-language]");const font=event.target.closest("[data-font]");
+  if(lang){selectLanguage(lang.dataset.language);return}
+  if(font){selectFont(font.dataset.font);return}
+  if(action){handleAction(action.dataset.action,action);return}
   if(screen){showScreen(screen.dataset.screen);return}
   if(reason){selectReason(reason.dataset.reason);return}
   if(feature){showFeature(feature.dataset.feature);return}
   if(event.target===$("#modalOverlay")){closeModal();return}
+  if(event.target===$("#googleOverlay")){closeGoogle();return}
   if(!event.target.closest(".popover-anchor"))closePopovers();
 });
 document.addEventListener("keydown",event=>{
-  if(event.key==="Escape"){if(!$("#modalOverlay").hidden){closeModal();return}closePopovers();setDrawer(false)}
+  if(event.key==="Escape"){if(!$("#googleOverlay").hidden){closeGoogle();return}if(!$("#modalOverlay").hidden){closeModal();return}closePopovers();setDrawer(false)}
+  if(!$("#googleOverlay").hidden&&event.key==="Tab"){
+    const controls=$("#googleOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+    return;
+  }
   if(!$("#modalOverlay").hidden&&event.key==="Tab"){const controls=$("#modalOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}
 });
 $("#drawerScrim").addEventListener("click",()=>setDrawer(false));
@@ -556,5 +744,7 @@ $("#toolsSearch").addEventListener("input",event=>renderTools(event.target.value
 const banner=$("#statusBanner");
 $("#messageInput").addEventListener("input",()=>{banner.hidden=true});
 renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$("[data-reason=medium]").forEach(button=>button.classList.add("selected"));resizeInput();showScreen("welcome");
-</script></body>
+
+</script>
+</body>
 </html>

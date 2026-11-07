@@ -16,7 +16,8 @@ export function buildPreview(){
   if(css.includes('</style')||scripts.some(s=>s.includes('</script'))){
     throw new Error('Unsafe closing tag in embeddable source');
   }
-  let preview=once(html,
+  let preview=once(html,'<head>','<head>\n<meta name="robots" content="noindex,follow">','preview robots policy');
+  preview=once(preview,
     '<link rel="stylesheet" href="./styles.css">',
     '<style>\n'+css+'\n</style>','stylesheet');
   for(const name of ['app.js','session.js','i18n.js']){

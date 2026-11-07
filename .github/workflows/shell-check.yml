@@ -16,9 +16,9 @@ jobs:
         with:
           node-version: '22'
       - name: Check JavaScript syntax
-        run: node --check public/app.js
+        run: node --check public/app.js && node --check public/session.js && node --check src/index.js
       - name: Verify shell requirements
-        run: node --test tests/shell.test.mjs
+        run: node --test tests/shell.test.mjs tests/api.test.mjs
       - name: Install browser test tool
         run: npm install --no-save --ignore-scripts playwright-core
       - name: Check real desktop and mobile browser interactions

@@ -235,6 +235,7 @@
         else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.");
         return;
       }
+      if(abort!==controller)return;
       if(!data||typeof data.text!=="string"||!data.text.trim())throw new Error("EMPTY_RESPONSE");
       if(replaceId){
         const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
@@ -245,6 +246,7 @@
       if(current===chat.id){displayThread(chat);renderChat()}
       showStatus("");
     }catch(e){
+      if(abort!==controller)return;
       if(e?.name==="AbortError")showStatus("Генерация ответа остановлена.");
       else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.");
     }finally{
@@ -326,6 +328,7 @@
       const m=c.messages[index];
       if(action==="copy-message"){copyValue(m.content);return}
       if(action==="edit-message"&&m.role==="user"){
+        if(abort){notify("Сначала остановите текущий ответ.");return}
         openDialog("Изменить сообщение","Ответы, отправленные после этого сообщения, будут удалены из текущей ветки.",body=>{
           const area=make("textarea","session-textarea");area.value=m.content;area.maxLength=4000;
           body.append(area);
@@ -333,7 +336,7 @@
           save.addEventListener("click",()=>{
             const value=area.value.trim();if(!value){notify("Сообщение не может быть пустым.");return}
             m.content=value;c.messages.splice(index+1);closeDialog();renderChat();renderHistory();
-            showStatus("Сообщение изменено. Отправьте новый запрос, чтобы получить новый ответ.");
+            runAI(c);
           });body.append(save);
         });return;
       }

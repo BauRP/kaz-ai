@@ -442,5 +442,5 @@
   window.KazSession={snapshot:()=>({
     threads:threads.map(c=>({id:c.id,title:c.title,messages:c.messages.length,pinned:c.pinned,temporary:c.temporary,projectId:c.projectId})),
     projects:projects.map(p=>({id:p.id,name:p.name})),active:current
-  }),compute};
+  }),compute,sendMessage};
 })();

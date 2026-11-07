@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const d=JSON.parse(readFileSync('ACTIVE_PROGRESS.json','utf8'));
-const previous=JSON.parse(readFileSync('PROGRESS.json','utf8'));
+const previous=JSON.parse(readFileSync('progress/2026-11-08-milestone-1.json','utf8'));
+
 const report=readFileSync('ACTIVE_PROGRESS.md','utf8');
 const ids=new Set([1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,22,23,24,25,40,41,42,43,44,45]);
 const avg=(a,k)=>a.reduce((sum,x)=>sum+x[k],0)/a.length;
@@ -16,7 +17,7 @@ test('only 25 agreed active-stage items are counted',()=>{
 test('baseline uses last-stage values and per-item improvements reconcile',()=>{
   for(const item of d.items){
     const prior=previous.items.find(x=>x.id===item.id);
-    assert.equal(item.previous,prior.after);
+    assert.equal(item.previous,prior.now);
     assert.equal(item.now-item.previous,item.delta);
     assert.ok(item.now>=item.previous&&item.now<=100);
   }

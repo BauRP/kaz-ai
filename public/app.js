@@ -183,7 +183,7 @@ $("#drawerScrim").addEventListener("click",()=>setDrawer(false));
 $("#messageInput").addEventListener("input",resizeInput);
 $("#messageInput").addEventListener("keydown",event=>{if(event.key==="Enter"&&!event.shiftKey&&!event.isComposing){event.preventDefault();submitMessage()}});
 $("#sendButton").addEventListener("click",submitMessage);
-$("#historySearch").addEventListener("input",renderHistory);
+$("#historySearch").addEventListener("input",()=>renderHistory());
 $("#toolsSearch").addEventListener("input",event=>renderTools(event.target.value));
 const banner=$("#statusBanner");
 $("#messageInput").addEventListener("input",()=>{banner.hidden=true});

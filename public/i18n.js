@@ -525,7 +525,7 @@
       en:{welcome:"Kaz AI",chat:"Conversation",history:"Chats",projects:"Projects",tools:"Tools",settings:"Settings"},
       kk:{welcome:"Kaz AI",chat:"Әңгіме",history:"Чаттар",projects:"Жобалар",tools:"Құралдар",settings:"Баптаулар"}};
     const title=document.querySelector("#pageTitle");
-    if(title&&window.state&&state.screen)title.textContent=labels[language][state.screen]||"Kaz AI";
+    if(title&&typeof state!=="undefined"&&state.screen)title.textContent=labels[language][state.screen]||"Kaz AI";
     document.documentElement.lang=language==="kk"?"kk":language==="en"?"en":"ru";
   }
   const observer=new MutationObserver(changes=>{

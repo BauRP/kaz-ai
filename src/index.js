@@ -75,7 +75,9 @@ export default {
     ];
     try{
       const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
-        input:messages,reasoning:{effort:input.effort},max_output_tokens:900
+        messages,
+        reasoning_effort:input.effort,
+        max_tokens:1200
       });
       const text=answerText(result);
       if(!text)return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);

@@ -19,3 +19,16 @@ test('reason selector initialization uses a collection of buttons',()=>{
   assert.ok(!js.includes('; $("[data-reason=medium]").forEach('));
   assert.ok(!js.includes(';$("[data-reason=medium]").forEach('));
 });
+
+test('custom Kaz AI wordmark is styled and language slogan removed',()=>{
+  const preview = readFileSync('public/preview.html','utf8');
+  for(const page of [html,preview]){
+    assert.doesNotMatch(page,/Ваш помощник на казахском, русском и английском языках/);
+    assert.match(page,/class="hero-wordmark"/);
+    assert.match(page,/class="brand-wordmark"/);
+  }
+  assert.match(css,/hero-copy h1\.hero-wordmark/);
+  assert.match(css,/body\.light \.hero-copy h1\.hero-wordmark/);
+  assert.match(preview,/<style>[\s\S]*?hero-wordmark/);
+  assert.match(preview,/<script>[\s\S]*?FEATURE_GROUPS/);
+});

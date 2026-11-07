@@ -70,7 +70,9 @@
   };
   function sessionNewChat(temporary=false){
     if(abort)abort.abort();
-    abort=null;pending=null;current=null;
+    abort=null;pending=null;
+    for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary)threads.splice(i,1);
+    current=null;
     state.chat=[];state.draftTitle="Новый чат";
     $("#messageInput").value="";$("#messageInput").focus();
     $("#sendButton").disabled=true;
@@ -238,7 +240,7 @@
         const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
         if(existing){existing.content=data.text.trim();existing.rating=null}
       }else{
-        chat.messages.push({id:nextId(),role:"assistant",content:data.text.trim()});
+        if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text.trim()});
       }
       if(current===chat.id){displayThread(chat);renderChat()}
       showStatus("");
@@ -278,7 +280,16 @@
   function handle(action,id){
     const chat=threads.find(c=>c.id===id);
     const project=projects.find(p=>p.id===id);
-    if(action==="open-chat"&&chat){displayThread(chat);renderChat();renderHistory();showScreen("chat");return}
+    if(action==="open-chat"&&chat){
+      if(current!==chat.id){
+        const old=selected();
+        if(old?.temporary){
+          const i=threads.indexOf(old);
+          if(i>=0)threads.splice(i,1);
+        }
+      }
+      displayThread(chat);renderChat();renderHistory();showScreen("chat");return
+    }
     if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{chat.title=v;renderHistory();renderSessionProjects()});return}
     if(action==="pin-chat"&&chat){chat.pinned=!chat.pinned;renderHistory();return}
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{

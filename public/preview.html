@@ -23,8 +23,58 @@ body.light{color-scheme:light;--bg:#e6f2fb;--panel:#e8f5ff;--panel2:#d1eafd;--li
 @media(max-height:650px){.hero-emblem{display:none}.hero-copy{margin-top:0}.hero-copy h1{font-size:clamp(42px,5vw,65px)}.hero-accent{margin-top:8px}.hero-bottom-note{display:none}.orbit-art{top:38%;max-height:100%}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-</style>
-  
+/* Kaz AI wordmark: self-contained typography, no remote fonts or services. */
+.brand-wordmark,.topbar-title,.hero-copy h1.hero-wordmark{
+  font-family:"Bahnschrift SemiBold","Bahnschrift","Arial Black","Trebuchet MS","Segoe UI",sans-serif;
+  font-synthesis:weight style;
+  font-weight:900;
+}
+.brand-wordmark{display:inline-block;font-size:1em;letter-spacing:.012em;font-style:italic;white-space:nowrap;text-shadow:0 0 16px rgba(77,204,250,.20)}
+.brand-wordmark b{font-weight:950;color:#7ef2ff;letter-spacing:.055em}
+.topbar-title{font-size:16px;letter-spacing:.035em;font-style:italic}
+.hero-copy h1.hero-wordmark{
+  font-size:clamp(52px,6.6vw,93px);
+  letter-spacing:-.028em;
+  line-height:1.08;
+  font-style:italic;
+  transform:skewX(-3deg);
+  margin:17px 0 11px;
+  color:#e7f8ff;
+  background:linear-gradient(115deg,#f9fdff 6%,#d6f9ff 52%,#9bdcff 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 4px 17px rgba(25,189,239,.38));
+}
+.hero-copy h1.hero-wordmark span{
+  color:#7deaff;
+  background:linear-gradient(120deg,#b4ffff 0%,#47d4f5 58%,#aaa8ff 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.hero-copy .hero-heading{margin-bottom:8px}
+.hero-copy .hero-accent{margin-top:20px}
+body.light .hero-copy h1.hero-wordmark{
+  color:#11365a;
+  background:linear-gradient(110deg,#102e51 0%,#075788 65%,#117fa9 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 3px 12px rgba(20,122,172,.15));
+}
+body.light .hero-copy h1.hero-wordmark span{
+  background:linear-gradient(115deg,#066e91 0%,#159ac8 60%,#535db9 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+body.light .brand-wordmark{text-shadow:none}
+body.light .brand-wordmark b{color:#087bb0}
+@media(max-width:390px){.hero-copy h1.hero-wordmark{font-size:clamp(48px,12vw,54px);letter-spacing:-.04em}}
+
+  </style>
+
 </head>
 <body>
 <svg xmlns="http://www.w3.org/2000/svg" class="svg-library" aria-hidden="true">
@@ -60,7 +110,7 @@ body.light{color-scheme:light;--bg:#e6f2fb;--panel:#e8f5ff;--panel2:#d1eafd;--li
   <aside class="sidebar" id="sidebar" aria-label="Боковое меню">
     <div class="sidebar-header">
       <button type="button" class="brand" data-action="home" aria-label="На главную Kaz AI">
-        <svg class="brand-mark"><use href="#logo-mark"/></svg><span>Kaz <b>AI</b></span>
+        <svg class="brand-mark"><use href="#logo-mark"/></svg><span class="brand-wordmark">Kaz <b>AI</b></span>
       </button>
       <button type="button" class="icon-button close-sidebar" data-action="close-sidebar" aria-label="Закрыть меню"><svg class="icon"><use href="#ic-close"/></svg></button>
     </div>
@@ -135,9 +185,8 @@ body.light{color-scheme:light;--bg:#e6f2fb;--panel:#e8f5ff;--panel2:#d1eafd;--li
         </div>
         <div class="hero-copy">
           <div class="hero-emblem"><svg class="brand-mark"><use href="#logo-mark"/></svg></div>
-          <h1>Kaz <span>AI</span></h1>
+          <h1 class="hero-wordmark">Kaz <span>AI</span></h1>
           <p class="hero-heading">Интеллект нового поколения</p>
-          <p class="hero-subtitle">Ваш помощник на казахском, русском и английском языках</p>
           <span class="hero-accent"><span></span><svg class="brand-mark"><use href="#logo-mark"/></svg><span></span></span>
         </div>
         <p class="hero-bottom-note">Задайте вопрос, чтобы начать разговор</p>
@@ -287,7 +336,7 @@ const REASONS = Object.freeze({
 });
 const state = {screen:"welcome",reason:"medium",chat:[],draftTitle:"Новый чат",light:false,dialogTrigger:null,toastTimer:null};
 const $ = selector => document.querySelector(selector);
-const $ = selector => Array.from(document.querySelectorAll(selector));
+const $$ = selector => Array.from(document.querySelectorAll(selector));
 const viewNames = ["welcome","chat","history","projects","tools","settings"];
 const viewLabels = {welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки"};
 function icon(id){const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","icon");svg.setAttribute("aria-hidden","true");const use = document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href","#ic-"+id);svg.append(use);return svg}
@@ -296,7 +345,7 @@ function notify(message){const toast=$("#toast");clearTimeout(state.toastTimer);
 function closePopovers(){ $("#attachMenu").hidden=true;$("#reasonMenu").hidden=true;$("#attachToggle").setAttribute("aria-expanded","false");$("#reasonToggle").setAttribute("aria-expanded","false")}
 function togglePopover(kind){const opening=$("#"+kind+"Menu").hidden;closePopovers();if(opening){$("#"+kind+"Menu").hidden=false;$("#"+(kind==="attach"?"attachToggle":"reasonToggle")).setAttribute("aria-expanded","true")}}
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
-function showScreen(screen){if(!viewNames.includes(screen))return;state.screen=screen;viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0}
+function showScreen(screen){if(!viewNames.includes(screen))return;state.screen=screen;viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0}
 function newChat(){state.chat=[];state.draftTitle="Новый чат";$("#statusBanner").hidden=true;renderChat();renderHistory();showScreen("welcome");$("#messageInput").value="";resizeInput();$("#messageInput").focus()}
 function resizeInput(){const input=$("#messageInput");input.style.height="auto";input.style.height=Math.min(input.scrollHeight,176)+"px";$("#sendButton").disabled=!input.value.trim()}
 function addChatMessage(role,content){const item={role,content};state.chat.push(item);renderChat();renderHistory();return item}
@@ -304,8 +353,8 @@ function renderChat(){const target=$("#chatMessages");target.replaceChildren();f
 function submitMessage(){const input=$("#messageInput");const value=input.value.trim();if(!value)return;if(state.chat.length===0)state.draftTitle=value.slice(0,52);addChatMessage("user",value);input.value="";resizeInput();showScreen("chat");const banner=$("#statusBanner");banner.textContent="Оболочка готова. Ответ нейросети пока недоступен: GPT-OSS 120B подключим на следующем этапе.";banner.hidden=false;notify("Сообщение показано только в демо. На сервер ничего не отправлено.");$("#mainContent").scrollTop=$("#mainContent").scrollHeight}
 function renderHistory(){const target=$("#historyList"),recent=$("#recentChats");recent.replaceChildren();const search=($("#historySearch").value||"").trim().toLocaleLowerCase();const has=state.chat.some(m=>m.role==="user")&&state.draftTitle.toLocaleLowerCase().includes(search);if(!has){const empty=node("div","empty-card");empty.append(icon("chat"),node("h2","","Пока нет сохранённых переписок"),node("p","","На этом этапе разговоры существуют только в текущем открытом сеансе. Постоянное хранение подключим позже."));target.replaceChildren(empty);const hint=node("div","sidebar-empty","История пока не сохраняется");recent.append(hint);return}const card=node("button","history-card subtle-cta",state.draftTitle+" · демо-сеанс");card.type="button";card.addEventListener("click",()=>showScreen("chat"));target.replaceChildren(card);const entry=node("button","recent-item");entry.type="button";entry.append(icon("chat"),node("span","",state.draftTitle));entry.addEventListener("click",()=>showScreen("chat"));recent.append(entry)}
 function renderTools(query=""){const target=$("#toolGroups");target.replaceChildren();const value=query.toLocaleLowerCase().trim();let total=0;for(const group of FEATURE_GROUPS){const list=group.items.filter(item=>(item[1]+" "+item[2]).toLocaleLowerCase().includes(value));if(!list.length)continue;total+=list.length;const section=node("section","tool-group");const title=node("h2","tool-group-title");title.append(node("span","",group.title),node("small","",list.length+" функций"));section.append(title);const grid=node("div","tool-grid");for(const [number,name,description,iconName] of list){const card=node("button","tool-card");card.type="button";card.dataset.feature="tool-"+number;card.setAttribute("aria-label",name+", функция будет подключена позже");const head=node("div","tool-card-top");head.append(icon(iconName),node("small","","В плане"));card.append(head,node("strong","",name),node("p","",description));grid.append(card)}section.append(grid);target.append(section)}if(!total)target.append(node("p","","Ничего не найдено"))}
-function selectReason(value){if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return}state.reason=value;$("#currentReason").textContent=REASONS[value].name;$("[data-reason]").forEach(btn=>btn.classList.toggle("selected",btn.dataset.reason===value));closePopovers();notify("Выбран уровень «"+REASONS[value].name+"». Подключение к модели — на следующем этапе.")}
-function toggleTheme(){state.light=!state.light;document.body.classList.toggle("light",state.light);$("#themeLabel").textContent=state.light?"Светлая":"Тёмная";$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"))}
+function selectReason(value){if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return}state.reason=value;$("#currentReason").textContent=REASONS[value].name;$$("[data-reason]").forEach(btn=>btn.classList.toggle("selected",btn.dataset.reason===value));closePopovers();notify("Выбран уровень «"+REASONS[value].name+"». Подключение к модели — на следующем этапе.")}
+function toggleTheme(){state.light=!state.light;document.body.classList.toggle("light",state.light);$("#themeLabel").textContent=state.light?"Светлая":"Тёмная";$$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"))}
 const featureDescriptions={
   google:["Вход через Google","Здесь будет настоящая регистрация через Google. Пока авторизация не подключена: никакие данные аккаунта не запрашиваются."],
   languages:["Выбор языка","Интерфейс на русском, казахском и английском добавим после согласования текстов и навигации."],
@@ -336,7 +385,7 @@ document.addEventListener("click",event=>{
 });
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape"){if(!$("#modalOverlay").hidden){closeModal();return}closePopovers();setDrawer(false)}
-  if(!$("#modalOverlay").hidden&&event.key==="Tab"){const controls=$("#modalOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}
+  if(!$("#modalOverlay").hidden&&event.key==="Tab"){const controls=$$("#modalOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}
 });
 $("#drawerScrim").addEventListener("click",()=>setDrawer(false));
 $("#messageInput").addEventListener("input",resizeInput);
@@ -346,7 +395,7 @@ $("#historySearch").addEventListener("input",renderHistory);
 $("#toolsSearch").addEventListener("input",event=>renderTools(event.target.value));
 const banner=$("#statusBanner");
 $("#messageInput").addEventListener("input",()=>{banner.hidden=true});
-renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$("[data-reason=medium]").forEach(button=>button.classList.add("selected"));resizeInput();showScreen("welcome");
+renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$$("[data-reason=medium]").forEach(button=>button.classList.add("selected"));resizeInput();showScreen("welcome");
 
 </script>
 </body>

@@ -424,6 +424,7 @@ body.light .session-dialog-close{color:#2f6385}
 </style>
   
   
+  
 </head>
 <body>
 <svg xmlns="http://www.w3.org/2000/svg" class="svg-library" aria-hidden="true">
@@ -496,7 +497,7 @@ body.light .session-dialog-close{color:#2f6385}
                 <button type="button" data-language="ru" class="language-option selected"><span class="language-code">RU</span><span><strong>Русский</strong><small>Русский язык</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
                 <button type="button" data-language="kk" class="language-option"><span class="language-code">KZ</span><span><strong>Қазақша</strong><small>Қазақ тілі</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
                 <button type="button" data-language="en" class="language-option"><span class="language-code">EN</span><span><strong>English</strong><small>English language</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
-                <p class="popover-hint">Пока меняется только выбранный язык. Полный перевод будет добавлен позже.</p>
+                <p class="popover-hint">Переведены основные элементы сайта. Остальные тексты добавляются поэтапно.</p>
           </div>
         </div>
       </div>
@@ -540,16 +541,16 @@ body.light .session-dialog-close{color:#2f6385}
       </section>
       <section id="view-chat" class="view view-chat" hidden aria-label="Переписка"><div id="chatMessages" class="chat-messages" aria-live="polite"></div></section>
       <section id="view-history" class="view view-panel" hidden aria-labelledby="historyHeading">
-        <div class="panel-heading"><span class="eyebrow">ПЕРЕПИСКИ</span><h1 id="historyHeading">История чатов</h1><p>Все разговоры будут отображаться здесь.</p></div>
+        <div class="panel-heading"><span class="eyebrow">ПЕРЕПИСКИ</span><h1 id="historyHeading">История чатов</h1><p>Разговоры доступны до обновления вкладки.</p></div>
         <div class="search-bar"><svg class="icon"><use href="#ic-search"/></svg><input id="historySearch" type="search" placeholder="Поиск по перепискам" autocomplete="off" aria-label="Поиск по перепискам"></div>
         <div id="historyList" class="panel-items"><div class="empty-card"><svg class="icon"><use href="#ic-chat"/></svg><h2>Пока нет разговоров</h2><p>Начните новый чат, чтобы увидеть, как будет выглядеть история.</p><button data-action="new-chat" class="subtle-cta">Новый чат</button></div></div>
       </section>
       <section id="view-projects" class="view view-panel" hidden aria-labelledby="projectsHeading">
-        <div class="panel-heading"><span class="eyebrow">ПРОСТРАНСТВО ДЛЯ ИДЕЙ</span><h1 id="projectsHeading">Проекты</h1><p>В будущем здесь будут папки для группировки разговоров.</p></div>
+        <div class="panel-heading"><span class="eyebrow">ПРОСТРАНСТВО ДЛЯ ИДЕЙ</span><h1 id="projectsHeading">Проекты</h1><p>Создавайте простые папки и объединяйте переписки по темам.</p></div>
         <div class="empty-card"><svg class="icon"><use href="#ic-folder"/></svg><h2>Ваши будущие проекты</h2><p>Обычные папки, без общей памяти и сложных настроек. Создание проектов подключим на следующем этапе.</p><button data-feature="projects" class="subtle-cta">+ Новый проект <span class="small-soon">Скоро</span></button></div>
       </section>
       <section id="view-tools" class="view view-panel" hidden aria-labelledby="toolsHeading">
-        <div class="panel-heading"><span class="eyebrow">КАРТА ВОЗМОЖНОСТЕЙ</span><h1 id="toolsHeading">Инструменты Kaz AI</h1><p>Все запланированные возможности собраны здесь. Пока это только оболочка: функции будут подключаться поэтапно.</p></div>
+        <div class="panel-heading"><span class="eyebrow">КАРТА ВОЗМОЖНОСТЕЙ</span><h1 id="toolsHeading">Инструменты Kaz AI</h1><p>Часть инструментов уже работает. Остальные подключаются поэтапно.</p></div>
         <div class="search-bar"><svg class="icon"><use href="#ic-search"/></svg><input id="toolsSearch" type="search" placeholder="Найти функцию" autocomplete="off" aria-label="Найти функцию"></div>
         <div id="toolGroups" class="tools-groups"></div>
       </section>
@@ -562,11 +563,11 @@ body.light .session-dialog-close{color:#2f6385}
                 <button type="button" data-language="ru" class="language-option selected"><span class="language-code">RU</span><span><strong>Русский</strong><small>Русский язык</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
                 <button type="button" data-language="kk" class="language-option"><span class="language-code">KZ</span><span><strong>Қазақша</strong><small>Қазақ тілі</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
                 <button type="button" data-language="en" class="language-option"><span class="language-code">EN</span><span><strong>English</strong><small>English language</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
-                <p class="popover-hint">Пока меняется только выбранный язык. Полный перевод будет добавлен позже.</p></div></div></div>
+                <p class="popover-hint">Переведены основные элементы сайта. Остальные тексты добавляются поэтапно.</p></div></div></div>
           <div class="setting-item"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><div class="popover-anchor settings-popover-anchor"><button type="button" class="setting-control" data-action="toggle-font" id="fontToggle" aria-expanded="false" aria-controls="fontMenu"><span id="fontLabel">Обычный</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div class="popover-menu font-menu" id="fontMenu" hidden><p class="popover-title">Размер текста</p><button type="button" data-font="small">Компактный</button><button type="button" data-font="normal" class="selected">Обычный</button><button type="button" data-font="large">Крупный</button><p class="popover-hint">Пример оформления для проверки дизайна.</p></div></div></div>
           <div class="setting-item"><div><h2>Личные инструкции</h2><p>Как ИИ должен отвечать именно вам</p></div><button class="setting-control" data-feature="instructions">Настроить <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
           <div class="setting-item"><div><h2>Память ИИ</h2><p>Запоминание предпочтений — позже</p></div><button class="setting-control" data-feature="memory">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
-          <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать свои переписки — позже</p></div><button class="setting-control" data-feature="export">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
+          <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать историю текущей вкладки</p></div><button class="setting-control" data-feature="export">Скачать <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
           <div class="setting-item"><div><h2>Аккаунт</h2><p>Вход через Google будет подключён позже</p></div><button class="setting-control" data-feature="google">Войти <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
         </div>
       </section>
@@ -605,7 +606,7 @@ body.light .session-dialog-close{color:#2f6385}
           </div>
         </div>
       </div>
-      <p id="composerNote" class="composer-note">Демо интерфейса. ИИ, Google-вход и сохранение истории пока не подключены.</p>
+      <p id="composerNote" class="composer-note">История временная. Настоящие ответы ИИ требуют настройки защищённого Cloudflare.</p>
     </div>
   </div>
 </div>
@@ -719,7 +720,7 @@ function togglePopover(kind,trigger){
   if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
 }
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
-function showScreen(screen){if(!viewNames.includes(screen))return;state.screen=screen;viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0}
+function showScreen(screen){if(!viewNames.includes(screen))return;state.screen=screen;viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0;window.KazI18n?.refresh()}
 function newChat(){state.chat=[];state.draftTitle="Новый чат";$("#statusBanner").hidden=true;renderChat();renderHistory();showScreen("welcome");$("#messageInput").value="";resizeInput();$("#messageInput").focus()}
 function resizeInput(){const input=$("#messageInput");input.style.height="auto";input.style.height=Math.min(input.scrollHeight,176)+"px";$("#sendButton").disabled=!input.value.trim()}
 function addChatMessage(role,content){const item={role,content};state.chat.push(item);renderChat();renderHistory();return item}
@@ -736,7 +737,8 @@ function selectLanguage(value){
   $$(".language-current").forEach(el=>{el.textContent=languages[value]});
   $$("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
   closePopovers();
-  notify("Выбран язык «"+languages[value]+"». Это предварительный просмотр выбора, перевод интерфейса будет позже.");
+  window.KazI18n?.set(value);
+  notify("Язык интерфейса: "+languages[value]);
 }
 function selectFont(value){
   if(!["small","normal","large"].includes(value))return;
@@ -897,7 +899,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   };
   function sessionNewChat(temporary=false){
     if(abort)abort.abort();
-    abort=null;pending=null;current=null;
+    abort=null;pending=null;
+    for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary)threads.splice(i,1);
+    current=null;
     state.chat=[];state.draftTitle="Новый чат";
     $("#messageInput").value="";$("#messageInput").focus();
     $("#sendButton").disabled=true;
@@ -1032,20 +1036,20 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       body.append(save);
     });
   }
-  async function runAI(chat){
+  async function runAI(chat,replaceId=null){
     if(!allowRemote()){
       showStatus("Предпросмотр: настоящий GPT-OSS 120B ещё не подключён. Сообщения никуда не отправляются.");
       return;
     }
     if(!aiAccessKey){
       showStatus("Для подключения ИИ укажи приватный ключ доступа.");
-      configureAccess(()=>runAI(chat));return;
+      configureAccess(()=>runAI(chat,replaceId));return;
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
     const controller=new AbortController();abort=controller;pending=chat.id;
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
-    const history=chat.messages.filter(m=>m.role==="user"||m.role==="assistant").slice(-16)
+    const history=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
       .map(m=>({role:m.role,content:m.content.slice(0,4000)}));
     try{
       const response=await fetch("/api/chat",{
@@ -1060,11 +1064,18 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.");
         return;
       }
+      if(abort!==controller)return;
       if(!data||typeof data.text!=="string"||!data.text.trim())throw new Error("EMPTY_RESPONSE");
-      chat.messages.push({id:nextId(),role:"assistant",content:data.text.trim()});
+      if(replaceId){
+        const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
+        if(existing){existing.content=data.text.trim();existing.rating=null}
+      }else{
+        if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text.trim()});
+      }
       if(current===chat.id){displayThread(chat);renderChat()}
       showStatus("");
     }catch(e){
+      if(abort!==controller)return;
       if(e?.name==="AbortError")showStatus("Генерация ответа остановлена.");
       else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.");
     }finally{
@@ -1100,7 +1111,16 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   function handle(action,id){
     const chat=threads.find(c=>c.id===id);
     const project=projects.find(p=>p.id===id);
-    if(action==="open-chat"&&chat){displayThread(chat);renderChat();renderHistory();showScreen("chat");return}
+    if(action==="open-chat"&&chat){
+      if(current!==chat.id){
+        const old=selected();
+        if(old?.temporary){
+          const i=threads.indexOf(old);
+          if(i>=0)threads.splice(i,1);
+        }
+      }
+      displayThread(chat);renderChat();renderHistory();showScreen("chat");return
+    }
     if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{chat.title=v;renderHistory();renderSessionProjects()});return}
     if(action==="pin-chat"&&chat){chat.pinned=!chat.pinned;renderHistory();return}
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
@@ -1137,6 +1157,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       const m=c.messages[index];
       if(action==="copy-message"){copyValue(m.content);return}
       if(action==="edit-message"&&m.role==="user"){
+        if(abort){notify("Сначала остановите текущий ответ.");return}
         openDialog("Изменить сообщение","Ответы, отправленные после этого сообщения, будут удалены из текущей ветки.",body=>{
           const area=make("textarea","session-textarea");area.value=m.content;area.maxLength=4000;
           body.append(area);
@@ -1144,15 +1165,14 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
           save.addEventListener("click",()=>{
             const value=area.value.trim();if(!value){notify("Сообщение не может быть пустым.");return}
             m.content=value;c.messages.splice(index+1);closeDialog();renderChat();renderHistory();
-            showStatus("Сообщение изменено. Отправьте новый запрос, чтобы получить новый ответ.");
+            runAI(c);
           });body.append(save);
         });return;
       }
       if(action==="retry-answer"){
+        if(abort){notify("Дождитесь завершения предыдущего запроса.");return}
         if(m.role!=="assistant"||index!==c.messages.length-1){notify("Повторить можно только последний ответ.");return}
-        c.messages.pop();displayThread(c);renderChat();
-        const last=c.messages.at(-1);
-        if(last?.role==="user")runAI(c);
+        if(c.messages[index-1]?.role==="user")runAI(c,m.id);
         else showStatus("Не удалось определить вопрос для повторного ответа.");
         return;
       }
@@ -1281,12 +1301,51 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   renderChat=renderSessionChat;
   renderTools=function(query=""){
     baseRenderTools(query);
-    const calc=$("#toolGroups [data-feature='tool-25']");if(calc){
-      calc.setAttribute("aria-label","Простой калькулятор, работает без ИИ");
-      const status=calc.querySelector("small");if(status)status.textContent="Работает";
+    const working=new Set([1,2,3,4,5,6,7,8,11,13,14,25,40,41,42,44,45]);
+    const partial=new Set([9,10,15,16,43]);
+    for(const card of document.querySelectorAll("#toolGroups [data-feature^='tool-']")){
+      const id=Number(card.dataset.feature.slice(5));
+      const status=card.querySelector("small");
+      if(working.has(id)){
+        if(status)status.textContent="Работает";
+        card.setAttribute("aria-label",card.querySelector("strong")?.textContent||"Инструмент");
+      }else if(partial.has(id)){
+        if(status)status.textContent="Частично";
+        card.setAttribute("aria-label",(card.querySelector("strong")?.textContent||"Инструмент")+", частично реализовано");
+      }
     }
   };
   showFeature=function(key){
+    if(key.startsWith("tool-")){
+      const number=Number(key.slice(5)),chat=selected();
+      if(number===1){sessionNewChat();return}
+      if(number===2||number===3){showScreen("history");if(number===3)$("#historySearch").focus();return}
+      if([4,5,6,8,9,11,13,14].includes(number)){
+        if(!chat){showScreen("history");notify("Сначала создайте чат.");return}
+        const lastUser=[...chat.messages].reverse().find(m=>m.role==="user");
+        const lastAssistant=[...chat.messages].reverse().find(m=>m.role==="assistant");
+        if(number===4)return handle("rename-chat",chat.id);
+        if(number===5)return handle("delete-chat",chat.id);
+        if(number===6)return handle("pin-chat",chat.id);
+        if(number===8&&lastUser){showScreen("chat");return handle("edit-message",lastUser.id)}
+        if(number===9&&lastAssistant){showScreen("chat");return handle("retry-answer",lastAssistant.id)}
+        if(number===11&&(lastAssistant||lastUser)){return handle("copy-message",(lastAssistant||lastUser).id)}
+        if(number===14&&(lastAssistant||lastUser)){return handle("branch-message",(lastAssistant||lastUser).id)}
+        if(number===13){showScreen("chat");notify("Оценка ответа находится под сообщением ИИ.");return}
+        notify("Сначала напишите сообщение.");return;
+      }
+      if(number===7){showScreen("projects");return}
+      if(number===10){if(abort)abort.abort();else notify("Сейчас нет активного ответа.");return}
+      if(number===15){showScreen("welcome");$("#messageInput").focus();return}
+      if(number===16){togglePopover("reason");return}
+      if(number===25){showCalculator();return}
+      if(number===40)return handle("instructions");
+      if(number===41){showScreen("settings");$("#sessionTemporary").focus();return}
+      if(number===42){toggleTheme();return}
+      if(number===43){togglePopover("language",$("#languageToggle"));return}
+      if(number===44){showScreen("settings");togglePopover("font");return}
+      if(number===45)return handle("export");
+    }
     if(key==="tool-25"){showCalculator();return}
     if(key==="export"){handle("export");return}
     if(key==="instructions"){handle("instructions");return}
@@ -1305,6 +1364,591 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     threads:threads.map(c=>({id:c.id,title:c.title,messages:c.messages.length,pinned:c.pinned,temporary:c.temporary,projectId:c.projectId})),
     projects:projects.map(p=>({id:p.id,name:p.name})),active:current
   }),compute,sendMessage};
+})();
+
+</script>
+<script>
+
+"use strict";
+/* Kaz AI session-only localization. No translation of user content. */
+(function(){
+  const dictionary={
+  "Новый чат": {
+    "en": "New chat",
+    "kk": "Жаңа чат"
+  },
+  "Чаты": {
+    "en": "Chats",
+    "kk": "Чаттар"
+  },
+  "Проекты": {
+    "en": "Projects",
+    "kk": "Жобалар"
+  },
+  "Инструменты": {
+    "en": "Tools",
+    "kk": "Құралдар"
+  },
+  "Настройки": {
+    "en": "Settings",
+    "kk": "Баптаулар"
+  },
+  "НЕДАВНИЕ ЧАТЫ": {
+    "en": "RECENT CHATS",
+    "kk": "СОҢҒЫ ЧАТТАР"
+  },
+  "Здесь появятся ваши разговоры": {
+    "en": "Your conversations will appear here",
+    "kk": "Әңгімелеріңіз осы жерде пайда болады"
+  },
+  "Войти через Google": {
+    "en": "Sign in with Google",
+    "kk": "Google арқылы кіру"
+  },
+  "Предварительный интерфейс": {
+    "en": "Interface preview",
+    "kk": "Интерфейс үлгісі"
+  },
+  "Демо оболочки": {
+    "en": "Interface demo",
+    "kk": "Интерфейс үлгісі"
+  },
+  "Русский": {
+    "en": "Русский",
+    "kk": "Русский"
+  },
+  "Русский язык": {
+    "en": "Russian language",
+    "kk": "Орыс тілі"
+  },
+  "Язык интерфейса": {
+    "en": "Interface language",
+    "kk": "Интерфейс тілі"
+  },
+  "Пока меняется только выбранный язык. Полный перевод будет добавлен позже.": {
+    "en": "The selected language changes the site interface.",
+    "kk": "Таңдалған тіл сайт интерфейсін өзгертеді."
+  },
+  "Уровень рассуждения": {
+    "en": "Reasoning level",
+    "kk": "Ойлау деңгейі"
+  },
+  "Усилие рассуждения": {
+    "en": "Reasoning effort",
+    "kk": "Ойлау деңгейі"
+  },
+  "Низкий": {
+    "en": "Low",
+    "kk": "Төмен"
+  },
+  "Средний": {
+    "en": "Medium",
+    "kk": "Орташа"
+  },
+  "Высокий": {
+    "en": "High",
+    "kk": "Жоғары"
+  },
+  "Углублённый": {
+    "en": "Deep",
+    "kk": "Терең"
+  },
+  "Быстрые ответы": {
+    "en": "Fast answers",
+    "kk": "Жылдам жауаптар"
+  },
+  "Баланс скорости и анализа": {
+    "en": "Balanced speed and analysis",
+    "kk": "Жылдамдық пен талдау тепе-теңдігі"
+  },
+  "Подробные рассуждения": {
+    "en": "Detailed reasoning",
+    "kk": "Толық талдау"
+  },
+  "Максимально глубокий анализ": {
+    "en": "Deep analysis",
+    "kk": "Терең талдау"
+  },
+  "Прикрепить файл": {
+    "en": "Attach file",
+    "kk": "Файл тіркеу"
+  },
+  "Прикрепить фото": {
+    "en": "Attach photo",
+    "kk": "Фото тіркеу"
+  },
+  "Создать картинку": {
+    "en": "Create image",
+    "kk": "Сурет жасау"
+  },
+  "Аудиозапись": {
+    "en": "Audio recording",
+    "kk": "Аудиожазба"
+  },
+  "Позже": {
+    "en": "Later",
+    "kk": "Кейін"
+  },
+  "История чатов": {
+    "en": "Chat history",
+    "kk": "Чаттар тарихы"
+  },
+  "Все разговоры будут отображаться здесь.": {
+    "en": "Your conversations appear here.",
+    "kk": "Әңгімелеріңіз осы жерде көрсетіледі."
+  },
+  "Поиск по перепискам": {
+    "en": "Search chats",
+    "kk": "Чаттардан іздеу"
+  },
+  "Пока нет разговоров": {
+    "en": "No conversations yet",
+    "kk": "Әзірге әңгімелер жоқ"
+  },
+  "Начните новый чат, чтобы увидеть, как будет выглядеть история.": {
+    "en": "Start a new chat to see your history.",
+    "kk": "Тарихты көру үшін жаңа чат бастаңыз."
+  },
+  "ПЕРЕПИСКИ": {
+    "en": "CONVERSATIONS",
+    "kk": "ӘҢГІМЕЛЕР"
+  },
+  "ПРОСТРАНСТВО ДЛЯ ИДЕЙ": {
+    "en": "IDEAS AND PROJECTS",
+    "kk": "ИДЕЯЛАР МЕН ЖОБАЛАР"
+  },
+  "В будущем здесь будут папки для группировки разговоров.": {
+    "en": "Organize conversations into projects.",
+    "kk": "Әңгімелерді жобаларға топтастырыңыз."
+  },
+  "КАРТА ВОЗМОЖНОСТЕЙ": {
+    "en": "FEATURE CATALOG",
+    "kk": "МҮМКІНДІКТЕР ТІЗІМІ"
+  },
+  "Инструменты Kaz AI": {
+    "en": "Kaz AI tools",
+    "kk": "Kaz AI құралдары"
+  },
+  "Все запланированные возможности собраны здесь. Пока это только оболочка: функции будут подключаться поэтапно.": {
+    "en": "Browse planned tools. Features are being connected step by step.",
+    "kk": "Жоспарланған құралдар осы жерде. Функциялар кезең-кезеңімен қосылады."
+  },
+  "Найти функцию": {
+    "en": "Find a feature",
+    "kk": "Функцияны іздеу"
+  },
+  "ЛИЧНОЕ ПРОСТРАНСТВО": {
+    "en": "YOUR SPACE",
+    "kk": "ЖЕКЕ КЕҢІСТІК"
+  },
+  "Основные параметры вашего будущего Kaz AI.": {
+    "en": "Customize your Kaz AI experience.",
+    "kk": "Kaz AI интерфейсін баптаңыз."
+  },
+  "Оформление": {
+    "en": "Appearance",
+    "kk": "Көрініс"
+  },
+  "Светлая или тёмная тема": {
+    "en": "Light or dark theme",
+    "kk": "Ашық немесе қараңғы тақырып"
+  },
+  "Тёмная": {
+    "en": "Dark",
+    "kk": "Қараңғы"
+  },
+  "Светлая": {
+    "en": "Light",
+    "kk": "Ашық"
+  },
+  "Размер текста": {
+    "en": "Text size",
+    "kk": "Мәтін өлшемі"
+  },
+  "Удобное чтение на любом экране": {
+    "en": "Comfortable reading on any screen",
+    "kk": "Кез келген экранда ыңғайлы оқу"
+  },
+  "Компактный": {
+    "en": "Compact",
+    "kk": "Ықшам"
+  },
+  "Обычный": {
+    "en": "Normal",
+    "kk": "Қалыпты"
+  },
+  "Крупный": {
+    "en": "Large",
+    "kk": "Үлкен"
+  },
+  "Личные инструкции": {
+    "en": "Custom instructions",
+    "kk": "Жеке нұсқаулар"
+  },
+  "Как ИИ должен отвечать именно вам": {
+    "en": "How AI should respond to you",
+    "kk": "ЖИ сізге қалай жауап беруі керек"
+  },
+  "Настроить": {
+    "en": "Configure",
+    "kk": "Баптау"
+  },
+  "Память ИИ": {
+    "en": "AI memory",
+    "kk": "ЖИ жады"
+  },
+  "Запоминание предпочтений — позже": {
+    "en": "Saving preferences will come later",
+    "kk": "Таңдауларды сақтау кейін қосылады"
+  },
+  "Скоро": {
+    "en": "Coming soon",
+    "kk": "Жақында"
+  },
+  "Экспорт истории": {
+    "en": "Export chat history",
+    "kk": "Чат тарихын экспорттау"
+  },
+  "Скачать свои переписки — позже": {
+    "en": "Download chats from this tab",
+    "kk": "Осы қойындыдағы чаттарды жүктеп алу"
+  },
+  "Аккаунт": {
+    "en": "Account",
+    "kk": "Тіркелгі"
+  },
+  "Вход через Google будет подключён позже": {
+    "en": "Google sign-in will be available later",
+    "kk": "Google арқылы кіру кейін қосылады"
+  },
+  "Войти": {
+    "en": "Sign in",
+    "kk": "Кіру"
+  },
+  "Временный чат": {
+    "en": "Temporary chat",
+    "kk": "Уақытша чат"
+  },
+  "Без добавления в историю текущей вкладки": {
+    "en": "Not added to this tab's chat history",
+    "kk": "Осы қойындының чат тарихына қосылмайды"
+  },
+  "Включить": {
+    "en": "Enable",
+    "kk": "Қосу"
+  },
+  "Доступ к текстовому ИИ": {
+    "en": "Access to text AI",
+    "kk": "Мәтіндік ЖИ-ге қолжетімділік"
+  },
+  "GPT-OSS 120B. Для личного тестирования на Cloudflare нужен защитный ключ.": {
+    "en": "GPT-OSS 120B requires a private Cloudflare access key.",
+    "kk": "GPT-OSS 120B үшін Cloudflare жеке қолжетімділік кілті қажет."
+  },
+  "Настроить ключ": {
+    "en": "Configure key",
+    "kk": "Кілтті баптау"
+  },
+  "Напишите сообщение...": {
+    "en": "Type a message...",
+    "kk": "Хабарлама жазыңыз..."
+  },
+  "Демо интерфейса. ИИ, Google-вход и сохранение истории пока не подключены.": {
+    "en": "Interface preview. AI and Google sign-in require setup; chat history is temporary.",
+    "kk": "Интерфейс үлгісі. ЖИ мен Google кіруін баптау қажет; чат тарихы уақытша."
+  },
+  "Добро пожаловать в Kaz AI": {
+    "en": "Welcome to Kaz AI",
+    "kk": "Kaz AI-ге қош келдіңіз"
+  },
+  "Войдите, чтобы в будущем сохранять свои переписки и настройки.": {
+    "en": "Sign in to save chats and settings in the future.",
+    "kk": "Болашақта чаттар мен баптауларды сақтау үшін кіріңіз."
+  },
+  "Продолжить с Google": {
+    "en": "Continue with Google",
+    "kk": "Google арқылы жалғастыру"
+  },
+  "Вернуться к сайту": {
+    "en": "Return to site",
+    "kk": "Сайтқа оралу"
+  },
+  "Это только макет окна входа. Мы не запрашиваем данные Google и ничего не отправляем.": {
+    "en": "This is a sign-in preview. No Google data is requested or transmitted.",
+    "kk": "Бұл кіру терезесінің үлгісі. Google деректері сұралмайды немесе жіберілмейді."
+  },
+  "Готово": {
+    "en": "Done",
+    "kk": "Дайын"
+  },
+  "Понятно": {
+    "en": "OK",
+    "kk": "Түсінікті"
+  },
+  "Закрыть": {
+    "en": "Close",
+    "kk": "Жабу"
+  },
+  "Ничего не найдено": {
+    "en": "No results found",
+    "kk": "Ештеңе табылмады"
+  },
+  "Чаты и переписки": {
+    "en": "Chats and conversations",
+    "kk": "Чаттар мен әңгімелер"
+  },
+  "Интеллектуальные возможности": {
+    "en": "AI capabilities",
+    "kk": "ЖИ мүмкіндіктері"
+  },
+  "Изображения, файлы и голос": {
+    "en": "Images, files and voice",
+    "kk": "Суреттер, файлдар және дауыс"
+  },
+  "Настройки и дополнительные возможности": {
+    "en": "Settings and more",
+    "kk": "Баптаулар және қосымша мүмкіндіктер"
+  },
+  "В плане": {
+    "en": "Planned",
+    "kk": "Жоспарда"
+  },
+  "Работает": {
+    "en": "Working",
+    "kk": "Жұмыс істейді"
+  },
+  "Нет чатов": {
+    "en": "No chats",
+    "kk": "Чаттар жоқ"
+  },
+  "Нет временной истории": {
+    "en": "No chat history",
+    "kk": "Чаттар тарихы жоқ"
+  },
+  "Пока нет проектов": {
+    "en": "No projects yet",
+    "kk": "Әзірге жобалар жоқ"
+  },
+  "Без проекта": {
+    "en": "No project",
+    "kk": "Жобасыз"
+  },
+  "Пока нет чатов в этом проекте.": {
+    "en": "No chats in this project yet.",
+    "kk": "Бұл жобада әзірге чат жоқ."
+  },
+  "Название": {
+    "en": "Rename",
+    "kk": "Атау"
+  },
+  "Закрепить": {
+    "en": "Pin",
+    "kk": "Бекіту"
+  },
+  "Открепить": {
+    "en": "Unpin",
+    "kk": "Бекітуден шығару"
+  },
+  "Проект": {
+    "en": "Project",
+    "kk": "Жоба"
+  },
+  "Удалить": {
+    "en": "Delete",
+    "kk": "Жою"
+  },
+  "Переименовать": {
+    "en": "Rename",
+    "kk": "Қайта атау"
+  },
+  "Удалить проект": {
+    "en": "Delete project",
+    "kk": "Жобаны жою"
+  },
+  "Создать проект": {
+    "en": "Create project",
+    "kk": "Жоба жасау"
+  },
+  "Переименовать чат": {
+    "en": "Rename chat",
+    "kk": "Чатты қайта атау"
+  },
+  "Удалить чат?": {
+    "en": "Delete this chat?",
+    "kk": "Бұл чатты жою керек пе?"
+  },
+  "Изменить": {
+    "en": "Edit",
+    "kk": "Өзгерту"
+  },
+  "Копировать": {
+    "en": "Copy",
+    "kk": "Көшіру"
+  },
+  "Ответвить": {
+    "en": "Branch",
+    "kk": "Тармақтау"
+  },
+  "Повторить ответ": {
+    "en": "Retry answer",
+    "kk": "Жауапты қайталау"
+  },
+  "Сохранить": {
+    "en": "Save",
+    "kk": "Сақтау"
+  },
+  "Применить": {
+    "en": "Apply",
+    "kk": "Қолдану"
+  },
+  "Отменить": {
+    "en": "Cancel",
+    "kk": "Болдырмау"
+  },
+  "Мои разработки": {
+    "en": "My projects",
+    "kk": "Менің жобаларым"
+  },
+  "Новый проект": {
+    "en": "New project",
+    "kk": "Жаңа жоба"
+  },
+  "Скопировать текст": {
+    "en": "Copy text",
+    "kk": "Мәтінді көшіру"
+  },
+  "Остановить": {
+    "en": "Stop",
+    "kk": "Тоқтату"
+  },
+  "Простой калькулятор": {
+    "en": "Simple calculator",
+    "kk": "Қарапайым калькулятор"
+  },
+  "Рассчитать": {
+    "en": "Calculate",
+    "kk": "Есептеу"
+  },
+  "Результат появится здесь": {
+    "en": "The result appears here",
+    "kk": "Нәтиже осында шығады"
+  },
+  "Выбран язык": {
+    "en": "Language selected",
+    "kk": "Тіл таңдалды"
+  },
+  "Функция появится позже": {
+    "en": "Feature coming later",
+    "kk": "Функция кейін қосылады"
+  },
+  "Переписка": {
+    "en": "Conversation",
+    "kk": "Әңгіме"
+  },
+  "Разговоры доступны до обновления вкладки.": {
+    "en": "Chats are available until you refresh the tab.",
+    "kk": "Чаттар қойынды жаңартылғанша қолжетімді."
+  },
+  "Создавайте простые папки и объединяйте переписки по темам.": {
+    "en": "Create folders and organize your conversations by topic.",
+    "kk": "Қалталар жасап, әңгімелерді тақырып бойынша топтастырыңыз."
+  },
+  "Часть инструментов уже работает. Остальные подключаются поэтапно.": {
+    "en": "Some tools already work. Others will be added step by step.",
+    "kk": "Кейбір құралдар жұмыс істейді. Қалғандары кезең-кезеңімен қосылады."
+  },
+  "Скачать историю текущей вкладки": {
+    "en": "Download chats from this tab",
+    "kk": "Осы қойындыдағы чаттарды жүктеп алу"
+  },
+  "Скачать": {
+    "en": "Download",
+    "kk": "Жүктеп алу"
+  },
+  "История временная. Настоящие ответы ИИ требуют настройки защищённого Cloudflare.": {
+    "en": "Chat history is temporary. Real AI replies require protected Cloudflare setup.",
+    "kk": "Чат тарихы уақытша. Нақты ЖИ жауаптары үшін қорғалған Cloudflare баптауы қажет."
+  },
+  "Переведены основные элементы сайта. Остальные тексты добавляются поэтапно.": {
+    "en": "Core site controls are translated. Other texts are being added.",
+    "kk": "Сайттың негізгі басқару элементтері аударылды. Қалған мәтіндер кейін қосылады."
+  },
+  "Частично": {
+    "en": "Partly working",
+    "kk": "Ішінара"
+  },
+  "Сейчас нет активного ответа.": {
+    "en": "No response in progress.",
+    "kk": "Қазір жауап жасалып жатқан жоқ."
+  }
+};
+  const selectors=[
+    ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",
+    ".topbar", "#view-history .panel-heading","#view-history .search-bar",
+    "#view-projects .panel-heading","#view-tools .panel-heading",
+    "#view-tools .search-bar","#view-settings .panel-heading",
+    "#view-settings .settings-list","#toolGroups",
+    "#attachMenu","#reasonMenu","#fontMenu","#languageMenu","#settingsLanguageMenu",
+    "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay"
+  ];
+  const captured=new WeakMap();
+  let language="ru";
+  function shouldSkip(node){
+    const parent=node.parentElement;
+    return !parent||Boolean(parent.closest("input,textarea,option,script,style,[data-session='open-chat'],.session-project-title,.session-project-chat,.session-chat-name,.session-recent,.session-calc-output,.session-chat-ops [data-id] .session-user-label"));
+  }
+  function translateNode(node){
+    if(shouldSkip(node))return;
+    const value=node.nodeValue||"";
+    if(!value.trim())return;
+    if(!captured.has(node))captured.set(node,value);
+    const original=captured.get(node);
+    const key=original.trim();
+    const translated=language==="ru"?key:(dictionary[key]?.[language]||key);
+    const prefix=original.match(/^\s*/)?.[0]||"";
+    const suffix=original.match(/\s*$/)?.[0]||"";
+    const output=prefix+translated+suffix;
+    if(value!==output)node.nodeValue=output;
+  }
+  function translateText(root){
+    if(!root||!root.isConnected)return;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let node;while((node=walker.nextNode()))translateNode(node);
+    for(const element of [root,...root.querySelectorAll("input[placeholder],textarea[placeholder]")]){
+      if(!element.hasAttribute?.("placeholder"))continue;
+      if(!element.dataset.originalPlaceholder)element.dataset.originalPlaceholder=element.getAttribute("placeholder");
+      const original=element.dataset.originalPlaceholder;
+      const translated=language==="ru"?original:(dictionary[original]?.[language]||original);
+      if(element.placeholder!==translated)element.placeholder=translated;
+    }
+  }
+  function refresh(){
+    for(const selector of selectors){
+      const root=document.querySelector(selector);
+      if(root)translateText(root);
+    }
+    const labels={ru:{welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки"},
+      en:{welcome:"Kaz AI",chat:"Conversation",history:"Chats",projects:"Projects",tools:"Tools",settings:"Settings"},
+      kk:{welcome:"Kaz AI",chat:"Әңгіме",history:"Чаттар",projects:"Жобалар",tools:"Құралдар",settings:"Баптаулар"}};
+    const title=document.querySelector("#pageTitle");
+    if(title&&typeof state!=="undefined"&&state.screen)title.textContent=labels[language][state.screen]||"Kaz AI";
+    document.documentElement.lang=language==="kk"?"kk":language==="en"?"en":"ru";
+  }
+  const observer=new MutationObserver(changes=>{
+    if(changes.some(x=>x.type==="childList"))refresh();
+  });
+  function set(next){
+    if(!["ru","kk","en"].includes(next))return;
+    language=next;refresh();
+  }
+  window.KazI18n={set,refresh,get language(){return language}};
+  window.addEventListener("DOMContentLoaded",()=>{
+    refresh();
+    for(const selector of selectors){
+      const root=document.querySelector(selector);
+      if(root)observer.observe(root,{childList:true,subtree:true});
+    }
+  },{once:true});
 })();
 
 </script>

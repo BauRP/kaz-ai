@@ -112,13 +112,16 @@ test('GPT-OSS route is server-side and requires private access key',()=>{
 
 test('About navigation is after Settings and the chat welcome has no SEO article',()=>{
   const settings=html.indexOf('data-screen="settings" class="nav-item"');
-  const about=html.indexOf('class="nav-item about-nav-link"');
+  const about=html.indexOf('data-screen="about" class="nav-item about-nav-link"');
   assert.ok(settings>0&&about>settings);
-  assert.match(html,/href="\.\/about\/"/);
+  assert.match(html,/data-screen="about" class="nav-item about-nav-link"/);
+  assert.match(html,/id="view-about"/);
+  assert.match(html,/id="aboutHelp"/);
+  assert.doesNotMatch(html, /target="_blank"/);
   assert.doesNotMatch(html,/seo-home-intro|seo-home-links|info-links/);
   assert.doesNotMatch(css,/\.seo-home-intro\s*\{/);
   const aboutText=readFileSync('public/about/index.html','utf8');
-  for(const word of ['149 млрд параметров','117 млрд параметров','FLUX.2 dev','Помощь пользователям Kaz AI'])assert.ok(aboutText.includes(word));
+  for(const word of ['149 млрд параметров','117 млрд параметров','FLUX.2 dev','Помощь пользователям Kaz AI']){assert.ok(aboutText.includes(word));assert.ok(html.includes(word)||word==='Помощь пользователям Kaz AI');}
 });
 test('user messages no longer render copy, edit or reply buttons',()=>{
   const session=readFileSync('public/session.js','utf8');

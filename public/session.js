@@ -335,7 +335,7 @@
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
       if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;$("#sessionStop").hidden=true;showStatus("")}
       const i=threads.indexOf(chat);threads.splice(i,1);drafts.delete(chat.id);
-      if(current===chat.id){displayThread(null);showScreen("welcome");renderChat()}
+      if(current===chat.id){displayThread(null);drafts.delete(chat.id);showScreen("welcome");renderChat()}
       renderHistory();renderSessionProjects();
     });return}
     if(action==="assign-chat"&&chat){
@@ -462,6 +462,13 @@
       const counter=make("p","session-history-summary");counter.id="historySearchSummary";
       counter.setAttribute("role","status");counter.setAttribute("aria-live","polite");
       historyInput.closest(".search-bar")?.insertAdjacentElement("afterend",counter);
+      const clear=make("button","session-clear-search","Очистить");
+      clear.type="button";clear.id="sessionClearSearch";
+      clear.setAttribute("aria-label","Очистить поиск переписок");clear.hidden=true;
+      historyInput.closest(".search-bar")?.append(clear);
+      const updateSearch=()=>{clear.hidden=!historyInput.value;renderHistory()};
+      historyInput.addEventListener("input",updateSearch);
+      clear.addEventListener("click",()=>{historyInput.value="";updateSearch();historyInput.focus()});
     }
     const projectsView=$("#view-projects");
     if(projectsView){

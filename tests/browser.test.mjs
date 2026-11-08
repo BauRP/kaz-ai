@@ -87,7 +87,7 @@ test('real browser: interactive Kaz AI design preview', async () => {
   }
 });
 
-test('real browser: session chats, search, project folders, editing, branch, export and calculator', async () => {
+test('real browser: session chats, search, project folders, export and calculator', async () => {
   const chromePath = ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({
     ...(chromePath ? {executablePath:chromePath}:{channel:'chrome'}),
@@ -132,13 +132,10 @@ test('real browser: session chats, search, project folders, editing, branch, exp
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Тема для проекта'));
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="open-chat"]').click();
-    await page.locator('#chatMessages [data-session="edit-message"]').first().click();
-    await page.locator('#sessionBody textarea').fill('Обновлённое первое сообщение');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),1);
-    assert.ok((await page.locator('#chatMessages').innerText()).includes('Обновлённое первое сообщение'));
-    await page.locator('#chatMessages [data-session="branch-message"]').first().click();
-    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads.length)),2);
+    assert.equal(await page.locator('#chatMessages .message-user').count(),2);
+    assert.equal(await page.locator('#chatMessages .message-user .session-message-actions').count(),0);
+    for(const action of ['copy-message','edit-message','branch-message'])assert.equal(await page.locator('[data-session="'+action+'"]').count(),0);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads)).length,1);
     await page.locator('.sidebar [data-screen="settings"]').click();
     await page.locator('[data-feature="instructions"]').click();
     await page.locator('#sessionBody textarea').fill('Отвечай просто');
@@ -201,7 +198,7 @@ test('real browser: Russian English Kazakh navigation and safe temporary chats',
   }finally{await browser.close()}
 });
 
-test('real browser: failed GPT answer retry retains original reply and editing regenerates', async () => {
+test('real browser: failed GPT answer retry preserves original reply until new response succeeds', async () => {
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({
     ...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),
@@ -225,7 +222,7 @@ test('real browser: failed GPT answer retry retains original reply and editing r
         });
         return route.fulfill({
           status:200,contentType:'application/json',
-          body:JSON.stringify({text:calls===1?'Первый успешный ответ':calls===3?'Повторный успешный ответ':'Новый ответ после редактирования'})
+          body:JSON.stringify({text:calls===1?'Первый успешный ответ':'Повторный успешный ответ'})
         });
       }
       return route.fulfill({status:200,contentType:'text/html',body:html});
@@ -243,11 +240,9 @@ test('real browser: failed GPT answer retry retains original reply and editing r
     await page.locator('[data-session="retry-answer"]').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Повторный успешный ответ'));
     assert.ok(!(await page.locator('#chatMessages').innerText()).includes('Первый успешный ответ'));
-    await page.locator('[data-session="edit-message"]').first().click();
-    await page.locator('#sessionBody textarea').fill('Исправленный вопрос');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Новый ответ после редактирования'));
-    assert.equal(calls,4);
+    for(const action of ['copy-message','edit-message','branch-message'])assert.equal(await page.locator('[data-session="'+action+'"]').count(),0);
+    assert.equal(await page.locator('.message-user .session-message-actions').count(),0);
+    assert.equal(calls,3);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
@@ -347,7 +342,7 @@ test('SEO pages remain readable with JavaScript disabled and responsive layout',
   }finally{await browser.close()}
 });
 
-test('Kaz AI frontpage preserves chat controls and offers visible crawlable AI summary',async()=>{
+test('Kaz AI starts with a clean chat and opens About outside the conversation',async()=>{
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -358,18 +353,22 @@ test('Kaz AI frontpage preserves chat controls and offers visible crawlable AI s
       assert.equal(await page.title(),'Kaz AI — Казахстанский искусственный интеллект онлайн');
       assert.ok(await page.locator('.hero-wordmark').isVisible());
       assert.ok(await page.locator('#messageInput').isVisible());
-      const intro=page.locator('.seo-home-intro');
-      assert.equal(await intro.count(),1);
-      assert.ok((await intro.innerText()).includes('149 млрд параметров'));
-      assert.ok((await intro.innerText()).includes('ещё не подключены'));
-      assert.equal(await page.locator('#mainContent').evaluate(el=>el.scrollHeight>el.clientHeight),true,'Info area must be scrollable below original hero');
-      await intro.scrollIntoViewIfNeeded();
-      assert.ok(await intro.isVisible());
-      assert.ok(await page.locator('.seo-home-links a[href="./about/"]').isVisible());
-      assert.ok(await page.locator('.seo-home-links a[href="./help/"]').isVisible());
+      assert.equal(await page.locator('.seo-home-intro').count(),0);
+      assert.equal(await page.locator('.info-links').count(),0);
+      const nav=page.locator('.primary-nav .nav-item');
+      assert.equal(await nav.last().innerText(),'О проекте');
+      assert.equal(await nav.nth(3).innerText(),'Настройки');
+      assert.equal(await nav.last().getAttribute('href'),'./about/');
+      const aboutPage=await browser.newPage({viewport,javaScriptEnabled:false});
+      await aboutPage.goto(pathToFileURL(resolve('public','about','index.html')).href);
+      assert.ok((await aboutPage.locator('main').innerText()).includes('149 млрд параметров'));
+      assert.ok(await aboutPage.locator('a[href="../help/"]').first().isVisible());
+      await aboutPage.close();
       await page.locator('#messageInput').fill('Проверка интерфейса');
       await page.locator('#sendButton').click();
       assert.ok((await page.locator('#chatMessages').innerText()).includes('Проверка интерфейса'));
+      assert.equal(await page.locator('.message-user .session-message-actions').count(),0);
+      for(const label of ['Копировать','Изменить','Ответвить'])assert.equal(await page.locator('.message-user button',{hasText:label}).count(),0);
       assert.deepEqual(errors,[]);
       await page.close();
     }

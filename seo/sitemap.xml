@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Template only. The running Cloudflare Worker serves /sitemap.xml using the actual request origin. Do not upload this file unchanged as a public sitemap. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>{{SITE_ORIGIN}}/</loc></url>
+  <url><loc>{{SITE_ORIGIN}}/about/</loc></url>
+  <url><loc>{{SITE_ORIGIN}}/capabilities/</loc></url>
+  <url><loc>{{SITE_ORIGIN}}/questions/</loc></url>
+  <url><loc>{{SITE_ORIGIN}}/privacy/</loc></url>
+  <url><loc>{{SITE_ORIGIN}}/kk/</loc></url>
+  <url><loc>{{SITE_ORIGIN}}/en/</loc></url>
+  <url><loc>{{SITE_ORIGIN}}/ai-chat/</loc></url>
+  <url><loc>{{SITE_ORIGIN}}/ai-images/</loc></url>
+</urlset>

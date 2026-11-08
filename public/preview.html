@@ -5,12 +5,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#041021">
-  <meta name="description" content="Kaz AI — казахстанский проект сайта искусственного интеллекта. Попробуйте чаты, проекты и настройки; реальные ИИ-модели подключаются поэтапно.">
+  <meta name="description" content="Kaz AI — казахстанский ИИ-сервис онлайн в разработке: умный чат, тексты, код, перевод, создание и редактирование картинок. GPT-OSS 120B и FLUX планируются к подключению.">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Kaz AI — казахстанский проект искусственного интеллекта">
-  <meta property="og:description" content="Казахстанский проект ИИ-сервиса. Демонстрация чатов и проектов, планы по GPT-OSS 120B и генерации изображений.">
+  <meta property="og:title" content="Kaz AI — Казахстанский искусственный интеллект онлайн">
+  <meta property="og:description" content="Kaz AI объединит ИИ для текста и генерации изображений. Запланированная связка GPT-OSS 120B и FLUX, интерфейс уже доступен для ознакомления.">
   <meta name="twitter:card" content="summary">
-  <title>Kaz AI — казахстанский проект искусственного интеллекта</title>
+  <title>Kaz AI — Казахстанский искусственный интеллект онлайн</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E" type="image/svg+xml">
   <style>
 :root{color-scheme:dark;--bg:#030c1e;--panel:#061832;--panel2:#092344;--line:rgba(112,201,255,.14);--line-strong:rgba(68,218,251,.36);--text:#eaf7ff;--muted:#96b2cb;--dim:#6889a8;--accent:#42e2fa;--accent2:#1f7eff;--gold:#f5d28c;--shadow:0 14px 55px rgba(0,0,0,.35);--glass:rgba(8,31,61,.73);--radius:18px;--sidebar-width:262px;--topbar-height:70px;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;font-synthesis:none}
@@ -437,6 +437,54 @@ body.light .session-dialog-close{color:#2f6385}
 .info-links a:hover{color:var(--accent);text-decoration:underline}
 .info-links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
+/* Search-readable project explanation below the existing Kaz AI hero.
+   The first viewport preserves the centered logo and the chat composer. */
+#view-welcome{
+  overflow:visible;
+  justify-content:flex-start!important;
+  padding:0!important;
+  align-items:stretch;
+}
+#view-welcome .hero-copy{
+  box-sizing:border-box;
+  width:100%;
+  min-height:max(360px,calc(100dvh - 210px));
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  flex-shrink:0;
+  margin:0 auto!important;
+}
+.seo-home-intro{
+  position:relative;
+  z-index:4;
+  width:min(790px,calc(100% - 48px));
+  margin:0 auto 38px;
+  padding:28px 30px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:var(--glass);
+  color:var(--text);
+  overflow-wrap:anywhere;
+}
+.seo-home-intro h2{font-size:clamp(19px,2vw,27px);line-height:1.3;margin:0 0 14px}
+.seo-home-intro p{font-size:13px;line-height:1.75;color:var(--muted);margin:0 0 12px}
+.seo-home-intro strong{color:var(--text)}
+.seo-home-intro .seo-home-status{font-size:12px}
+.seo-home-links{display:flex;flex-wrap:wrap;gap:9px 17px;margin-top:15px}
+.seo-home-links a{color:var(--accent);font-size:12px;text-decoration:underline;text-underline-offset:3px}
+.seo-home-links a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+body.light .seo-home-intro{background:rgba(255,255,255,.76);border-color:var(--line-strong)}
+@media(max-width:760px){
+  #view-welcome .hero-copy{min-height:max(300px,calc(100dvh - 190px));padding:14px 8px!important}
+  .seo-home-intro{width:calc(100% - 26px);padding:19px 17px;margin-bottom:24px}
+  .seo-home-intro h2{font-size:20px}
+}
+@media(max-height:520px){
+  #view-welcome .hero-copy{min-height:275px}
+}
+
 </style>
   
   
@@ -495,7 +543,7 @@ body.light .session-dialog-close{color:#2f6385}
       <div class="ornament-line" aria-hidden="true"></div>
       <button type="button" class="google-button" data-feature="google"><span class="google-g">G</span><span>Войти через Google</span><svg class="icon"><use href="#ic-arrow-right"/></svg></button>
       <div class="footer-note"><span class="online-dot"></span>Предварительный интерфейс</div>
-      <nav class="info-links" aria-label="Информация о проекте"><a href="./about/">О Kaz AI</a><a href="./capabilities/">Возможности</a><a href="./questions/">Вопросы</a><a href="./kk/">Қазақша</a><a href="./en/">English</a><a href="./privacy/">Конфиденциальность</a></nav>
+      <nav class="info-links" aria-label="Информация о проекте"><a href="./about/">О Kaz AI</a><a href="./help/">Помощь</a><a href="./capabilities/">Возможности</a><a href="./questions/">Вопросы</a><a href="./kk/">Қазақша</a><a href="./en/">English</a><a href="./privacy/">Конфиденциальность</a></nav>
     </div>
   </aside>
   <div class="main-area">
@@ -555,6 +603,13 @@ body.light .session-dialog-close{color:#2f6385}
           <div class="hero-logo-line"><svg class="hero-logo-mark" aria-hidden="true"><use href="#logo-mark"/></svg><h1 class="hero-wordmark">Kaz <span>AI</span></h1></div>
           <span class="hero-accent"><span></span><svg class="brand-mark"><use href="#logo-mark"/></svg><span></span></span>
         </div>
+        <section class="seo-home-intro" aria-labelledby="seoHomeHeading">
+          <h2 id="seoHomeHeading">Kaz AI — казахстанский искусственный интеллект онлайн</h2>
+          <p>Kaz AI — разрабатываемый в Казахстане ИИ-сервис для ответов на вопросы, рассуждений, написания и исправления кода, перевода, создания текстов, помощи с документами, обучением и расчётами. В будущем сайт объединит общение с нейросетью и создание и редактирование изображений.</p>
+          <p><strong>Планируемая связка моделей:</strong> GPT-OSS 120B для текста (около <strong>117 млрд параметров</strong>) и FLUX.2 dev для картинок (<strong>32 млрд</strong>). При выборе этой версии FLUX суммарный размер двух моделей составляет около <strong>149 млрд параметров</strong>. Это две отдельные нейросети, а не одна модель на 149 млрд.</p>
+          <p class="seo-home-status">Сейчас доступна демонстрационная оболочка с чатами, проектами и настройками. Настоящие ответы GPT-OSS и создание картинок через FLUX ещё не подключены.</p>
+          <nav class="seo-home-links" aria-label="Подробнее о Kaz AI"><a href="./about/">Что такое Kaz AI</a><a href="./help/">Помощь</a><a href="./capabilities/">Все возможности</a><a href="./ai-chat/">ИИ-чат</a><a href="./ai-images/">Создание картинок ИИ</a></nav>
+        </section>
       </section>
       <section id="view-chat" class="view view-chat" hidden aria-label="Переписка"><div id="chatMessages" class="chat-messages" aria-live="polite"></div></section>
       <section id="view-history" class="view view-panel" hidden aria-labelledby="historyHeading">

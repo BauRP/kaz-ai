@@ -105,23 +105,53 @@
     return chat;
   }
   function renderSessionHistory(){
-    const list=$("#historyList"),recent=$("#recentChats");
+    const list=$("#historyList"),recent=$("#recentChats"),summary=$("#historySearchSummary");
     list.replaceChildren();recent.replaceChildren();
-    const search=($("#historySearch").value||"").trim().toLocaleLowerCase();
-    const shown=threads.filter(c=>!c.temporary && (
-      c.title.toLocaleLowerCase().includes(search) ||
-      c.messages.some(m=>m.content.toLocaleLowerCase().includes(search))
-    )).sort((a,b)=>Number(b.pinned)-Number(a.pinned));
+    const query=($("#historySearch").value||"").trim();
+    const value=query.toLocaleLowerCase();
+    const saved=threads.filter(c=>!c.temporary)
+      .sort((a,b)=>Number(b.pinned)-Number(a.pinned));
+    const shown=saved.filter(c=>!value||
+      c.title.toLocaleLowerCase().includes(value)||
+      c.messages.some(m=>m.content.toLocaleLowerCase().includes(value)));
+    if(summary){
+      summary.textContent=value?"Найдено переписок: "+shown.length+" из "+saved.length:
+        "Переписок в текущей вкладке: "+saved.length;
+    }
     if(!shown.length){
       const empty=make("div","empty-card");
-      empty.append(make("h2","","Нет чатов"),make("p","","Разговоры хранятся только пока открыта эта вкладка. После перезагрузки они исчезнут."));
-      list.append(empty);recent.append(make("div","sidebar-empty","Нет временной истории"));
-      return;
+      empty.append(make("h2","",value?"Совпадений не найдено":"Пока нет чатов"),
+        make("p","",value?"Попробуйте другое слово. Недавние чаты слева остаются доступны.":"История доступна, пока открыта эта вкладка. После обновления страницы разговоры исчезнут."));
+      list.append(empty);
+    }
+    function highlighted(target,text){
+      const start=value?text.toLocaleLowerCase().indexOf(value):-1;
+      if(start<0){target.textContent=text;return}
+      target.append(document.createTextNode(text.slice(0,start)),
+        make("mark","session-search-hit",text.slice(start,start+query.length)),
+        document.createTextNode(text.slice(start+query.length)));
     }
     for(const c of shown){
       const card=make("div","session-chat-row"+(c.id===current?" active":""));
-      const name=button((c.pinned?"📌 ":"")+c.title,"open-chat",c.id,"session-chat-name");
+      const name=button("","open-chat",c.id,"session-chat-name");
+      name.setAttribute("aria-label","Открыть чат: "+c.title);
+      if(c.pinned)name.append(make("span","session-pin","📌 "));
+      const label=make("span","session-chat-label");
+      highlighted(label,c.title);
+      name.append(label);
       card.append(name);
+      if(value){
+        const matched=c.messages.find(m=>m.content.toLocaleLowerCase().includes(value));
+        if(matched){
+          const at=matched.content.toLocaleLowerCase().indexOf(value);
+          const from=Math.max(0,at-38),to=Math.min(matched.content.length,at+query.length+46);
+          const snippet=make("div","session-search-snippet");
+          if(from)snippet.append(document.createTextNode("…"));
+          highlighted(snippet,matched.content.slice(from,to));
+          if(to<matched.content.length)snippet.append(document.createTextNode("…"));
+          card.append(snippet);
+        }
+      }
       const ops=make("div","session-chat-ops");
       ops.append(
         button(c.pinned?"Открепить":"Закрепить","pin-chat",c.id),
@@ -131,10 +161,11 @@
       );
       card.append(ops);list.append(card);
     }
-    for(const c of shown.slice(0,6)){
+    for(const c of saved.slice(0,6)){
       const entry=button((c.pinned?"📌 ":"")+c.title,"open-chat",c.id,"recent-item session-recent");
       recent.append(entry);
     }
+    if(!saved.length)recent.append(make("div","sidebar-empty","Нет переписок"));
   }
   function renderSessionChat(){
     baseRenderChat();
@@ -423,6 +454,12 @@
     });
   }
   function setup(){
+    const historyInput=$("#historySearch");
+    if(historyInput&&!$("#historySearchSummary")){
+      const counter=make("p","session-history-summary");counter.id="historySearchSummary";
+      counter.setAttribute("role","status");counter.setAttribute("aria-live","polite");
+      historyInput.closest(".search-bar")?.insertAdjacentElement("afterend",counter);
+    }
     const projectsView=$("#view-projects");
     if(projectsView){
       const old=projectsView.querySelector(".empty-card");old?.remove();

@@ -1,0 +1,5 @@
+# Reference template. /robots.txt is served by the Worker with the real site origin.
+User-agent: *
+Allow: /
+Disallow: /api/
+Sitemap: {{SITE_ORIGIN}}/sitemap.xml

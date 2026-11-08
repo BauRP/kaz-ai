@@ -472,9 +472,9 @@
       clear.type="button";clear.id="sessionClearSearch";
       clear.setAttribute("aria-label","Очистить поиск переписок");clear.hidden=true;
       historyInput.closest(".search-bar")?.append(clear);
-      const updateSearch=()=>{clear.hidden=!historyInput.value;renderHistory()};
+      const updateSearch=()=>{clear.hidden=!historyInput.value};
       historyInput.addEventListener("input",updateSearch);
-      clear.addEventListener("click",()=>{historyInput.value="";updateSearch();historyInput.focus()});
+      clear.addEventListener("click",()=>{historyInput.value="";updateSearch();renderHistory();historyInput.focus()});
     }
     const projectsView=$("#view-projects");
     if(projectsView){

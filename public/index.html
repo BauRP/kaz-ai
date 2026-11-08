@@ -60,7 +60,7 @@
       <button type="button" data-screen="projects" class="nav-item"><svg class="icon"><use href="#ic-folder"/></svg><span>Проекты</span></button>
       <button type="button" data-screen="tools" class="nav-item"><svg class="icon"><use href="#ic-grid"/></svg><span>Инструменты</span><span class="nav-count">41</span></button>
       <button type="button" data-screen="settings" class="nav-item"><svg class="icon"><use href="#ic-settings"/></svg><span>Настройки</span></button>
-      <a class="nav-item about-nav-link" href="./about/" target="_blank" rel="noopener" aria-label="О проекте Kaz AI, откроется в новой вкладке"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>О проекте</span></a>
+      <button type="button" data-screen="about" class="nav-item about-nav-link" aria-controls="view-about"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>О проекте</span></button>
     </nav>
     <div class="sidebar-recent">
       <div class="sidebar-recent-header"><span>НЕДАВНИЕ ЧАТЫ</span><svg class="icon"><use href="#ic-clock"/></svg></div>
@@ -161,6 +161,30 @@
           <div class="setting-item"><div><h2>Память ИИ</h2><p>Запоминание предпочтений — позже</p></div><button class="setting-control" data-feature="memory">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
           <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать историю текущей вкладки</p></div><button class="setting-control" data-feature="export">Скачать <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
           <div class="setting-item"><div><h2>Аккаунт</h2><p>Вход через Google будет подключён позже</p></div><button class="setting-control" data-feature="google">Войти <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
+        </div>
+      </section>
+      <section id="view-about" class="view view-panel view-about" hidden aria-labelledby="aboutHeading">
+        <div class="panel-heading">
+          <span class="eyebrow">ИНФОРМАЦИЯ О ПРОЕКТЕ</span>
+          <h1 id="aboutHeading">О Kaz AI</h1>
+          <p>Казахстанский проект искусственного интеллекта, который развивается поэтапно.</p>
+        </div>
+        <div class="about-content">
+          <section class="about-section">
+            <h2>Что такое Kaz AI</h2>
+            <p>Kaz AI — создаваемый в Казахстане веб-сервис для общения с искусственным интеллектом на русском, казахском и английском языках. Он задуман для вопросов, подготовки текстов, переводов, программирования, обучения и помощи с документами.</p>
+          </section>
+          <section class="about-section">
+            <h2>ИИ для текста и изображений</h2>
+            <p>Для текста выбрана модель GPT-OSS 120B с примерно <strong>117 млрд параметров</strong>. Для будущего создания и редактирования изображений рассматривается FLUX.2 dev с <strong>32 млрд параметров</strong>.</p>
+            <p>Вместе это около <strong>149 млрд параметров в двух отдельных моделях</strong>, а не одна нейросеть на 149 млрд.</p>
+            <p>В демонстрации доступны чаты, проекты и настройки. Настоящие ответы GPT-OSS и генерация изображений ещё не подключены.</p>
+          </section>
+          <details class="about-section about-help" id="aboutHelp">
+            <summary>Помощь пользователям <svg class="icon" aria-hidden="true"><use href="#ic-chevron"/></svg></summary>
+            <div class="about-help-content"><p>Раздел помощи подготовлен. Инструкции и способы обращения появятся здесь позднее.</p></div>
+          </details>
+          <button type="button" class="subtle-cta about-back" data-action="back-to-chat">Вернуться к переписке</button>
         </div>
       </section>
     </main>

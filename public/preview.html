@@ -787,7 +787,7 @@ function togglePopover(kind,trigger){
   if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
 }
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
-function showScreen(screen){if(!viewNames.includes(screen))return;if(screen==="about"&&state.screen!=="about")state.aboutReturnScreen=state.screen;state.screen=screen;document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0;window.KazI18n?.refresh()}
+function showScreen(screen){if(!viewNames.includes(screen))return;if(screen==="about"&&state.screen!=="about")state.aboutReturnScreen=state.screen;state.screen=screen;document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat"&&screen!=="about")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0;window.KazI18n?.refresh()}
 function newChat(){state.chat=[];state.draftTitle="Новый чат";$("#statusBanner").hidden=true;renderChat();renderHistory();showScreen("welcome");$("#messageInput").value="";resizeInput();$("#messageInput").focus()}
 function resizeInput(){const input=$("#messageInput");input.style.height="auto";input.style.height=Math.min(input.scrollHeight,176)+"px";$("#sendButton").disabled=!input.value.trim()}
 function addChatMessage(role,content){const item={role,content};state.chat.push(item);renderChat();renderHistory();return item}
@@ -805,6 +805,7 @@ function selectLanguage(value){
   $$("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
   closePopovers();
   window.KazI18n?.set(value);
+  renderHistory();
   notify("Язык интерфейса: "+languages[value]);
 }
 function selectFont(value){
@@ -953,7 +954,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     ...c.messages.map(m=>(m.role==="assistant"?"Kaz AI: ":"Вы: ")+m.content+"\n")
   ].join("\n");
   function download(name,body,mime){
-    const blob=new Blob([body],{type:mime});
+    const blob=new Blob([mime.startsWith("text/plain")?"\uFEFF":"",body],{type:mime});
     const url=URL.createObjectURL(blob);
     const link=document.createElement("a");link.href=url;link.download=name;document.body.append(link);link.click();link.remove();
     setTimeout(()=>URL.revokeObjectURL(url),500);
@@ -1011,10 +1012,16 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const shown=saved.filter(c=>!value||
       c.title.toLocaleLowerCase().includes(value)||
       c.messages.some(m=>m.content.toLocaleLowerCase().includes(value)));
+    const language=window.KazI18n?.language||"ru";
     if(summary){
-      summary.textContent=value?"Найдено переписок: "+shown.length+" из "+saved.length:
-        "Переписок в текущей вкладке: "+saved.length;
+      summary.textContent=language==="en"
+        ?(value?"Chats found: "+shown.length+" of "+saved.length:"Chats in this tab: "+saved.length)
+        :language==="kk"
+          ?(value?"Табылған чаттар: "+shown.length+" / "+saved.length:"Осы қойындыдағы чаттар: "+saved.length)
+          :(value?"Найдено переписок: "+shown.length+" из "+saved.length:"Переписок в текущей вкладке: "+saved.length);
     }
+    const clearButton=$("#sessionClearSearch");
+    if(clearButton)clearButton.textContent=language==="en"?"Clear":language==="kk"?"Тазалау":"Очистить";
     if(!shown.length){
       const empty=make("div","empty-card");
       empty.append(make("h2","",value?"Совпадений не найдено":"Пока нет чатов"),
@@ -1363,9 +1370,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       clear.type="button";clear.id="sessionClearSearch";
       clear.setAttribute("aria-label","Очистить поиск переписок");clear.hidden=true;
       historyInput.closest(".search-bar")?.append(clear);
-      const updateSearch=()=>{clear.hidden=!historyInput.value;renderHistory()};
+      const updateSearch=()=>{clear.hidden=!historyInput.value};
       historyInput.addEventListener("input",updateSearch);
-      clear.addEventListener("click",()=>{historyInput.value="";updateSearch();historyInput.focus()});
+      clear.addEventListener("click",()=>{historyInput.value="";updateSearch();renderHistory();historyInput.focus()});
     }
     const projectsView=$("#view-projects");
     if(projectsView){

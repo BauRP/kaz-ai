@@ -439,3 +439,9 @@ body.is-about-screen .composer-region{display:none}
 .about-back{margin-top:10px}
 body.light .about-section{background:rgba(255,255,255,.73)}
 @media(max-width:760px){.view-about{padding:15px 14px 25px}.about-section{padding:18px 17px}.about-section h2{font-size:18px}}
+
+/* Search feedback remains independent of pinned/recent conversations. */
+.session-history-summary{font-size:12px;color:var(--muted);margin:-13px 0 19px;line-height:1.5}
+.session-search-snippet{width:100%;min-width:0;font-size:12px;line-height:1.55;color:var(--muted);overflow-wrap:anywhere;white-space:normal;padding:4px 0}
+.session-search-hit{background:rgba(56,206,244,.24);color:var(--text);border-radius:3px;padding:0 2px;font-weight:650}
+body.light .session-search-hit{background:rgba(10,121,187,.2);color:#17486b}

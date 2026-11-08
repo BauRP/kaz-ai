@@ -114,10 +114,16 @@
     const shown=saved.filter(c=>!value||
       c.title.toLocaleLowerCase().includes(value)||
       c.messages.some(m=>m.content.toLocaleLowerCase().includes(value)));
+    const language=window.KazI18n?.language||"ru";
     if(summary){
-      summary.textContent=value?"Найдено переписок: "+shown.length+" из "+saved.length:
-        "Переписок в текущей вкладке: "+saved.length;
+      summary.textContent=language==="en"
+        ?(value?"Chats found: "+shown.length+" of "+saved.length:"Chats in this tab: "+saved.length)
+        :language==="kk"
+          ?(value?"Табылған чаттар: "+shown.length+" / "+saved.length:"Осы қойындыдағы чаттар: "+saved.length)
+          :(value?"Найдено переписок: "+shown.length+" из "+saved.length:"Переписок в текущей вкладке: "+saved.length);
     }
+    const clearButton=$("#sessionClearSearch");
+    if(clearButton)clearButton.textContent=language==="en"?"Clear":language==="kk"?"Тазалау":"Очистить";
     if(!shown.length){
       const empty=make("div","empty-card");
       empty.append(make("h2","",value?"Совпадений не найдено":"Пока нет чатов"),

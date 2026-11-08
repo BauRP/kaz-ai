@@ -16,13 +16,24 @@
   };
   const threads=[];
   const projects=[];
+  const drafts=new Map();
+  let welcomeDraft="";
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="";
   const nextId=()=>String(++serial);
   const selected=()=>threads.find(c=>c.id===current)||null;
   const displayThread=c=>{
-    current=c?.id||null;
+    const next=c?.id||null;
+    const input=$("#messageInput");
+    if(current!==next&&input){
+      if(current)drafts.set(current,input.value);
+      else welcomeDraft=input.value;
+    }
+    current=next;
     state.chat=c?c.messages:[];
     state.draftTitle=c?c.title:"Новый чат";
+    if(input&&current!==null&&c)input.value=drafts.get(current)||"";
+    else if(input)input.value=welcomeDraft;
+    resizeInput();
   };
   const composeText=()=>$("#messageInput").value.trim();
   function showStatus(text,quota=false,retryable=false){
@@ -73,7 +84,9 @@
     if(abort)abort.abort("navigation");
     abort=null;pending=null;
     $("#sessionStop").hidden=true;
-    for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary)threads.splice(i,1);
+    for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){drafts.delete(threads[i].id);threads.splice(i,1)}
+    if(current)drafts.set(current,$("#messageInput").value);
+    welcomeDraft="";
     current=null;
     state.chat=[];state.draftTitle="Новый чат";
     $("#messageInput").value="";$("#messageInput").focus();
@@ -248,7 +261,7 @@
     const chat=selected()||newThread(text);
     chat.messages.push({id:nextId(),role:"user",content:text});
     displayThread(chat);
-    $("#messageInput").value="";resizeInput();
+    $("#messageInput").value="";drafts.delete(chat.id);welcomeDraft="";resizeInput();
     renderChat();renderHistory();showScreen("chat");runAI(chat);
   }
   function textDialog(title,label,value,onSave){
@@ -280,7 +293,7 @@
         const old=selected();
         if(old?.temporary){
           const i=threads.indexOf(old);
-          if(i>=0)threads.splice(i,1);
+          if(i>=0){threads.splice(i,1);drafts.delete(old.id)}
         }
       }
       displayThread(chat);renderChat();renderHistory();showScreen("chat");return
@@ -289,7 +302,7 @@
     if(action==="pin-chat"&&chat){chat.pinned=!chat.pinned;renderHistory();return}
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
       if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;$("#sessionStop").hidden=true;showStatus("")}
-      const i=threads.indexOf(chat);threads.splice(i,1);
+      const i=threads.indexOf(chat);threads.splice(i,1);drafts.delete(chat.id);
       if(current===chat.id){displayThread(null);showScreen("welcome");renderChat()}
       renderHistory();renderSessionProjects();
     });return}

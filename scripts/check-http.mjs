@@ -48,7 +48,9 @@ try{
   const sitemapText=await sitemap.text();
   assert.equal((sitemapText.match(/<loc>/g)||[]).length,7);
   assert.ok(sitemapText.includes(origin+'/kk/'));
-  const preview=await get('/preview.html');
+  const previewRedirect=await get('/preview.html');
+  assert.ok([200,301,302,307,308].includes(previewRedirect.status),'Preview response or canonical redirect');
+  const preview=await fetch(origin+'/preview.html',{redirect:'follow',signal:AbortSignal.timeout(5000)});
   assert.equal(preview.status,200);
   assert.match(preview.headers.get('x-robots-tag')||'',/noindex/);
   assert.match(await preview.text(),/<meta name="robots" content="noindex,follow">/);

@@ -436,6 +436,25 @@ body.light .session-dialog-close{color:#2f6385}
 .about-nav-link{text-decoration:none;cursor:pointer}
 .about-nav-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
+/* Same-tab About screen. Keep the chat composer and its draft intact while browsing project info. */
+body.is-about-screen .composer-region{display:none}
+.view-about{padding-bottom:35px}
+.about-content{max-width:840px;margin:0 auto;padding:4px 3px 25px}
+.about-section{border:1px solid var(--line);background:rgba(9,34,65,.6);border-radius:16px;margin:0 0 15px;padding:22px 24px;color:var(--text)}
+.about-section h2{font-size:19px;line-height:1.35;margin:0 0 12px}
+.about-section p{font-size:13px;line-height:1.8;color:var(--muted);margin:0 0 13px;overflow-wrap:anywhere}
+.about-section p:last-child{margin-bottom:0}
+.about-section strong{color:var(--text)}
+.about-help summary{display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:16px;font-weight:700;list-style:none}
+.about-help summary::-webkit-details-marker{display:none}
+.about-help summary .icon{width:16px;height:16px}
+.about-help[open] summary .icon{transform:rotate(180deg)}
+.about-help summary:focus-visible,.about-back:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.about-help-content{padding-top:13px}
+.about-back{margin-top:10px}
+body.light .about-section{background:rgba(255,255,255,.73)}
+@media(max-width:760px){.view-about{padding:15px 14px 25px}.about-section{padding:18px 17px}.about-section h2{font-size:18px}}
+
 </style>
   
   
@@ -485,7 +504,7 @@ body.light .session-dialog-close{color:#2f6385}
       <button type="button" data-screen="projects" class="nav-item"><svg class="icon"><use href="#ic-folder"/></svg><span>Проекты</span></button>
       <button type="button" data-screen="tools" class="nav-item"><svg class="icon"><use href="#ic-grid"/></svg><span>Инструменты</span><span class="nav-count">41</span></button>
       <button type="button" data-screen="settings" class="nav-item"><svg class="icon"><use href="#ic-settings"/></svg><span>Настройки</span></button>
-      <a class="nav-item about-nav-link" href="./about/" target="_blank" rel="noopener" aria-label="О проекте Kaz AI, откроется в новой вкладке"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>О проекте</span></a>
+      <button type="button" data-screen="about" class="nav-item about-nav-link" aria-controls="view-about"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>О проекте</span></button>
     </nav>
     <div class="sidebar-recent">
       <div class="sidebar-recent-header"><span>НЕДАВНИЕ ЧАТЫ</span><svg class="icon"><use href="#ic-clock"/></svg></div>
@@ -586,6 +605,30 @@ body.light .session-dialog-close{color:#2f6385}
           <div class="setting-item"><div><h2>Память ИИ</h2><p>Запоминание предпочтений — позже</p></div><button class="setting-control" data-feature="memory">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
           <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать историю текущей вкладки</p></div><button class="setting-control" data-feature="export">Скачать <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
           <div class="setting-item"><div><h2>Аккаунт</h2><p>Вход через Google будет подключён позже</p></div><button class="setting-control" data-feature="google">Войти <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
+        </div>
+      </section>
+      <section id="view-about" class="view view-panel view-about" hidden aria-labelledby="aboutHeading">
+        <div class="panel-heading">
+          <span class="eyebrow">ИНФОРМАЦИЯ О ПРОЕКТЕ</span>
+          <h1 id="aboutHeading">О Kaz AI</h1>
+          <p>Казахстанский проект искусственного интеллекта, который развивается поэтапно.</p>
+        </div>
+        <div class="about-content">
+          <section class="about-section">
+            <h2>Что такое Kaz AI</h2>
+            <p>Kaz AI — создаваемый в Казахстане веб-сервис для общения с искусственным интеллектом на русском, казахском и английском языках. Он задуман для вопросов, подготовки текстов, переводов, программирования, обучения и помощи с документами.</p>
+          </section>
+          <section class="about-section">
+            <h2>ИИ для текста и изображений</h2>
+            <p>Для текста выбрана модель GPT-OSS 120B с примерно <strong>117 млрд параметров</strong>. Для будущего создания и редактирования изображений рассматривается FLUX.2 dev с <strong>32 млрд параметров</strong>.</p>
+            <p>Вместе это около <strong>149 млрд параметров в двух отдельных моделях</strong>, а не одна нейросеть на 149 млрд.</p>
+            <p>В демонстрации доступны чаты, проекты и настройки. Настоящие ответы GPT-OSS и генерация изображений ещё не подключены.</p>
+          </section>
+          <details class="about-section about-help" id="aboutHelp">
+            <summary>Помощь пользователям <svg class="icon" aria-hidden="true"><use href="#ic-chevron"/></svg></summary>
+            <div class="about-help-content"><p>Раздел помощи подготовлен. Инструкции и способы обращения появятся здесь позднее.</p></div>
+          </details>
+          <button type="button" class="subtle-cta about-back" data-action="back-to-chat">Вернуться к переписке</button>
         </div>
       </section>
     </main>
@@ -715,8 +758,8 @@ const REASONS = Object.freeze({
 const state = {screen:"welcome",reason:"medium",chat:[],draftTitle:"Новый чат",light:false,dialogTrigger:null,toastTimer:null};
 const $ = selector => document.querySelector(selector);
 const $$ = selector => Array.from(document.querySelectorAll(selector));
-const viewNames = ["welcome","chat","history","projects","tools","settings"];
-const viewLabels = {welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки"};
+const viewNames = ["welcome","chat","history","projects","tools","settings","about"];
+const viewLabels = {welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки",about:"О проекте"};
 function icon(id){const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","icon");svg.setAttribute("aria-hidden","true");const use = document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href","#ic-"+id);svg.append(use);return svg}
 function node(tag,className,text){const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e}
 function notify(message){const toast=$("#toast");clearTimeout(state.toastTimer);toast.textContent=message;toast.hidden=false;state.toastTimer=setTimeout(()=>{toast.hidden=true},3800)}
@@ -734,7 +777,7 @@ function togglePopover(kind,trigger){
   if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
 }
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
-function showScreen(screen){if(!viewNames.includes(screen))return;state.screen=screen;viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0;window.KazI18n?.refresh()}
+function showScreen(screen){if(!viewNames.includes(screen))return;if(screen==="about"&&state.screen!=="about")state.aboutReturnScreen=state.screen;state.screen=screen;document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0;window.KazI18n?.refresh()}
 function newChat(){state.chat=[];state.draftTitle="Новый чат";$("#statusBanner").hidden=true;renderChat();renderHistory();showScreen("welcome");$("#messageInput").value="";resizeInput();$("#messageInput").focus()}
 function resizeInput(){const input=$("#messageInput");input.style.height="auto";input.style.height=Math.min(input.scrollHeight,176)+"px";$("#sendButton").disabled=!input.value.trim()}
 function addChatMessage(role,content){const item={role,content};state.chat.push(item);renderChat();renderHistory();return item}
@@ -794,6 +837,7 @@ function closeModal(){$("#modalOverlay").hidden=true;if(state.dialogTrigger&&typ
 function showFeature(key){if(key==="google"){openGoogle();return}if(key==="languages"){togglePopover("language",$("#languageToggle"));return}const data=featureDescriptions[key];if(data)featureModal(...data);else if(key.startsWith("tool-")){const n=Number(key.slice(5));const item=FEATURE_GROUPS.flatMap(g=>g.items).find(i=>i[0]===n);if(item)featureModal(item[1],item[2]+". Сейчас подготовлена только кнопка и место в интерфейсе. Реализация — на согласованном этапе.")}else featureModal("Функция появится позже","Сейчас разрабатывается только оболочка сайта.")}
 function handleAction(action,trigger){switch(action){
   case"home":showScreen("welcome");break;
+  case"back-to-chat":showScreen(state.aboutReturnScreen||"welcome");break;
   case"new-chat":newChat();break;
   case"close-sidebar":setDrawer(false);break;
   case"toggle-sidebar":setDrawer(!$("#sidebar").classList.contains("open"));break;
@@ -1402,6 +1446,11 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     "en": "About",
     "kk": "Жоба туралы"
   },
+  "Что такое Kaz AI": {"en":"What is Kaz AI","kk":"Kaz AI дегеніміз не"},
+  "ИИ для текста и изображений": {"en":"AI for text and images","kk":"Мәтін және сурет ЖИ"},
+  "Помощь пользователям": {"en":"User help","kk":"Пайдаланушыларға көмек"},
+  "Вернуться к переписке": {"en":"Return to conversation","kk":"Әңгімеге оралу"},
+  "ИНФОРМАЦИЯ О ПРОЕКТЕ": {"en":"ABOUT THE PROJECT","kk":"ЖОБА ТУРАЛЫ АҚПАРАТ"},
   "НЕДАВНИЕ ЧАТЫ": {
     "en": "RECENT CHATS",
     "kk": "СОҢҒЫ ЧАТТАР"
@@ -1893,6 +1942,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
 };
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",
+    "#view-about",
     ".topbar", "#view-history .panel-heading","#view-history .search-bar",
     "#view-projects .panel-heading","#view-tools .panel-heading",
     "#view-tools .search-bar","#view-settings .panel-heading",
@@ -1936,9 +1986,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       const root=document.querySelector(selector);
       if(root)translateText(root);
     }
-    const labels={ru:{welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки"},
-      en:{welcome:"Kaz AI",chat:"Conversation",history:"Chats",projects:"Projects",tools:"Tools",settings:"Settings"},
-      kk:{welcome:"Kaz AI",chat:"Әңгіме",history:"Чаттар",projects:"Жобалар",tools:"Құралдар",settings:"Баптаулар"}};
+    const labels={ru:{welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки",about:"О проекте"},
+      en:{welcome:"Kaz AI",chat:"Conversation",history:"Chats",projects:"Projects",tools:"Tools",settings:"Settings",about:"About"},
+      kk:{welcome:"Kaz AI",chat:"Әңгіме",history:"Чаттар",projects:"Жобалар",tools:"Құралдар",settings:"Баптаулар",about:"Жоба туралы"}};
     const title=document.querySelector("#pageTitle");
     if(title&&typeof state!=="undefined"&&state.screen){const next=labels[language][state.screen]||"Kaz AI";if(title.textContent!==next)title.textContent=next}
     document.documentElement.lang=language==="kk"?"kk":language==="en"?"en":"ru";

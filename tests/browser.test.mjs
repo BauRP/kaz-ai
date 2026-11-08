@@ -359,6 +359,8 @@ test('Kaz AI starts with a clean chat and opens About outside the conversation',
       assert.equal(await nav.last().innerText(),'О проекте');
       assert.equal(await nav.nth(3).innerText(),'Настройки');
       assert.equal(await nav.last().getAttribute('href'),'./about/');
+      assert.equal(await nav.last().getAttribute('target'),'_blank');
+      assert.equal(await nav.last().getAttribute('rel'),'noopener');
       const aboutPage=await browser.newPage({viewport,javaScriptEnabled:false});
       await aboutPage.goto(pathToFileURL(resolve('public','about','index.html')).href);
       assert.ok((await aboutPage.locator('main').innerText()).includes('149 млрд параметров'));

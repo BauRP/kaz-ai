@@ -23,7 +23,8 @@ test('eight crawlable pages render substantial body content without scripts',()=
   }
 });
 test('site exposes crawlable links to static information pages',()=>{
-  assert.match(main,/<a class="nav-item about-nav-link" href="\.\/about\/"/);
+  assert.match(main, /data-screen="about" class="nav-item about-nav-link"/);
+  assert.match(main,/id="view-about"/);
   assert.doesNotMatch(main,/seo-home-intro|seo-home-links|info-links/);
   assert.match(main,/<meta name="description"/);
   assert.match(main,/<title>Kaz AI — Казахстанский искусственный интеллект онлайн<\/title>/);

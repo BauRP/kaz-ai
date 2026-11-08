@@ -27,6 +27,11 @@
     "en": "About",
     "kk": "Жоба туралы"
   },
+  "Что такое Kaz AI": {"en":"What is Kaz AI","kk":"Kaz AI дегеніміз не"},
+  "ИИ для текста и изображений": {"en":"AI for text and images","kk":"Мәтін және сурет ЖИ"},
+  "Помощь пользователям": {"en":"User help","kk":"Пайдаланушыларға көмек"},
+  "Вернуться к переписке": {"en":"Return to conversation","kk":"Әңгімеге оралу"},
+  "ИНФОРМАЦИЯ О ПРОЕКТЕ": {"en":"ABOUT THE PROJECT","kk":"ЖОБА ТУРАЛЫ АҚПАРАТ"},
   "НЕДАВНИЕ ЧАТЫ": {
     "en": "RECENT CHATS",
     "kk": "СОҢҒЫ ЧАТТАР"
@@ -518,6 +523,7 @@
 };
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",
+    "#view-about",
     ".topbar", "#view-history .panel-heading","#view-history .search-bar",
     "#view-projects .panel-heading","#view-tools .panel-heading",
     "#view-tools .search-bar","#view-settings .panel-heading",
@@ -561,9 +567,9 @@
       const root=document.querySelector(selector);
       if(root)translateText(root);
     }
-    const labels={ru:{welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки"},
-      en:{welcome:"Kaz AI",chat:"Conversation",history:"Chats",projects:"Projects",tools:"Tools",settings:"Settings"},
-      kk:{welcome:"Kaz AI",chat:"Әңгіме",history:"Чаттар",projects:"Жобалар",tools:"Құралдар",settings:"Баптаулар"}};
+    const labels={ru:{welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки",about:"О проекте"},
+      en:{welcome:"Kaz AI",chat:"Conversation",history:"Chats",projects:"Projects",tools:"Tools",settings:"Settings",about:"About"},
+      kk:{welcome:"Kaz AI",chat:"Әңгіме",history:"Чаттар",projects:"Жобалар",tools:"Құралдар",settings:"Баптаулар",about:"Жоба туралы"}};
     const title=document.querySelector("#pageTitle");
     if(title&&typeof state!=="undefined"&&state.screen){const next=labels[language][state.screen]||"Kaz AI";if(title.textContent!==next)title.textContent=next}
     document.documentElement.lang=language==="kk"?"kk":language==="en"?"en":"ru";

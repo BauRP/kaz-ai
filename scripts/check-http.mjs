@@ -28,13 +28,17 @@ try{
   const root=await get('/');
   assert.equal(root.status,200,'HTML homepage');
   assert.match(await root.text(),/Kaz AI/);
-  for(const path of ['/about/','/capabilities/','/questions/','/privacy/','/kk/','/en/']){
+  for(const path of ['/about/','/capabilities/','/questions/','/privacy/','/kk/','/en/','/ai-chat/','/ai-images/','/help/']){
     const response=await get(path);
     assert.equal(response.status,200,'Static page '+path);
     const text=await response.text();
     assert.match(text,/<h1>/,'Static text without JS on '+path);
     assert.doesNotMatch(text,/<script\b/);
   }
+  const help=await get('/help/');
+  assert.equal(help.status,200);
+  assert.match(help.headers.get('x-robots-tag')||'',/noindex/);
+  assert.match(await help.text(),/Помощь/);
   const missing=await get('/not-a-real-kaz-ai-page-12345');
   assert.equal(missing.status,404,'Nonexistent routes cannot be a soft-404 homepage');
   assert.match(await missing.text(),/Страница не найдена/);
@@ -46,7 +50,10 @@ try{
   const sitemap=await get('/sitemap.xml');
   assert.equal(sitemap.status,200);
   const sitemapText=await sitemap.text();
-  assert.equal((sitemapText.match(/<loc>/g)||[]).length,7);
+  assert.equal((sitemapText.match(/<loc>/g)||[]).length,9);
+  assert.ok(sitemapText.includes(origin+'/ai-chat/'));
+  assert.ok(sitemapText.includes(origin+'/ai-images/'));
+  assert.ok(!sitemapText.includes('/help/'));
   assert.ok(sitemapText.includes(origin+'/kk/'));
   const previewRedirect=await get('/preview.html');
   assert.ok([200,301,302,307,308].includes(previewRedirect.status),'Preview response or canonical redirect');
@@ -56,7 +63,7 @@ try{
   assert.match(await preview.text(),/<meta name="robots" content="noindex,follow">/);
   const api=await get('/api/chat');
   assert.equal(api.status,405,'Unconfigured AI endpoint must not return real responses to GET');
-  console.log('HTTP smoke checks passed: 6 static pages, sitemap, robots, 404, preview noindex and protected API.');
+  console.log('HTTP checks passed: 9 static pages incl. Help, sitemap with 9 search pages, robots, true 404, preview/help noindex, protected API.');
 }finally{
   child.kill('SIGTERM');
   await sleep(200);

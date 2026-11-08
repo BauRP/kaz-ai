@@ -56,7 +56,7 @@ export default {
       });
     }
     if(url.pathname==="/sitemap.xml"&&request.method==="GET"){
-      const urls=["/","/about/","/capabilities/","/questions/","/privacy/","/kk/","/en/"];
+      const urls=["/","/about/","/capabilities/","/questions/","/privacy/","/kk/","/en/","/ai-chat/","/ai-images/"];
       const entries=urls.map(path=>"<url><loc>"+url.origin+path+"</loc></url>").join("");
       return new Response('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+entries+'</urlset>',{
         headers:{"content-type":"application/xml; charset=utf-8","cache-control":"public, max-age=3600","x-content-type-options":"nosniff"}

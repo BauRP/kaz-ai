@@ -329,7 +329,8 @@ test('SEO pages remain readable with JavaScript disabled and responsive layout',
   try{
     for(const [pagePath,heading] of [
       ['about','Что такое Kaz AI'],['capabilities','Что умеет Kaz AI'],['questions','Частые вопросы'],
-      ['privacy','Конфиденциальность'],['kk','Kaz AI дегеніміз не'],['en','What is Kaz AI']
+      ['privacy','Конфиденциальность'],['kk','Kaz AI дегеніміз не'],['en','What is Kaz AI'],
+      ['ai-chat','ИИ-чат Kaz AI'],['ai-images','Создание и редактирование картинок'],['help','Помощь']
     ]){
       const page=await browser.newPage({viewport:{width:390,height:844},javaScriptEnabled:false});
       const errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -340,6 +341,35 @@ test('SEO pages remain readable with JavaScript disabled and responsive layout',
       assert.equal(await page.locator('main script').count(),0);
       const widthInfo=await page.evaluate(()=>({page:document.documentElement.scrollWidth,viewport:window.innerWidth,offenders:Array.from(document.querySelectorAll('*')).map(el=>({tag:el.tagName,cl:el.className,txt:el.textContent?.slice(0,24),right:Math.round(el.getBoundingClientRect().right)})).filter(x=>x.right>window.innerWidth+1).slice(0,8)}));
       assert.equal(widthInfo.page<=widthInfo.viewport,true,pagePath+': '+JSON.stringify(widthInfo));
+      assert.deepEqual(errors,[]);
+      await page.close();
+    }
+  }finally{await browser.close()}
+});
+
+test('Kaz AI frontpage preserves chat controls and offers visible crawlable AI summary',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    for(const viewport of [{width:1366,height:850},{width:390,height:844}]){
+      const page=await browser.newPage({viewport});
+      const errors=[];page.on('pageerror',e=>errors.push(e.message));
+      await page.goto(appUrl);
+      assert.equal(await page.title(),'Kaz AI — Казахстанский искусственный интеллект онлайн');
+      assert.ok(await page.locator('.hero-wordmark').isVisible());
+      assert.ok(await page.locator('#messageInput').isVisible());
+      const intro=page.locator('.seo-home-intro');
+      assert.equal(await intro.count(),1);
+      assert.ok((await intro.innerText()).includes('149 млрд параметров'));
+      assert.ok((await intro.innerText()).includes('ещё не подключены'));
+      assert.equal(await page.locator('#mainContent').evaluate(el=>el.scrollHeight>el.clientHeight),true,'Info area must be scrollable below original hero');
+      await intro.scrollIntoViewIfNeeded();
+      assert.ok(await intro.isVisible());
+      assert.ok(await page.locator('.seo-home-links a[href="./about/"]').isVisible());
+      assert.ok(await page.locator('.seo-home-links a[href="./help/"]').isVisible());
+      await page.locator('#messageInput').fill('Проверка интерфейса');
+      await page.locator('#sendButton').click();
+      assert.ok((await page.locator('#chatMessages').innerText()).includes('Проверка интерфейса'));
       assert.deepEqual(errors,[]);
       await page.close();
     }

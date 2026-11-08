@@ -6,6 +6,8 @@
 # Preview must not compete with the actual website in search results.
 /preview.html
   X-Robots-Tag: noindex, follow
+/preview
+  X-Robots-Tag: noindex, follow
 
 # Static informational content has no JavaScript and can use a restrictive CSP.
 /about/*

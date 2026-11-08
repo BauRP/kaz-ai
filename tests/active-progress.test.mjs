@@ -2,17 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const d=JSON.parse(readFileSync('ACTIVE_PROGRESS.json','utf8'));
-const previous=JSON.parse(readFileSync('progress/2026-11-08-milestone-2.json','utf8'));
+const previous=JSON.parse(readFileSync('progress/2026-11-08-milestone-before-same-tab.json','utf8'));
 
 const report=readFileSync('ACTIVE_PROGRESS.md','utf8');
-const ids=new Set([1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,22,23,24,25,40,41,42,43,44,45]);
+const ids=new Set([1,2,3,4,5,6,7,9,10,13,15,16,22,23,24,25,40,41,42,43,44,45]);
 const avg=(a,k)=>a.reduce((sum,x)=>sum+x[k],0)/a.length;
-test('only 25 agreed active-stage items are counted',()=>{
-  assert.equal(d.items.length,25);
+test('only 22 active light-medium items are counted',()=>{
+  assert.equal(d.items.length,22);
   assert.equal(new Set(d.items.map(x=>x.id)).size,25);
   assert.ok(d.items.every(x=>ids.has(x.id)));
   assert.ok(d.items.every(x=>['Чаты','Интеллект','Настройки'].includes(x.group)));
-  assert.equal(d.groups.reduce((s,x)=>s+x.count,0),25);
+  assert.equal(d.groups.reduce((s,x)=>s+x.count,0),22);
 });
 test('baseline uses last-stage values and per-item improvements reconcile',()=>{
   for(const item of d.items){

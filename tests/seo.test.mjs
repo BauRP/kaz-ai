@@ -23,14 +23,16 @@ test('eight crawlable pages render substantial body content without scripts',()=
   }
 });
 test('site exposes crawlable links to static information pages',()=>{
-  assert.match(main,/<nav class="info-links"/);
-  for(const route of routes)assert.ok(main.includes('href="./'+route+'/"'),'Missing crawler link: '+route);
+  assert.match(main,/<a class="nav-item about-nav-link" href="\.\/about\/"/);
+  assert.doesNotMatch(main,/seo-home-intro|seo-home-links|info-links/);
   assert.match(main,/<meta name="description"/);
   assert.match(main,/<title>Kaz AI — Казахстанский искусственный интеллект онлайн<\/title>/);
-  assert.match(main,/149 млрд параметров/);
-  assert.match(main,/117 млрд параметров/);
-  assert.match(main,/FLUX\.2 dev/);
-  assert.match(main,/href="\.\/help\/"/);
+  const about=file('about/index.html');
+  assert.match(about,/149 млрд параметров/);
+  assert.match(about,/117 млрд параметров/);
+  assert.match(about,/FLUX\.2 dev/);
+  assert.match(about,/href="\.\.\/help\/"/);
+  for(const route of routes)assert.ok(file(route+'/index.html').includes('href="../about/"'),'Missing static About link: '+route);
   assert.match(main,/<meta property="og:title"/);
   assert.match(main,/<h1 class="hero-wordmark"/,'Do not replace chatbot design');
   assert.match(main,/id="messageInput"/,'Chat retained');

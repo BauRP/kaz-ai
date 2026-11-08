@@ -455,6 +455,16 @@ body.is-about-screen .composer-region{display:none}
 body.light .about-section{background:rgba(255,255,255,.73)}
 @media(max-width:760px){.view-about{padding:15px 14px 25px}.about-section{padding:18px 17px}.about-section h2{font-size:18px}}
 
+/* Search feedback remains independent of pinned/recent conversations. */
+.session-history-summary{font-size:12px;color:var(--muted);margin:-13px 0 19px;line-height:1.5}
+.session-search-snippet{width:100%;min-width:0;font-size:12px;line-height:1.55;color:var(--muted);overflow-wrap:anywhere;white-space:normal;padding:4px 0}
+.session-search-hit{background:rgba(56,206,244,.24);color:var(--text);border-radius:3px;padding:0 2px;font-weight:650}
+body.light .session-search-hit{background:rgba(10,121,187,.2);color:#17486b}
+
+.session-clear-search{flex:none;border:1px solid var(--line-strong);border-radius:8px;background:rgba(60,156,209,.09);color:var(--text);padding:6px 9px;font-size:11px}
+.session-clear-search:hover{background:rgba(60,156,209,.22)}
+.session-clear-search:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
 </style>
   
   
@@ -992,23 +1002,53 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     return chat;
   }
   function renderSessionHistory(){
-    const list=$("#historyList"),recent=$("#recentChats");
+    const list=$("#historyList"),recent=$("#recentChats"),summary=$("#historySearchSummary");
     list.replaceChildren();recent.replaceChildren();
-    const search=($("#historySearch").value||"").trim().toLocaleLowerCase();
-    const shown=threads.filter(c=>!c.temporary && (
-      c.title.toLocaleLowerCase().includes(search) ||
-      c.messages.some(m=>m.content.toLocaleLowerCase().includes(search))
-    )).sort((a,b)=>Number(b.pinned)-Number(a.pinned));
+    const query=($("#historySearch").value||"").trim();
+    const value=query.toLocaleLowerCase();
+    const saved=threads.filter(c=>!c.temporary)
+      .sort((a,b)=>Number(b.pinned)-Number(a.pinned));
+    const shown=saved.filter(c=>!value||
+      c.title.toLocaleLowerCase().includes(value)||
+      c.messages.some(m=>m.content.toLocaleLowerCase().includes(value)));
+    if(summary){
+      summary.textContent=value?"Найдено переписок: "+shown.length+" из "+saved.length:
+        "Переписок в текущей вкладке: "+saved.length;
+    }
     if(!shown.length){
       const empty=make("div","empty-card");
-      empty.append(make("h2","","Нет чатов"),make("p","","Разговоры хранятся только пока открыта эта вкладка. После перезагрузки они исчезнут."));
-      list.append(empty);recent.append(make("div","sidebar-empty","Нет временной истории"));
-      return;
+      empty.append(make("h2","",value?"Совпадений не найдено":"Пока нет чатов"),
+        make("p","",value?"Попробуйте другое слово. Недавние чаты слева остаются доступны.":"История доступна, пока открыта эта вкладка. После обновления страницы разговоры исчезнут."));
+      list.append(empty);
+    }
+    function highlighted(target,text){
+      const start=value?text.toLocaleLowerCase().indexOf(value):-1;
+      if(start<0){target.textContent=text;return}
+      target.append(document.createTextNode(text.slice(0,start)),
+        make("mark","session-search-hit",text.slice(start,start+query.length)),
+        document.createTextNode(text.slice(start+query.length)));
     }
     for(const c of shown){
       const card=make("div","session-chat-row"+(c.id===current?" active":""));
-      const name=button((c.pinned?"📌 ":"")+c.title,"open-chat",c.id,"session-chat-name");
+      const name=button("","open-chat",c.id,"session-chat-name");
+      name.setAttribute("aria-label","Открыть чат: "+c.title);
+      if(c.pinned)name.append(make("span","session-pin","📌 "));
+      const label=make("span","session-chat-label");
+      highlighted(label,c.title);
+      name.append(label);
       card.append(name);
+      if(value){
+        const matched=c.messages.find(m=>m.content.toLocaleLowerCase().includes(value));
+        if(matched){
+          const at=matched.content.toLocaleLowerCase().indexOf(value);
+          const from=Math.max(0,at-38),to=Math.min(matched.content.length,at+query.length+46);
+          const snippet=make("div","session-search-snippet");
+          if(from)snippet.append(document.createTextNode("…"));
+          highlighted(snippet,matched.content.slice(from,to));
+          if(to<matched.content.length)snippet.append(document.createTextNode("…"));
+          card.append(snippet);
+        }
+      }
       const ops=make("div","session-chat-ops");
       ops.append(
         button(c.pinned?"Открепить":"Закрепить","pin-chat",c.id),
@@ -1018,10 +1058,11 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       );
       card.append(ops);list.append(card);
     }
-    for(const c of shown.slice(0,6)){
+    for(const c of saved.slice(0,6)){
       const entry=button((c.pinned?"📌 ":"")+c.title,"open-chat",c.id,"recent-item session-recent");
       recent.append(entry);
     }
+    if(!saved.length)recent.append(make("div","sidebar-empty","Нет переписок"));
   }
   function renderSessionChat(){
     baseRenderChat();
@@ -1158,7 +1199,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       field.value=value;field.setAttribute("aria-label",label);
       body.append(field);
       const save=button("Сохранить","dialog-save",null,"session-primary");
-      save.addEventListener("click",()=>{const next=field.value.trim();if(!next){notify("Введите название.");return}onSave(next);closeDialog()});
+      save.addEventListener("click",()=>{const next=field.value.trim();if(!next){notify("Введите название.");return}if(onSave(next)===false)return;closeDialog()});
       field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save.click()}});
       body.append(save);
     });
@@ -1191,7 +1232,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
       if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;$("#sessionStop").hidden=true;showStatus("")}
       const i=threads.indexOf(chat);threads.splice(i,1);drafts.delete(chat.id);
-      if(current===chat.id){displayThread(null);showScreen("welcome");renderChat()}
+      if(current===chat.id){displayThread(null);drafts.delete(chat.id);showScreen("welcome");renderChat()}
       renderHistory();renderSessionProjects();
     });return}
     if(action==="assign-chat"&&chat){
@@ -1206,10 +1247,13 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         body.append(save);
         if(!projects.length)body.append(make("p","session-help","Сначала создайте проект в разделе «Проекты»."));
       });return}
+    const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&p.name.toLocaleLowerCase()===name.toLocaleLowerCase());
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{
+      if(duplicateProject(name)){notify("Проект с таким названием уже есть.");return false}
       projects.push({id:nextId(),name});renderSessionProjects();
     });return}
     if(action==="rename-project"&&project){textDialog("Название проекта","Название",project.name,name=>{
+      if(duplicateProject(name,project.id)){notify("Проект с таким названием уже есть.");return false}
       project.name=name;renderSessionProjects();
     });return}
     if(action==="delete-project"&&project){confirmDialog("Удалить проект?","Чаты не удалятся, они перейдут в раздел «Без проекта».",()=>{
@@ -1310,6 +1354,19 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     });
   }
   function setup(){
+    const historyInput=$("#historySearch");
+    if(historyInput&&!$("#historySearchSummary")){
+      const counter=make("p","session-history-summary");counter.id="historySearchSummary";
+      counter.setAttribute("role","status");counter.setAttribute("aria-live","polite");
+      historyInput.closest(".search-bar")?.insertAdjacentElement("afterend",counter);
+      const clear=make("button","session-clear-search","Очистить");
+      clear.type="button";clear.id="sessionClearSearch";
+      clear.setAttribute("aria-label","Очистить поиск переписок");clear.hidden=true;
+      historyInput.closest(".search-bar")?.append(clear);
+      const updateSearch=()=>{clear.hidden=!historyInput.value;renderHistory()};
+      historyInput.addEventListener("input",updateSearch);
+      clear.addEventListener("click",()=>{historyInput.value="";updateSearch();historyInput.focus()});
+    }
     const projectsView=$("#view-projects");
     if(projectsView){
       const old=projectsView.querySelector(".empty-card");old?.remove();

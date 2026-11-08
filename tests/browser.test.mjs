@@ -414,3 +414,32 @@ test('same-tab About keeps existing chat and projects unchanged on desktop and m
     }
   }finally{await browser.close()}
 });
+
+test('drafts stay with their conversation and About never clears the composer',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первый чат');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Черновик первого чата');
+    await page.locator('.sidebar [data-screen="about"]').click();
+    assert.equal(await page.locator('#view-about').isVisible(),true);
+    await page.locator('#aboutHelp summary').click();
+    await page.locator('[data-action="back-to-chat"]').click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'Черновик первого чата');
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Второй чат');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Черновик второго чата');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').last().click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'Черновик первого чата');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').first().click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'Черновик второго чата');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

@@ -361,6 +361,7 @@ test('Kaz AI starts with a clean chat and opens About outside the conversation',
       assert.equal(await nav.last().getAttribute('data-screen'),'about');
       assert.equal(await nav.last().getAttribute('target'),null);
       await page.locator('#messageInput').fill('Незаконченный черновик');
+      if(viewport.width<760)await page.locator('[data-action="toggle-sidebar"]').click();
       await nav.last().click();
       assert.ok(await page.locator('#view-about').isVisible());
       assert.equal(await page.locator('#view-chat').isVisible(),false);

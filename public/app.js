@@ -63,8 +63,8 @@ const REASONS = Object.freeze({
 const state = {screen:"welcome",reason:"medium",chat:[],draftTitle:"Новый чат",light:false,dialogTrigger:null,toastTimer:null};
 const $ = selector => document.querySelector(selector);
 const $$ = selector => Array.from(document.querySelectorAll(selector));
-const viewNames = ["welcome","chat","history","projects","tools","settings"];
-const viewLabels = {welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки"};
+const viewNames = ["welcome","chat","history","projects","tools","settings","about"];
+const viewLabels = {welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки",about:"О проекте"};
 function icon(id){const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","icon");svg.setAttribute("aria-hidden","true");const use = document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href","#ic-"+id);svg.append(use);return svg}
 function node(tag,className,text){const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e}
 function notify(message){const toast=$("#toast");clearTimeout(state.toastTimer);toast.textContent=message;toast.hidden=false;state.toastTimer=setTimeout(()=>{toast.hidden=true},3800)}
@@ -82,7 +82,7 @@ function togglePopover(kind,trigger){
   if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
 }
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
-function showScreen(screen){if(!viewNames.includes(screen))return;state.screen=screen;viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0;window.KazI18n?.refresh()}
+function showScreen(screen){if(!viewNames.includes(screen))return;if(screen==="about"&&state.screen!=="about")state.aboutReturnScreen=state.screen;state.screen=screen;document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0;window.KazI18n?.refresh()}
 function newChat(){state.chat=[];state.draftTitle="Новый чат";$("#statusBanner").hidden=true;renderChat();renderHistory();showScreen("welcome");$("#messageInput").value="";resizeInput();$("#messageInput").focus()}
 function resizeInput(){const input=$("#messageInput");input.style.height="auto";input.style.height=Math.min(input.scrollHeight,176)+"px";$("#sendButton").disabled=!input.value.trim()}
 function addChatMessage(role,content){const item={role,content};state.chat.push(item);renderChat();renderHistory();return item}
@@ -142,6 +142,7 @@ function closeModal(){$("#modalOverlay").hidden=true;if(state.dialogTrigger&&typ
 function showFeature(key){if(key==="google"){openGoogle();return}if(key==="languages"){togglePopover("language",$("#languageToggle"));return}const data=featureDescriptions[key];if(data)featureModal(...data);else if(key.startsWith("tool-")){const n=Number(key.slice(5));const item=FEATURE_GROUPS.flatMap(g=>g.items).find(i=>i[0]===n);if(item)featureModal(item[1],item[2]+". Сейчас подготовлена только кнопка и место в интерфейсе. Реализация — на согласованном этапе.")}else featureModal("Функция появится позже","Сейчас разрабатывается только оболочка сайта.")}
 function handleAction(action,trigger){switch(action){
   case"home":showScreen("welcome");break;
+  case"back-to-chat":showScreen(state.aboutReturnScreen||"welcome");break;
   case"new-chat":newChat();break;
   case"close-sidebar":setDrawer(false);break;
   case"toggle-sidebar":setDrawer(!$("#sidebar").classList.contains("open"));break;

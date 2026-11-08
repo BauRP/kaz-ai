@@ -26,3 +26,5 @@ jobs:
         run: npm run test:browser
       - name: Build Cloudflare Worker without deployment
         run: npx wrangler deploy --dry-run --outdir /tmp/kaz-ai-build
+      - name: Smoke test real local HTTP responses and search engine metadata
+        run: npm run test:http

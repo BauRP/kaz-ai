@@ -67,3 +67,15 @@ test('robots allows reading preview noindex while excluding API',async()=>{
   assert.doesNotMatch(robots,/Disallow: \/preview\.html/);
   assert.ok(robots.includes('Sitemap: '+origin+'/sitemap.xml\n'));
 });
+
+test('safe static security headers protect information pages without breaking chat scripts',()=>{
+  const headers=file('_headers');
+  assert.match(headers,/X-Content-Type-Options: nosniff/);
+  assert.match(headers,/Referrer-Policy: strict-origin-when-cross-origin/);
+  assert.match(headers,/\/preview\.html\s+X-Robots-Tag: noindex, follow/);
+  for(const route of routes)assert.ok(headers.includes('/'+route+'/*'),'Missing CSP for '+route);
+  assert.match(headers,/script-src 'none'/);
+  const generalSection=headers.split('/preview.html')[0];
+  assert.doesNotMatch(generalSection,/Content-Security-Policy:/,'Do not block live app scripts globally');
+  assert.doesNotMatch(generalSection,/microphone=\(\)|camera=\(\)/,'Do not disable planned future media globally');
+});

@@ -508,3 +508,29 @@ test('project names cannot be duplicated by case and modal remains editable',asy
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('history TXT export keeps Cyrillic readable and excludes temporary chats',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800},acceptDownloads:true});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Қазақша и русский: проверка');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#sessionTemporary').check();
+    await page.locator('#messageInput').fill('PRIVATE TEMP NEVER EXPORT');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    const downloading=page.waitForEvent('download');
+    await page.locator('[data-feature="export"]').click();
+    const file=await downloading;
+    assert.equal(file.suggestedFilename(),'Kaz-AI-history.txt');
+    const body=readFileSync(await file.path(),'utf8');
+    assert.ok(body.startsWith('\uFEFF'),'Text export must be UTF-8 BOM for Windows editors');
+    assert.ok(body.includes('Қазақша и русский: проверка'));
+    assert.ok(!body.includes('PRIVATE TEMP NEVER EXPORT'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

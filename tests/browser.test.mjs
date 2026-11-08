@@ -444,3 +444,64 @@ test('drafts stay with their conversation and About never clears the composer',a
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('search highlights matching message safely while pinned and recent chats remain stable',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первый разговор');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('секретный пароль <img src=x onerror=alert(1)> безопасный тест');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Второй разговор');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const recent=await page.locator('#recentChats').innerText();
+    await page.locator('#historySearch').fill('пароль');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#historySearchSummary').innerText(),'Найдено переписок: 1 из 2');
+    assert.equal(await page.locator('#historyList mark.session-search-hit').count(),1);
+    assert.ok((await page.locator('.session-search-snippet').innerText()).includes('пароль'));
+    assert.equal(await page.locator('#historyList img').count(),0,'Search snippets must never interpret user HTML');
+    assert.equal(await page.locator('#recentChats').innerText(),recent,'Search must not erase recent chats');
+    await page.locator('#historySearch').fill('несуществующее слово');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),0);
+    assert.equal(await page.locator('#historySearchSummary').innerText(),'Найдено переписок: 0 из 2');
+    assert.equal(await page.locator('#recentChats').innerText(),recent);
+    await page.locator('#historySearch').fill('');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),2);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('project names cannot be duplicated by case and modal remains editable',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Мой проект');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().projects)).length,1);
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('мой ПРОЕКТ');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.ok(await page.locator('#sessionOverlay').isVisible());
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().projects)).length,1);
+    await page.locator('#sessionBody input').fill('Другой проект');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().projects)).length,2);
+    await page.locator('[data-session="rename-project"]').last().click();
+    await page.locator('#sessionBody input').fill('МОЙ ПРОЕКТ');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.ok(await page.locator('#sessionOverlay').isVisible());
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().projects)).length,2);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

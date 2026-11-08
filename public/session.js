@@ -56,7 +56,7 @@
     ...c.messages.map(m=>(m.role==="assistant"?"Kaz AI: ":"Вы: ")+m.content+"\n")
   ].join("\n");
   function download(name,body,mime){
-    const blob=new Blob([body],{type:mime});
+    const blob=new Blob([mime.startsWith("text/plain")?"\uFEFF":"",body],{type:mime});
     const url=URL.createObjectURL(blob);
     const link=document.createElement("a");link.href=url;link.download=name;document.body.append(link);link.click();link.remove();
     setTimeout(()=>URL.revokeObjectURL(url),500);

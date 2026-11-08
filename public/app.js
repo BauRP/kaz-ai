@@ -100,6 +100,7 @@ function selectLanguage(value){
   $$("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
   closePopovers();
   window.KazI18n?.set(value);
+  renderHistory();
   notify("Язык интерфейса: "+languages[value]);
 }
 function selectFont(value){

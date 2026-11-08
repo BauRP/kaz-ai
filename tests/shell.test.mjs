@@ -8,7 +8,7 @@ const config = JSON.parse(readFileSync('wrangler.jsonc','utf8'));
 test('Cloudflare static assets point at public directory', () => {assert.equal(config.assets.directory,'./public');assert.equal(config.name,'kaz-ai');});
 test('main shell screens present',()=>{for(const id of ['welcome','chat','history','projects','tools','settings'])assert.match(html,new RegExp('id="view-'+id+'"'));});
 test('composer has real accessible controls',()=>{for(const id of ['messageInput','sendButton','attachToggle','reasonToggle'])assert.match(html,new RegExp('id="'+id+'"'));assert.match(html,/aria-label="Отправить сообщение"/);assert.match(html,/ic-arrow/);assert.doesNotMatch(html,/telegram\.org/i);});
-test('all 44 planned functions, without sharing conversation',()=>{const matches=Array.from(js.matchAll(/\[([0-9]+),"/g),x=>Number(x[1]));assert.equal(matches.length,44);assert.equal(new Set(matches).size,44);assert.ok(!matches.includes(12));assert.ok(!matches.includes(26));assert.ok(matches.includes(46));});
+test('41 active tool entries exclude explicitly removed message actions',()=>{const matches=Array.from(js.matchAll(/\[([0-9]+),"/g),x=>Number(x[1]));assert.equal(matches.length,41);assert.equal(new Set(matches).size,41);for(const n of [8,11,12,14,26])assert.ok(!matches.includes(n),'Removed action '+n);assert.ok(matches.includes(46));assert.match(html,/<span class="nav-count">41<\/span>/);});
 test('four levels visible, deep stays locked',()=>{for(const key of ['low','medium','high','deep'])assert.match(js,new RegExp(key+':\\{name:'));assert.match(js,/value==="deep"/);assert.match(html,/data-feature="deep-reason"/);});
 test('no accidental live AI, Google or data persistence',()=>{assert.doesNotMatch(js,/fetch\s*\(|localStorage|sessionStorage|indexedDB|google\.accounts|workers\.ai/i);assert.match(html,/История временная/);assert.match(js,/никакие данные аккаунта не запрашиваются/);});
 test('responsive layouts including phones and reduced motion',()=>{assert.match(css,/@media\(max-width:760px\)/);assert.match(css,/@media\(max-width:390px\)/);assert.match(css,/prefers-reduced-motion/);assert.match(css,/safe-area-inset-bottom/);});
@@ -108,4 +108,24 @@ test('GPT-OSS route is server-side and requires private access key',()=>{
   assert.match(worker,/@cf\/openai\/gpt-oss-120b/);
   assert.doesNotMatch(html,/KAZ_AI_ACCESS_KEY|CLOUDFLARE_API_TOKEN/);
   assert.doesNotMatch(readFileSync('public/preview.html','utf8'),/CLOUDFLARE_API_TOKEN/);
+});
+
+test('About navigation is after Settings and the chat welcome has no SEO article',()=>{
+  const settings=html.indexOf('data-screen="settings" class="nav-item"');
+  const about=html.indexOf('class="nav-item about-nav-link"');
+  assert.ok(settings>0&&about>settings);
+  assert.match(html,/href="\.\/about\/"/);
+  assert.doesNotMatch(html,/seo-home-intro|seo-home-links|info-links/);
+  assert.doesNotMatch(css,/\.seo-home-intro\s*\{/);
+  const aboutText=readFileSync('public/about/index.html','utf8');
+  for(const word of ['149 млрд параметров','117 млрд параметров','FLUX.2 dev','Помощь пользователям Kaz AI'])assert.ok(aboutText.includes(word));
+});
+test('user messages no longer render copy, edit or reply buttons',()=>{
+  const session=readFileSync('public/session.js','utf8');
+  for(const obsolete of ['copy-message','edit-message','branch-message','function copyValue','Ответвить']){
+    assert.ok(!session.includes(obsolete),'Obsolete action remains: '+obsolete);
+  }
+  assert.match(session,/if\(message\.role==="assistant"\)\{/);
+  assert.doesNotMatch(session,/if\(message\.role==="user"\)actions/);
+  assert.match(session,/retry-answer/);
 });

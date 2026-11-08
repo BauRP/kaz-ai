@@ -338,7 +338,8 @@ test('SEO pages remain readable with JavaScript disabled and responsive layout',
       assert.ok((await page.locator('main').innerText()).length>400);
       assert.ok(await page.locator('main h1').isVisible());
       assert.equal(await page.locator('main script').count(),0);
-      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
+      const widthInfo=await page.evaluate(()=>({page:document.documentElement.scrollWidth,viewport:window.innerWidth,offenders:Array.from(document.querySelectorAll('*')).map(el=>({tag:el.tagName,cl:el.className,txt:el.textContent?.slice(0,24),right:Math.round(el.getBoundingClientRect().right)})).filter(x=>x.right>window.innerWidth+1).slice(0,8)}));
+      assert.equal(widthInfo.page<=widthInfo.viewport,true,pagePath+': '+JSON.stringify(widthInfo));
       assert.deepEqual(errors,[]);
       await page.close();
     }

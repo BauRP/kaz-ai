@@ -358,14 +358,20 @@ test('Kaz AI starts with a clean chat and opens About outside the conversation',
       const nav=page.locator('.primary-nav .nav-item');
       assert.equal(await nav.last().innerText(),'О проекте');
       assert.equal(await nav.nth(3).innerText(),'Настройки');
-      assert.equal(await nav.last().getAttribute('href'),'./about/');
-      assert.equal(await nav.last().getAttribute('target'),'_blank');
-      assert.equal(await nav.last().getAttribute('rel'),'noopener');
-      const aboutPage=await browser.newPage({viewport,javaScriptEnabled:false});
-      await aboutPage.goto(pathToFileURL(resolve('public','about','index.html')).href);
-      assert.ok((await aboutPage.locator('main').innerText()).includes('149 млрд параметров'));
-      assert.ok(await aboutPage.locator('a[href="../help/"]').first().isVisible());
-      await aboutPage.close();
+      assert.equal(await nav.last().getAttribute('data-screen'),'about');
+      assert.equal(await nav.last().getAttribute('target'),null);
+      await page.locator('#messageInput').fill('Незаконченный черновик');
+      await nav.last().click();
+      assert.ok(await page.locator('#view-about').isVisible());
+      assert.equal(await page.locator('#view-chat').isVisible(),false);
+      assert.equal(await page.locator('.composer-region').isVisible(),false);
+      assert.ok((await page.locator('#view-about').innerText()).includes('149 млрд параметров'));
+      await page.locator('#aboutHelp summary').click();
+      assert.ok((await page.locator('.about-help-content').innerText()).includes('Инструкции'));
+      await page.locator('[data-action="back-to-chat"]').click();
+      assert.equal(await page.locator('#view-welcome').isVisible(),true);
+      assert.ok(await page.locator('#messageInput').isVisible());
+      assert.equal(await page.locator('#messageInput').inputValue(),'Незаконченный черновик');
       await page.locator('#messageInput').fill('Проверка интерфейса');
       await page.locator('#sendButton').click();
       assert.ok((await page.locator('#chatMessages').innerText()).includes('Проверка интерфейса'));
@@ -373,6 +379,38 @@ test('Kaz AI starts with a clean chat and opens About outside the conversation',
       for(const label of ['Копировать','Изменить','Ответвить'])assert.equal(await page.locator('.message-user button',{hasText:label}).count(),0);
       assert.deepEqual(errors,[]);
       await page.close();
+    }
+  }finally{await browser.close()}
+});
+
+test('same-tab About keeps existing chat and projects unchanged on desktop and mobile', async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    for(const mobile of [false,true]){
+      const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile});
+      const page=await context.newPage();
+      const errors=[];page.on('pageerror',e=>errors.push(e.message));
+      await page.goto(appUrl);
+      await page.locator('#messageInput').fill('Сохрани нашу переписку');
+      await page.locator('#sendButton').click();
+      const before=await page.evaluate(()=>JSON.stringify(window.KazSession.snapshot()));
+      assert.ok(await page.locator('#view-chat').isVisible());
+      if(mobile)await page.locator('[data-action="toggle-sidebar"]').click();
+      await page.locator('.sidebar [data-screen="about"]').click();
+      assert.ok(await page.locator('#view-about').isVisible());
+      assert.equal(await page.locator('.composer-region').isVisible(),false);
+      assert.equal(await page.locator('#pageTitle').innerText(),'О проекте');
+      assert.equal(await page.locator('#aboutHelp .about-help-content').isVisible(),false);
+      await page.locator('#aboutHelp summary').click();
+      assert.ok(await page.locator('#aboutHelp .about-help-content').isVisible());
+      assert.equal(await page.evaluate(()=>JSON.stringify(window.KazSession.snapshot())),before,'Entering About must not reset chats');
+      await page.locator('[data-action="back-to-chat"]').click();
+      assert.ok(await page.locator('#view-chat').isVisible());
+      assert.ok((await page.locator('#chatMessages').innerText()).includes('Сохрани нашу переписку'));
+      assert.ok(await page.locator('.composer-region').isVisible());
+      assert.deepEqual(errors,[]);
+      await context.close();
     }
   }finally{await browser.close()}
 });

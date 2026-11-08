@@ -302,7 +302,7 @@
       field.value=value;field.setAttribute("aria-label",label);
       body.append(field);
       const save=button("Сохранить","dialog-save",null,"session-primary");
-      save.addEventListener("click",()=>{const next=field.value.trim();if(!next){notify("Введите название.");return}onSave(next);closeDialog()});
+      save.addEventListener("click",()=>{const next=field.value.trim();if(!next){notify("Введите название.");return}if(onSave(next)===false)return;closeDialog()});
       field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save.click()}});
       body.append(save);
     });
@@ -350,10 +350,13 @@
         body.append(save);
         if(!projects.length)body.append(make("p","session-help","Сначала создайте проект в разделе «Проекты»."));
       });return}
+    const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&p.name.toLocaleLowerCase()===name.toLocaleLowerCase());
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{
+      if(duplicateProject(name)){notify("Проект с таким названием уже есть.");return false}
       projects.push({id:nextId(),name});renderSessionProjects();
     });return}
     if(action==="rename-project"&&project){textDialog("Название проекта","Название",project.name,name=>{
+      if(duplicateProject(name,project.id)){notify("Проект с таким названием уже есть.");return false}
       project.name=name;renderSessionProjects();
     });return}
     if(action==="delete-project"&&project){confirmDialog("Удалить проект?","Чаты не удалятся, они перейдут в раздел «Без проекта».",()=>{

@@ -24,16 +24,17 @@
   const displayThread=c=>{
     const next=c?.id||null;
     const input=$("#messageInput");
-    if(current!==next&&input){
-      if(current)drafts.set(current,input.value);
-      else welcomeDraft=input.value;
+    if(current!==next){
+      if(input){
+        if(current)drafts.set(current,input.value);
+        else welcomeDraft=input.value;
+      }
+      current=next;
+      if(input)input.value=next?(drafts.get(next)||""):welcomeDraft;
+      resizeInput();
     }
-    current=next;
     state.chat=c?c.messages:[];
     state.draftTitle=c?c.title:"Новый чат";
-    if(input&&current!==null&&c)input.value=drafts.get(current)||"";
-    else if(input)input.value=welcomeDraft;
-    resizeInput();
   };
   const composeText=()=>$("#messageInput").value.trim();
   function showStatus(text,quota=false,retryable=false){

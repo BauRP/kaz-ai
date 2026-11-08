@@ -472,6 +472,10 @@ test('search highlights matching message safely while pinned and recent chats re
     assert.equal(await page.locator('#historyList .session-chat-row').count(),0);
     assert.equal(await page.locator('#historySearchSummary').innerText(),'Найдено переписок: 0 из 2');
     assert.equal(await page.locator('#recentChats').innerText(),recent);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    assert.equal(await page.locator('#historySearchSummary').innerText(),'Chats found: 0 of 2');
+    assert.equal(await page.locator('#sessionClearSearch').innerText(),'Clear');
     assert.ok(await page.locator('#sessionClearSearch').isVisible());
     await page.locator('#sessionClearSearch').click();
     assert.equal(await page.locator('#historySearch').inputValue(),'');

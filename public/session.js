@@ -130,18 +130,14 @@
     chat.messages.forEach((message,i)=>{
       const bubble=bubbles[i];if(!bubble)return;
       message.id||=nextId();
-      const actions=make("div","session-message-actions");
-      const copy=button("Копировать","copy-message",message.id);
-      actions.append(copy);
-      if(message.role==="user")actions.append(button("Изменить","edit-message",message.id));
       if(message.role==="assistant"){
+        const actions=make("div","session-message-actions");
         const up=button("👍","rate-up",message.id),down=button("👎","rate-down",message.id);
         if(message.rating==="up")up.classList.add("selected");
         if(message.rating==="down")down.classList.add("selected");
         actions.append(up,down,button("Повторить ответ","retry-answer",message.id));
+        bubble.append(actions);
       }
-      actions.append(button("Ответвить","branch-message",message.id));
-      bubble.append(actions);
     });
   }
   function renderSessionProjects(){
@@ -174,17 +170,6 @@
       box.append(make("h2","","Без проекта"));
       for(const c of ungrouped)box.append(button("↳ "+c.title,"open-chat",c.id,"session-project-chat"));
       target.append(box);
-    }
-  }
-  async function copyValue(value){
-    try{
-      await navigator.clipboard.writeText(value);
-      notify("Текст скопирован.");
-    }catch{
-      openDialog("Скопировать текст","Выдели текст ниже и скопируй его.",body=>{
-        const area=make("textarea","session-textarea");area.value=value;area.readOnly=true;
-        body.append(area);area.select();
-      });
     }
   }
   const allowRemote=()=>{
@@ -331,24 +316,10 @@
       for(const c of threads)if(c.projectId===project.id)c.projectId=null;
       renderSessionProjects();renderHistory();
     });return}
-    if(action==="copy-message"||action==="edit-message"||action==="rate-up"||action==="rate-down"||action==="branch-message"||action==="retry-answer"){
+    if(action==="rate-up"||action==="rate-down"||action==="retry-answer"){
       const c=selected(),index=c?.messages.findIndex(m=>m.id===id)??-1;
       if(index<0)return;
       const m=c.messages[index];
-      if(action==="copy-message"){copyValue(m.content);return}
-      if(action==="edit-message"&&m.role==="user"){
-        if(abort){notify("Сначала остановите текущий ответ.");return}
-        openDialog("Изменить сообщение","Ответы, отправленные после этого сообщения, будут удалены из текущей ветки.",body=>{
-          const area=make("textarea","session-textarea");area.value=m.content;area.maxLength=4000;
-          body.append(area);
-          const save=button("Сохранить","dialog-save",null,"session-primary");
-          save.addEventListener("click",()=>{
-            const value=area.value.trim();if(!value){notify("Сообщение не может быть пустым.");return}
-            m.content=value;c.messages.splice(index+1);closeDialog();renderChat();renderHistory();
-            runAI(c);
-          });body.append(save);
-        });return;
-      }
       if(action==="retry-answer"){
         if(abort){notify("Дождитесь завершения предыдущего запроса.");return}
         if(m.role!=="assistant"||index!==c.messages.length-1){notify("Повторить можно только последний ответ.");return}
@@ -359,13 +330,7 @@
       if(action==="rate-up"||action==="rate-down"){
         m.rating=m.rating===(action==="rate-up"?"up":"down")?null:(action==="rate-up"?"up":"down");renderChat();return
       }
-      if(action==="branch-message"){
-        const copy=c.messages.slice(0,index+1).map(v=>({...v,id:nextId()}));
-        const branch={id:nextId(),title:"Ветка: "+c.title.slice(0,45),messages:copy,
-          pinned:false,projectId:c.projectId,temporary:false};
-        threads.unshift(branch);displayThread(branch);renderChat();renderHistory();showScreen("chat");
-        notify("Создана независимая ветка переписки.");return;
-      }
+
     }
     if(action==="stop"){abort?.abort("manual");return}
     if(action==="retry-request"){
@@ -502,7 +467,7 @@
   renderChat=renderSessionChat;
   renderTools=function(query=""){
     baseRenderTools(query);
-    const working=new Set([1,2,3,4,5,6,7,8,11,13,14,25,40,41,42,44,45]);
+    const working=new Set([1,2,3,4,5,6,7,13,25,40,41,42,44,45]);
     const partial=new Set([9,10,15,16,43]);
     for(const card of document.querySelectorAll("#toolGroups [data-feature^='tool-']")){
       const id=Number(card.dataset.feature.slice(5));
@@ -521,17 +486,13 @@
       const number=Number(key.slice(5)),chat=selected();
       if(number===1){sessionNewChat();return}
       if(number===2||number===3){showScreen("history");if(number===3)$("#historySearch").focus();return}
-      if([4,5,6,8,9,11,13,14].includes(number)){
+      if([4,5,6,9,13].includes(number)){
         if(!chat){showScreen("history");notify("Сначала создайте чат.");return}
-        const lastUser=[...chat.messages].reverse().find(m=>m.role==="user");
         const lastAssistant=[...chat.messages].reverse().find(m=>m.role==="assistant");
         if(number===4)return handle("rename-chat",chat.id);
         if(number===5)return handle("delete-chat",chat.id);
         if(number===6)return handle("pin-chat",chat.id);
-        if(number===8&&lastUser){showScreen("chat");return handle("edit-message",lastUser.id)}
         if(number===9&&lastAssistant){showScreen("chat");return handle("retry-answer",lastAssistant.id)}
-        if(number===11&&(lastAssistant||lastUser)){return handle("copy-message",(lastAssistant||lastUser).id)}
-        if(number===14&&(lastAssistant||lastUser)){return handle("branch-message",(lastAssistant||lastUser).id)}
         if(number===13){showScreen("chat");notify("Оценка ответа находится под сообщением ИИ.");return}
         notify("Сначала напишите сообщение.");return;
       }

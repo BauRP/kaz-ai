@@ -1542,6 +1542,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       handle(action,target.dataset.id||null,target.dataset);
     },true);
     checkbox.addEventListener("change",()=>handle("temp-toggle"));
+    // The shell already subscribed to the original resizeInput callback before
+    // this module replaced it. Enforce the pending-request lock after that handler.
+    $("#messageInput").addEventListener("input",()=>{if(abort)$("#sendButton").disabled=true});
     document.addEventListener("keydown",event=>{
       if((event.ctrlKey||event.metaKey)&&!event.altKey&&event.key.toLowerCase()==="k"
          &&$("#sessionOverlay").hidden&&$("#modalOverlay").hidden&&$("#googleOverlay").hidden){

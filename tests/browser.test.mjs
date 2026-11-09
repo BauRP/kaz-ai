@@ -1,4 +1,6 @@
-import test from 'node:test';
+import {test as nodeTest} from 'node:test';
+// Browser hangs must surface as a failed test, not block CI indefinitely.
+const test=(name,fn)=>nodeTest(name,{timeout:35000},fn);
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';

@@ -717,6 +717,8 @@ test('send stays disabled while a GPT request is pending, including when typing'
     assert.equal(await page.locator('#sendButton').isDisabled(),true);
     release();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Запрос завершился'));
+    // Rendering can finish a microtask before the request's finally block unlocks Send.
+    await page.waitForFunction(()=>!document.querySelector('#sendButton').disabled);
     assert.equal(await page.locator('#sendButton').isEnabled(),true);
     assert.equal(await page.locator('#messageInput').inputValue(),'Второй запрос, не отправлять пока');
     assert.deepEqual(errors,[]);

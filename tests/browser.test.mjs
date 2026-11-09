@@ -694,10 +694,11 @@ test('project TXT export downloads only saved project conversations',async()=>{
 test('send stays disabled while a GPT request is pending, including when typing',async()=>{
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  let release;
   try{
     const page=await browser.newPage({viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
-    let release;const gate=new Promise(resolve=>{release=resolve});
+    const gate=new Promise(resolve=>{release=resolve});
     const html=readFileSync('public/preview.html','utf8');
     await page.route('https://kaz-ai.test/**',async route=>{
       if(new URL(route.request().url()).pathname==='/api/chat'){

@@ -1,32 +1,32 @@
 {
   "scope": "22 active light-medium features; explicitly removed 8 (edit message), 11 (copy), 14 (branch) excluded; higher difficulty excluded.",
-  "basis": "Previous 22-feature stage, verified CI 42589776275: fixed stale pending Send state, added manual stop/retry without duplicates, late-answer suppression, sequential time-bounded Chromium tests. Other feature estimates unchanged.",
+  "basis": "22 authorized light/medium directions, previous milestone 73.23%; verified GitHub Actions run 42593407209: retry failed regeneration, server-safe bounded assistant history, small-number precision, RU/KZ/EN dynamic notices.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
   "date": "2026-11-09",
-  "previous": 73.04545454545455,
-  "now": 73.22727272727273,
-  "delta": 0.18181818181818699,
+  "previous": 73.22727272727273,
+  "now": 73.68181818181819,
+  "delta": 0.45454545454545325,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 87,
-      "now": 87.4,
-      "delta": 0.4000000000000057
+      "previous": 87.4,
+      "now": 87.7,
+      "delta": 0.29999999999999716
     },
     {
       "name": "Интеллект",
       "count": 6,
       "previous": 39.833333333333336,
-      "now": 39.833333333333336,
-      "delta": 0
+      "now": 40.5,
+      "delta": 0.6666666666666643
     },
     {
       "name": "Настройки",
       "count": 6,
       "previous": 83,
-      "now": 83,
-      "delta": 0
+      "now": 83.5,
+      "delta": 0.5
     }
   ],
   "items": [
@@ -97,19 +97,19 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 64,
-      "now": 66,
-      "delta": 2,
-      "summary": "После остановки незавершённого ответа можно повторить исходный запрос без второго сообщения пользователя."
+      "previous": 66,
+      "now": 69,
+      "delta": 3,
+      "summary": "После неудачной повторной генерации можно снова попробовать ответить, сохранив предыдущий текст до успешного результата."
     },
     {
       "id": 10,
       "name": "Остановить ответ",
       "group": "Чаты",
-      "previous": 75,
+      "previous": 77,
       "now": 77,
-      "delta": 2,
-      "summary": "Ручная остановка безопасно отменяет запрос; поздний ответ не появляется; кнопка отправки остаётся заблокированной до завершения."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 13,
@@ -125,9 +125,9 @@
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
       "previous": 53,
-      "now": 53,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 54,
+      "delta": 1,
+      "summary": "Длинный ответ ИИ в истории безопасно сокращается до серверного ограничения без потери нового вопроса."
     },
     {
       "id": 16,
@@ -170,9 +170,9 @@
       "name": "Простой калькулятор",
       "group": "Интеллект",
       "previous": 85,
-      "now": 85,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 88,
+      "delta": 3,
+      "summary": "Калькулятор больше не превращает очень маленькие ненулевые значения в ноль и точнее показывает десятичные результаты."
     },
     {
       "id": 40,
@@ -206,9 +206,9 @@
       "name": "Язык интерфейса",
       "group": "Настройки",
       "previous": 62,
-      "now": 62,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 65,
+      "delta": 3,
+      "summary": "Добавлены переводы системных уведомлений и ошибок ИИ на казахский и английский; они обновляются при выборе языка."
     },
     {
       "id": 44,

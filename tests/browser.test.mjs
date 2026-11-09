@@ -538,3 +538,47 @@ test('history TXT export keeps Cyrillic readable and excludes temporary chats',a
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('real browser: match navigation, in-place project organization and individual TXT export',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820},acceptDownloads:true});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Начало проекта');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Важный фрагмент поиска');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Вторая переписка');
+    await page.locator('#sendButton').click();
+    await page.keyboard.press('Control+k');
+    assert.equal(await page.locator('#historySearch').evaluate(el=>document.activeElement===el),true);
+    await page.locator('#historySearch').fill('Важный фрагмент');
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#chatMessages .session-jump-hit').count(),1);
+    assert.ok((await page.locator('.session-jump-hit').innerText()).includes('Важный фрагмент'));
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#sessionClearSearch').click();
+    const downloading=page.waitForEvent('download');
+    await page.locator('#historyList [data-session="export-chat"]').first().click();
+    const file=await downloading;
+    assert.ok(file.suggestedFilename().endsWith('.txt'));
+    assert.ok(readFileSync(await file.path(),'utf8').startsWith('\uFEFF'));
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads)).length,2);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Мой рабочий проект');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('[data-session="add-chat-to-project"]').click();
+    await page.locator('#sessionBody select').selectOption({index:0});
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads.filter(c=>c.projectId).length)),1);
+    assert.ok((await page.locator('.session-project-card').first().innerText()).includes('1 чатов'));
+    await page.locator('.session-project-card').first().locator('[data-session="remove-chat-from-project"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads.filter(c=>c.projectId).length)),0);
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Без проекта'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

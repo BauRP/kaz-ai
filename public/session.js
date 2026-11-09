@@ -140,6 +140,8 @@
     for(const c of shown){
       const card=make("div","session-chat-row"+(c.id===current?" active":""));
       const name=button("","open-chat",c.id,"session-chat-name");
+      const matchIndex=value?c.messages.findIndex(m=>m.content.toLocaleLowerCase().includes(value)):-1;
+      if(matchIndex>=0)name.dataset.matchIndex=String(matchIndex);
       name.setAttribute("aria-label","Открыть чат: "+c.title);
       if(c.pinned)name.append(make("span","session-pin","📌 "));
       const label=make("span","session-chat-label");
@@ -147,7 +149,7 @@
       name.append(label);
       card.append(name);
       if(value){
-        const matched=c.messages.find(m=>m.content.toLocaleLowerCase().includes(value));
+        const matched=matchIndex>=0?c.messages[matchIndex]:null;
         if(matched){
           const at=matched.content.toLocaleLowerCase().indexOf(value);
           const from=Math.max(0,at-38),to=Math.min(matched.content.length,at+query.length+46);
@@ -163,6 +165,7 @@
         button(c.pinned?"Открепить":"Закрепить","pin-chat",c.id),
         button("Название","rename-chat",c.id),
         button("Проект","assign-chat",c.id),
+        button("Скачать","export-chat",c.id),
         button("Удалить","delete-chat",c.id,"session-button session-danger")
       );
       card.append(ops);list.append(card);
@@ -206,12 +209,18 @@
     for(const project of projects){
       const card=make("section","session-project-card");
       const header=make("div","session-project-title");
-      header.append(make("h2","",project.name),make("small","",threads.filter(c=>c.projectId===project.id).length+" чатов"));
+      header.append(make("h2","",project.name),make("small","",threads.filter(c=>c.projectId===project.id&&!c.temporary).length+" чатов"));
       card.append(header);
       const chats=threads.filter(c=>c.projectId===project.id&&!c.temporary);
       if(!chats.length)card.append(make("p","session-help","Пока нет чатов в этом проекте."));
-      for(const c of chats)card.append(button("↳ "+c.title,"open-chat",c.id,"session-project-chat"));
-      addButtons(card,[{label:"Переименовать",action:"rename-project",id:project.id},
+      for(const c of chats){
+        const row=make("div","session-project-chat-row");
+        row.append(button("↳ "+c.title,"open-chat",c.id,"session-project-chat"),
+          button("Убрать","remove-chat-from-project",c.id,"session-button"));
+        card.append(row);
+      }
+      addButtons(card,[{label:"＋ Добавить чат",action:"add-chat-to-project",id:project.id},
+        {label:"Переименовать",action:"rename-project",id:project.id},
         {label:"Удалить проект",action:"delete-project",id:project.id,className:"session-button session-danger"}]);
       target.append(card);
     }
@@ -269,6 +278,8 @@
         body:JSON.stringify({messages:history,effort:state.reason,instructions:personalInstructions})
       });
       let data=null;try{data=await response.json()}catch{}
+      // An outdated answer cannot change the status of a different chat.
+      if(abort!==controller||!threads.includes(chat)||current!==chat.id)return;
       if(!response.ok){
         if(data?.code==="AI_QUOTA_EXHAUSTED")showStatus("Лимит ИИ исчерпан. Бесплатный дневной лимит закончился. Попробуйте позже, когда он обновится.",true);
         else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
@@ -320,7 +331,7 @@
       body.append(yes);
     });
   }
-  function handle(action,id){
+  function handle(action,id,details={}){
     const chat=threads.find(c=>c.id===id);
     const project=projects.find(p=>p.id===id);
     if(action==="open-chat"&&chat){
@@ -334,10 +345,24 @@
           if(i>=0){threads.splice(i,1);drafts.delete(old.id)}
         }
       }
-      displayThread(chat);renderChat();renderHistory();showScreen("chat");return
+      displayThread(chat);renderChat();renderHistory();showScreen("chat");
+      if(details.matchIndex!==undefined){
+        const index=Number(details.matchIndex);
+        const bubble=Number.isSafeInteger(index)?$("#chatMessages").children[index]:null;
+        if(bubble){bubble.classList.add("session-jump-hit");bubble.scrollIntoView({block:"center"});}
+      }
+      return
     }
     if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{chat.title=v;renderHistory();renderSessionProjects()});return}
     if(action==="pin-chat"&&chat){chat.pinned=!chat.pinned;renderHistory();return}
+    if(action==="export-chat"&&chat&&!chat.temporary){
+      const safe=chat.title.normalize("NFKC").replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,"").slice(0,70)||"chat";
+      download("Kaz-AI-"+safe+".txt",exportText(chat),"text/plain;charset=utf-8");
+      notify("Переписка скачана в текстовый файл.");return
+    }
+    if(action==="remove-chat-from-project"&&chat){
+      chat.projectId=null;renderSessionProjects();renderHistory();notify("Чат перемещён в «Без проекта».");return
+    }
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
       if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;$("#sessionStop").hidden=true;showStatus("")}
       const i=threads.indexOf(chat);threads.splice(i,1);drafts.delete(chat.id);
@@ -356,6 +381,26 @@
         body.append(save);
         if(!projects.length)body.append(make("p","session-help","Сначала создайте проект в разделе «Проекты»."));
       });return}
+    if(action==="add-chat-to-project"&&project){
+      const available=threads.filter(c=>!c.temporary&&c.projectId!==project.id);
+      if(!available.length){notify("Нет других чатов для добавления.");return}
+      openDialog("Добавить чат в «"+project.name+"»","Можно выбрать чат без проекта или перенести из другого проекта.",body=>{
+        const select=make("select","session-input");
+        select.setAttribute("aria-label","Выберите чат для проекта");
+        for(const candidate of available){
+          const option=make("option","",candidate.title);option.value=candidate.id;select.append(option);
+        }
+        body.append(select);
+        const save=button("Добавить","dialog-save",null,"session-primary");
+        save.addEventListener("click",()=>{
+          const chosen=threads.find(c=>c.id===select.value);
+          if(!chosen||chosen.temporary){notify("Этот чат уже недоступен.");return}
+          chosen.projectId=project.id;closeDialog();renderSessionProjects();renderHistory();
+          notify("Чат добавлен в проект.");
+        });
+        body.append(save);
+      });return
+    }
     const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&p.name.toLocaleLowerCase()===name.toLocaleLowerCase());
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{
       if(duplicateProject(name)){notify("Проект с таким названием уже есть.");return false}
@@ -509,9 +554,16 @@
       const action=target.dataset.session;
       if(action==="dialog-close"){closeDialog();return}
       if(["dialog-save","dialog-confirm","calc-run"].includes(action))return;
-      handle(action,target.dataset.id||null);
+      handle(action,target.dataset.id||null,target.dataset);
     },true);
     checkbox.addEventListener("change",()=>handle("temp-toggle"));
+    document.addEventListener("keydown",event=>{
+      if((event.ctrlKey||event.metaKey)&&!event.altKey&&event.key.toLowerCase()==="k"
+         &&$("#sessionOverlay").hidden&&$("#modalOverlay").hidden&&$("#googleOverlay").hidden){
+        event.preventDefault();showScreen("history");
+        const search=$("#historySearch");search.focus();search.select();
+      }
+    });
     overlay.addEventListener("click",e=>{if(e.target===overlay)closeDialog()});
     document.addEventListener("keydown",e=>{
       if(overlay.hidden)return;

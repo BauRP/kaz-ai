@@ -1,32 +1,32 @@
 {
   "scope": "22 active light-medium features; explicitly removed 8 (edit message), 11 (copy), 14 (branch) excluded; higher difficulty excluded.",
-  "basis": "22 authorized light/medium directions, previous milestone 73.23%; verified GitHub Actions run 42593407209: retry failed regeneration, server-safe bounded assistant history, small-number precision, RU/KZ/EN dynamic notices.",
+  "basis": "Previous 22-feature stage 73.68%. New code in commit 1ff6c805; 46 Node tests and 27 Chrome browser scenarios passed in GitHub Actions 42693080095. Fixes: deleted-chat draft, fresh home chat, exact search-hit highlighting, accessible pin/rating toggle controls.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
-  "date": "2026-11-09",
-  "previous": 73.22727272727273,
-  "now": 73.68181818181819,
-  "delta": 0.45454545454545325,
+  "date": "2026-11-10",
+  "previous": 73.68181818181819,
+  "now": 74,
+  "delta": 0.318181818181813,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 87.4,
-      "now": 87.7,
-      "delta": 0.29999999999999716
+      "previous": 87.7,
+      "now": 88.4,
+      "delta": 0.7000000000000028
     },
     {
       "name": "Интеллект",
       "count": 6,
-      "previous": 39.833333333333336,
+      "previous": 40.5,
       "now": 40.5,
-      "delta": 0.6666666666666643
+      "delta": 0
     },
     {
       "name": "Настройки",
       "count": 6,
-      "previous": 83,
+      "previous": 83.5,
       "now": 83.5,
-      "delta": 0.5
+      "delta": 0
     }
   ],
   "items": [
@@ -35,27 +35,27 @@
       "name": "Новый чат",
       "group": "Чаты",
       "previous": 94,
-      "now": 94,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 95,
+      "delta": 1,
+      "summary": "Главная страница теперь создаёт новый чат, не смешивая сообщение с прежним разговором."
     },
     {
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
       "previous": 85,
-      "now": 85,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 86,
+      "delta": 1,
+      "summary": "При возврате в старый чат сохраняется его собственный несохранённый черновик."
     },
     {
       "id": 3,
       "name": "Поиск по перепискам",
       "group": "Чаты",
       "previous": 93,
-      "now": 93,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 94,
+      "delta": 1,
+      "summary": "При переходе из поиска найденное слово безопасно выделяется внутри сообщения."
     },
     {
       "id": 4,
@@ -71,18 +71,18 @@
       "name": "Удалить чат",
       "group": "Чаты",
       "previous": 95,
-      "now": 95,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 97,
+      "delta": 2,
+      "summary": "Удаление открытого чата очищает его черновик и не переносит его на главный экран."
     },
     {
       "id": 6,
       "name": "Закрепить чат",
       "group": "Чаты",
       "previous": 92,
-      "now": 92,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 93,
+      "delta": 1,
+      "summary": "Кнопка закрепления показывает выбранное состояние для вспомогательных технологий."
     },
     {
       "id": 7,
@@ -97,10 +97,10 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 66,
+      "previous": 69,
       "now": 69,
-      "delta": 3,
-      "summary": "После неудачной повторной генерации можно снова попробовать ответить, сохранив предыдущий текст до успешного результата."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 10,
@@ -116,18 +116,18 @@
       "name": "Оценка ответа",
       "group": "Чаты",
       "previous": 88,
-      "now": 88,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 89,
+      "delta": 1,
+      "summary": "Положительная и отрицательная оценки получают доступное название и состояние переключателя."
     },
     {
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 53,
+      "previous": 54,
       "now": 54,
-      "delta": 1,
-      "summary": "Длинный ответ ИИ в истории безопасно сокращается до серверного ограничения без потери нового вопроса."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 16,
@@ -169,10 +169,10 @@
       "id": 25,
       "name": "Простой калькулятор",
       "group": "Интеллект",
-      "previous": 85,
+      "previous": 88,
       "now": 88,
-      "delta": 3,
-      "summary": "Калькулятор больше не превращает очень маленькие ненулевые значения в ноль и точнее показывает десятичные результаты."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 40,
@@ -205,10 +205,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 62,
+      "previous": 65,
       "now": 65,
-      "delta": 3,
-      "summary": "Добавлены переводы системных уведомлений и ошибок ИИ на казахский и английский; они обновляются при выборе языка."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 44,

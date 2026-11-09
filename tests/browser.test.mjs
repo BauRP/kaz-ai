@@ -949,3 +949,83 @@ test('ratings and pin controls expose their toggled state to assistive technolog
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('temporary chat never leaks an unsent private draft into the new-chat composer',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Обычный чат сохранён в истории');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#sessionTemporary').check();
+    await page.locator('#messageInput').fill('Временная переписка');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('СЕКРЕТНЫЙ_ЧЕРНОВИК_ВРЕМЕННОГО_ЧАТА');
+    await page.locator('#recentChats [data-session="open-chat"]').first().click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).draftCount,0);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('rating a response changes only its buttons without destroying the displayed message',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Подробный ответ от модели '+('Пример текста. '.repeat(350))})});
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Оцени этот ответ');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('long-safe-browser-test-access-key-1234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Подробный ответ от модели'));
+    const result=await page.evaluate(()=>{
+      const message=document.querySelector('.message-assistant');
+      const before=message;
+      const content=message.textContent;
+      document.querySelector('#mainContent').scrollTop=0;
+      message.querySelector('[data-session="rate-up"]').click();
+      const after=document.querySelector('.message-assistant');
+      return {same:after===before,content:after.textContent===content,pressed:after.querySelector('[data-session="rate-up"]').getAttribute('aria-pressed'),scroll:document.querySelector('#mainContent').scrollTop};
+    });
+    assert.equal(result.same,true);
+    assert.equal(result.content,true);
+    assert.equal(result.pressed,'true');
+    assert.equal(result.scroll,0);
+    await page.locator('.message-assistant [data-session="rate-down"]').click();
+    assert.equal(await page.locator('.message-assistant [data-session="rate-up"]').getAttribute('aria-pressed'),'false');
+    assert.equal(await page.locator('.message-assistant [data-session="rate-down"]').getAttribute('aria-pressed'),'true');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('project selection opens with keyboard focus on the choice, not Save',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Переписка для проекта');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Рабочая папка');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('[data-session="add-chat-to-project"]').click();
+    assert.equal(await page.locator('#sessionBody select').evaluate(e=>document.activeElement===e),true);
+    await page.keyboard.press('Escape');
+    assert.equal(await page.locator('#sessionBody select').count(),0);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

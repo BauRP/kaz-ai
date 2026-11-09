@@ -75,7 +75,7 @@
     if(paragraph)body.append(make("p","session-help",paragraph));
     if(build)build(body);
     overlay.hidden=false;
-    const focus=body.querySelector("input,textarea,button")||$("#sessionClose");
+    const focus=body.querySelector("input,textarea,select,button")||$("#sessionClose");
     focus.focus();
   }
   function closeDialog(){
@@ -394,6 +394,9 @@
         if(old?.temporary){
           const i=threads.indexOf(old);
           if(i>=0){threads.splice(i,1);drafts.delete(old.id)}
+          // Temporary drafts must not leak into the welcome composer during navigation.
+          welcomeDraft="";
+          $("#messageInput").value="";
         }
       }
       displayThread(chat);renderChat();renderHistory();showScreen("chat");
@@ -498,7 +501,16 @@
         return;
       }
       if(action==="rate-up"||action==="rate-down"){
-        m.rating=m.rating===(action==="rate-up"?"up":"down")?null:(action==="rate-up"?"up":"down");renderChat();return
+        const nextRating=action==="rate-up"?"up":"down";
+        m.rating=m.rating===nextRating?null:nextRating;
+        // Do not rebuild or scroll the entire conversation when rating a message.
+        for(const control of document.querySelectorAll('#chatMessages [data-session="rate-up"],#chatMessages [data-session="rate-down"]')){
+          if(control.dataset.id!==m.id)continue;
+          const active=control.dataset.session===(m.rating==="up"?"rate-up":m.rating==="down"?"rate-down":"");
+          control.classList.toggle("selected",active);
+          control.setAttribute("aria-pressed",String(active));
+        }
+        return
       }
 
     }
@@ -517,7 +529,7 @@
       sessionNewChat(Boolean($("#sessionTemporary").checked));return;
     }
     if(action==="export"){
-      const saved=threads.filter(c=>!c.temporary&&c.messages.length);
+      const saved=threads.filter(c=>!c.temporary&&c.messages.length).sort(newestFirst);
       if(!saved.length){notify("Для экспорта пока нет переписок.");return}
       const text=saved.map(exportText).join("\n\n"+"=".repeat(45)+"\n\n");
       download("Kaz-AI-history.txt",text,"text/plain;charset=utf-8");
@@ -744,8 +756,8 @@
         notify("Сначала напишите сообщение.");return;
       }
       if(number===7){showScreen("projects");return}
-      if(number===10){if(abort)abort.abort();else notify("Сейчас нет активного ответа.");return}
-      if(number===15){showScreen("welcome");$("#messageInput").focus();return}
+      if(number===10){if(abort)abort.abort("manual");else notify("Сейчас нет активного ответа.");return}
+      if(number===15){sessionNewChat(false);return}
       if(number===16){togglePopover("reason");return}
       if([22,23,24].includes(number)){openTextHelper(number);return}
       if(number===25){showCalculator();return}

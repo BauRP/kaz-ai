@@ -72,3 +72,18 @@ test('quota errors are not misreported as network errors',async()=>{
   assert.equal(response.status,429);
   assert.equal((await response.json()).code,'AI_QUOTA_EXHAUSTED');
 });
+
+test('a temporary request-rate limit does not claim the daily quota is exhausted',async()=>{
+  const {env}=envWithAI(async()=>{throw new Error('429 Too Many Requests: rate limit')});
+  const response=await worker.fetch(post(good),env);
+  assert.equal(response.status,429);
+  const body=await response.json();
+  assert.equal(body.code,'AI_RATE_LIMITED');
+  assert.doesNotMatch(body.message,/дневной лимит/i);
+});
+test('an unrelated AI failure is not classified as a quota or rate limit',async()=>{
+  const {env}=envWithAI(async()=>{throw new Error('model temporarily unavailable')});
+  const response=await worker.fetch(post(good),env);
+  assert.equal(response.status,503);
+  assert.equal((await response.json()).code,'AI_UNAVAILABLE');
+});

@@ -269,8 +269,24 @@
     const timeout=setTimeout(()=>controller.abort("timeout"),45000);
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
-    const history=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
-      .map(m=>({role:m.role,content:m.content.slice(0,4000)}));
+    const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16);
+    // Preserve full recent messages, but do not exceed the server's 50 KB payload cap.
+    // Account for JSON encoding, user instructions and non-ASCII characters.
+    const encoder=new TextEncoder();
+    let budget=39000-encoder.encode(personalInstructions).length;
+    const history=[];
+    for(let i=candidates.length-1;i>=0;i--){
+      const item={role:candidates[i].role,content:candidates[i].content};
+      const bytes=encoder.encode(JSON.stringify(item)).length+2;
+      if(bytes>budget)break;
+      history.unshift(item);budget-=bytes;
+    }
+    while(history.length>1&&history[0].role!=="user")history.shift();
+    if(!history.length||history.at(-1).role!=="user"){
+      showStatus("Запрос слишком большой. Сократите последнее сообщение.",false,true);
+      clearTimeout(timeout);abort=null;pending=null;stop.hidden=true;resizeInput();
+      return;
+    }
     try{
       const response=await fetch("/api/chat",{
         method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+aiAccessKey},
@@ -281,7 +297,8 @@
       // An outdated answer cannot change the status of a different chat.
       if(abort!==controller||!threads.includes(chat)||current!==chat.id)return;
       if(!response.ok){
-        if(data?.code==="AI_QUOTA_EXHAUSTED")showStatus("Лимит ИИ исчерпан. Бесплатный дневной лимит закончился. Попробуйте позже, когда он обновится.",true);
+        if(data?.code==="AI_QUOTA_EXHAUSTED")showStatus("Дневной лимит ИИ исчерпан. Попробуйте после его обновления.",true);
+        else if(data?.code==="AI_RATE_LIMITED")showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);
         else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
         else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
         return;
@@ -307,6 +324,7 @@
   }
   function sendMessage(){
     const text=composeText();if(!text||abort)return;
+    if(text.length>4000){notify("Сообщение длиннее 4000 символов. Сократите его перед отправкой.");return}
     const chat=selected()||newThread(text);
     chat.messages.push({id:nextId(),role:"user",content:text});
     displayThread(chat);
@@ -493,6 +511,53 @@
     if(i!==matches.length||!Number.isFinite(answer))throw Error("INVALID");
     return Math.round((answer+Number.EPSILON)*1e9)/1e9;
   }
+
+  // These text tools only prepare a draft. They never send it automatically.
+  function openTextHelper(kind){
+    const definitions={
+      22:["Переводчик","Вставьте текст и выберите язык перевода. Отправка произойдёт только после вашего подтверждения."],
+      23:["Помощь с программированием","Опишите задачу или вставьте код. Kaz AI подготовит вопрос для текстовой модели."],
+      24:["Помощь с документами","Опишите, какой текст необходимо составить. Файлы Word и PDF здесь пока не создаются."]
+    };
+    const definition=definitions[kind];if(!definition)return;
+    openDialog(definition[0],definition[1],body=>{
+      let languageSelect=null;
+      if(kind===22){
+        languageSelect=make("select","session-input");
+        languageSelect.setAttribute("aria-label","Язык перевода");
+        for(const [value,label] of [["ru","Русский"],["kk","Қазақша"],["en","English"]]){
+          const option=make("option","",label);option.value=value;languageSelect.append(option);
+        }
+        languageSelect.value=window.KazI18n?.language||"ru";
+        body.append(languageSelect);
+      }
+      const field=make("textarea","session-textarea");field.rows=6;field.maxLength=3500;
+      field.setAttribute("aria-label",kind===22?"Текст для перевода":kind===23?"Задача по программированию":"Описание документа");
+      field.placeholder=kind===22?"Введите текст для перевода":kind===23?"Что нужно исправить или написать?":"Например: деловое письмо о встрече";
+      body.append(field);
+      const prepare=button("Подготовить запрос","dialog-save",null,"session-primary");
+      prepare.addEventListener("click",()=>{
+        const value=field.value.trim();
+        if(!value){notify("Сначала введите текст или описание задачи.");field.focus();return}
+        const input=$("#messageInput");
+        if(input.value.trim()){notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");return}
+        let prompt="";
+        if(kind===22){
+          const target={ru:"русский",kk:"казахский",en:"английский"}[languageSelect.value];
+          prompt="Переведи следующий текст на "+target+" язык. Сохрани смысл, имена и форматирование. Выведи только перевод.\n\n"+value;
+        }else if(kind===23){
+          prompt="Помоги с программированием. Если информации не хватает, уточни её. Объясняй простыми словами, а код приводи в удобном виде. Задача:\n\n"+value;
+        }else{
+          prompt="Подготовь текст документа по следующему описанию. Сделай его понятным и аккуратно структурированным. Не выдумывай неизвестные данные. Описание:\n\n"+value;
+        }
+        if(prompt.length>4000){notify("Текст слишком длинный. Сократите описание.");return}
+        closeDialog();showScreen(selected()?"chat":"welcome");
+        input.value=prompt;resizeInput();input.focus();
+        notify("Запрос подготовлен. Проверьте текст и нажмите отправку.");
+      });
+      body.append(prepare);
+    });
+  }
   function showCalculator(){
     openDialog("Простой калькулятор","Поддерживает +, −, ×, ÷ и скобки. Не использует ИИ.",body=>{
       const field=make("input","session-input");field.type="text";field.inputMode="decimal";
@@ -587,7 +652,7 @@
   renderTools=function(query=""){
     baseRenderTools(query);
     const working=new Set([1,2,3,4,5,6,7,13,25,40,41,42,44,45]);
-    const partial=new Set([9,10,15,16,43]);
+    const partial=new Set([9,10,15,16,22,23,24,43]);
     for(const card of document.querySelectorAll("#toolGroups [data-feature^='tool-']")){
       const id=Number(card.dataset.feature.slice(5));
       const status=card.querySelector("small");
@@ -619,6 +684,7 @@
       if(number===10){if(abort)abort.abort();else notify("Сейчас нет активного ответа.");return}
       if(number===15){showScreen("welcome");$("#messageInput").focus();return}
       if(number===16){togglePopover("reason");return}
+      if([22,23,24].includes(number)){openTextHelper(number);return}
       if(number===25){showCalculator();return}
       if(number===40)return handle("instructions");
       if(number===41){showScreen("settings");$("#sessionTemporary").focus();return}

@@ -43,9 +43,11 @@ function validatedInput(payload){
   if(payload.instructions!==undefined&&(typeof payload.instructions!=="string"||payload.instructions.length>2000))return null;
   return {messages,effort:payload.effort,instructions:(payload.instructions||"").trim()};
 }
-function isQuotaError(error){
+function classifyAILimit(error){
   const msg=String(error?.message||error||"").toLowerCase();
-  return /\b429\b|quota|neurons|daily limit|billing limit|rate limit|budget exceeded|exceeded your account limit/.test(msg);
+  if(/daily|neurons|quota exceeded|quota exhausted|billing limit|budget exceeded|exceeded your account limit/.test(msg))return "daily";
+  if(/\b429\b|rate limit|too many requests|throttl/.test(msg))return "rate";
+  return null;
 }
 export default {
   async fetch(request,env){
@@ -95,7 +97,9 @@ export default {
       if(!text)return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
       return json({text,model:"gpt-oss-120b",effort:input.effort});
     }catch(e){
-      if(isQuotaError(e))return codeError("AI_QUOTA_EXHAUSTED","Лимит ИИ исчерпан. Бесплатный дневной лимит закончился. Попробуйте позже, когда он обновится.",429);
+      const kind=classifyAILimit(e);
+      if(kind==="daily")return codeError("AI_QUOTA_EXHAUSTED","Дневной лимит ИИ исчерпан. Попробуйте после его обновления.",429);
+      if(kind==="rate")return codeError("AI_RATE_LIMITED","Слишком много запросов за короткое время. Попробуйте позднее.",429);
       return codeError("AI_UNAVAILABLE","Не удалось получить ответ ИИ. Попробуйте позже.",503);
     }
   }

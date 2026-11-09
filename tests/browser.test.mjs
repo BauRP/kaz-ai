@@ -582,3 +582,36 @@ test('real browser: match navigation, in-place project organization and individu
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('text helpers prepare safe drafts but never send without user confirmation',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const instance=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await instance.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-22"]').click();
+    await page.locator('#sessionBody select').selectOption('en');
+    await page.locator('#sessionBody textarea').fill('Сәлем, әлем!');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.ok((await page.locator('#messageInput').inputValue()).includes('Сәлем, әлем!'));
+    assert.ok((await page.locator('#messageInput').inputValue()).includes('английский'));
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads)).length,0,'text helper must not send a request automatically');
+    const firstDraft=await page.locator('#messageInput').inputValue();
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-23"]').click();
+    await page.locator('#sessionBody textarea').fill('Объясни функцию JavaScript');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#messageInput').inputValue(),firstDraft,'preparing another prompt must not erase existing draft');
+    assert.ok(await page.locator('#sessionOverlay').isVisible(),'unsent draft keeps helper dialog open');
+    await page.locator('#sessionClose').click();
+    await page.locator('#messageInput').fill('');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-24"]').click();
+    await page.locator('#sessionBody textarea').fill('Письмо о встрече');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.ok((await page.locator('#messageInput').inputValue()).includes('Письмо о встрече'));
+    assert.deepEqual(errors,[]);
+  }finally{await instance.close()}
+});

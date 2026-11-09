@@ -519,7 +519,25 @@
   "Сейчас нет активного ответа.": {
     "en": "No response in progress.",
     "kk": "Қазір жауап жасалып жатқан жоқ."
-  }
+  },
+  "Переводчик": {"en":"Translator","kk":"Аудармашы"},
+  "Помощь с программированием": {"en":"Programming help","kk":"Бағдарламалау көмегі"},
+  "Помощь с документами": {"en":"Document writing help","kk":"Құжат дайындау көмегі"},
+  "Вставьте текст и выберите язык перевода. Отправка произойдёт только после вашего подтверждения.": {"en":"Paste text and choose a language. Nothing is sent without your confirmation.","kk":"Мәтінді енгізіп, аударма тілін таңдаңыз. Сіз растамайынша ештеңе жіберілмейді."},
+  "Опишите задачу или вставьте код. Kaz AI подготовит вопрос для текстовой модели.": {"en":"Describe the task or paste code. Kaz AI will prepare a prompt for the text model.","kk":"Тапсырманы сипаттаңыз немесе кодты қойыңыз. Kaz AI мәтіндік модельге сұрау дайындайды."},
+  "Опишите, какой текст необходимо составить. Файлы Word и PDF здесь пока не создаются.": {"en":"Describe the text you need. Word and PDF files are not generated yet.","kk":"Қандай мәтін қажет екенін сипаттаңыз. Word және PDF файлдары әзірге жасалмайды."},
+  "Подготовить запрос": {"en":"Prepare prompt","kk":"Сұрауды дайындау"},
+  "Введите текст для перевода": {"en":"Enter text to translate","kk":"Аударатын мәтінді енгізіңіз"},
+  "Что нужно исправить или написать?": {"en":"What needs to be fixed or written?","kk":"Не жазу немесе түзету керек?"},
+  "Например: деловое письмо о встрече": {"en":"For example: a meeting invitation email","kk":"Мысалы: кездесуге шақыру хаты"},
+  "＋ Добавить чат": {"en":"＋ Add chat","kk":"＋ Чат қосу"},
+  "Убрать": {"en":"Remove","kk":"Алып тастау"},
+  "Очистить": {"en":"Clear","kk":"Тазалау"},
+  "Подключить": {"en":"Connect","kk":"Қосу"},
+  "Повторить запрос": {"en":"Retry request","kk":"Сұрауды қайталау"},
+  "Нет переписок": {"en":"No chats","kk":"Чаттар жоқ"},
+  "Пока нет чатов": {"en":"No chats yet","kk":"Әзірше чаттар жоқ"},
+  "Совпадений не найдено": {"en":"No matches","kk":"Сәйкестіктер табылмады"}
 };
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",

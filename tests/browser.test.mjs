@@ -737,10 +737,10 @@ test('manually cancelled AI request offers retry and rejects late responses',asy
     let calls=0;
     await page.route('https://kaz-ai.test/**',async route=>{
       if(new URL(route.request().url()).pathname==='/api/chat'){
-        calls++;
-        if(calls===1)await gate;
+        const ordinal=++calls;
+        if(ordinal===1)await gate;
         try{return await route.fulfill({status:200,contentType:'application/json',
-          body:JSON.stringify({text:calls===1?'Запоздавший ответ':'Новый ответ после повтора'})})}catch{return}
+          body:JSON.stringify({text:ordinal===1?'Запоздавший ответ':'Новый ответ после повтора'})})}catch{return}
       }
       return route.fulfill({status:200,contentType:'text/html',body:html});
     });
@@ -753,6 +753,7 @@ test('manually cancelled AI request offers retry and rejects late responses',asy
     await page.locator('#sessionStop').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('остановлена'));
     assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
     release();
     await page.locator('#sessionRetry').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Новый ответ после повтора'));

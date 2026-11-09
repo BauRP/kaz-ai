@@ -171,7 +171,7 @@
       }
       const ops=make("div","session-chat-ops");
       ops.append(
-        button(c.pinned?"Открепить":"Закрепить","pin-chat",c.id),
+        (()=>{const pin=button(c.pinned?"Открепить":"Закрепить","pin-chat",c.id);pin.setAttribute("aria-pressed",String(Boolean(c.pinned)));return pin})(),
         button("Название","rename-chat",c.id),
         button("Проект","assign-chat",c.id),
         button("Скачать","export-chat",c.id),
@@ -198,6 +198,10 @@
         const up=button("👍","rate-up",message.id),down=button("👎","rate-down",message.id);
         if(message.rating==="up")up.classList.add("selected");
         if(message.rating==="down")down.classList.add("selected");
+        up.setAttribute("aria-label","Положительная оценка ответа");
+        down.setAttribute("aria-label","Отрицательная оценка ответа");
+        up.setAttribute("aria-pressed",String(message.rating==="up"));
+        down.setAttribute("aria-pressed",String(message.rating==="down"));
         actions.append(up,down,button("Повторить ответ","retry-answer",message.id));
         bubble.append(actions);
       }
@@ -354,7 +358,7 @@
   function sendMessage(){
     const text=composeText();if(!text||abort)return;
     if(text.length>4000){notify("Сообщение длиннее 4000 символов. Сократите его перед отправкой.");return}
-    const chat=selected()||newThread(text);
+    const chat=(state.screen==="welcome"?newThread(text):selected()||newThread(text));
     chat.messages.push({id:nextId(),role:"user",content:text});
     touchChat(chat);displayThread(chat);
     $("#messageInput").value="";drafts.delete(chat.id);welcomeDraft="";resizeInput();
@@ -396,7 +400,21 @@
       if(details.matchIndex!==undefined){
         const index=Number(details.matchIndex);
         const bubble=Number.isSafeInteger(index)?$("#chatMessages").children[index]:null;
-        if(bubble){bubble.classList.add("session-jump-hit");bubble.scrollIntoView({block:"center"});}
+        if(bubble){
+          bubble.classList.add("session-jump-hit");
+          const phrase=$("#historySearch").value.trim();
+          const textNode=bubble.querySelector(":scope > span");
+          if(phrase&&textNode){
+            const content=textNode.textContent;
+            const match=content.toLocaleLowerCase().indexOf(phrase.toLocaleLowerCase());
+            if(match>=0){
+              textNode.replaceChildren(document.createTextNode(content.slice(0,match)),
+                make("mark","session-search-hit",content.slice(match,match+phrase.length)),
+                document.createTextNode(content.slice(match+phrase.length)));
+            }
+          }
+          bubble.scrollIntoView({block:"center"});
+        }
       }
       return
     }
@@ -412,7 +430,7 @@
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
       if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;$("#sessionStop").hidden=true;showStatus("")}
       const i=threads.indexOf(chat);threads.splice(i,1);drafts.delete(chat.id);
-      if(current===chat.id){showStatus("");displayThread(null);drafts.delete(chat.id);showScreen("welcome");renderChat()}
+      if(current===chat.id)sessionNewChat(false);
       renderHistory();renderSessionProjects();
     });return}
     if(action==="assign-chat"&&chat){
@@ -653,6 +671,9 @@
     const retry=button("Повторить запрос","retry-request",null,"session-retry");
     retry.id="sessionRetry";retry.hidden=true;
     $("#statusBanner").insertAdjacentElement("afterend",retry);
+    document.addEventListener("click",e=>{
+      if(e.target.closest('[data-action="home"]'))sessionNewChat(false);
+    },true);
     document.addEventListener("click",e=>{
       const target=e.target.closest("[data-session]");if(!target)return;
       const action=target.dataset.session;

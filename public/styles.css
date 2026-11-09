@@ -456,3 +456,7 @@ body.light .session-search-hit{background:rgba(10,121,187,.2);color:#17486b}
 .session-project-chat-row .session-button{flex:0 0 auto}
 .session-jump-hit{outline:2px solid var(--accent);outline-offset:3px;scroll-margin-block:120px}
 @media(max-width:390px){.session-project-chat-row{flex-wrap:wrap}.session-project-chat-row .session-project-chat{flex-basis:100%}}
+
+/* Matched passage is emphasized without altering the original stored conversation. */
+.session-jump-hit .session-search-hit{border-radius:3px;padding:0 2px;background:rgba(56,206,244,.28);color:inherit}
+body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}

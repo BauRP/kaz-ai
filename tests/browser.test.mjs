@@ -859,3 +859,93 @@ test('real browser: calculator keeps tiny results and language selection transla
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('deleting the selected conversation clears its private draft and leaves other chats intact',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Чат, который нужно сохранить');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Чат для удаления');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('ЛИЧНЫЙ НЕСОХРАНЁННЫЙ ЧЕРНОВИК');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList .session-chat-row').filter({hasText:'Чат для удаления'}).locator('[data-session="delete-chat"]').click();
+    await page.locator('#sessionBody [data-session="dialog-confirm"]').click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+    assert.equal((await page.locator('#view-welcome').isVisible()),true);
+    await page.locator('#messageInput').fill('Новый вопрос без старого черновика');
+    await page.locator('#sendButton').click();
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads.length,2);
+    assert.ok(snapshot.threads.every(c=>c.title!=='Чат для удаления'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('home starts fresh chat without erasing the previous conversation or its draft',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первый пользовательский вопрос');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Черновик старого чата');
+    await page.locator('[data-action="home"]').click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'');
+    await page.locator('#messageInput').fill('Второй пользовательский вопрос');
+    await page.locator('#sendButton').click();
+    const before=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(before.threads.length,2);
+    assert.equal(before.threads.find(x=>x.title==='Первый пользовательский вопрос').messages,1);
+    assert.equal(before.threads.find(x=>x.title==='Второй пользовательский вопрос').messages,1);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList .session-chat-row').filter({hasText:'Первый пользовательский вопрос'}).locator('[data-session="open-chat"]').click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'Черновик старого чата');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('search opens highlighted message text safely, including special characters',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первое сообщение');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Здесь есть <script>НЕ_ИСПОЛНЯТЬ</script> в середине');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('<script>');
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#chatMessages .session-jump-hit mark').count(),1);
+    assert.equal(await page.locator('#chatMessages .session-jump-hit mark').textContent(),'<script>');
+    assert.equal(await page.locator('script:has-text("НЕ_ИСПОЛНЯТЬ")').count(),0);
+    assert.ok((await page.locator('.session-jump-hit').innerText()).includes('</script>'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('ratings and pin controls expose their toggled state to assistive technology',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Для закрепления');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const pin=page.locator('#historyList [data-session="pin-chat"]').first();
+    assert.equal(await pin.getAttribute('aria-pressed'),'false');
+    await pin.click();
+    assert.equal(await page.locator('#historyList [data-session="pin-chat"]').first().getAttribute('aria-pressed'),'true');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

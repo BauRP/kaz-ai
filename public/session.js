@@ -304,7 +304,7 @@
       });
       let data=null;try{data=await response.json()}catch{}
       // An outdated answer cannot change the status of a different chat.
-      if(abort!==controller||!threads.includes(chat)||current!==chat.id)return;
+      if(abort!==controller||controller.signal.aborted||!threads.includes(chat)||current!==chat.id)return;
       if(!response.ok){
         if(data?.code==="AI_QUOTA_EXHAUSTED")showStatus("Дневной лимит ИИ исчерпан. Попробуйте после его обновления.",true);
         else if(data?.code==="AI_RATE_LIMITED")showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);
@@ -312,7 +312,7 @@
         else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
         return;
       }
-      if(abort!==controller||!threads.includes(chat))return;
+      if(abort!==controller||controller.signal.aborted||!threads.includes(chat))return;
       if(!data||typeof data.text!=="string"||!data.text.trim())throw new Error("EMPTY_RESPONSE");
       if(replaceId){
         const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
@@ -324,8 +324,13 @@
       showStatus("");
     }catch(e){
       if(abort!==controller)return;
-      if(e?.name==="AbortError")showStatus(controller.signal.reason==="timeout"?"ИИ не ответил за 45 секунд. Попробуйте повторить запрос.":"Генерация ответа остановлена.",false,controller.signal.reason==="timeout");
-      else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.",false,true);
+      if(controller.signal.aborted){
+        const timedOut=controller.signal.reason==="timeout";
+        const manual=controller.signal.reason==="manual";
+        if(timedOut)showStatus("ИИ не ответил за 45 секунд. Попробуйте повторить запрос.",false,!replaceId&&chat.messages.at(-1)?.role==="user");
+        else if(manual)showStatus("Генерация ответа остановлена.",false,!replaceId&&chat.messages.at(-1)?.role==="user");
+        // Navigation and deletion must not display stale status messages.
+      }else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.",false,true);
     }finally{
       clearTimeout(timeout);
       if(abort===controller){abort=null;pending=null;stop.hidden=true;resizeInput()}

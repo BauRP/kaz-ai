@@ -1,32 +1,32 @@
 {
   "scope": "22 active light-medium features; explicitly removed 8 (edit message), 11 (copy), 14 (branch) excluded; higher difficulty excluded.",
-  "basis": "Prior 22-feature stage; code commit 303bbc42: chronological recent chats, temporary draft hygiene, pending request input lock, per-project export, sensitive modal cleanup, UTF-8 payload validation. Unit/lint/preview checks passed; full browser CI may still be running. Progress estimates are not claims of live AI or browser test completion.",
+  "basis": "Previous 22-feature stage, verified CI 42589776275: fixed stale pending Send state, added manual stop/retry without duplicates, late-answer suppression, sequential time-bounded Chromium tests. Other feature estimates unchanged.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
   "date": "2026-11-09",
-  "previous": 72.5909090909091,
-  "now": 73.04545454545455,
-  "delta": 0.45454545454545325,
+  "previous": 73.04545454545455,
+  "now": 73.22727272727273,
+  "delta": 0.18181818181818699,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 86.5,
-      "now": 87,
-      "delta": 0.5
+      "previous": 87,
+      "now": 87.4,
+      "delta": 0.4000000000000057
     },
     {
       "name": "Интеллект",
       "count": 6,
-      "previous": 39.666666666666664,
+      "previous": 39.833333333333336,
       "now": 39.833333333333336,
-      "delta": 0.1666666666666714
+      "delta": 0
     },
     {
       "name": "Настройки",
       "count": 6,
-      "previous": 82.33333333333333,
+      "previous": 83,
       "now": 83,
-      "delta": 0.6666666666666714
+      "delta": 0
     }
   ],
   "items": [
@@ -43,10 +43,10 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 83,
+      "previous": 85,
       "now": 85,
-      "delta": 2,
-      "summary": "Чаты с новой активностью поднимаются выше, закреплённые остаются первыми."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 3,
@@ -88,28 +88,28 @@
       "id": 7,
       "name": "Папки и проекты",
       "group": "Чаты",
-      "previous": 89,
+      "previous": 91,
       "now": 91,
-      "delta": 2,
-      "summary": "Можно скачать все переписки одного проекта, без чужих и временных чатов."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
       "previous": 64,
-      "now": 64,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 66,
+      "delta": 2,
+      "summary": "После остановки незавершённого ответа можно повторить исходный запрос без второго сообщения пользователя."
     },
     {
       "id": 10,
       "name": "Остановить ответ",
       "group": "Чаты",
-      "previous": 74,
-      "now": 75,
-      "delta": 1,
-      "summary": "Кнопка отправки остаётся заблокированной во время ответа ИИ, даже если продолжать вводить текст."
+      "previous": 75,
+      "now": 77,
+      "delta": 2,
+      "summary": "Ручная остановка безопасно отменяет запрос; поздний ответ не появляется; кнопка отправки остаётся заблокированной до завершения."
     },
     {
       "id": 13,
@@ -124,10 +124,10 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 52,
+      "previous": 53,
       "now": 53,
-      "delta": 1,
-      "summary": "Сервер проверяет размер запроса в реальных байтах UTF-8, включая русский и казахский текст."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 16,
@@ -187,10 +187,10 @@
       "id": 41,
       "name": "Временный чат",
       "group": "Настройки",
-      "previous": 87,
+      "previous": 89,
       "now": 89,
-      "delta": 2,
-      "summary": "Удалённые временные разговоры больше не оставляют черновиков в памяти вкладки."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 42,
@@ -223,10 +223,10 @@
       "id": 45,
       "name": "Экспорт истории",
       "group": "Настройки",
-      "previous": 91,
+      "previous": 93,
       "now": 93,
-      "delta": 2,
-      "summary": "Добавлен экспорт отдельного проекта с безопасным именем файла и читаемым UTF-8 для Windows."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     }
   ]
 }

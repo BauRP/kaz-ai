@@ -1,0 +1,232 @@
+{
+  "scope": "22 active light-medium features; explicitly removed 8 (edit message), 11 (copy), 14 (branch) excluded; higher difficulty excluded.",
+  "basis": "Prior 22-feature stage; code commit 303bbc42: chronological recent chats, temporary draft hygiene, pending request input lock, per-project export, sensitive modal cleanup, UTF-8 payload validation. Unit/lint/preview checks passed; full browser CI may still be running. Progress estimates are not claims of live AI or browser test completion.",
+  "branch": "chatgpt/kaz-ai-shell-20261108",
+  "date": "2026-11-09",
+  "previous": 72.5909090909091,
+  "now": 73.04545454545455,
+  "delta": 0.45454545454545325,
+  "groups": [
+    {
+      "name": "Чаты",
+      "count": 10,
+      "previous": 86.5,
+      "now": 87,
+      "delta": 0.5
+    },
+    {
+      "name": "Интеллект",
+      "count": 6,
+      "previous": 39.666666666666664,
+      "now": 39.833333333333336,
+      "delta": 0.1666666666666714
+    },
+    {
+      "name": "Настройки",
+      "count": 6,
+      "previous": 82.33333333333333,
+      "now": 83,
+      "delta": 0.6666666666666714
+    }
+  ],
+  "items": [
+    {
+      "id": 1,
+      "name": "Новый чат",
+      "group": "Чаты",
+      "previous": 94,
+      "now": 94,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 2,
+      "name": "История чатов",
+      "group": "Чаты",
+      "previous": 83,
+      "now": 85,
+      "delta": 2,
+      "summary": "Чаты с новой активностью поднимаются выше, закреплённые остаются первыми."
+    },
+    {
+      "id": 3,
+      "name": "Поиск по перепискам",
+      "group": "Чаты",
+      "previous": 93,
+      "now": 93,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 4,
+      "name": "Переименовать чат",
+      "group": "Чаты",
+      "previous": 93,
+      "now": 93,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 5,
+      "name": "Удалить чат",
+      "group": "Чаты",
+      "previous": 95,
+      "now": 95,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 6,
+      "name": "Закрепить чат",
+      "group": "Чаты",
+      "previous": 92,
+      "now": 92,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 7,
+      "name": "Папки и проекты",
+      "group": "Чаты",
+      "previous": 89,
+      "now": 91,
+      "delta": 2,
+      "summary": "Можно скачать все переписки одного проекта, без чужих и временных чатов."
+    },
+    {
+      "id": 9,
+      "name": "Повторить ответ",
+      "group": "Чаты",
+      "previous": 64,
+      "now": 64,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 10,
+      "name": "Остановить ответ",
+      "group": "Чаты",
+      "previous": 74,
+      "now": 75,
+      "delta": 1,
+      "summary": "Кнопка отправки остаётся заблокированной во время ответа ИИ, даже если продолжать вводить текст."
+    },
+    {
+      "id": 13,
+      "name": "Оценка ответа",
+      "group": "Чаты",
+      "previous": 88,
+      "now": 88,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 15,
+      "name": "Обычный чат с GPT-OSS",
+      "group": "Интеллект",
+      "previous": 52,
+      "now": 53,
+      "delta": 1,
+      "summary": "Сервер проверяет размер запроса в реальных байтах UTF-8, включая русский и казахский текст."
+    },
+    {
+      "id": 16,
+      "name": "Уровни рассуждения",
+      "group": "Интеллект",
+      "previous": 53,
+      "now": 53,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 22,
+      "name": "Переводчик с ИИ",
+      "group": "Интеллект",
+      "previous": 16,
+      "now": 16,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 23,
+      "name": "Программирование с ИИ",
+      "group": "Интеллект",
+      "previous": 16,
+      "now": 16,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 24,
+      "name": "Подготовка документов",
+      "group": "Интеллект",
+      "previous": 16,
+      "now": 16,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 25,
+      "name": "Простой калькулятор",
+      "group": "Интеллект",
+      "previous": 85,
+      "now": 85,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 40,
+      "name": "Личные инструкции",
+      "group": "Настройки",
+      "previous": 86,
+      "now": 86,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 41,
+      "name": "Временный чат",
+      "group": "Настройки",
+      "previous": 87,
+      "now": 89,
+      "delta": 2,
+      "summary": "Удалённые временные разговоры больше не оставляют черновиков в памяти вкладки."
+    },
+    {
+      "id": 42,
+      "name": "Светлая и тёмная тема",
+      "group": "Настройки",
+      "previous": 90,
+      "now": 90,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 43,
+      "name": "Язык интерфейса",
+      "group": "Настройки",
+      "previous": 62,
+      "now": 62,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 44,
+      "name": "Размер текста",
+      "group": "Настройки",
+      "previous": 78,
+      "now": 78,
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
+    },
+    {
+      "id": 45,
+      "name": "Экспорт истории",
+      "group": "Настройки",
+      "previous": 91,
+      "now": 93,
+      "delta": 2,
+      "summary": "Добавлен экспорт отдельного проекта с безопасным именем файла и читаемым UTF-8 для Windows."
+    }
+  ]
+}

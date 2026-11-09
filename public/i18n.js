@@ -537,7 +537,23 @@
   "Повторить запрос": {"en":"Retry request","kk":"Сұрауды қайталау"},
   "Нет переписок": {"en":"No chats","kk":"Чаттар жоқ"},
   "Пока нет чатов": {"en":"No chats yet","kk":"Әзірше чаттар жоқ"},
-  "Совпадений не найдено": {"en":"No matches","kk":"Сәйкестіктер табылмады"}
+  "Совпадений не найдено": {"en":"No matches","kk":"Сәйкестіктер табылмады"},
+  "Анализирую запрос…": {"en":"Processing your request…","kk":"Сұрауыңызды өңдеп жатырмын…"},
+  "Генерация ответа остановлена.": {"en":"Response generation stopped.","kk":"Жауапты құрастыру тоқтатылды."},
+  "ИИ не ответил за 45 секунд. Попробуйте повторить запрос.": {"en":"AI did not respond within 45 seconds. Try again.","kk":"ЖИ 45 секунд ішінде жауап бермеді. Қайталап көріңіз."},
+  "Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.": {"en":"Could not get an AI response. Check your connection or try again later.","kk":"ЖИ жауабын алу мүмкін болмады. Қосылымды тексеріңіз немесе кейінірек қайталаңыз."},
+  "Слишком много запросов за короткое время. Попробуйте позднее.": {"en":"Too many requests in a short time. Try again later.","kk":"Қысқа уақытта тым көп сұрау жіберілді. Кейінірек қайталаңыз."},
+  "Дневной лимит ИИ исчерпан. Попробуйте после его обновления.": {"en":"Daily AI quota exhausted. Try after it resets.","kk":"ЖИ-дің күндік лимиті таусылды. Жаңартылғаннан кейін қайталаңыз."},
+  "Ключ доступа не принят или ИИ на сервере ещё не настроен.": {"en":"Access key rejected or AI is not configured on the server yet.","kk":"Қолжетімділік кілті қабылданбады немесе серверде ЖИ әлі бапталмаған."},
+  "Для подключения ИИ укажи приватный ключ доступа.": {"en":"Enter a private access key to connect AI.","kk":"ЖИ-ді қосу үшін жеке қолжетімділік кілтін енгізіңіз."},
+  "Предпросмотр: настоящий GPT-OSS 120B ещё не подключён. Сообщения никуда не отправляются.": {"en":"Preview: GPT-OSS 120B is not connected. No messages are sent.","kk":"Алдын ала қарау: GPT-OSS 120B қосылмаған. Хабарламалар жіберілмейді."},
+  "Запрос слишком большой. Сократите последнее сообщение.": {"en":"Request is too large. Shorten your latest message.","kk":"Сұрау тым ұзын. Соңғы хабарламаны қысқартыңыз."},
+  "Не найден вопрос для повторной отправки.": {"en":"No question found to retry.","kk":"Қайталау үшін сұрақ табылмады."},
+  "Запрос подготовлен. Проверьте текст и нажмите отправку.": {"en":"Draft prepared. Review it and press Send.","kk":"Сұрау дайын. Мәтінді тексеріп, Жіберу түймесін басыңыз."},
+  "Переписка скачана в текстовый файл.": {"en":"Conversation downloaded as text.","kk":"Сөйлесу мәтіндік файл ретінде жүктелді."},
+  "Переписки проекта скачаны. Временные чаты не включены.": {"en":"Project conversations downloaded. Temporary chats excluded.","kk":"Жоба сөйлесулері жүктелді. Уақытша чаттар енгізілген жоқ."},
+  "Временный чат не будет добавлен в историю.": {"en":"Temporary chat will not be added to history.","kk":"Уақытша чат тарихқа қосылмайды."},
+  "История текущей вкладки скачана. Временные чаты не включены.": {"en":"This tab's chat history downloaded. Temporary chats excluded.","kk":"Қойындыдағы чат тарихы жүктелді. Уақытша чаттар енгізілмеді."}
 };
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",
@@ -547,7 +563,7 @@
     "#view-tools .search-bar","#view-settings .panel-heading",
     "#view-settings .settings-list","#toolGroups",
     "#attachMenu","#reasonMenu","#fontMenu","#languageMenu","#settingsLanguageMenu",
-    "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay"
+    "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay","#statusBanner","#toast"
   ];
   const captured=new WeakMap();
   let language="ru";

@@ -898,7 +898,10 @@ $("#sendButton").addEventListener("click",submitMessage);
 $("#historySearch").addEventListener("input",()=>renderHistory());
 $("#toolsSearch").addEventListener("input",event=>renderTools(event.target.value));
 const banner=$("#statusBanner");
-$("#messageInput").addEventListener("input",()=>{banner.hidden=true});
+$("#messageInput").addEventListener("input",()=>{
+  if($("#sessionStop")?.hidden===false||$("#sessionRetry")?.hidden===false)return;
+  banner.hidden=true;
+});
 renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$$("[data-reason=medium]").forEach(button=>button.classList.add("selected"));resizeInput();showScreen("welcome");
 
 </script>
@@ -926,7 +929,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   let activitySerial=0;
   const touchChat=chat=>{chat.activity=++activitySerial};
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
-  let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="";
+  let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="",retryAnswerId=null;
   const nextId=()=>String(++serial);
   const selected=()=>threads.find(c=>c.id===current)||null;
   const displayThread=c=>{
@@ -948,6 +951,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   function showStatus(text,quota=false,retryable=false){
     const banner=$("#statusBanner");
     banner.textContent=text;
+    if(!retryable)retryAnswerId=null;
     banner.classList.toggle("is-quota",quota);
     banner.hidden=!text;
     const retry=$("#sessionRetry");if(retry)retry.hidden=!retryable;
@@ -1179,11 +1183,12 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       configureAccess(()=>runAI(chat,replaceId));return;
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
-    const controller=new AbortController();abort=controller;pending=chat.id;
+    const controller=new AbortController();abort=controller;pending=chat.id;retryAnswerId=null;
     const timeout=setTimeout(()=>controller.abort("timeout"),45000);
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
-    const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16);
+    const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
+      .map(m=>({role:m.role,content:m.role==="assistant"?m.content.slice(0,4000):m.content}));
     // Preserve full recent messages, but do not exceed the server's 50 KB payload cap.
     // Account for JSON encoding, user instructions and non-ASCII characters.
     const encoder=new TextEncoder();
@@ -1212,9 +1217,14 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat)||current!==chat.id)return;
       if(!response.ok){
         if(data?.code==="AI_QUOTA_EXHAUSTED")showStatus("Дневной лимит ИИ исчерпан. Попробуйте после его обновления.",true);
-        else if(data?.code==="AI_RATE_LIMITED")showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);
-        else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
-        else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
+        else if(data?.code==="AI_RATE_LIMITED"){
+          retryAnswerId=replaceId;
+          showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);
+        }else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
+        else{
+          retryAnswerId=replaceId;
+          showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
+        }
         return;
       }
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat))return;
@@ -1232,10 +1242,18 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       if(controller.signal.aborted){
         const timedOut=controller.signal.reason==="timeout";
         const manual=controller.signal.reason==="manual";
-        if(timedOut)showStatus("ИИ не ответил за 45 секунд. Попробуйте повторить запрос.",false,!replaceId&&chat.messages.at(-1)?.role==="user");
-        else if(manual)showStatus("Генерация ответа остановлена.",false,!replaceId&&chat.messages.at(-1)?.role==="user");
+        const canRetry=replaceId
+          ? chat.messages.at(-1)?.id===replaceId
+          : chat.messages.at(-1)?.role==="user";
+        if(timedOut||manual){
+          retryAnswerId=replaceId;
+          showStatus(timedOut?"ИИ не ответил за 45 секунд. Попробуйте повторить запрос.":"Генерация ответа остановлена.",false,Boolean(canRetry));
+        }
         // Navigation and deletion must not display stale status messages.
-      }else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.",false,true);
+      }else{
+        retryAnswerId=replaceId;
+        showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.",false,true);
+      }
     }finally{
       clearTimeout(timeout);
       if(abort===controller){abort=null;pending=null;stop.hidden=true;resizeInput()}
@@ -1379,7 +1397,10 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       if(abort){notify("Дождитесь завершения текущего запроса.");return}
       const c=selected(),last=c?.messages.at(-1);
       if(last?.role==="user"){showStatus("");runAI(c)}
-      else notify("Не найден вопрос для повторной отправки.");
+      else if(last?.role==="assistant"&&last.id===retryAnswerId){
+        const target=retryAnswerId;
+        showStatus("");runAI(c,target);
+      }else notify("Не найден вопрос для повторной отправки.");
       return;
     }
     if(action==="temp-toggle"){
@@ -1434,7 +1455,8 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     };
     const answer=sum();
     if(i!==matches.length||!Number.isFinite(answer))throw Error("INVALID");
-    return Math.round((answer+Number.EPSILON)*1e9)/1e9;
+    // Round ordinary floating-point noise without losing tiny valid results or exact safe integers.
+    return Number.isSafeInteger(answer)?answer:Number.parseFloat(answer.toPrecision(15));
   }
 
   // These text tools only prepare a draft. They never send it automatically.
@@ -2182,7 +2204,23 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   "Повторить запрос": {"en":"Retry request","kk":"Сұрауды қайталау"},
   "Нет переписок": {"en":"No chats","kk":"Чаттар жоқ"},
   "Пока нет чатов": {"en":"No chats yet","kk":"Әзірше чаттар жоқ"},
-  "Совпадений не найдено": {"en":"No matches","kk":"Сәйкестіктер табылмады"}
+  "Совпадений не найдено": {"en":"No matches","kk":"Сәйкестіктер табылмады"},
+  "Анализирую запрос…": {"en":"Processing your request…","kk":"Сұрауыңызды өңдеп жатырмын…"},
+  "Генерация ответа остановлена.": {"en":"Response generation stopped.","kk":"Жауапты құрастыру тоқтатылды."},
+  "ИИ не ответил за 45 секунд. Попробуйте повторить запрос.": {"en":"AI did not respond within 45 seconds. Try again.","kk":"ЖИ 45 секунд ішінде жауап бермеді. Қайталап көріңіз."},
+  "Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.": {"en":"Could not get an AI response. Check your connection or try again later.","kk":"ЖИ жауабын алу мүмкін болмады. Қосылымды тексеріңіз немесе кейінірек қайталаңыз."},
+  "Слишком много запросов за короткое время. Попробуйте позднее.": {"en":"Too many requests in a short time. Try again later.","kk":"Қысқа уақытта тым көп сұрау жіберілді. Кейінірек қайталаңыз."},
+  "Дневной лимит ИИ исчерпан. Попробуйте после его обновления.": {"en":"Daily AI quota exhausted. Try after it resets.","kk":"ЖИ-дің күндік лимиті таусылды. Жаңартылғаннан кейін қайталаңыз."},
+  "Ключ доступа не принят или ИИ на сервере ещё не настроен.": {"en":"Access key rejected or AI is not configured on the server yet.","kk":"Қолжетімділік кілті қабылданбады немесе серверде ЖИ әлі бапталмаған."},
+  "Для подключения ИИ укажи приватный ключ доступа.": {"en":"Enter a private access key to connect AI.","kk":"ЖИ-ді қосу үшін жеке қолжетімділік кілтін енгізіңіз."},
+  "Предпросмотр: настоящий GPT-OSS 120B ещё не подключён. Сообщения никуда не отправляются.": {"en":"Preview: GPT-OSS 120B is not connected. No messages are sent.","kk":"Алдын ала қарау: GPT-OSS 120B қосылмаған. Хабарламалар жіберілмейді."},
+  "Запрос слишком большой. Сократите последнее сообщение.": {"en":"Request is too large. Shorten your latest message.","kk":"Сұрау тым ұзын. Соңғы хабарламаны қысқартыңыз."},
+  "Не найден вопрос для повторной отправки.": {"en":"No question found to retry.","kk":"Қайталау үшін сұрақ табылмады."},
+  "Запрос подготовлен. Проверьте текст и нажмите отправку.": {"en":"Draft prepared. Review it and press Send.","kk":"Сұрау дайын. Мәтінді тексеріп, Жіберу түймесін басыңыз."},
+  "Переписка скачана в текстовый файл.": {"en":"Conversation downloaded as text.","kk":"Сөйлесу мәтіндік файл ретінде жүктелді."},
+  "Переписки проекта скачаны. Временные чаты не включены.": {"en":"Project conversations downloaded. Temporary chats excluded.","kk":"Жоба сөйлесулері жүктелді. Уақытша чаттар енгізілген жоқ."},
+  "Временный чат не будет добавлен в историю.": {"en":"Temporary chat will not be added to history.","kk":"Уақытша чат тарихқа қосылмайды."},
+  "История текущей вкладки скачана. Временные чаты не включены.": {"en":"This tab's chat history downloaded. Temporary chats excluded.","kk":"Қойындыдағы чат тарихы жүктелді. Уақытша чаттар енгізілмеді."}
 };
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",
@@ -2192,7 +2230,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     "#view-tools .search-bar","#view-settings .panel-heading",
     "#view-settings .settings-list","#toolGroups",
     "#attachMenu","#reasonMenu","#fontMenu","#languageMenu","#settingsLanguageMenu",
-    "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay"
+    "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay","#statusBanner","#toast"
   ];
   const captured=new WeakMap();
   let language="ru";

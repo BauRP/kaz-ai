@@ -21,7 +21,7 @@
   let activitySerial=0;
   const touchChat=chat=>{chat.activity=++activitySerial};
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
-  let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="";
+  let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="",retryAnswerId=null;
   const nextId=()=>String(++serial);
   const selected=()=>threads.find(c=>c.id===current)||null;
   const displayThread=c=>{
@@ -43,6 +43,7 @@
   function showStatus(text,quota=false,retryable=false){
     const banner=$("#statusBanner");
     banner.textContent=text;
+    if(!retryable)retryAnswerId=null;
     banner.classList.toggle("is-quota",quota);
     banner.hidden=!text;
     const retry=$("#sessionRetry");if(retry)retry.hidden=!retryable;
@@ -274,11 +275,12 @@
       configureAccess(()=>runAI(chat,replaceId));return;
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
-    const controller=new AbortController();abort=controller;pending=chat.id;
+    const controller=new AbortController();abort=controller;pending=chat.id;retryAnswerId=null;
     const timeout=setTimeout(()=>controller.abort("timeout"),45000);
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
-    const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16);
+    const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
+      .map(m=>({role:m.role,content:m.role==="assistant"?m.content.slice(0,4000):m.content}));
     // Preserve full recent messages, but do not exceed the server's 50 KB payload cap.
     // Account for JSON encoding, user instructions and non-ASCII characters.
     const encoder=new TextEncoder();
@@ -307,9 +309,14 @@
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat)||current!==chat.id)return;
       if(!response.ok){
         if(data?.code==="AI_QUOTA_EXHAUSTED")showStatus("Дневной лимит ИИ исчерпан. Попробуйте после его обновления.",true);
-        else if(data?.code==="AI_RATE_LIMITED")showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);
-        else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
-        else showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
+        else if(data?.code==="AI_RATE_LIMITED"){
+          retryAnswerId=replaceId;
+          showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);
+        }else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
+        else{
+          retryAnswerId=replaceId;
+          showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
+        }
         return;
       }
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat))return;
@@ -327,10 +334,18 @@
       if(controller.signal.aborted){
         const timedOut=controller.signal.reason==="timeout";
         const manual=controller.signal.reason==="manual";
-        if(timedOut)showStatus("ИИ не ответил за 45 секунд. Попробуйте повторить запрос.",false,!replaceId&&chat.messages.at(-1)?.role==="user");
-        else if(manual)showStatus("Генерация ответа остановлена.",false,!replaceId&&chat.messages.at(-1)?.role==="user");
+        const canRetry=replaceId
+          ? chat.messages.at(-1)?.id===replaceId
+          : chat.messages.at(-1)?.role==="user";
+        if(timedOut||manual){
+          retryAnswerId=replaceId;
+          showStatus(timedOut?"ИИ не ответил за 45 секунд. Попробуйте повторить запрос.":"Генерация ответа остановлена.",false,Boolean(canRetry));
+        }
         // Navigation and deletion must not display stale status messages.
-      }else showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.",false,true);
+      }else{
+        retryAnswerId=replaceId;
+        showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.",false,true);
+      }
     }finally{
       clearTimeout(timeout);
       if(abort===controller){abort=null;pending=null;stop.hidden=true;resizeInput()}
@@ -474,7 +489,10 @@
       if(abort){notify("Дождитесь завершения текущего запроса.");return}
       const c=selected(),last=c?.messages.at(-1);
       if(last?.role==="user"){showStatus("");runAI(c)}
-      else notify("Не найден вопрос для повторной отправки.");
+      else if(last?.role==="assistant"&&last.id===retryAnswerId){
+        const target=retryAnswerId;
+        showStatus("");runAI(c,target);
+      }else notify("Не найден вопрос для повторной отправки.");
       return;
     }
     if(action==="temp-toggle"){
@@ -529,7 +547,8 @@
     };
     const answer=sum();
     if(i!==matches.length||!Number.isFinite(answer))throw Error("INVALID");
-    return Math.round((answer+Number.EPSILON)*1e9)/1e9;
+    // Round ordinary floating-point noise without losing tiny valid results or exact safe integers.
+    return Number.isSafeInteger(answer)?answer:Number.parseFloat(answer.toPrecision(15));
   }
 
   // These text tools only prepare a draft. They never send it automatically.

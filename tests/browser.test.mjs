@@ -764,3 +764,98 @@ test('manually cancelled AI request offers retry and rejects late responses',asy
     assert.deepEqual(errors,[]);
   }finally{release?.();await browser.close()}
 });
+
+test('real browser: failed answer regeneration can be retried without duplicating messages',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        const ordinal=++calls;
+        if(ordinal===2)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({code:'AI_UNAVAILABLE',message:'Временная ошибка'})});
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:ordinal===1?'Первый ответ':'Ответ после удачного повтора'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Проверь повтор ответа');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('private-test-access-token-1234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Первый ответ'));
+    await page.locator('[data-session="retry-answer"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Временная ошибка'));
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    assert.ok((await page.locator('#chatMessages').innerText()).includes('Первый ответ'));
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ после удачного повтора'));
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    assert.equal(calls,3);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),false);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('real browser: a long assistant reply does not invalidate the next chat request',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    const bodies=[];
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        const body=route.request().postDataJSON();
+        bodies.push(body);
+        return route.fulfill({status:200,contentType:'application/json',
+          body:JSON.stringify({text:bodies.length===1?'Длинный ответ '+('А'.repeat(4900)):'Второй ответ'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Первый вопрос');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('private-test-access-token-1234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.length>4800);
+    await page.locator('#messageInput').fill('Второй вопрос');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelectorAll('.message-assistant').length===2);
+    assert.equal(bodies.length,2);
+    assert.ok(bodies[1].messages.some(m=>m.role==='assistant'&&m.content.length===4000));
+    assert.equal(bodies[1].messages.at(-1).content,'Второй вопрос');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('real browser: calculator keeps tiny results and language selection translates status',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    assert.equal(await page.evaluate(()=>window.KazSession.compute('1/10000000000')),1e-10);
+    assert.equal(await page.evaluate(()=>window.KazSession.compute('0,1+0,2')),0.3);
+    assert.equal(await page.evaluate(()=>window.KazSession.compute('9007199254740991')),9007199254740991);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    await page.locator('#messageInput').fill('Verify status translations');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Preview:'));
+    assert.equal(await page.locator('#statusBanner').isVisible(),true);
+    await page.locator('#messageInput').fill('Draft after preview warning');
+    assert.equal(await page.locator('#statusBanner').isVisible(),false);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    await page.locator('#messageInput').fill('Сәлем');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Алдын ала қарау:'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

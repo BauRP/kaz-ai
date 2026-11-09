@@ -1,18 +1,18 @@
 {
   "scope": "22 active light-medium features; explicitly removed 8 (edit message), 11 (copy), 14 (branch) excluded; higher difficulty excluded.",
-  "basis": "Previous progress: progress/2026-11-08-before-search-projects-export.json. This work improves history, search, project naming, deletion cleanup, UI localization and UTF-8 export. 22 active functions only.",
+  "basis": "Previous milestone ACTIVE_PROGRESS from 2026-11-08. Verified GitHub Actions commit 42c61f5: search jump, project organization, per-chat export and stale response guard. 22 active light/medium features only.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
-  "date": "2026-11-08",
-  "previous": 70.77272727272727,
-  "now": 71.22727272727273,
-  "delta": 0.45454545454546746,
+  "date": "2026-11-09",
+  "previous": 71.22727272727273,
+  "now": 71.5909090909091,
+  "delta": 0.36363636363635976,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 85,
-      "now": 85.8,
-      "delta": 0.7999999999999972
+      "previous": 85.8,
+      "now": 86.4,
+      "delta": 0.6000000000000085
     },
     {
       "name": "Интеллект",
@@ -24,9 +24,9 @@
     {
       "name": "Настройки",
       "count": 6,
-      "previous": 81.33333333333333,
-      "now": 81.66666666666667,
-      "delta": 0.3333333333333428
+      "previous": 81.66666666666667,
+      "now": 82,
+      "delta": 0.3333333333333286
     }
   ],
   "items": [
@@ -43,19 +43,19 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 81,
+      "previous": 83,
       "now": 83,
-      "delta": 2,
-      "summary": "Результаты истории с количеством совпадений и стабильным списком недавних чатов."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 3,
       "name": "Поиск по перепискам",
       "group": "Чаты",
-      "previous": 88,
-      "now": 91,
-      "delta": 3,
-      "summary": "Подсветка совпадений в тексте без HTML-вставки, очистка поиска одной кнопкой."
+      "previous": 91,
+      "now": 93,
+      "delta": 2,
+      "summary": "Результат поиска открывает нужный чат и выделяет совпавшее сообщение."
     },
     {
       "id": 4,
@@ -70,10 +70,10 @@
       "id": 5,
       "name": "Удалить чат",
       "group": "Чаты",
-      "previous": 94,
+      "previous": 95,
       "now": 95,
-      "delta": 1,
-      "summary": "Исправлено удаление черновика вместе с удалением открытого чата."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 6,
@@ -88,10 +88,10 @@
       "id": 7,
       "name": "Папки и проекты",
       "group": "Чаты",
-      "previous": 84,
-      "now": 86,
-      "delta": 2,
-      "summary": "Не допускаются проекты с одинаковыми названиями при создании и переименовании."
+      "previous": 86,
+      "now": 89,
+      "delta": 3,
+      "summary": "Добавление существующего чата прямо из проекта, перенос между проектами и возврат без удаления переписки."
     },
     {
       "id": 9,
@@ -107,9 +107,9 @@
       "name": "Остановить ответ",
       "group": "Чаты",
       "previous": 72,
-      "now": 72,
-      "delta": 0,
-      "summary": "Без нового прироста по этому пункту."
+      "now": 73,
+      "delta": 1,
+      "summary": "Запоздавшая ошибка отменённого запроса не отображается после перехода к другому чату."
     },
     {
       "id": 13,
@@ -205,10 +205,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 59,
+      "previous": 60,
       "now": 60,
-      "delta": 1,
-      "summary": "Счётчики и кнопка очистки поиска теперь обновляются на RU/EN/KZ."
+      "delta": 0,
+      "summary": "Без нового прироста по этому пункту."
     },
     {
       "id": 44,
@@ -223,10 +223,10 @@
       "id": 45,
       "name": "Экспорт истории",
       "group": "Настройки",
-      "previous": 88,
-      "now": 89,
-      "delta": 1,
-      "summary": "Текстовый экспорт открывается корректно в Windows; тест проверяет исключение временных чатов."
+      "previous": 89,
+      "now": 91,
+      "delta": 2,
+      "summary": "Отдельная переписка скачивается как TXT с безопасным названием и поддержкой кириллицы."
     }
   ]
 }

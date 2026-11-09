@@ -87,3 +87,17 @@ test('an unrelated AI failure is not classified as a quota or rate limit',async(
   assert.equal(response.status,503);
   assert.equal((await response.json()).code,'AI_UNAVAILABLE');
 });
+
+test('request payload larger than 50 KB in Cyrillic is rejected by byte size',async()=>{
+  const {env,calls}=envWithAI();
+  const messages=Array.from({length:9},(_,i)=>({
+    role:i%2?'assistant':'user',
+    content:'Ж'.repeat(3700)
+  }));
+  const json=JSON.stringify({messages,effort:'medium'});
+  assert.ok(json.length<50000,'Test must be below text-character threshold');
+  assert.ok(new TextEncoder().encode(json).byteLength>50000,'Test must exceed UTF-8 byte cap');
+  const response=await worker.fetch(post(json),env);
+  assert.equal(response.status,413);
+  assert.equal(calls.length,0);
+});

@@ -18,6 +18,9 @@
   const projects=[];
   const drafts=new Map();
   let welcomeDraft="";
+  let activitySerial=0;
+  const touchChat=chat=>{chat.activity=++activitySerial};
+  const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="";
   const nextId=()=>String(++serial);
   const selected=()=>threads.find(c=>c.id===current)||null;
@@ -26,7 +29,7 @@
     const input=$("#messageInput");
     if(current!==next){
       if(input){
-        if(current)drafts.set(current,input.value);
+        if(current&&threads.some(thread=>thread.id===current))drafts.set(current,input.value);
         else welcomeDraft=input.value;
       }
       current=next;
@@ -44,11 +47,14 @@
     banner.hidden=!text;
     const retry=$("#sessionRetry");if(retry)retry.hidden=!retryable;
   }
+  const baseResizeInput=resizeInput;
+  resizeInput=function(){baseResizeInput();if(abort)$("#sendButton").disabled=true};
   const baseRenderChat=renderChat;
   const baseRenderTools=renderTools;
   const baseShowScreen=showScreen;
   const baseShowFeature=showFeature;
   const baseToggleTheme=toggleTheme;
+  const safeExportName=name=>name.normalize("NFKC").replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,"").slice(0,70)||"chat";
   const exportText=c=>[
     "Kaz AI — "+c.title,
     "Экспорт текущей переписки (без сохранения в облаке)",
@@ -59,7 +65,7 @@
     const blob=new Blob([mime.startsWith("text/plain")?"\uFEFF":"",body],{type:mime});
     const url=URL.createObjectURL(blob);
     const link=document.createElement("a");link.href=url;link.download=name;document.body.append(link);link.click();link.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),500);
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
   }
   function openDialog(title,paragraph="",build){
     modalReturn=document.activeElement;
@@ -73,6 +79,8 @@
   }
   function closeDialog(){
     $("#sessionOverlay").hidden=true;
+    $("#sessionBody").replaceChildren();
+    $("#sessionTitle").textContent="";
     if(modalReturn&&typeof modalReturn.focus==="function")modalReturn.focus();
     modalReturn=null;
   }
@@ -86,7 +94,7 @@
     abort=null;pending=null;
     $("#sessionStop").hidden=true;
     for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){drafts.delete(threads[i].id);threads.splice(i,1)}
-    if(current)drafts.set(current,$("#messageInput").value);
+    if(current&&threads.some(thread=>thread.id===current))drafts.set(current,$("#messageInput").value);
     welcomeDraft="";
     current=null;
     state.chat=[];state.draftTitle="Новый чат";
@@ -101,7 +109,7 @@
     const temporary=Boolean($("#sessionTemporary")?.checked);
     const chat={id:nextId(),title:firstMessage.slice(0,55)||"Новый чат",
       messages:[],pinned:false,projectId:null,temporary};
-    threads.unshift(chat);displayThread(chat);
+    touchChat(chat);threads.unshift(chat);displayThread(chat);
     return chat;
   }
   function renderSessionHistory(){
@@ -110,7 +118,7 @@
     const query=($("#historySearch").value||"").trim();
     const value=query.toLocaleLowerCase();
     const saved=threads.filter(c=>!c.temporary)
-      .sort((a,b)=>Number(b.pinned)-Number(a.pinned));
+      .sort((a,b)=>Number(b.pinned)-Number(a.pinned)||newestFirst(a,b));
     const shown=saved.filter(c=>!value||
       c.title.toLocaleLowerCase().includes(value)||
       c.messages.some(m=>m.content.toLocaleLowerCase().includes(value)));
@@ -211,7 +219,7 @@
       const header=make("div","session-project-title");
       header.append(make("h2","",project.name),make("small","",threads.filter(c=>c.projectId===project.id&&!c.temporary).length+" чатов"));
       card.append(header);
-      const chats=threads.filter(c=>c.projectId===project.id&&!c.temporary);
+      const chats=threads.filter(c=>c.projectId===project.id&&!c.temporary).sort(newestFirst);
       if(!chats.length)card.append(make("p","session-help","Пока нет чатов в этом проекте."));
       for(const c of chats){
         const row=make("div","session-project-chat-row");
@@ -220,11 +228,12 @@
         card.append(row);
       }
       addButtons(card,[{label:"＋ Добавить чат",action:"add-chat-to-project",id:project.id},
+        ...(chats.some(c=>c.messages.length)?[{label:"Скачать чаты",action:"export-project",id:project.id}]:[]),
         {label:"Переименовать",action:"rename-project",id:project.id},
         {label:"Удалить проект",action:"delete-project",id:project.id,className:"session-button session-danger"}]);
       target.append(card);
     }
-    const ungrouped=threads.filter(c=>!c.projectId&&!c.temporary);
+    const ungrouped=threads.filter(c=>!c.projectId&&!c.temporary).sort(newestFirst);
     if(ungrouped.length){
       const box=make("section","session-project-card");
       box.append(make("h2","","Без проекта"));
@@ -311,7 +320,7 @@
       }else{
         if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text.trim()});
       }
-      if(current===chat.id){displayThread(chat);renderChat()}
+      if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
       showStatus("");
     }catch(e){
       if(abort!==controller)return;
@@ -327,7 +336,7 @@
     if(text.length>4000){notify("Сообщение длиннее 4000 символов. Сократите его перед отправкой.");return}
     const chat=selected()||newThread(text);
     chat.messages.push({id:nextId(),role:"user",content:text});
-    displayThread(chat);
+    touchChat(chat);displayThread(chat);
     $("#messageInput").value="";drafts.delete(chat.id);welcomeDraft="";resizeInput();
     renderChat();renderHistory();showScreen("chat");runAI(chat);
   }
@@ -374,8 +383,7 @@
     if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{chat.title=v;renderHistory();renderSessionProjects()});return}
     if(action==="pin-chat"&&chat){chat.pinned=!chat.pinned;renderHistory();return}
     if(action==="export-chat"&&chat&&!chat.temporary){
-      const safe=chat.title.normalize("NFKC").replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,"").slice(0,70)||"chat";
-      download("Kaz-AI-"+safe+".txt",exportText(chat),"text/plain;charset=utf-8");
+      download("Kaz-AI-"+safeExportName(chat.title)+".txt",exportText(chat),"text/plain;charset=utf-8");
       notify("Переписка скачана в текстовый файл.");return
     }
     if(action==="remove-chat-from-project"&&chat){
@@ -384,7 +392,7 @@
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
       if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;$("#sessionStop").hidden=true;showStatus("")}
       const i=threads.indexOf(chat);threads.splice(i,1);drafts.delete(chat.id);
-      if(current===chat.id){displayThread(null);drafts.delete(chat.id);showScreen("welcome");renderChat()}
+      if(current===chat.id){showStatus("");displayThread(null);drafts.delete(chat.id);showScreen("welcome");renderChat()}
       renderHistory();renderSessionProjects();
     });return}
     if(action==="assign-chat"&&chat){
@@ -399,6 +407,13 @@
         body.append(save);
         if(!projects.length)body.append(make("p","session-help","Сначала создайте проект в разделе «Проекты»."));
       });return}
+    if(action==="export-project"&&project){
+      const saved=threads.filter(c=>c.projectId===project.id&&!c.temporary&&c.messages.length).sort(newestFirst);
+      if(!saved.length){notify("В этом проекте пока нет переписок для скачивания.");return}
+      download("Kaz-AI-project-"+safeExportName(project.name)+".txt",
+        saved.map(exportText).join("\n\n"+"=".repeat(45)+"\n\n"),"text/plain;charset=utf-8");
+      notify("Переписки проекта скачаны. Временные чаты не включены.");return
+    }
     if(action==="add-chat-to-project"&&project){
       const available=threads.filter(c=>!c.temporary&&c.projectId!==project.id);
       if(!available.length){notify("Нет других чатов для добавления.");return}
@@ -709,6 +724,6 @@
   setup();
   window.KazSession={snapshot:()=>({
     threads:threads.map(c=>({id:c.id,title:c.title,messages:c.messages.length,pinned:c.pinned,temporary:c.temporary,projectId:c.projectId})),
-    projects:projects.map(p=>({id:p.id,name:p.name})),active:current
+    projects:projects.map(p=>({id:p.id,name:p.name})),active:current,draftCount:drafts.size
   }),compute,sendMessage};
 })();

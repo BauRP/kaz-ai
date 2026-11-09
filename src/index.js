@@ -78,7 +78,7 @@ export default {
     if(length>50000)return codeError("INVALID_REQUEST","Слишком длинный запрос.",413);
     let raw;
     try{raw=await request.text()}catch{return codeError("INVALID_REQUEST","Ошибка чтения запроса.",400)}
-    if(raw.length>50000)return codeError("INVALID_REQUEST","Слишком длинный запрос.",413);
+    if(new TextEncoder().encode(raw).byteLength>50000)return codeError("INVALID_REQUEST","Слишком длинный запрос.",413);
     let payload;try{payload=JSON.parse(raw)}catch{return codeError("INVALID_REQUEST","Некорректный JSON.",400)}
     const input=validatedInput(payload);
     if(!input)return codeError("INVALID_REQUEST","Неподдерживаемый запрос.",400);

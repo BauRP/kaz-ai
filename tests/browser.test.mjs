@@ -615,3 +615,107 @@ test('text helpers prepare safe drafts but never send without user confirmation'
     assert.deepEqual(errors,[]);
   }finally{await instance.close()}
 });
+
+test('recent chats reorder by activity while pinned chats remain at the top',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первый чат');await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Второй чат');await page.locator('#sendButton').click();
+    assert.ok((await page.locator('#recentChats .session-recent').first().innerText()).includes('Второй чат'));
+    await page.locator('#recentChats .session-recent').last().click();
+    await page.locator('#messageInput').fill('Обновление первого чата');
+    await page.locator('#sendButton').click();
+    assert.ok((await page.locator('#recentChats .session-recent').first().innerText()).includes('Первый чат'));
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList .session-chat-row').filter({hasText:'Второй чат'}).locator('[data-session="pin-chat"]').click();
+    assert.ok((await page.locator('#recentChats .session-recent').first().innerText()).includes('Второй чат'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('closing access-key modal removes hidden password input; temporary drafts do not survive removal',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('[data-session="ai-access"]').click();
+    await page.locator('#sessionBody input[type=password]').fill('unsaved-test-private-key-value');
+    await page.locator('#sessionClose').click();
+    assert.equal(await page.locator('#sessionBody input[type=password]').count(),0);
+    await page.locator('#sessionTemporary').check();
+    await page.locator('#messageInput').fill('Временное сообщение');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Секретный несохранённый черновик');
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads.length,0);
+    assert.equal(snapshot.draftCount,0);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('project TXT export downloads only saved project conversations',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800},acceptDownloads:true});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('ПЕРВЫЙ ТЕКСТ ПРОЕКТА');await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('ВТОРОЙ ТЕКСТ ВНЕ ПРОЕКТА');await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Рабочие идеи');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('[data-session="add-chat-to-project"]').click();
+    await page.locator('#sessionBody select').selectOption({label:'ПЕРВЫЙ ТЕКСТ ПРОЕКТА'});
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    const started=page.waitForEvent('download');
+    await page.locator('[data-session="export-project"]').click();
+    const result=await started;
+    assert.ok(result.suggestedFilename().includes('Рабочие идеи'));
+    const body=readFileSync(await result.path(),'utf8');
+    assert.ok(body.startsWith('\uFEFF'));
+    assert.ok(body.includes('ПЕРВЫЙ ТЕКСТ ПРОЕКТА'));
+    assert.ok(!body.includes('ВТОРОЙ ТЕКСТ ВНЕ ПРОЕКТА'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('send stays disabled while a GPT request is pending, including when typing',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    let release;const gate=new Promise(resolve=>{release=resolve});
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        await gate;
+        try{return await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Запрос завершился'})})}catch{return}
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Первый запрос');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('my-safe-private-test-token-123456789');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.locator('#messageInput').fill('Второй запрос, не отправлять пока');
+    assert.equal(await page.locator('#sendButton').isDisabled(),true);
+    release();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Запрос завершился'));
+    assert.equal(await page.locator('#sendButton').isEnabled(),true);
+    assert.equal(await page.locator('#messageInput').inputValue(),'Второй запрос, не отправлять пока');
+    assert.deepEqual(errors,[]);
+  }finally{release?.();await browser.close()}
+});

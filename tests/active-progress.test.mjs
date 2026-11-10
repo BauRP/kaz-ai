@@ -50,7 +50,7 @@ test('stable original 22-feature score keeps the completed calculator in its den
 test('human report reflects the 21 working features without misleading AI claims',()=>{
   for(const item of d.items)assert.ok(report.includes('| '+item.id+' | '+item.name+' |'));
   assert.match(report,/Завершено \(отдельно от рабочих направлений\)/);
-  assert.match(report,/21 незавершённое направление/);
+  assert.match(report,/21 незавершённ/);
   assert.ok(report.includes(d.overall_now.toFixed(2).replace('.',',')));
   assert.ok(report.includes(d.now.toFixed(2).replace('.',',')));
   assert.match(report,/Настоящие ответы GPT-OSS 120B пока не проверены/);

@@ -40,7 +40,7 @@ test('individual and group progress agrees with the last full baseline',()=>{
   }
 });
 test('stable original 22-feature score keeps the completed calculator in its denominator',()=>{
-  const priorMean=prior.items.reduce((s,x)=>s+x.now,0)/22;
+  const priorMean=(prior.items.reduce((s,x)=>s+x.now,0)+prior.completed_items[0].now)/22;
   close(d.overall_previous,priorMean);
   close(d.overall_now,(d.items.reduce((s,x)=>s+x.now,0)+d.completed_items[0].now)/22);
   close(d.overall_delta,d.overall_now-d.overall_previous);
@@ -49,7 +49,7 @@ test('stable original 22-feature score keeps the completed calculator in its den
 });
 test('human report reflects the 21 working features without misleading AI claims',()=>{
   for(const item of d.items)assert.ok(report.includes('| '+item.id+' | '+item.name+' |'));
-  assert.match(report,/Завершено \(отдельный архив/);
+  assert.match(report,/Завершено \(отдельно от рабочих направлений\)/);
   assert.match(report,/21 незавершённое направление/);
   assert.ok(report.includes(d.overall_now.toFixed(2).replace('.',',')));
   assert.ok(report.includes(d.now.toFixed(2).replace('.',',')));

@@ -1029,3 +1029,90 @@ test('project selection opens with keyboard focus on the choice, not Save',async
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('real browser: rejected AI key allows retry with a new key and no duplicate user message',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    let requests=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        requests++;
+        if(requests===1)return route.fulfill({status:401,contentType:'application/json',body:JSON.stringify({code:'ACCESS_REQUIRED',message:'Bad key'})});
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Ответ после обновления ключа'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Вопрос, который нельзя дублировать');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('first-invalid-key-12345678901234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Ключ доступа не принят'));
+    await page.locator('#sessionRetry').waitFor({state:'visible'});
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
+    await page.locator('#sessionRetry').click();
+    await page.locator('#sessionBody input[type=password]').fill('new-valid-test-key-12345678901234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ после обновления ключа'));
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads.length,1);
+    assert.equal(snapshot.threads[0].messages,2);
+    assert.equal(requests,2);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('projects reject equivalent Unicode names without changing an existing project',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Work');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Ｗｏｒｋ');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,1);
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    await page.locator('#sessionBody input').fill('Другая папка');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,2);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('all three existing font settings change composer and dialog text without altering typed drafts',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Сохраняемый черновик');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#fontToggle').click();
+    await page.locator('#fontMenu [data-font="large"]').click();
+    const large=await page.locator('#messageInput').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+    await page.locator('[data-session="instructions"]').click();
+    const dlg=await page.locator('#sessionBody textarea').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+    assert.equal(large,17);
+    assert.equal(dlg,17);
+    await page.locator('#sessionClose').click();
+    await page.locator('#fontToggle').click();
+    await page.locator('#fontMenu [data-font="small"]').click();
+    const small=await page.locator('#messageInput').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+    assert.equal(small,12);
+    assert.equal(await page.locator('#messageInput').inputValue(),'Сохраняемый черновик');
+    await page.locator('#fontToggle').click();
+    await page.locator('#fontMenu [data-font="normal"]').click();
+    const normal=await page.locator('#messageInput').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+    assert.ok(normal>small&&normal<large,'regular size should be between small and large');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

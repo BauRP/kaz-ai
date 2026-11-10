@@ -321,7 +321,15 @@
         else if(data?.code==="AI_RATE_LIMITED"){
           retryAnswerId=replaceId;
           showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);
-        }else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
+        }else if(data?.code==="ACCESS_REQUIRED"){
+          // An invalid key should not force the user to send the same question twice.
+          aiAccessKey="";
+          retryAnswerId=replaceId;
+          const mayRetry=replaceId
+            ? chat.messages.at(-1)?.id===replaceId
+            : chat.messages.at(-1)?.role==="user";
+          showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.",false,Boolean(mayRetry));
+        }
         else{
           retryAnswerId=replaceId;
           showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
@@ -480,7 +488,9 @@
         body.append(save);
       });return
     }
-    const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&p.name.toLocaleLowerCase()===name.toLocaleLowerCase());
+    // NFKC also treats visually equivalent Unicode forms as one project name.
+    const projectKey=name=>name.trim().normalize("NFKC").toLocaleLowerCase();
+    const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&projectKey(p.name)===projectKey(name));
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{
       if(duplicateProject(name)){notify("Проект с таким названием уже есть.");return false}
       projects.push({id:nextId(),name});renderSessionProjects();

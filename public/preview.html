@@ -476,6 +476,15 @@ body.light .session-search-hit{background:rgba(10,121,187,.2);color:#17486b}
 .session-jump-hit .session-search-hit{border-radius:3px;padding:0 2px;background:rgba(56,206,244,.28);color:inherit}
 body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
 
+/* The existing three font-size choices also apply to editable controls and dialogs.
+   Keep default typography unchanged when no font-size modifier is chosen. */
+.font-small .composer textarea,.font-small .session-dialog,.font-small .session-dialog input,
+.font-small .session-dialog textarea,.font-small .session-dialog select,.font-small .search-bar input,
+.font-small .tool-card,.font-small .setting-item,.font-small .popover-menu,.font-small .status-banner{font-size:12px}
+.font-large .composer textarea,.font-large .session-dialog,.font-large .session-dialog input,
+.font-large .session-dialog textarea,.font-large .session-dialog select,.font-large .search-bar input,
+.font-large .tool-card,.font-large .setting-item,.font-large .popover-menu,.font-large .status-banner{font-size:17px}
+
 </style>
   
   
@@ -1233,7 +1242,15 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         else if(data?.code==="AI_RATE_LIMITED"){
           retryAnswerId=replaceId;
           showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);
-        }else if(data?.code==="ACCESS_REQUIRED"){aiAccessKey="";showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.");}
+        }else if(data?.code==="ACCESS_REQUIRED"){
+          // An invalid key should not force the user to send the same question twice.
+          aiAccessKey="";
+          retryAnswerId=replaceId;
+          const mayRetry=replaceId
+            ? chat.messages.at(-1)?.id===replaceId
+            : chat.messages.at(-1)?.role==="user";
+          showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.",false,Boolean(mayRetry));
+        }
         else{
           retryAnswerId=replaceId;
           showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
@@ -1392,7 +1409,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         body.append(save);
       });return
     }
-    const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&p.name.toLocaleLowerCase()===name.toLocaleLowerCase());
+    // NFKC also treats visually equivalent Unicode forms as one project name.
+    const projectKey=name=>name.trim().normalize("NFKC").toLocaleLowerCase();
+    const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&projectKey(p.name)===projectKey(name));
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{
       if(duplicateProject(name)){notify("Проект с таким названием уже есть.");return false}
       projects.push({id:nextId(),name});renderSessionProjects();

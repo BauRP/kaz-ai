@@ -1505,7 +1505,7 @@ test('reasoning effort buttons announce selection and send existing low-medium-h
     await page.locator('[data-reason="high"]').click();
     assert.equal(await page.locator('[data-reason="high"]').getAttribute('aria-pressed'),'true');
     assert.equal(await page.locator('[data-reason="medium"]').getAttribute('aria-pressed'),'false');
-    assert.equal(await page.locator('[data-reason="deep"]').getAttribute('aria-pressed'),null);
+    assert.equal(await page.locator('[data-feature="deep-reason"]').getAttribute('aria-pressed'),null);
     await page.locator('#languageToggle').click();
     await page.locator('#languageMenu [data-language="en"]').click();
     await page.locator('#reasonToggle').click();

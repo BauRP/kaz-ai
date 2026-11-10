@@ -2,53 +2,59 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const d=JSON.parse(readFileSync('ACTIVE_PROGRESS.json','utf8'));
-const previous=JSON.parse(readFileSync('progress/2026-11-10-before-calculator-complete.json','utf8'));
-
+const prior=JSON.parse(readFileSync('progress/2026-11-10-before-active21-separation.json','utf8'));
 const report=readFileSync('ACTIVE_PROGRESS.md','utf8');
-const ids=new Set([1,2,3,4,5,6,7,9,10,13,15,16,22,23,24,25,40,41,42,43,44,45]);
-const avg=(a,k)=>a.reduce((sum,x)=>sum+x[k],0)/a.length;
-test('only 22 active light-medium items are counted',()=>{
-  assert.equal(d.items.length,22);
-  assert.equal(new Set(d.items.map(x=>x.id)).size,22);
-  assert.ok(d.items.every(x=>ids.has(x.id)));
-  assert.ok(d.items.every(x=>['Чаты','Интеллект','Настройки'].includes(x.group)));
-  assert.equal(d.groups.reduce((s,x)=>s+x.count,0),22);
-});
-test('baseline uses last-stage values and per-item improvements reconcile',()=>{
-  for(const item of d.items){
-    const prior=previous.items.find(x=>x.id===item.id);
-    assert.equal(item.previous,prior.now);
-    assert.equal(item.now-item.previous,item.delta);
-    assert.ok(item.now>=item.previous&&item.now<=100);
-  }
-  assert.ok(Math.abs(d.previous-avg(d.items,'previous'))<1e-10);
-  assert.ok(Math.abs(d.now-avg(d.items,'now'))<1e-10);
-  assert.ok(Math.abs(d.delta-(d.now-d.previous))<1e-10);
-  for(const g of d.groups){
-    const subset=d.items.filter(x=>x.group===g.name);
-    assert.equal(subset.length,g.count);
-    assert.ok(Math.abs(g.now-avg(subset,'now'))<1e-10);
-    assert.ok(Math.abs(g.previous-avg(subset,'previous'))<1e-10);
-    assert.ok(Math.abs(g.delta-(g.now-g.previous))<1e-10);
-  }
-});
-test('human report shows only active items and avoids claiming real AI deployment',()=>{
-  assert.ok(report.includes(d.previous.toFixed(2).replace('.',',')));
-  assert.ok(report.includes(d.now.toFixed(2).replace('.',',')));
-  for(const i of d.items)assert.ok(report.includes('| '+i.id+' | '+i.name+' |'));
-  assert.match(report,/Настоящие ответы GPT-OSS 120B пока не проверены/);
-  assert.doesNotMatch(report,/\| 29 \| Создание изображений/);
-});
-
-test('completed features are separated from the 21 unfinished directions without changing the weighted baseline',()=>{
+const activeIds=new Set([1,2,3,4,5,6,7,9,10,13,15,16,22,23,24,40,41,42,43,44,45]);
+const mean=(xs,key)=>xs.reduce((sum,x)=>sum+x[key],0)/xs.length;
+const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-10,'Expected '+a+' ≈ '+b);
+test('the calculator is archived and all 21 working directions exclude it',()=>{
+  assert.equal(d.items.length,21);
+  assert.equal(new Set(d.items.map(i=>i.id)).size,21);
+  assert.ok(d.items.every(i=>activeIds.has(i.id)&&i.id!==25&&i.status==='in_progress'));
+  assert.equal(d.completed_items.length,1);
+  assert.equal(d.completed_items[0].id,25);
+  assert.equal(d.completed_items[0].now,100);
   assert.deepEqual(d.completed_ids,[25]);
   assert.equal(d.completed_count,1);
   assert.equal(d.incomplete_count,21);
-  assert.equal(d.completed_count+d.incomplete_count,d.items.length);
-  const finished=d.items.filter(i=>i.status==='completed');
-  assert.deepEqual(finished.map(i=>i.id),[25]);
-  assert.ok(finished.every(i=>i.now===100));
-  assert.ok(d.items.filter(i=>i.id!==25).every(i=>i.status==='in_progress'&&i.delta===0));
-  assert.match(report,/Незавершённые направления \(21\)/);
-  assert.match(report,/Готовые направления \(100%\)/);
+  assert.equal(d.completed_count+d.incomplete_count,22);
+  assert.equal(d.groups.reduce((s,g)=>s+g.count,0),21);
+});
+test('individual and group progress agrees with the last full baseline',()=>{
+  for(const item of d.items){
+    const old=prior.items.find(i=>i.id===item.id);
+    assert.ok(old,'Unknown item '+item.id);
+    assert.equal(item.previous,old.now);
+    assert.equal(item.delta,item.now-item.previous);
+    assert.ok(item.now>=old.now&&item.now<100);
+  }
+  close(d.previous,mean(d.items,'previous'));
+  close(d.now,mean(d.items,'now'));
+  close(d.delta,d.now-d.previous);
+  for(const group of d.groups){
+    const xs=d.items.filter(i=>i.group===group.name);
+    assert.equal(xs.length,group.count);
+    close(group.previous,mean(xs,'previous'));
+    close(group.now,mean(xs,'now'));
+    close(group.delta,group.now-group.previous);
+  }
+});
+test('stable original 22-feature score keeps the completed calculator in its denominator',()=>{
+  const priorMean=prior.items.reduce((s,x)=>s+x.now,0)/22;
+  close(d.overall_previous,priorMean);
+  close(d.overall_now,(d.items.reduce((s,x)=>s+x.now,0)+d.completed_items[0].now)/22);
+  close(d.overall_delta,d.overall_now-d.overall_previous);
+  assert.ok(d.overall_now>=d.overall_previous);
+  assert.ok(d.now<d.overall_now,'Active-only average cannot be padded by completed feature');
+});
+test('human report reflects the 21 working features without misleading AI claims',()=>{
+  for(const item of d.items)assert.ok(report.includes('| '+item.id+' | '+item.name+' |'));
+  assert.match(report,/Завершено \(отдельный архив/);
+  assert.match(report,/21 незавершённое направление/);
+  assert.ok(report.includes(d.overall_now.toFixed(2).replace('.',',')));
+  assert.ok(report.includes(d.now.toFixed(2).replace('.',',')));
+  assert.match(report,/Настоящие ответы GPT-OSS 120B пока не проверены/);
+  assert.doesNotMatch(report,/\| 29 \| Создание изображений/);
+  const working=report.slice(report.indexOf('## Рабочий список:'),report.indexOf('## Прогресс по группам'));
+  assert.doesNotMatch(working,/\| 25 \|/);
 });

@@ -1,25 +1,25 @@
 {
-  "scope": "22 active light-medium features; explicitly removed 8 (edit message), 11 (copy), 14 (branch) excluded; higher difficulty excluded.",
-  "basis": "22 approved features tracked consistently; item 25 Basic Calculator (four operations, decimal arithmetic, brackets and unary signs) reached 100% in software. Exact bounded rational arithmetic with 6 dedicated tests (including 200 deterministic cases), 47 browser checks, 53 core checks; browser, lint, preview and Cloudflare dry-run validated in GitHub Actions 42861215714. Advanced or scientific math is explicitly out of scope.",
+  "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
+  "basis": "Active features exclude the 100% basic calculator. Both the unfinished-only 21-feature average and stable original 22-feature overall indicator are tracked separately. Real changes verified commit bc5279cbc1a046c1c6cb11f7e7566bca818d150b, GitHub Actions 42865624914: 55 unit and 50 Chromium browser tests, Cloudflare dry-run and HTTP smoke checks. Tool 16 and 13 navigation improved; GPT-OSS remains unconnected.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
   "date": "2026-11-10",
-  "previous": 75.9090909090909,
-  "now": 76.27272727272727,
-  "delta": 0.36363636363635976,
+  "previous": 75.14285714285714,
+  "now": 75.33333333333333,
+  "delta": 0.1904761904761898,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
       "previous": 89.6,
-      "now": 89.6,
-      "delta": 0
+      "now": 89.8,
+      "delta": 0.20000000000000284
     },
     {
       "name": "Интеллект",
-      "count": 6,
-      "previous": 43.333333333333336,
-      "now": 44.666666666666664,
-      "delta": 1.3333333333333286
+      "count": 5,
+      "previous": 33.6,
+      "now": 34,
+      "delta": 0.3999999999999986
     },
     {
       "name": "Настройки",
@@ -37,7 +37,7 @@
       "previous": 95,
       "now": 95,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -47,7 +47,7 @@
       "previous": 88,
       "now": 88,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -57,7 +57,7 @@
       "previous": 95,
       "now": 95,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -67,7 +67,7 @@
       "previous": 93,
       "now": 93,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -77,7 +77,7 @@
       "previous": 97,
       "now": 97,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -87,7 +87,7 @@
       "previous": 93,
       "now": 93,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -97,7 +97,7 @@
       "previous": 94,
       "now": 94,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -107,7 +107,7 @@
       "previous": 72,
       "now": 72,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -117,7 +117,7 @@
       "previous": 78,
       "now": 78,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -125,9 +125,9 @@
       "name": "Оценка ответа",
       "group": "Чаты",
       "previous": 91,
-      "now": 91,
-      "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "now": 93,
+      "delta": 2,
+      "summary": "В каталоге «Оценка ответа» теперь переходит к последнему реальному ответу ИИ и ставит фокус на оценку, ничего не оценивая автоматически; без ответа показывает честное уведомление.",
       "status": "in_progress"
     },
     {
@@ -137,7 +137,7 @@
       "previous": 56,
       "now": 56,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -145,9 +145,9 @@
       "name": "Уровни рассуждения",
       "group": "Интеллект",
       "previous": 55,
-      "now": 55,
-      "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "now": 57,
+      "delta": 2,
+      "summary": "Инструмент «Уровни рассуждения» открывает видимое меню рядом с полем сообщения и сохраняет черновик и текущий чат.",
       "status": "in_progress"
     },
     {
@@ -157,7 +157,7 @@
       "previous": 19,
       "now": 19,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -167,7 +167,7 @@
       "previous": 19,
       "now": 19,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -177,18 +177,8 @@
       "previous": 19,
       "now": 19,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
-    },
-    {
-      "id": 25,
-      "name": "Простой калькулятор",
-      "group": "Интеллект",
-      "previous": 92,
-      "now": 100,
-      "delta": 8,
-      "summary": "Завершён базовый автономный калькулятор: точная десятичная арифметика, операции + − × ÷, скобки, унарные знаки, ограничение размера, понятные ошибки, три языка и независимые проверки на компьютере и мобильном экране.",
-      "status": "completed"
     },
     {
       "id": 40,
@@ -197,7 +187,7 @@
       "previous": 86,
       "now": 86,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -207,7 +197,7 @@
       "previous": 91,
       "now": 91,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -217,7 +207,7 @@
       "previous": 90,
       "now": 90,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -227,7 +217,7 @@
       "previous": 70,
       "now": 70,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -237,7 +227,7 @@
       "previous": 81,
       "now": 81,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     },
     {
@@ -247,7 +237,7 @@
       "previous": 96,
       "now": 96,
       "delta": 0,
-      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "summary": "Без нового прироста.",
       "status": "in_progress"
     }
   ],
@@ -255,5 +245,20 @@
     25
   ],
   "completed_count": 1,
-  "incomplete_count": 21
+  "incomplete_count": 21,
+  "completed_items": [
+    {
+      "id": 25,
+      "name": "Простой калькулятор",
+      "group": "Интеллект",
+      "previous": 100,
+      "now": 100,
+      "delta": 0,
+      "summary": "Базовый автономный калькулятор завершён, проверен и исключён из всех списков незавершённых задач.",
+      "status": "completed"
+    }
+  ],
+  "overall_previous": 76.27272727272727,
+  "overall_now": 76.45454545454545,
+  "overall_delta": 0.18181818181818699
 }

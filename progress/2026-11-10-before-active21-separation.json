@@ -1,0 +1,259 @@
+{
+  "scope": "22 active light-medium features; explicitly removed 8 (edit message), 11 (copy), 14 (branch) excluded; higher difficulty excluded.",
+  "basis": "22 approved features tracked consistently; item 25 Basic Calculator (four operations, decimal arithmetic, brackets and unary signs) reached 100% in software. Exact bounded rational arithmetic with 6 dedicated tests (including 200 deterministic cases), 47 browser checks, 53 core checks; browser, lint, preview and Cloudflare dry-run validated in GitHub Actions 42861215714. Advanced or scientific math is explicitly out of scope.",
+  "branch": "chatgpt/kaz-ai-shell-20261108",
+  "date": "2026-11-10",
+  "previous": 75.9090909090909,
+  "now": 76.27272727272727,
+  "delta": 0.36363636363635976,
+  "groups": [
+    {
+      "name": "Чаты",
+      "count": 10,
+      "previous": 89.6,
+      "now": 89.6,
+      "delta": 0
+    },
+    {
+      "name": "Интеллект",
+      "count": 6,
+      "previous": 43.333333333333336,
+      "now": 44.666666666666664,
+      "delta": 1.3333333333333286
+    },
+    {
+      "name": "Настройки",
+      "count": 6,
+      "previous": 85.66666666666667,
+      "now": 85.66666666666667,
+      "delta": 0
+    }
+  ],
+  "items": [
+    {
+      "id": 1,
+      "name": "Новый чат",
+      "group": "Чаты",
+      "previous": 95,
+      "now": 95,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 2,
+      "name": "История чатов",
+      "group": "Чаты",
+      "previous": 88,
+      "now": 88,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 3,
+      "name": "Поиск по перепискам",
+      "group": "Чаты",
+      "previous": 95,
+      "now": 95,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 4,
+      "name": "Переименовать чат",
+      "group": "Чаты",
+      "previous": 93,
+      "now": 93,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 5,
+      "name": "Удалить чат",
+      "group": "Чаты",
+      "previous": 97,
+      "now": 97,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 6,
+      "name": "Закрепить чат",
+      "group": "Чаты",
+      "previous": 93,
+      "now": 93,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 7,
+      "name": "Папки и проекты",
+      "group": "Чаты",
+      "previous": 94,
+      "now": 94,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 9,
+      "name": "Повторить ответ",
+      "group": "Чаты",
+      "previous": 72,
+      "now": 72,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 10,
+      "name": "Остановить ответ",
+      "group": "Чаты",
+      "previous": 78,
+      "now": 78,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 13,
+      "name": "Оценка ответа",
+      "group": "Чаты",
+      "previous": 91,
+      "now": 91,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 15,
+      "name": "Обычный чат с GPT-OSS",
+      "group": "Интеллект",
+      "previous": 56,
+      "now": 56,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 16,
+      "name": "Уровни рассуждения",
+      "group": "Интеллект",
+      "previous": 55,
+      "now": 55,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 22,
+      "name": "Переводчик с ИИ",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 23,
+      "name": "Программирование с ИИ",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 24,
+      "name": "Подготовка документов",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 25,
+      "name": "Простой калькулятор",
+      "group": "Интеллект",
+      "previous": 92,
+      "now": 100,
+      "delta": 8,
+      "summary": "Завершён базовый автономный калькулятор: точная десятичная арифметика, операции + − × ÷, скобки, унарные знаки, ограничение размера, понятные ошибки, три языка и независимые проверки на компьютере и мобильном экране.",
+      "status": "completed"
+    },
+    {
+      "id": 40,
+      "name": "Личные инструкции",
+      "group": "Настройки",
+      "previous": 86,
+      "now": 86,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 41,
+      "name": "Временный чат",
+      "group": "Настройки",
+      "previous": 91,
+      "now": 91,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 42,
+      "name": "Светлая и тёмная тема",
+      "group": "Настройки",
+      "previous": 90,
+      "now": 90,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 43,
+      "name": "Язык интерфейса",
+      "group": "Настройки",
+      "previous": 70,
+      "now": 70,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 44,
+      "name": "Размер текста",
+      "group": "Настройки",
+      "previous": 81,
+      "now": 81,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    },
+    {
+      "id": 45,
+      "name": "Экспорт истории",
+      "group": "Настройки",
+      "previous": 96,
+      "now": 96,
+      "delta": 0,
+      "summary": "Без изменений. Разработка этого направления продолжается.",
+      "status": "in_progress"
+    }
+  ],
+  "completed_ids": [
+    25
+  ],
+  "completed_count": 1,
+  "incomplete_count": 21
+}

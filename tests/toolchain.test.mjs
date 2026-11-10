@@ -18,7 +18,7 @@ test('modern LTS runtime and direct tools are pinned',()=>{
 });
 test('modern source remains vanilla HTML/CSS/JS without CDN code injection',()=>{
   assert.match(main,/^<!doctype html>/i);
-  for(const script of ['app.js','session.js','i18n.js'])assert.ok(main.includes('src="./'+script+'" defer'));
+  for(const script of ['app.js','calculator.js','session.js','i18n.js'])assert.ok(main.includes('src="./'+script+'" defer'));
   assert.ok(main.includes('href="./styles.css"'));
   assert.doesNotMatch(main,/<script[^>]+src="https?:/i);
   assert.doesNotMatch(main,/<link[^>]+href="https?:/i);

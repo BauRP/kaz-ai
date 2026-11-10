@@ -12,7 +12,7 @@ const once=(text,find,replacement,name)=>{
 export function buildPreview(){
   const html=read('index.html');
   const css=read('styles.css');
-  const scripts=['app.js','session.js','i18n.js'].map(read);
+  const scripts=['app.js','calculator.js','session.js','i18n.js'].map(read);
   if(css.includes('</style')||scripts.some(s=>s.includes('</script'))){
     throw new Error('Unsafe closing tag in embeddable source');
   }
@@ -20,7 +20,7 @@ export function buildPreview(){
   preview=once(preview,
     '<link rel="stylesheet" href="./styles.css">',
     '<style>\n'+css+'\n</style>','stylesheet');
-  for(const name of ['app.js','session.js','i18n.js']){
+  for(const name of ['app.js','calculator.js','session.js','i18n.js']){
     preview=once(preview,'<script src="./'+name+'" defer></script>','','external script '+name);
   }
   const inline=scripts.map(code=>'<script>\n'+code+'\n</script>').join('\n');

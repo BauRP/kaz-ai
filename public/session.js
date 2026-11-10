@@ -584,43 +584,7 @@
     }
     if(action==="calc"){showCalculator();return}
   }
-  function compute(expression){
-    const input=expression.replaceAll(",",".").replace(/\s/g,"");
-    if(input.length>150||!input)throw Error("INVALID");
-    const matches=input.match(/(?:\d+(?:\.\d+)?|\.\d+|[()+*/-])/g);
-    if(!matches||matches.join("")!==input)throw Error("INVALID");
-    let i=0;
-    const safe=value=>{
-      if(!Number.isFinite(value))throw Error("INVALID");
-      if(Math.abs(value)>Number.MAX_SAFE_INTEGER)throw Error("UNSAFE");
-      return value;
-    };
-    const factor=()=>{
-      if(matches[i]==="-"){i++;return -factor()}
-      if(matches[i]==="+"){i++;return factor()}
-      if(matches[i]==="("){i++;const result=sum();if(matches[i++]!==")")throw Error("BRACKETS");return result}
-      const token=matches[i++];if(!token||!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(token))throw Error("INVALID");
-      return safe(Number(token));
-    };
-    const product=()=>{
-      let v=factor();
-      while(matches[i]==="*"||matches[i]==="/"){
-        const op=matches[i++],right=factor();
-        if(op==="/"&&right===0)throw Error("ZERO");
-        v=safe(op==="*"?v*right:v/right);
-      }return v;
-    };
-    const sum=()=>{
-      let v=product();
-      while(matches[i]==="+"||matches[i]==="-"){
-        const op=matches[i++],right=product();v=safe(op==="+"?v+right:v-right)
-      }return v;
-    };
-    const answer=sum();
-    if(i!==matches.length||!Number.isFinite(answer))throw Error("INVALID");
-    // Round ordinary floating-point noise without losing tiny valid results or exact safe integers.
-    return Number.isSafeInteger(answer)?answer:Number.parseFloat(answer.toPrecision(15));
-  }
+  const compute=window.KazCalculator.compute;
 
   // These text tools only prepare a draft. They never send it automatically.
   function openTextHelper(kind){
@@ -688,9 +652,9 @@
   }
   function showCalculator(){
     openDialog("Простой калькулятор","Поддерживает +, −, ×, ÷ и скобки. Не использует ИИ.",body=>{
-      const field=make("input","session-input");field.type="text";field.inputMode="decimal";
+      const field=make("input","session-input");field.type="text";field.inputMode="text";field.maxLength=150;
       field.value="(15 + 7) × 2";field.setAttribute("aria-label","Выражение");
-      const output=make("output","session-calc-output","Результат появится здесь");
+      const output=make("output","session-calc-output","Результат появится здесь");output.setAttribute("aria-live","polite");
       const submit=button("Рассчитать","calc-run",null,"session-primary");
       submit.addEventListener("click",()=>{
         const lang=window.KazI18n?.language||"ru";
@@ -699,7 +663,7 @@
           en:{answer:"Result: ",zero:"Cannot divide by zero.",invalid:"Check the mathematical expression.",unsafe:"Number too large for accurate calculation."},
           kk:{answer:"Нәтиже: ",zero:"Нөлге бөлуге болмайды.",invalid:"Математикалық өрнекті тексеріңіз.",unsafe:"Дәл есептеу үшін сан тым үлкен."}
         }[lang];
-        try{output.textContent=t.answer+compute(field.value.replaceAll("×","*").replaceAll("÷","/"))}
+        try{output.textContent=t.answer+window.KazCalculator.format(field.value)}
         catch(e){output.textContent=e.message==="ZERO"?t.zero:e.message==="UNSAFE"?t.unsafe:t.invalid}
       });
       field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submit.click()}});

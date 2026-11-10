@@ -162,3 +162,12 @@ test('About introduces the Kazakhstan platform honestly and preserves full appro
   assert.ok(!html.includes('target="_blank"'));
   assert.match(standalone,/<section id="help">/);
 });
+
+test('the basic calculator is isolated from chat state and bundled before the session',()=>{
+  const calculator=readFileSync('public/calculator.js','utf8');
+  const preview=readFileSync('public/preview.html','utf8');
+  assert.match(html,/<script src="\.\/calculator\.js" defer><\/script>\s*<script src="\.\/session\.js" defer><\/script>/);
+  assert.ok(preview.includes(calculator));
+  assert.ok(calculator.includes('window.KazCalculator=Object.freeze({compute,format})'));
+  assert.doesNotMatch(calculator,/\beval\s*\(|\bFunction\s*\(|\bfetch\s*\(|localStorage|sessionStorage|indexedDB/i);
+});

@@ -642,7 +642,7 @@
     if(!["ru","kk","en"].includes(next))return;
     language=next;refresh();
   }
-  window.KazI18n={set,refresh,get language(){return language}};
+  window.KazI18n={set,refresh,translate:value=>language==="ru"?value:(dictionary[value]?.[language]||value),get language(){return language}};
   window.addEventListener("DOMContentLoaded",()=>{
     refresh();
     for(const selector of selectors){

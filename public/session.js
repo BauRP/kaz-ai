@@ -639,13 +639,31 @@
         const input=$("#messageInput");
         if(input.value.trim()){notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");return}
         let prompt="";
+        const ui=window.KazI18n?.language||"ru";
         if(kind===22){
-          const target={ru:"русский",kk:"казахский",en:"английский"}[languageSelect.value];
-          prompt="Переведи следующий текст на "+target+" язык. Сохрани смысл, имена и форматирование. Выведи только перевод.\n\n"+value;
+          const target={
+            ru:{ru:"русский",kk:"казахский",en:"английский"},
+            en:{ru:"Russian",kk:"Kazakh",en:"English"},
+            kk:{ru:"орыс",kk:"қазақ",en:"ағылшын"}
+          }[ui][languageSelect.value];
+          const prefix={
+            ru:"Переведи следующий текст на "+target+" язык. Сохрани смысл, имена и форматирование. Выведи только перевод.\n\n",
+            en:"Translate the following text into "+target+". Preserve meaning, names, and formatting. Return only the translation.\n\n",
+            kk:"Келесі мәтінді "+target+" тіліне аудар. Мағынасын, есімдерді және пішімдеуді сақта. Тек аударманы бер.\n\n"
+          }[ui];
+          prompt=prefix+value;
         }else if(kind===23){
-          prompt="Помоги с программированием. Если информации не хватает, уточни её. Объясняй простыми словами, а код приводи в удобном виде. Задача:\n\n"+value;
+          prompt={
+            ru:"Помоги с программированием. Если информации не хватает, уточни её. Объясняй простыми словами, а код приводи в удобном виде. Задача:\n\n",
+            en:"Help with programming. Ask for missing details. Explain simply and format code clearly. Task:\n\n",
+            kk:"Бағдарламалауға көмектес. Ақпарат жетіспесе, нақтылап сұра. Қарапайым тілмен түсіндіріп, кодты түсінікті түрде көрсет. Тапсырма:\n\n"
+          }[ui]+value;
         }else{
-          prompt="Подготовь текст документа по следующему описанию. Сделай его понятным и аккуратно структурированным. Не выдумывай неизвестные данные. Описание:\n\n"+value;
+          prompt={
+            ru:"Подготовь текст документа по следующему описанию. Сделай его понятным и аккуратно структурированным. Не выдумывай неизвестные данные. Описание:\n\n",
+            en:"Draft the document text described below. Organize it clearly and do not invent missing details. Description:\n\n",
+            kk:"Төмендегі сипаттамаға сай құжат мәтінін дайында. Түсінікті әрі жүйелі жаз. Белгісіз мәліметтерді ойдан қоспа. Сипаттама:\n\n"
+          }[ui]+value;
         }
         if(prompt.length>4000){notify("Текст слишком длинный. Сократите описание.");return}
         closeDialog();showScreen(selected()?"chat":"welcome");
@@ -662,8 +680,14 @@
       const output=make("output","session-calc-output","Результат появится здесь");
       const submit=button("Рассчитать","calc-run",null,"session-primary");
       submit.addEventListener("click",()=>{
-        try{output.textContent="Ответ: "+compute(field.value.replaceAll("×","*").replaceAll("÷","/"))}
-        catch(e){output.textContent=e.message==="ZERO"?"На ноль делить нельзя.":"Проверьте математическое выражение."}
+        const lang=window.KazI18n?.language||"ru";
+        const t={
+          ru:{answer:"Ответ: ",zero:"На ноль делить нельзя.",invalid:"Проверьте математическое выражение."},
+          en:{answer:"Result: ",zero:"Cannot divide by zero.",invalid:"Check the mathematical expression."},
+          kk:{answer:"Нәтиже: ",zero:"Нөлге бөлуге болмайды.",invalid:"Математикалық өрнекті тексеріңіз."}
+        }[lang];
+        try{output.textContent=t.answer+compute(field.value.replaceAll("×","*").replaceAll("÷","/"))}
+        catch(e){output.textContent=e.message==="ZERO"?t.zero:t.invalid}
       });
       field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submit.click()}});
       body.append(field,submit,output);
@@ -754,6 +778,18 @@
   renderChat=renderSessionChat;
   renderTools=function(query=""){
     baseRenderTools(query);
+    const language=window.KazI18n?.language||"ru";
+    for(const heading of document.querySelectorAll("#toolGroups .tool-group-title small")){
+      const count=Number.parseInt(heading.textContent,10);
+      if(!Number.isSafeInteger(count))continue;
+      if(language==="en")heading.textContent=count+" "+(count===1?"function":"functions");
+      else if(language==="kk")heading.textContent=count+" функция";
+      else {
+        const last=count%10,lastTwo=count%100;
+        const plural=last===1&&lastTwo!==11?"функция":last>=2&&last<=4&&(lastTwo<12||lastTwo>14)?"функции":"функций";
+        heading.textContent=count+" "+plural;
+      }
+    }
     const working=new Set([1,2,3,4,5,6,7,13,25,40,41,42,44,45]);
     const partial=new Set([9,10,15,16,22,23,24,43]);
     for(const card of document.querySelectorAll("#toolGroups [data-feature^='tool-']")){

@@ -1251,3 +1251,100 @@ test('failed AI request does not leak Retry into settings and restores it on ret
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('text helpers use EN and KK prompts while preserving user drafts and never sending',async()=>{
+  const exec=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(exec?{executablePath:exec}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#settingsLanguageToggle').click();
+    await page.locator('#settingsLanguageMenu [data-language="en"]').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('[data-feature="tool-22"]').click();
+    await page.locator('#sessionBody select').selectOption('kk');
+    await page.locator('#sessionBody textarea').fill('Hello world');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.ok((await page.locator('#messageInput').inputValue()).startsWith('Translate the following text into Kazakh.'));
+    await page.locator('#messageInput').fill('');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('[data-feature="tool-23"]').click();
+    await page.locator('#sessionBody textarea').fill('JavaScript problem');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.ok((await page.locator('#messageInput').inputValue()).startsWith('Help with programming.'));
+    await page.locator('#messageInput').fill('');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#settingsLanguageToggle').click();
+    await page.locator('#settingsLanguageMenu [data-language="kk"]').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('[data-feature="tool-24"]').click();
+    await page.locator('#sessionBody textarea').fill('Кездесу туралы хат');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.ok((await page.locator('#messageInput').inputValue()).startsWith('Төмендегі сипаттамаға сай құжат мәтінін дайында.'));
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('calculator result and errors use selected RU EN and KK',async()=>{
+  const exec=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(exec?{executablePath:exec}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    async function calculate(input){
+      await page.locator('.sidebar [data-screen="tools"]').click();
+      await page.locator('[data-feature="tool-25"]').click();
+      await page.locator('#sessionBody input').fill(input);
+      await page.locator('#sessionBody [data-session="calc-run"]').click();
+      const output=await page.locator('.session-calc-output').innerText();
+      await page.locator('#sessionClose').click();return output;
+    }
+    async function language(lang){
+      await page.locator('.sidebar [data-screen="settings"]').click();
+      await page.locator('#settingsLanguageToggle').click();
+      await page.locator('#settingsLanguageMenu [data-language="'+lang+'"]').click();
+    }
+    assert.equal(await calculate('12*5'),'Ответ: 60');
+    await language('en');
+    assert.equal(await calculate('12*5'),'Result: 60');
+    assert.equal(await calculate('5/0'),'Cannot divide by zero.');
+    await language('kk');
+    assert.equal(await calculate('12*5'),'Нәтиже: 60');
+    assert.equal(await calculate('5/0'),'Нөлге бөлуге болмайды.');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('tools search supports translated names and correct group counts',async()=>{
+  const exec=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(exec?{executablePath:exec}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolsSearch').fill('Переводчик');
+    assert.equal(await page.locator('#toolGroups .tool-card').count(),1);
+    assert.equal(await page.locator('#toolGroups .tool-group-title small').innerText(),'1 функция');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#settingsLanguageToggle').click();
+    await page.locator('#settingsLanguageMenu [data-language="en"]').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolsSearch').fill('Translator');
+    assert.equal(await page.locator('#toolGroups .tool-card').count(),1);
+    assert.equal(await page.locator('#toolGroups .tool-group-title small').innerText(),'1 function');
+    await page.locator('#toolsSearch').fill('chat');
+    assert.ok((await page.locator('#toolGroups .tool-card').count())>=2);
+    assert.ok((await page.locator('#toolGroups').innerText()).includes('functions'));
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#settingsLanguageToggle').click();
+    await page.locator('#settingsLanguageMenu [data-language="kk"]').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolsSearch').fill('Аудармашы');
+    assert.equal(await page.locator('#toolGroups .tool-card').count(),1);
+    assert.equal(await page.locator('#toolGroups .tool-group-title small').innerText(),'1 функция');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

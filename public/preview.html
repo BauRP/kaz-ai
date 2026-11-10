@@ -814,7 +814,11 @@ function addChatMessage(role,content){const item={role,content};state.chat.push(
 function renderChat(){const target=$("#chatMessages");target.replaceChildren();for(const message of state.chat){const bubble=node("div","message message-"+message.role);if(message.role==="assistant"){const label=node("div","message-label");const mark=document.createElementNS("http://www.w3.org/2000/svg","svg");mark.setAttribute("class","brand-mark");mark.setAttribute("aria-hidden","true");const use=document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href","#logo-mark");mark.append(use);label.append(mark,node("span","","Kaz AI"));bubble.append(label)}bubble.append(node("span","",message.content));target.append(bubble)}$("#mainContent").scrollTop=$("#mainContent").scrollHeight}
 function submitMessage(){if(window.KazSession?.sendMessage){window.KazSession.sendMessage();return}const input=$("#messageInput");const value=input.value.trim();if(!value)return;if(state.chat.length===0)state.draftTitle=value.slice(0,52);addChatMessage("user",value);input.value="";resizeInput();showScreen("chat");const banner=$("#statusBanner");banner.textContent="Оболочка готова. Ответ нейросети пока недоступен: GPT-OSS 120B подключим на следующем этапе.";banner.hidden=false;notify("Сообщение показано только в демо. На сервер ничего не отправлено.");$("#mainContent").scrollTop=$("#mainContent").scrollHeight}
 function renderHistory(){const target=$("#historyList"),recent=$("#recentChats");recent.replaceChildren();const search=($("#historySearch").value||"").trim().toLocaleLowerCase();const has=state.chat.some(m=>m.role==="user")&&state.draftTitle.toLocaleLowerCase().includes(search);if(!has){const empty=node("div","empty-card");empty.append(icon("chat"),node("h2","","Пока нет сохранённых переписок"),node("p","","На этом этапе разговоры существуют только в текущем открытом сеансе. Постоянное хранение подключим позже."));target.replaceChildren(empty);const hint=node("div","sidebar-empty","История пока не сохраняется");recent.append(hint);return}const card=node("button","history-card subtle-cta",state.draftTitle+" · демо-сеанс");card.type="button";card.addEventListener("click",()=>showScreen("chat"));target.replaceChildren(card);const entry=node("button","recent-item");entry.type="button";entry.append(icon("chat"),node("span","",state.draftTitle));entry.addEventListener("click",()=>showScreen("chat"));recent.append(entry)}
-function renderTools(query=""){const target=$("#toolGroups");target.replaceChildren();const value=query.toLocaleLowerCase().trim();let total=0;for(const group of FEATURE_GROUPS){const list=group.items.filter(item=>(item[1]+" "+item[2]).toLocaleLowerCase().includes(value));if(!list.length)continue;total+=list.length;const section=node("section","tool-group");const title=node("h2","tool-group-title");title.append(node("span","",group.title),node("small","",list.length+" функций"));section.append(title);const grid=node("div","tool-grid");for(const [number,name,description,iconName] of list){const card=node("button","tool-card");card.type="button";card.dataset.feature="tool-"+number;card.setAttribute("aria-label",name+", функция будет подключена позже");const head=node("div","tool-card-top");head.append(icon(iconName),node("small","","В плане"));card.append(head,node("strong","",name),node("p","",description));grid.append(card)}section.append(grid);target.append(section)}if(!total)target.append(node("p","","Ничего не найдено"))}
+function renderTools(query=""){const target=$("#toolGroups");target.replaceChildren();const value=query.toLocaleLowerCase().trim();let total=0;for(const group of FEATURE_GROUPS){const list=group.items.filter(item=>{
+  const translate=window.KazI18n?.translate;
+  return [item[1],item[2],translate?.(item[1]),translate?.(item[2])]
+    .filter(Boolean).join(" ").toLocaleLowerCase().includes(value);
+});if(!list.length)continue;total+=list.length;const section=node("section","tool-group");const title=node("h2","tool-group-title");title.append(node("span","",group.title),node("small","",list.length+" функций"));section.append(title);const grid=node("div","tool-grid");for(const [number,name,description,iconName] of list){const card=node("button","tool-card");card.type="button";card.dataset.feature="tool-"+number;card.setAttribute("aria-label",name+", функция будет подключена позже");const head=node("div","tool-card-top");head.append(icon(iconName),node("small","","В плане"));card.append(head,node("strong","",name),node("p","",description));grid.append(card)}section.append(grid);target.append(section)}if(!total)target.append(node("p","","Ничего не найдено"))}
 function selectReason(value){if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return}state.reason=value;$("#currentReason").textContent=REASONS[value].name;$$("[data-reason]").forEach(btn=>btn.classList.toggle("selected",btn.dataset.reason===value));closePopovers();notify("Выбран уровень «"+REASONS[value].name+"». Подключение к модели — на следующем этапе.")}
 function toggleTheme(){state.light=!state.light;document.body.classList.toggle("light",state.light);$("#themeLabel").textContent=state.light?"Светлая":"Тёмная";$$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"))}
 const languages={ru:"Русский",kk:"Қазақша",en:"English"};
@@ -826,6 +830,7 @@ function selectLanguage(value){
   closePopovers();
   window.KazI18n?.set(value);
   renderHistory();
+  renderTools($("#toolsSearch").value);
   notify("Язык интерфейса: "+languages[value]);
 }
 function selectFont(value){
@@ -1560,13 +1565,31 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         const input=$("#messageInput");
         if(input.value.trim()){notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");return}
         let prompt="";
+        const ui=window.KazI18n?.language||"ru";
         if(kind===22){
-          const target={ru:"русский",kk:"казахский",en:"английский"}[languageSelect.value];
-          prompt="Переведи следующий текст на "+target+" язык. Сохрани смысл, имена и форматирование. Выведи только перевод.\n\n"+value;
+          const target={
+            ru:{ru:"русский",kk:"казахский",en:"английский"},
+            en:{ru:"Russian",kk:"Kazakh",en:"English"},
+            kk:{ru:"орыс",kk:"қазақ",en:"ағылшын"}
+          }[ui][languageSelect.value];
+          const prefix={
+            ru:"Переведи следующий текст на "+target+" язык. Сохрани смысл, имена и форматирование. Выведи только перевод.\n\n",
+            en:"Translate the following text into "+target+". Preserve meaning, names, and formatting. Return only the translation.\n\n",
+            kk:"Келесі мәтінді "+target+" тіліне аудар. Мағынасын, есімдерді және пішімдеуді сақта. Тек аударманы бер.\n\n"
+          }[ui];
+          prompt=prefix+value;
         }else if(kind===23){
-          prompt="Помоги с программированием. Если информации не хватает, уточни её. Объясняй простыми словами, а код приводи в удобном виде. Задача:\n\n"+value;
+          prompt={
+            ru:"Помоги с программированием. Если информации не хватает, уточни её. Объясняй простыми словами, а код приводи в удобном виде. Задача:\n\n",
+            en:"Help with programming. Ask for missing details. Explain simply and format code clearly. Task:\n\n",
+            kk:"Бағдарламалауға көмектес. Ақпарат жетіспесе, нақтылап сұра. Қарапайым тілмен түсіндіріп, кодты түсінікті түрде көрсет. Тапсырма:\n\n"
+          }[ui]+value;
         }else{
-          prompt="Подготовь текст документа по следующему описанию. Сделай его понятным и аккуратно структурированным. Не выдумывай неизвестные данные. Описание:\n\n"+value;
+          prompt={
+            ru:"Подготовь текст документа по следующему описанию. Сделай его понятным и аккуратно структурированным. Не выдумывай неизвестные данные. Описание:\n\n",
+            en:"Draft the document text described below. Organize it clearly and do not invent missing details. Description:\n\n",
+            kk:"Төмендегі сипаттамаға сай құжат мәтінін дайында. Түсінікті әрі жүйелі жаз. Белгісіз мәліметтерді ойдан қоспа. Сипаттама:\n\n"
+          }[ui]+value;
         }
         if(prompt.length>4000){notify("Текст слишком длинный. Сократите описание.");return}
         closeDialog();showScreen(selected()?"chat":"welcome");
@@ -1583,8 +1606,14 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       const output=make("output","session-calc-output","Результат появится здесь");
       const submit=button("Рассчитать","calc-run",null,"session-primary");
       submit.addEventListener("click",()=>{
-        try{output.textContent="Ответ: "+compute(field.value.replaceAll("×","*").replaceAll("÷","/"))}
-        catch(e){output.textContent=e.message==="ZERO"?"На ноль делить нельзя.":"Проверьте математическое выражение."}
+        const lang=window.KazI18n?.language||"ru";
+        const t={
+          ru:{answer:"Ответ: ",zero:"На ноль делить нельзя.",invalid:"Проверьте математическое выражение."},
+          en:{answer:"Result: ",zero:"Cannot divide by zero.",invalid:"Check the mathematical expression."},
+          kk:{answer:"Нәтиже: ",zero:"Нөлге бөлуге болмайды.",invalid:"Математикалық өрнекті тексеріңіз."}
+        }[lang];
+        try{output.textContent=t.answer+compute(field.value.replaceAll("×","*").replaceAll("÷","/"))}
+        catch(e){output.textContent=e.message==="ZERO"?t.zero:t.invalid}
       });
       field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submit.click()}});
       body.append(field,submit,output);
@@ -1675,6 +1704,18 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   renderChat=renderSessionChat;
   renderTools=function(query=""){
     baseRenderTools(query);
+    const language=window.KazI18n?.language||"ru";
+    for(const heading of document.querySelectorAll("#toolGroups .tool-group-title small")){
+      const count=Number.parseInt(heading.textContent,10);
+      if(!Number.isSafeInteger(count))continue;
+      if(language==="en")heading.textContent=count+" "+(count===1?"function":"functions");
+      else if(language==="kk")heading.textContent=count+" функция";
+      else {
+        const last=count%10,lastTwo=count%100;
+        const plural=last===1&&lastTwo!==11?"функция":last>=2&&last<=4&&(lastTwo<12||lastTwo>14)?"функции":"функций";
+        heading.textContent=count+" "+plural;
+      }
+    }
     const working=new Set([1,2,3,4,5,6,7,13,25,40,41,42,44,45]);
     const partial=new Set([9,10,15,16,22,23,24,43]);
     for(const card of document.querySelectorAll("#toolGroups [data-feature^='tool-']")){
@@ -2387,7 +2428,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     if(!["ru","kk","en"].includes(next))return;
     language=next;refresh();
   }
-  window.KazI18n={set,refresh,get language(){return language}};
+  window.KazI18n={set,refresh,translate:value=>language==="ru"?value:(dictionary[value]?.[language]||value),get language(){return language}};
   window.addEventListener("DOMContentLoaded",()=>{
     refresh();
     for(const selector of selectors){

@@ -1,32 +1,32 @@
 {
   "scope": "22 active light-medium features; explicitly removed 8 (edit message), 11 (copy), 14 (branch) excluded; higher difficulty excluded.",
-  "basis": "Previous 22-feature baseline 75.50%; verified commit 533d9a0 in GitHub Actions 42844127783: safe numeric bounds for calculator and unanswered-question retry through existing tools. 46 core + 42 browser tests, Cloudflare dry-run and HTTP succeeded.",
+  "basis": "22 authorized light and medium Kaz AI functions; prior 75.681818%. Commit eae2b846 verified in GitHub Actions 42854474527: 47 unit checks, 46 browser scenarios, Cloudflare dry run and HTTP smoke tests. Reopens prior conversation scroll position from About, localizes TXT export labels, and makes selected reasoning level accessible. This is a judgment-based code completeness estimate, not working online GPT-OSS.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
   "date": "2026-11-10",
-  "previous": 75.5,
-  "now": 75.68181818181819,
-  "delta": 0.18181818181818699,
+  "previous": 75.68181818181819,
+  "now": 75.9090909090909,
+  "delta": 0.22727272727271952,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 89.3,
-      "now": 89.5,
-      "delta": 0.20000000000000284
+      "previous": 89.5,
+      "now": 89.6,
+      "delta": 0.09999999999999432
     },
     {
       "name": "Интеллект",
       "count": 6,
-      "previous": 42.666666666666664,
-      "now": 43,
+      "previous": 43,
+      "now": 43.333333333333336,
       "delta": 0.3333333333333357
     },
     {
       "name": "Настройки",
       "count": 6,
       "previous": 85.33333333333333,
-      "now": 85.33333333333333,
-      "delta": 0
+      "now": 85.66666666666667,
+      "delta": 0.3333333333333428
     }
   ],
   "items": [
@@ -44,9 +44,9 @@
       "name": "История чатов",
       "group": "Чаты",
       "previous": 87,
-      "now": 87,
-      "delta": 0,
-      "summary": "Без нового прироста по этому направлению."
+      "now": 88,
+      "delta": 1,
+      "summary": "Возврат из «О проекте» сохраняет положение чтения в открытой переписке."
     },
     {
       "id": 3,
@@ -97,10 +97,10 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 70,
+      "previous": 72,
       "now": 72,
-      "delta": 2,
-      "summary": "Повтор через каталог инструментов теперь работает и когда последний вопрос остался без ответа; повтор не дублирует сообщение."
+      "delta": 0,
+      "summary": "Без нового прироста по этому направлению."
     },
     {
       "id": 10,
@@ -134,9 +134,9 @@
       "name": "Уровни рассуждения",
       "group": "Интеллект",
       "previous": 53,
-      "now": 53,
-      "delta": 0,
-      "summary": "Без нового прироста по этому направлению."
+      "now": 55,
+      "delta": 2,
+      "summary": "Низкий, средний и высокий уровни показывают выбранное состояние для клавиатуры и вспомогательных технологий; уведомление соответствует языку интерфейса."
     },
     {
       "id": 22,
@@ -169,10 +169,10 @@
       "id": 25,
       "name": "Простой калькулятор",
       "group": "Интеллект",
-      "previous": 90,
+      "previous": 92,
       "now": 92,
-      "delta": 2,
-      "summary": "Калькулятор отклоняет числовые значения и промежуточные результаты за пределами безопасного диапазона вместо выдачи неточного ответа."
+      "delta": 0,
+      "summary": "Без нового прироста по этому направлению."
     },
     {
       "id": 40,
@@ -224,9 +224,9 @@
       "name": "Экспорт истории",
       "group": "Настройки",
       "previous": 94,
-      "now": 94,
-      "delta": 0,
-      "summary": "Без нового прироста по этому направлению."
+      "now": 96,
+      "delta": 2,
+      "summary": "В TXT-экспорте служебные подписи отображаются на русском, казахском или английском без перевода текста пользователя."
     }
   ]
 }

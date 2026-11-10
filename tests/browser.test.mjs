@@ -1435,3 +1435,86 @@ test('new About story remains readable, inside the same tab and without horizont
     }
   }finally{await browser.close()}
 });
+
+test('returning from About restores the previous reading position in the same chat',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1200,height:700}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Длинная переписка '+('Содержание для проверки позиции. '.repeat(90)));
+    await page.locator('#sendButton').click();
+    const before=await page.evaluate(()=>{
+      const main=document.querySelector('#mainContent');
+      const maximum=main.scrollHeight-main.clientHeight;
+      main.scrollTop=Math.max(1,Math.floor(maximum/3));
+      return {position:main.scrollTop,maximum,chat:window.KazSession.snapshot().active};
+    });
+    assert.ok(before.maximum>100,'Long conversation must create a scrollable reading area');
+    assert.ok(before.position>0);
+    await page.locator('.sidebar [data-screen="about"]').click();
+    assert.equal(await page.locator('#view-about').isVisible(),true);
+    await page.locator('[data-action="back-to-chat"]').click();
+    const after=await page.evaluate(()=>({position:document.querySelector('#mainContent').scrollTop,chat:window.KazSession.snapshot().active}));
+    assert.ok(Math.abs(after.position-before.position)<=2,'Reading position must be preserved');
+    assert.equal(after.chat,before.chat);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('TXT export retains original messages while localizing headers and user labels',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1250,height:800},acceptDownloads:true});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Қазақша и русский: ORIGINAL');
+    await page.locator('#sendButton').click();
+    for(const [lang,header,label] of [
+      ['en','Current conversation export (not saved to the cloud)','You: '],
+      ['kk','Ағымдағы әңгіме экспорты (бұлтта сақталмайды)','Сіз: ']
+    ]){
+      await page.locator('.sidebar [data-screen="settings"]').click();
+      await page.locator('#settingsLanguageToggle').click();
+      await page.locator('#settingsLanguageMenu [data-language="'+lang+'"]').click();
+      await page.locator('.sidebar [data-screen="history"]').click();
+      const started=page.waitForEvent('download');
+      await page.locator('#historyList [data-session="export-chat"]').first().click();
+      const download=await started;
+      const data=readFileSync(await download.path(),'utf8');
+      assert.ok(data.startsWith('\uFEFF'));
+      assert.ok(data.includes(header));
+      assert.ok(data.includes(label+'Қазақша и русский: ORIGINAL'));
+      assert.ok(data.includes('Kaz AI — Қазақша и русский: ORIGINAL'));
+      assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads)).length,1);
+    }
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('reasoning effort buttons announce selection and send existing low-medium-high values',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1250,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    assert.equal(await page.locator('[data-reason="medium"]').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.locator('[data-reason="low"]').getAttribute('aria-pressed'),'false');
+    await page.locator('#reasonToggle').click();
+    await page.locator('[data-reason="high"]').click();
+    assert.equal(await page.locator('[data-reason="high"]').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.locator('[data-reason="medium"]').getAttribute('aria-pressed'),'false');
+    assert.equal(await page.locator('[data-reason="deep"]').getAttribute('aria-pressed'),null);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    await page.locator('#reasonToggle').click();
+    await page.locator('[data-reason="low"]').click();
+    assert.ok((await page.locator('#toast').innerText()).includes('Reasoning level:'));
+    assert.equal(await page.locator('[data-reason="low"]').getAttribute('aria-pressed'),'true');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    assert.equal(await page.locator('.primary-nav [data-screen="settings"]').getAttribute('aria-current'),'page');
+    assert.equal(await page.locator('.primary-nav [data-screen="tools"]').getAttribute('aria-current'),null);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

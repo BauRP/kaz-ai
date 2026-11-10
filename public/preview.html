@@ -879,7 +879,12 @@ function togglePopover(kind,trigger){
   if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
 }
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
-function showScreen(screen){if(!viewNames.includes(screen))return;if(screen==="about"&&state.screen!=="about")state.aboutReturnScreen=state.screen;state.screen=screen;document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>button.classList.toggle("active",button.dataset.screen===screen));closePopovers();setDrawer(false);if(screen!=="chat"&&screen!=="about")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0;window.KazI18n?.refresh()}
+function showScreen(screen){if(!viewNames.includes(screen))return;if(screen==="about"&&state.screen!=="about"){state.aboutReturnScreen=state.screen;state.aboutReturnScroll=$("#mainContent").scrollTop}state.screen=screen;document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>{
+  const active=button.dataset.screen===screen;
+  button.classList.toggle("active",active);
+  if(active)button.setAttribute("aria-current","page");
+  else button.removeAttribute("aria-current");
+});closePopovers();setDrawer(false);if(screen!=="chat"&&screen!=="about")$("#statusBanner").hidden=true;$("#mainContent").scrollTop=0;window.KazI18n?.refresh()}
 function newChat(){state.chat=[];state.draftTitle="Новый чат";$("#statusBanner").hidden=true;renderChat();renderHistory();showScreen("welcome");$("#messageInput").value="";resizeInput();$("#messageInput").focus()}
 function resizeInput(){const input=$("#messageInput");input.style.height="auto";input.style.height=Math.min(input.scrollHeight,176)+"px";$("#sendButton").disabled=!input.value.trim()}
 function addChatMessage(role,content){const item={role,content};state.chat.push(item);renderChat();renderHistory();return item}
@@ -891,7 +896,24 @@ function renderTools(query=""){const target=$("#toolGroups");target.replaceChild
   return [item[1],item[2],translate?.(item[1]),translate?.(item[2])]
     .filter(Boolean).join(" ").toLocaleLowerCase().includes(value);
 });if(!list.length)continue;total+=list.length;const section=node("section","tool-group");const title=node("h2","tool-group-title");title.append(node("span","",group.title),node("small","",list.length+" функций"));section.append(title);const grid=node("div","tool-grid");for(const [number,name,description,iconName] of list){const card=node("button","tool-card");card.type="button";card.dataset.feature="tool-"+number;card.setAttribute("aria-label",name+", функция будет подключена позже");const head=node("div","tool-card-top");head.append(icon(iconName),node("small","","В плане"));card.append(head,node("strong","",name),node("p","",description));grid.append(card)}section.append(grid);target.append(section)}if(!total)target.append(node("p","","Ничего не найдено"))}
-function selectReason(value){if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return}state.reason=value;$("#currentReason").textContent=REASONS[value].name;$$("[data-reason]").forEach(btn=>btn.classList.toggle("selected",btn.dataset.reason===value));closePopovers();notify("Выбран уровень «"+REASONS[value].name+"». Подключение к модели — на следующем этапе.")}
+function selectReason(value){
+  if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){
+    featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return;
+  }
+  state.reason=value;
+  $("#currentReason").textContent=REASONS[value].name;
+  $$("[data-reason]").forEach(btn=>{
+    const active=btn.dataset.reason===value;
+    btn.classList.toggle("selected",active);
+    if(value!=="deep")btn.setAttribute("aria-pressed",String(active));
+  });
+  closePopovers();
+  const lang=window.KazI18n?.language||"ru";
+  const label=window.KazI18n?.translate?.(REASONS[value].name)||REASONS[value].name;
+  if(lang==="en")notify('Reasoning level: '+label+'. This will apply when the AI is connected.');
+  else if(lang==="kk")notify('Ойлау деңгейі: '+label+'. ЖИ қосылғанда қолданылады.');
+  else notify("Выбран уровень «"+label+"». Подключение к модели — на следующем этапе.");
+}
 function toggleTheme(){state.light=!state.light;document.body.classList.toggle("light",state.light);$("#themeLabel").textContent=state.light?"Светлая":"Тёмная";$$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"))}
 const languages={ru:"Русский",kk:"Қазақша",en:"English"};
 function selectLanguage(value){
@@ -945,7 +967,7 @@ function closeModal(){$("#modalOverlay").hidden=true;if(state.dialogTrigger&&typ
 function showFeature(key){if(key==="google"){openGoogle();return}if(key==="languages"){togglePopover("language",$("#languageToggle"));return}const data=featureDescriptions[key];if(data)featureModal(...data);else if(key.startsWith("tool-")){const n=Number(key.slice(5));const item=FEATURE_GROUPS.flatMap(g=>g.items).find(i=>i[0]===n);if(item)featureModal(item[1],item[2]+". Сейчас подготовлена только кнопка и место в интерфейсе. Реализация — на согласованном этапе.")}else featureModal("Функция появится позже","Сейчас разрабатывается только оболочка сайта.")}
 function handleAction(action,trigger){switch(action){
   case"home":showScreen("welcome");break;
-  case"back-to-chat":showScreen(state.aboutReturnScreen||"welcome");break;
+  case"back-to-chat":showScreen(state.aboutReturnScreen||"welcome");$("#mainContent").scrollTop=state.aboutReturnScroll||0;break;
   case"new-chat":newChat();break;
   case"close-sidebar":setDrawer(false);break;
   case"toggle-sidebar":setDrawer(!$("#sidebar").classList.contains("open"));break;
@@ -992,7 +1014,7 @@ $("#messageInput").addEventListener("input",()=>{
   if($("#sessionStop")?.hidden===false||$("#sessionRetry")?.hidden===false)return;
   banner.hidden=true;
 });
-renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$$("[data-reason=medium]").forEach(button=>button.classList.add("selected"));resizeInput();showScreen("welcome");
+renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$$("[data-reason]").forEach(button=>{const selected=button.dataset.reason==="medium";button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");
 
 </script>
 <script>
@@ -1067,12 +1089,20 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   const baseShowFeature=showFeature;
   const baseToggleTheme=toggleTheme;
   const safeExportName=name=>name.normalize("NFKC").replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,"").slice(0,70)||"chat";
-  const exportText=c=>[
-    "Kaz AI — "+c.title,
-    "Экспорт текущей переписки (без сохранения в облаке)",
-    "",
-    ...c.messages.map(m=>(m.role==="assistant"?"Kaz AI: ":"Вы: ")+m.content+"\n")
-  ].join("\n");
+  const exportText=c=>{
+    const lang=window.KazI18n?.language||"ru";
+    const labels={
+      ru:{note:"Экспорт текущей переписки (без сохранения в облаке)",user:"Вы: "},
+      en:{note:"Current conversation export (not saved to the cloud)",user:"You: "},
+      kk:{note:"Ағымдағы әңгіме экспорты (бұлтта сақталмайды)",user:"Сіз: "}
+    }[lang];
+    return [
+      "Kaz AI — "+c.title,
+      labels.note,
+      "",
+      ...c.messages.map(m=>(m.role==="assistant"?"Kaz AI: ":labels.user)+m.content+"\n")
+    ].join("\n");
+  };
   function download(name,body,mime){
     const blob=new Blob([mime.startsWith("text/plain")?"\uFEFF":"",body],{type:mime});
     const url=URL.createObjectURL(blob);

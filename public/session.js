@@ -69,12 +69,20 @@
   const baseShowFeature=showFeature;
   const baseToggleTheme=toggleTheme;
   const safeExportName=name=>name.normalize("NFKC").replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,"").slice(0,70)||"chat";
-  const exportText=c=>[
-    "Kaz AI — "+c.title,
-    "Экспорт текущей переписки (без сохранения в облаке)",
-    "",
-    ...c.messages.map(m=>(m.role==="assistant"?"Kaz AI: ":"Вы: ")+m.content+"\n")
-  ].join("\n");
+  const exportText=c=>{
+    const lang=window.KazI18n?.language||"ru";
+    const labels={
+      ru:{note:"Экспорт текущей переписки (без сохранения в облаке)",user:"Вы: "},
+      en:{note:"Current conversation export (not saved to the cloud)",user:"You: "},
+      kk:{note:"Ағымдағы әңгіме экспорты (бұлтта сақталмайды)",user:"Сіз: "}
+    }[lang];
+    return [
+      "Kaz AI — "+c.title,
+      labels.note,
+      "",
+      ...c.messages.map(m=>(m.role==="assistant"?"Kaz AI: ":labels.user)+m.content+"\n")
+    ].join("\n");
+  };
   function download(name,body,mime){
     const blob=new Blob([mime.startsWith("text/plain")?"\uFEFF":"",body],{type:mime});
     const url=URL.createObjectURL(blob);

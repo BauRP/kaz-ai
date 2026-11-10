@@ -577,7 +577,7 @@ test('real browser: match navigation, in-place project organization and individu
     await page.locator('#sessionBody select').selectOption({index:0});
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads.filter(c=>c.projectId).length)),1);
-    assert.ok((await page.locator('.session-project-card').first().innerText()).includes('1 чатов'));
+    assert.ok((await page.locator('.session-project-card').first().innerText()).includes('1 чат'));
     await page.locator('.session-project-card').first().locator('[data-session="remove-chat-from-project"]').click();
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads.filter(c=>c.projectId).length)),0);
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Без проекта'));

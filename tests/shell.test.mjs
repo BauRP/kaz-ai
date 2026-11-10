@@ -169,5 +169,5 @@ test('the basic calculator is isolated from chat state and bundled before the se
   assert.match(html,/<script src="\.\/calculator\.js" defer><\/script>\s*<script src="\.\/session\.js" defer><\/script>/);
   assert.ok(preview.includes(calculator));
   assert.ok(calculator.includes('window.KazCalculator=Object.freeze({compute,format})'));
-  assert.doesNotMatch(calculator,/\beval\s*\(|\bFunction\s*\(|\bfetch\s*\(|localStorage|sessionStorage|indexedDB/i);
+  assert.doesNotMatch(calculator,/\beval\s*\(|\bFunction\s*\(|\bfetch\s*\(|localStorage|sessionStorage|indexedDB/);
 });

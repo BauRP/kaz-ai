@@ -29,7 +29,9 @@
     const input=$("#messageInput");
     if(current!==next){
       if(input){
-        if(current&&threads.some(thread=>thread.id===current))drafts.set(current,input.value);
+        if(current&&threads.some(thread=>thread.id===current)){
+          if(input.value)drafts.set(current,input.value);else drafts.delete(current);
+        }
         else welcomeDraft=input.value;
       }
       current=next;
@@ -95,7 +97,10 @@
     abort=null;pending=null;
     $("#sessionStop").hidden=true;
     for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){drafts.delete(threads[i].id);threads.splice(i,1)}
-    if(current&&threads.some(thread=>thread.id===current))drafts.set(current,$("#messageInput").value);
+    if(current&&threads.some(thread=>thread.id===current)){
+      if($("#messageInput").value)drafts.set(current,$("#messageInput").value);
+      else drafts.delete(current);
+    }
     welcomeDraft="";
     current=null;
     state.chat=[];state.draftTitle="Новый чат";

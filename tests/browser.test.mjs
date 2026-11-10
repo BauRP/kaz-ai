@@ -1518,3 +1518,35 @@ test('reasoning effort buttons announce selection and send existing low-medium-h
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('isolated calculator completes exact decimal and repeating arithmetic on desktop and mobile without touching chats',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+      const page=await browser.newPage({viewport});
+      const errors=[];page.on('pageerror',e=>errors.push(e.message));
+      await page.goto(appUrl);
+      const before=await page.evaluate(()=>JSON.stringify(window.KazSession.snapshot()));
+      if(viewport.width<760)await page.locator('[data-action="toggle-sidebar"]').click();
+      await page.locator('.sidebar [data-screen="tools"]').click();
+      await page.locator('#toolGroups [data-feature="tool-25"]').click();
+      assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+      async function check(expr,result){
+        await page.locator('#sessionBody input').fill(expr);
+        await page.locator('#sessionBody [data-session="calc-run"]').click();
+        assert.equal(await page.locator('.session-calc-output').innerText(),result,expr);
+      }
+      await check('0,1+0,2','Ответ: 0.3');
+      await check('(15+7)×2','Ответ: 44');
+      await check('1/3','Ответ: ≈ 0.333333333333333');
+      await check('3/0','На ноль делить нельзя.');
+      await check('Math.random()','Проверьте математическое выражение.');
+      await page.locator('#sessionClose').click();
+      assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+      assert.equal(await page.evaluate(()=>JSON.stringify(window.KazSession.snapshot())),before);
+      assert.deepEqual(errors,[]);
+      await page.close();
+    }
+  }finally{await browser.close()}
+});

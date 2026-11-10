@@ -1628,3 +1628,38 @@ test('Rating entry is truthful when the latest chat has no generated assistant r
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('existing tools show localized warnings without altering drafts or automatically sending',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    async function language(value){
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+value+'"]').click();
+    }
+    await language('en');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-22"]').click();
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#toast')?.textContent==='Enter a text or task description first.');
+    await page.locator('#sessionClose').click();
+    await page.locator('#messageInput').fill('PREEXISTING PRIVATE DRAFT');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-23"]').click();
+    await page.locator('#sessionBody textarea').fill('test');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#toast')?.textContent==='You already have a draft. Send or clear it first.');
+    assert.equal(await page.locator('#messageInput').inputValue(),'PREEXISTING PRIVATE DRAFT');
+    await page.locator('#sessionClose').click();
+    await language('kk');
+    await page.locator('#toolGroups [data-feature="tool-24"]').click();
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#toast')?.textContent==='Алдымен мәтінді немесе тапсырма сипаттамасын енгізіңіз.');
+    assert.equal(await page.locator('#messageInput').inputValue(),'PREEXISTING PRIVATE DRAFT');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

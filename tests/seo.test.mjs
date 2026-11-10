@@ -29,8 +29,9 @@ test('site exposes crawlable links to static information pages',()=>{
   assert.match(main,/<meta name="description"/);
   assert.match(main,/<title>Kaz AI — Казахстанский искусственный интеллект онлайн<\/title>/);
   const about=file('about/index.html');
-  assert.match(about,/149 млрд параметров/);
-  assert.match(about,/117 млрд параметров/);
+  assert.match(about,/148,83 миллиарда параметров/);
+  assert.match(about,/116,83 миллиарда параметров/);
+  assert.match(about,/149 миллиардов параметров в двух отдельных моделях/);
   assert.match(about,/FLUX\.2 dev/);
   assert.match(about,/href="\.\.\/help\/"/);
   for(const route of routes)assert.ok(file(route+'/index.html').includes('href="../about/"'),'Missing static About link: '+route);
@@ -104,10 +105,17 @@ test('repository sitemap.xml and robots.txt templates match real Worker routes',
 test('about and capabilities explain separate AI models and Help is a reachable nonindex placeholder',()=>{
   for(const path of ['about','capabilities','ai-images']){
     const page=file(path+'/index.html');
-    assert.match(page,/149 млрд/);
-    assert.match(page,/117 млрд/);
-    assert.match(page,/32 млрд/);
-    assert.match(page,/не (?:одна|единая) (?:модель|нейросеть)/i);
+    if(path==='about'){
+      assert.match(page,/148,83 миллиарда параметров/);
+      assert.match(page,/116,83 млрд параметров/);
+      assert.match(page,/32 млрд параметров/);
+      assert.match(page,/а не одна нейросеть такого размера/);
+    }else{
+      assert.match(page,/149 млрд/);
+      assert.match(page,/117 млрд/);
+      assert.match(page,/32 млрд/);
+      assert.match(page,/не (?:одна|единая) (?:модель|нейросеть)/i);
+    }
   }
   const about=file('about/index.html');
   assert.match(about,/Помощь пользователям Kaz AI/);

@@ -1099,7 +1099,7 @@ test('all three existing font settings change composer and dialog text without a
     await page.locator('#fontToggle').click();
     await page.locator('#fontMenu [data-font="large"]').click();
     const large=await page.locator('#messageInput').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
-    await page.locator('[data-session="instructions"]').click();
+    await page.locator('[data-feature="instructions"]').click();
     const dlg=await page.locator('#sessionBody textarea').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
     assert.equal(large,17);
     assert.equal(dlg,17);

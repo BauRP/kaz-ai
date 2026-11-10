@@ -1210,3 +1210,44 @@ test('access dialog never sends a former conversation after programmatic navigat
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('failed AI request does not leak Retry into settings and restores it on returning to chat',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        const index=++calls;
+        if(index===1){
+          await new Promise(resolve=>setTimeout(resolve,250));
+          return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({code:'AI_UNAVAILABLE',message:'Временный отказ сервера'})});
+        }
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Ответ после возвращения'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Вопрос для повтора');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('my-test-access-secret-12345678901234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Временный отказ сервера'));
+    assert.equal(await page.locator('#statusBanner').isVisible(),false);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),false);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').first().click();
+    assert.equal(await page.locator('#statusBanner').isVisible(),true);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ после возвращения'));
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),2);
+    assert.equal(calls,2);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

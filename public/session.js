@@ -30,6 +30,7 @@
     return count+" "+suffix;
   };
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="",retryAnswerId=null;
+  let statusRetryable=false;
   const nextId=()=>String(++serial);
   const selected=()=>threads.find(c=>c.id===current)||null;
   const displayThread=c=>{
@@ -54,9 +55,11 @@
     const banner=$("#statusBanner");
     banner.textContent=text;
     if(!retryable)retryAnswerId=null;
+    statusRetryable=Boolean(text&&retryable);
     banner.classList.toggle("is-quota",quota);
-    banner.hidden=!text;
-    const retry=$("#sessionRetry");if(retry)retry.hidden=!retryable;
+    banner.hidden=!text||state.screen!=="chat";
+    const retry=$("#sessionRetry");
+    if(retry)retry.hidden=!statusRetryable||state.screen!=="chat";
   }
   const baseResizeInput=resizeInput;
   resizeInput=function(){baseResizeInput();if(abort)$("#sendButton").disabled=true};
@@ -801,6 +804,10 @@
   };
   showScreen=function(name){
     baseShowScreen(name);
+    // Status and Retry belong to the current conversation, not Settings or Projects.
+    const banner=$("#statusBanner"),retry=$("#sessionRetry");
+    if(name==="chat"&&statusRetryable)banner.hidden=false;
+    if(retry)retry.hidden=name!=="chat"||!statusRetryable;
     if(name==="projects")renderSessionProjects();
   };
   newChat=function(){sessionNewChat(false)};

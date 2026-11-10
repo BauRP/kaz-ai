@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const d=JSON.parse(readFileSync('ACTIVE_PROGRESS.json','utf8'));
-const previous=JSON.parse(readFileSync('progress/2026-11-10-before-about-export-reason-a11y.json','utf8'));
+const previous=JSON.parse(readFileSync('progress/2026-11-10-before-calculator-complete.json','utf8'));
 
 const report=readFileSync('ACTIVE_PROGRESS.md','utf8');
 const ids=new Set([1,2,3,4,5,6,7,9,10,13,15,16,22,23,24,25,40,41,42,43,44,45]);
@@ -38,4 +38,17 @@ test('human report shows only active items and avoids claiming real AI deploymen
   for(const i of d.items)assert.ok(report.includes('| '+i.id+' | '+i.name+' |'));
   assert.match(report,/Настоящие ответы GPT-OSS 120B пока не проверены/);
   assert.doesNotMatch(report,/\| 29 \| Создание изображений/);
+});
+
+test('completed features are separated from the 21 unfinished directions without changing the weighted baseline',()=>{
+  assert.deepEqual(d.completed_ids,[25]);
+  assert.equal(d.completed_count,1);
+  assert.equal(d.incomplete_count,21);
+  assert.equal(d.completed_count+d.incomplete_count,d.items.length);
+  const finished=d.items.filter(i=>i.status==='completed');
+  assert.deepEqual(finished.map(i=>i.id),[25]);
+  assert.ok(finished.every(i=>i.now===100));
+  assert.ok(d.items.filter(i=>i.id!==25).every(i=>i.status==='in_progress'&&i.delta===0));
+  assert.match(report,/Незавершённые направления \(21\)/);
+  assert.match(report,/Готовые направления \(100%\)/);
 });

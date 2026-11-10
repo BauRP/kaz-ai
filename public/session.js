@@ -21,6 +21,14 @@
   let activitySerial=0;
   const touchChat=chat=>{chat.activity=++activitySerial};
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
+  const projectCountLabel=count=>{
+    const lang=window.KazI18n?.language||"ru";
+    if(lang==="en")return count+" "+(count===1?"chat":"chats");
+    if(lang==="kk")return count+" чат";
+    const last=count%10,lastTwo=count%100;
+    const suffix=last===1&&lastTwo!==11?"чат":last>=2&&last<=4&&(lastTwo<12||lastTwo>14)?"чата":"чатов";
+    return count+" "+suffix;
+  };
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="",retryAnswerId=null;
   const nextId=()=>String(++serial);
   const selected=()=>threads.find(c=>c.id===current)||null;
@@ -227,7 +235,7 @@
     for(const project of projects){
       const card=make("section","session-project-card");
       const header=make("div","session-project-title");
-      header.append(make("h2","",project.name),make("small","",threads.filter(c=>c.projectId===project.id&&!c.temporary).length+" чатов"));
+      header.append(make("h2","",project.name),make("small","",projectCountLabel(threads.filter(c=>c.projectId===project.id&&!c.temporary).length)));
       card.append(header);
       const chats=threads.filter(c=>c.projectId===project.id&&!c.temporary).sort(newestFirst);
       if(!chats.length)card.append(make("p","session-help","Пока нет чатов в этом проекте."));
@@ -274,7 +282,9 @@
     });
   }
   async function runAI(chat,replaceId=null){
-    if(!threads.includes(chat))return;
+    // A pending unlock dialog can outlive the conversation that opened it.
+    // Never submit an old conversation when the user is now in another chat.
+    if(!threads.includes(chat)||current!==chat.id)return;
     if(!allowRemote()){
       showStatus("Предпросмотр: настоящий GPT-OSS 120B ещё не подключён. Сообщения никуда не отправляются.");
       return;

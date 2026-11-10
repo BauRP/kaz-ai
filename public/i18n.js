@@ -553,13 +553,40 @@
   "Переписка скачана в текстовый файл.": {"en":"Conversation downloaded as text.","kk":"Сөйлесу мәтіндік файл ретінде жүктелді."},
   "Переписки проекта скачаны. Временные чаты не включены.": {"en":"Project conversations downloaded. Temporary chats excluded.","kk":"Жоба сөйлесулері жүктелді. Уақытша чаттар енгізілген жоқ."},
   "Временный чат не будет добавлен в историю.": {"en":"Temporary chat will not be added to history.","kk":"Уақытша чат тарихқа қосылмайды."},
-  "История текущей вкладки скачана. Временные чаты не включены.": {"en":"This tab's chat history downloaded. Temporary chats excluded.","kk":"Қойындыдағы чат тарихы жүктелді. Уақытша чаттар енгізілмеді."}
+  "История текущей вкладки скачана. Временные чаты не включены.": {"en":"This tab's chat history downloaded. Temporary chats excluded.","kk":"Қойындыдағы чат тарихы жүктелді. Уақытша чаттар енгізілмеді."},
+  "Папки группируют чаты. Общей памяти, файлов и облачного хранения у них пока нет.": {"en":"Folders organize chats. They do not share memory, files or cloud storage yet.","kk":"Қалталар чаттарды топтастырады. Әзірге ортақ жады, файлдар және бұлттық сақтау жоқ."},
+  "＋ Новый проект": {"en":"＋ New project","kk":"＋ Жаңа жоба"},
+  "Создайте папку, чтобы сгруппировать переписки текущего сеанса.": {"en":"Create a folder to organize this tab's conversations.","kk":"Осы қойындыдағы әңгімелерді топтастыру үшін қалта жасаңыз."},
+  "Скачать чаты": {"en":"Download chats","kk":"Чаттарды жүктеу"},
+  "Попробуйте другое слово. Недавние чаты слева остаются доступны.": {"en":"Try a different search term. Recent chats remain available on the left.","kk":"Басқа сөзді іздеп көріңіз. Соңғы чаттар сол жақта қалады."},
+  "История доступна, пока открыта эта вкладка. После обновления страницы разговоры исчезнут.": {"en":"History is available while this tab remains open. Refreshing clears the conversations.","kk":"Тарих тек осы қойынды ашық тұрғанда қолжетімді. Бетті жаңартқанда әңгімелер жойылады."},
+  "Сообщения будут удалены из текущей вкладки.": {"en":"Messages will be deleted from this tab.","kk":"Хабарламалар осы қойындыдан жойылады."},
+  "Выберите проект для переписки.": {"en":"Select a project for this conversation.","kk":"Бұл әңгімеге жоба таңдаңыз."},
+  "Сначала создайте проект в разделе «Проекты».": {"en":"First create a project in Projects.","kk":"Алдымен «Жобалар» бөлімінде жоба жасаңыз."},
+  "Проект чата изменён.": {"en":"Chat project changed.","kk":"Чаттың жобасы өзгертілді."},
+  "Чат перемещён в «Без проекта».": {"en":"Chat moved to No project.","kk":"Чат «Жобасыз» бөліміне ауыстырылды."},
+  "Чат добавлен в проект.": {"en":"Chat added to project.","kk":"Чат жобаға қосылды."},
+  "Создайте проект в разделе «Проекты».": {"en":"Create a project in Projects.","kk":"«Жобалар» бөлімінде жоба жасаңыз."},
+  "Нет других чатов для добавления.": {"en":"No other chats to add.","kk":"Қосатын басқа чаттар жоқ."},
+  "В этом проекте пока нет переписок для скачивания.": {"en":"No conversations in this project to download yet.","kk":"Бұл жобада жүктейтін әңгімелер жоқ."},
+  "Сначала создайте чат.": {"en":"Create a chat first.","kk":"Алдымен чат жасаңыз."},
+  "Сначала напишите сообщение.": {"en":"Write a message first.","kk":"Алдымен хабарлама жазыңыз."},
+  "Удалить проект?": {"en":"Delete project?","kk":"Жобаны жою керек пе?"},
+  "Чаты не удалятся, они перейдут в раздел «Без проекта».": {"en":"Chats will be moved to No project, not deleted.","kk":"Чаттар жойылмайды, «Жобасыз» бөліміне көшіріледі."},
+  "Название проекта": {"en":"Project name","kk":"Жоба атауы"},
+  "Проект с таким названием уже существует.": {"en":"A project with this name already exists.","kk":"Мұндай атауы бар жоба бұрыннан бар."},
+  "Введите название.": {"en":"Enter a name.","kk":"Атау енгізіңіз."},
+  "Инструкции применены на текущий сеанс.": {"en":"Instructions applied for this session.","kk":"Нұсқаулар осы сеансқа қолданылды."},
+  "Для экспорта пока нет переписок.": {"en":"No conversations to export yet.","kk":"Экспорттауға әзірше әңгімелер жоқ."},
+  "Переместить в проект": {"en":"Move to project","kk":"Жобаға көшіру"},
+  "Положительная оценка ответа": {"en":"Positive response rating","kk":"Жауапқа оң баға"},
+  "Отрицательная оценка ответа": {"en":"Negative response rating","kk":"Жауапқа теріс баға"}
 };
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",
     "#view-about",
     ".topbar", "#view-history .panel-heading","#view-history .search-bar",
-    "#view-projects .panel-heading","#view-tools .panel-heading",
+    "#view-projects .panel-heading","#projectsWorkspace","#historyList","#recentChats","#view-tools .panel-heading",
     "#view-tools .search-bar","#view-settings .panel-heading",
     "#view-settings .settings-list","#toolGroups",
     "#attachMenu","#reasonMenu","#fontMenu","#languageMenu","#settingsLanguageMenu",
@@ -569,7 +596,7 @@
   let language="ru";
   function shouldSkip(node){
     const parent=node.parentElement;
-    return !parent||Boolean(parent.closest("input,textarea,option,script,style,[data-session='open-chat'],.session-project-title,.session-project-chat,.session-chat-name,.session-recent,.session-calc-output,.session-chat-ops [data-id] .session-user-label"));
+    return !parent||Boolean(parent.closest("input,textarea,option,script,style,[data-session='open-chat'],.session-project-title,.session-project-chat,.session-chat-name,.session-chat-label,.session-search-snippet,.session-recent,.session-calc-output,.session-chat-ops [data-id] .session-user-label"));
   }
   function translateNode(node){
     if(shouldSkip(node))return;

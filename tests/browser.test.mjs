@@ -1116,3 +1116,97 @@ test('all three existing font settings change composer and dialog text without a
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('project counters use correct Russian forms and live Kazakh/English labels while preserving chat titles',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Мой проект');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('.session-project-title small').first().innerText(),'0 чатов');
+    for(let i=0;i<5;i++){
+      await page.locator('.sidebar [data-action="new-chat"]').click();
+      await page.locator('#messageInput').fill(i===0?'Настройки':'Сообщение №'+(i+1));
+      await page.locator('#sendButton').click();
+      await page.locator('.sidebar [data-screen="projects"]').click();
+      await page.locator('[data-session="add-chat-to-project"]').click();
+      await page.locator('#sessionBody select').selectOption({label:i===0?'Настройки':'Сообщение №'+(i+1)});
+      await page.locator('#sessionBody [data-session="dialog-save"]').click();
+      const expected=['1 чат','2 чата','3 чата','4 чата','5 чатов'][i];
+      assert.equal(await page.locator('.session-project-title small').first().innerText(),expected);
+    }
+    await page.locator('#settingsLanguageToggle').count(); // same global session, switch from settings
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#settingsLanguageToggle').click();
+    await page.locator('#settingsLanguageMenu [data-language="en"]').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    assert.equal(await page.locator('.session-project-title small').first().innerText(),'5 chats');
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Folders organize chats.'));
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('＋ Add chat'));
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Настройки'),'User chat title must remain in its original language');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#settingsLanguageToggle').click();
+    await page.locator('#settingsLanguageMenu [data-language="kk"]').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    assert.equal(await page.locator('.session-project-title small').first().innerText(),'5 чат');
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Қалталар чаттарды топтастырады.'));
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Настройки'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('changing language does not translate user-written history search snippets or titles',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Пример темы');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Настройки');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('Настройки');
+    assert.ok((await page.locator('#historyList .session-search-snippet').innerText()).includes('Настройки'));
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#settingsLanguageToggle').click();
+    await page.locator('#settingsLanguageMenu [data-language="en"]').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    assert.ok((await page.locator('#historyList .session-search-snippet').innerText()).includes('Настройки'));
+    assert.equal(await page.locator('#historyList .session-search-snippet mark').innerText(),'Настройки');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('access dialog never sends a former conversation after programmatic navigation to new chat',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        calls++;return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Old response'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Original protected request');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionOverlay').waitFor({state:'visible'});
+    await page.evaluate(()=>newChat());
+    await page.locator('#sessionBody input[type=password]').fill('test-secret-1234567890123456789');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForTimeout(100);
+    assert.equal(calls,0);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+    assert.equal(await page.locator('.message-assistant').count(),0);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

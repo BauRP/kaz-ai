@@ -1348,3 +1348,61 @@ test('tools search supports translated names and correct group counts',async()=>
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('calculator rejects inputs and intermediate results beyond safe numeric precision',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    assert.equal(await page.evaluate(()=>window.KazSession.compute('9007199254740991')),9007199254740991);
+    assert.equal(await page.evaluate(()=>window.KazSession.compute('0,1+0,2')),0.3);
+    assert.equal(await page.evaluate(()=>window.KazSession.compute('1/10000000000')),1e-10);
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-25"]').click();
+    for(const expr of ['9007199254740992','9007199254740991+1','9007199254740991*2']){
+      await page.locator('#sessionBody input').fill(expr);
+      await page.locator('#sessionBody [data-session="calc-run"]').click();
+      assert.equal(await page.locator('.session-calc-output').innerText(),'Число слишком большое для точного расчёта.');
+    }
+    await page.locator('#sessionBody input').fill('9007199254740991');
+    await page.locator('#sessionBody [data-session="calc-run"]').click();
+    assert.equal(await page.locator('.session-calc-output').innerText(),'Ответ: 9007199254740991');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('existing Retry answer tool recovers the latest unanswered question without duplication',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    let calls=0;
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        calls++;
+        if(calls===1)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({code:'AI_UNAVAILABLE',message:'Временный отказ'})});
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Ответ после повторной попытки'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Вопрос без ответа');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('reliable-test-key-1234567890123456789012');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Временный отказ'));
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-9"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ после повторной попытки'));
+    assert.equal(calls,2);
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads[0].messages,2);
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

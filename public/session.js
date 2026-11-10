@@ -582,25 +582,30 @@
     const matches=input.match(/(?:\d+(?:\.\d+)?|\.\d+|[()+*/-])/g);
     if(!matches||matches.join("")!==input)throw Error("INVALID");
     let i=0;
+    const safe=value=>{
+      if(!Number.isFinite(value))throw Error("INVALID");
+      if(Math.abs(value)>Number.MAX_SAFE_INTEGER)throw Error("UNSAFE");
+      return value;
+    };
     const factor=()=>{
       if(matches[i]==="-"){i++;return -factor()}
       if(matches[i]==="+"){i++;return factor()}
       if(matches[i]==="("){i++;const result=sum();if(matches[i++]!==")")throw Error("BRACKETS");return result}
       const token=matches[i++];if(!token||!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(token))throw Error("INVALID");
-      return Number(token);
+      return safe(Number(token));
     };
     const product=()=>{
       let v=factor();
       while(matches[i]==="*"||matches[i]==="/"){
         const op=matches[i++],right=factor();
         if(op==="/"&&right===0)throw Error("ZERO");
-        v=op==="*"?v*right:v/right;
+        v=safe(op==="*"?v*right:v/right);
       }return v;
     };
     const sum=()=>{
       let v=product();
       while(matches[i]==="+"||matches[i]==="-"){
-        const op=matches[i++],right=product();v=op==="+"?v+right:v-right
+        const op=matches[i++],right=product();v=safe(op==="+"?v+right:v-right)
       }return v;
     };
     const answer=sum();
@@ -682,12 +687,12 @@
       submit.addEventListener("click",()=>{
         const lang=window.KazI18n?.language||"ru";
         const t={
-          ru:{answer:"Ответ: ",zero:"На ноль делить нельзя.",invalid:"Проверьте математическое выражение."},
-          en:{answer:"Result: ",zero:"Cannot divide by zero.",invalid:"Check the mathematical expression."},
-          kk:{answer:"Нәтиже: ",zero:"Нөлге бөлуге болмайды.",invalid:"Математикалық өрнекті тексеріңіз."}
+          ru:{answer:"Ответ: ",zero:"На ноль делить нельзя.",invalid:"Проверьте математическое выражение.",unsafe:"Число слишком большое для точного расчёта."},
+          en:{answer:"Result: ",zero:"Cannot divide by zero.",invalid:"Check the mathematical expression.",unsafe:"Number too large for accurate calculation."},
+          kk:{answer:"Нәтиже: ",zero:"Нөлге бөлуге болмайды.",invalid:"Математикалық өрнекті тексеріңіз.",unsafe:"Дәл есептеу үшін сан тым үлкен."}
         }[lang];
         try{output.textContent=t.answer+compute(field.value.replaceAll("×","*").replaceAll("÷","/"))}
-        catch(e){output.textContent=e.message==="ZERO"?t.zero:t.invalid}
+        catch(e){output.textContent=e.message==="ZERO"?t.zero:e.message==="UNSAFE"?t.unsafe:t.invalid}
       });
       field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submit.click()}});
       body.append(field,submit,output);
@@ -815,7 +820,12 @@
         if(number===4)return handle("rename-chat",chat.id);
         if(number===5)return handle("delete-chat",chat.id);
         if(number===6)return handle("pin-chat",chat.id);
-        if(number===9&&lastAssistant){showScreen("chat");return handle("retry-answer",lastAssistant.id)}
+        if(number===9){
+          showScreen("chat");
+          if(chat.messages.at(-1)?.role==="user")return handle("retry-request");
+          if(lastAssistant)return handle("retry-answer",lastAssistant.id);
+          notify("Сначала напишите сообщение.");return;
+        }
         if(number===13){showScreen("chat");notify("Оценка ответа находится под сообщением ИИ.");return}
         notify("Сначала напишите сообщение.");return;
       }

@@ -1550,3 +1550,81 @@ test('isolated calculator completes exact decimal and repeating arithmetic on de
     }
   }finally{await browser.close()}
 });
+
+
+test('Tools reasoning entry opens the visible composer control without losing chat or draft',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Несохранённый черновик');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-16"]').click();
+    assert.equal(await page.locator('#view-welcome').isVisible(),true);
+    assert.equal(await page.locator('#reasonMenu').isVisible(),true);
+    assert.equal(await page.locator('#reasonToggle').getAttribute('aria-expanded'),'true');
+    assert.equal(await page.locator('#messageInput').inputValue(),'Несохранённый черновик');
+    await page.locator('#reasonMenu [data-reason="high"]').click();
+    assert.equal(await page.locator('#currentReason').innerText(),'Высокий');
+    assert.equal(await page.locator('#reasonMenu').isVisible(),false);
+    await page.locator('#messageInput').fill('Начальный вопрос');
+    await page.locator('#sendButton').click();
+    const snapshot=await page.evaluate(()=>JSON.stringify(window.KazSession.snapshot()));
+    await page.locator('#messageInput').fill('Черновик текущего чата');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-16"]').click();
+    assert.equal(await page.locator('#view-chat').isVisible(),true);
+    assert.equal(await page.locator('#reasonMenu').isVisible(),true);
+    assert.equal(await page.locator('#messageInput').inputValue(),'Черновик текущего чата');
+    assert.equal(await page.evaluate(()=>JSON.stringify(window.KazSession.snapshot())),snapshot);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('Rating entry from Tools focuses the latest AI rating rather than rating the reply automatically',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat')
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Проверяемый ответ модели'})});
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Вопрос для оценки');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('safe-test-only-key-12345678901234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Проверяемый ответ модели'));
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-13"]').click();
+    assert.equal(await page.locator('#view-chat').isVisible(),true);
+    const up=page.locator('#chatMessages [data-session="rate-up"]');
+    assert.equal(await up.evaluate(el=>document.activeElement===el),true);
+    assert.equal(await up.getAttribute('aria-pressed'),'false');
+    await up.click();
+    assert.equal(await up.getAttribute('aria-pressed'),'true');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('Rating entry is truthful when the latest chat has no generated assistant reply',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Вопрос без подключения модели');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-13"]').click();
+    assert.equal(await page.locator('#view-chat').isVisible(),true);
+    assert.equal(await page.locator('#chatMessages [data-session="rate-up"]').count(),0);
+    assert.equal(await page.locator('#toast').innerText(),'Пока нет ответа ИИ для оценки.');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

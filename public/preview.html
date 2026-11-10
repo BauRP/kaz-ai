@@ -1930,13 +1930,31 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
           if(lastAssistant)return handle("retry-answer",lastAssistant.id);
           notify("Сначала напишите сообщение.");return;
         }
-        if(number===13){showScreen("chat");notify("Оценка ответа находится под сообщением ИИ.");return}
+        if(number===13){
+          showScreen("chat");
+          const up=Array.from(document.querySelectorAll('#chatMessages [data-session="rate-up"]')).at(-1);
+          if(!up){
+            const lang=window.KazI18n?.language||"ru";
+            notify(lang==="en"?"There is no AI response to rate yet.":lang==="kk"?"Әзірге бағалайтын ЖИ жауабы жоқ.":"Пока нет ответа ИИ для оценки.");
+            return;
+          }
+          up.scrollIntoView({block:"center",behavior:"instant"});
+          up.focus();
+          return;
+        }
         notify("Сначала напишите сообщение.");return;
       }
       if(number===7){showScreen("projects");return}
       if(number===10){if(abort)abort.abort("manual");else notify("Сейчас нет активного ответа.");return}
       if(number===15){sessionNewChat(false);return}
-      if(number===16){togglePopover("reason");return}
+      if(number===16){
+        // The reasoning menu lives in the composer, hidden on the Tools screen.
+        // Reveal the current conversation (or new-chat composer) before opening it.
+        showScreen(selected()?"chat":"welcome");
+        togglePopover("reason");
+        $("#reasonToggle").focus();
+        return;
+      }
       if([22,23,24].includes(number)){openTextHelper(number);return}
       if(number===25){showCalculator();return}
       if(number===40)return handle("instructions");

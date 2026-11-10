@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const d=JSON.parse(readFileSync('ACTIVE_PROGRESS.json','utf8'));
-const previous=JSON.parse(readFileSync('progress/2026-11-10-before-multilingual-helpers.json','utf8'));
+const previous=JSON.parse(readFileSync('progress/2026-11-10-before-calc-tool-retry.json','utf8'));
 
 const report=readFileSync('ACTIVE_PROGRESS.md','utf8');
 const ids=new Set([1,2,3,4,5,6,7,9,10,13,15,16,22,23,24,25,40,41,42,43,44,45]);

@@ -1,0 +1,264 @@
+{
+  "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
+  "basis": "Active features exclude the 100% basic calculator. Both the unfinished-only 21-feature average and stable original 22-feature overall indicator are tracked separately. Real changes verified commit bc5279cbc1a046c1c6cb11f7e7566bca818d150b, GitHub Actions 42865624914: 55 unit and 50 Chromium browser tests, Cloudflare dry-run and HTTP smoke checks. Tool 16 and 13 navigation improved; GPT-OSS remains unconnected.",
+  "branch": "chatgpt/kaz-ai-shell-20261108",
+  "date": "2026-11-10",
+  "previous": 75.14285714285714,
+  "now": 75.33333333333333,
+  "delta": 0.1904761904761898,
+  "groups": [
+    {
+      "name": "Чаты",
+      "count": 10,
+      "previous": 89.6,
+      "now": 89.8,
+      "delta": 0.20000000000000284
+    },
+    {
+      "name": "Интеллект",
+      "count": 5,
+      "previous": 33.6,
+      "now": 34,
+      "delta": 0.3999999999999986
+    },
+    {
+      "name": "Настройки",
+      "count": 6,
+      "previous": 85.66666666666667,
+      "now": 85.66666666666667,
+      "delta": 0
+    }
+  ],
+  "items": [
+    {
+      "id": 1,
+      "name": "Новый чат",
+      "group": "Чаты",
+      "previous": 95,
+      "now": 95,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 2,
+      "name": "История чатов",
+      "group": "Чаты",
+      "previous": 88,
+      "now": 88,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 3,
+      "name": "Поиск по перепискам",
+      "group": "Чаты",
+      "previous": 95,
+      "now": 95,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 4,
+      "name": "Переименовать чат",
+      "group": "Чаты",
+      "previous": 93,
+      "now": 93,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 5,
+      "name": "Удалить чат",
+      "group": "Чаты",
+      "previous": 97,
+      "now": 97,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 6,
+      "name": "Закрепить чат",
+      "group": "Чаты",
+      "previous": 93,
+      "now": 93,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 7,
+      "name": "Папки и проекты",
+      "group": "Чаты",
+      "previous": 94,
+      "now": 94,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 9,
+      "name": "Повторить ответ",
+      "group": "Чаты",
+      "previous": 72,
+      "now": 72,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 10,
+      "name": "Остановить ответ",
+      "group": "Чаты",
+      "previous": 78,
+      "now": 78,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 13,
+      "name": "Оценка ответа",
+      "group": "Чаты",
+      "previous": 91,
+      "now": 93,
+      "delta": 2,
+      "summary": "В каталоге «Оценка ответа» теперь переходит к последнему реальному ответу ИИ и ставит фокус на оценку, ничего не оценивая автоматически; без ответа показывает честное уведомление.",
+      "status": "in_progress"
+    },
+    {
+      "id": 15,
+      "name": "Обычный чат с GPT-OSS",
+      "group": "Интеллект",
+      "previous": 56,
+      "now": 56,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 16,
+      "name": "Уровни рассуждения",
+      "group": "Интеллект",
+      "previous": 55,
+      "now": 57,
+      "delta": 2,
+      "summary": "Инструмент «Уровни рассуждения» открывает видимое меню рядом с полем сообщения и сохраняет черновик и текущий чат.",
+      "status": "in_progress"
+    },
+    {
+      "id": 22,
+      "name": "Переводчик с ИИ",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 23,
+      "name": "Программирование с ИИ",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 24,
+      "name": "Подготовка документов",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 40,
+      "name": "Личные инструкции",
+      "group": "Настройки",
+      "previous": 86,
+      "now": 86,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 41,
+      "name": "Временный чат",
+      "group": "Настройки",
+      "previous": 91,
+      "now": 91,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 42,
+      "name": "Светлая и тёмная тема",
+      "group": "Настройки",
+      "previous": 90,
+      "now": 90,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 43,
+      "name": "Язык интерфейса",
+      "group": "Настройки",
+      "previous": 70,
+      "now": 70,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 44,
+      "name": "Размер текста",
+      "group": "Настройки",
+      "previous": 81,
+      "now": 81,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    },
+    {
+      "id": 45,
+      "name": "Экспорт истории",
+      "group": "Настройки",
+      "previous": 96,
+      "now": 96,
+      "delta": 0,
+      "summary": "Без нового прироста.",
+      "status": "in_progress"
+    }
+  ],
+  "completed_ids": [
+    25
+  ],
+  "completed_count": 1,
+  "incomplete_count": 21,
+  "completed_items": [
+    {
+      "id": 25,
+      "name": "Простой калькулятор",
+      "group": "Интеллект",
+      "previous": 100,
+      "now": 100,
+      "delta": 0,
+      "summary": "Базовый автономный калькулятор завершён, проверен и исключён из всех списков незавершённых задач.",
+      "status": "completed"
+    }
+  ],
+  "overall_previous": 76.27272727272727,
+  "overall_now": 76.45454545454545,
+  "overall_delta": 0.18181818181818699
+}

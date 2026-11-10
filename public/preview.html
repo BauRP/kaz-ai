@@ -567,7 +567,7 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
         <span class="preview-pill"><span class="online-dot"></span>Демо оболочки</span>
       </div>
       <div class="topbar-actions">
-        <button type="button" class="icon-button" data-action="toggle-theme" aria-label="Переключить тему" title="Переключить тему"><svg class="icon icon-theme"><use href="#ic-sun"/></svg></button>
+        <button type="button" class="icon-button" data-action="toggle-theme" aria-pressed="false" aria-label="Переключить тему" title="Переключить тему"><svg class="icon icon-theme"><use href="#ic-sun"/></svg></button>
         <div class="popover-anchor language-anchor">
           <button type="button" class="language-pill" id="languageToggle" data-action="toggle-language" aria-label="Выбор языка интерфейса" aria-expanded="false" aria-controls="languageMenu"><svg class="icon"><use href="#ic-globe"/></svg><span class="language-current">Русский</span><svg class="icon tiny"><use href="#ic-chevron"/></svg></button>
           <div id="languageMenu" class="popover-menu language-menu" hidden>
@@ -635,14 +635,14 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
       <section id="view-settings" class="view view-panel" hidden aria-labelledby="settingsHeading">
         <div class="panel-heading"><span class="eyebrow">ЛИЧНОЕ ПРОСТРАНСТВО</span><h1 id="settingsHeading">Настройки</h1><p>Основные параметры вашего будущего Kaz AI.</p></div>
         <div class="settings-list">
-          <div class="setting-item"><div><h2>Оформление</h2><p>Светлая или тёмная тема</p></div><button class="setting-control" data-action="toggle-theme"><svg class="icon"><use href="#ic-sun"/></svg><span id="themeLabel">Тёмная</span></button></div>
+          <div class="setting-item"><div><h2>Оформление</h2><p>Светлая или тёмная тема</p></div><button class="setting-control" data-action="toggle-theme" aria-pressed="false"><svg class="icon"><use href="#ic-sun"/></svg><span id="themeLabel">Тёмная</span></button></div>
           <div class="setting-item"><div><h2>Язык интерфейса</h2><p>Русский, қазақша, English</p></div><div class="popover-anchor settings-popover-anchor language-anchor"><button type="button" class="setting-control" id="settingsLanguageToggle" data-action="toggle-language" aria-expanded="false" aria-controls="settingsLanguageMenu"><span class="language-current">Русский</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div id="settingsLanguageMenu" class="popover-menu language-menu" hidden>
                 <p class="popover-title">Язык интерфейса</p>
                 <button type="button" data-language="ru" class="language-option selected"><span class="language-code">RU</span><span><strong>Русский</strong><small>Русский язык</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
                 <button type="button" data-language="kk" class="language-option"><span class="language-code">KZ</span><span><strong>Қазақша</strong><small>Қазақ тілі</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
                 <button type="button" data-language="en" class="language-option"><span class="language-code">EN</span><span><strong>English</strong><small>English language</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
                 <p class="popover-hint">Переведены основные элементы сайта. Остальные тексты добавляются поэтапно.</p></div></div></div>
-          <div class="setting-item"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><div class="popover-anchor settings-popover-anchor"><button type="button" class="setting-control" data-action="toggle-font" id="fontToggle" aria-expanded="false" aria-controls="fontMenu"><span id="fontLabel">Обычный</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div class="popover-menu font-menu" id="fontMenu" hidden><p class="popover-title">Размер текста</p><button type="button" data-font="small">Компактный</button><button type="button" data-font="normal" class="selected">Обычный</button><button type="button" data-font="large">Крупный</button><p class="popover-hint">Пример оформления для проверки дизайна.</p></div></div></div>
+          <div class="setting-item"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><div class="popover-anchor settings-popover-anchor"><button type="button" class="setting-control" data-action="toggle-font" id="fontToggle" aria-expanded="false" aria-controls="fontMenu"><span id="fontLabel">Обычный</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div class="popover-menu font-menu" id="fontMenu" hidden><p class="popover-title">Размер текста</p><button type="button" data-font="small" aria-pressed="false">Компактный</button><button type="button" data-font="normal" class="selected" aria-pressed="true">Обычный</button><button type="button" data-font="large" aria-pressed="false">Крупный</button><p class="popover-hint">Пример оформления для проверки дизайна.</p></div></div></div>
           <div class="setting-item"><div><h2>Личные инструкции</h2><p>Как ИИ должен отвечать именно вам</p></div><button class="setting-control" data-feature="instructions">Настроить <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
           <div class="setting-item"><div><h2>Память ИИ</h2><p>Запоминание предпочтений — позже</p></div><button class="setting-control" data-feature="memory">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
           <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать историю текущей вкладки</p></div><button class="setting-control" data-feature="export">Скачать <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
@@ -915,7 +915,13 @@ function selectReason(value){
   else if(lang==="kk")notify('Ойлау деңгейі: '+label+'. ЖИ қосылғанда қолданылады.');
   else notify("Выбран уровень «"+label+"». Подключение к модели — на следующем этапе.");
 }
-function toggleTheme(){state.light=!state.light;document.body.classList.toggle("light",state.light);$("#themeLabel").textContent=state.light?"Светлая":"Тёмная";$$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"))}
+function toggleTheme(){
+  state.light=!state.light;
+  document.body.classList.toggle("light",state.light);
+  $("#themeLabel").textContent=state.light?"Светлая":"Тёмная";
+  $$('[data-action="toggle-theme"]').forEach(button=>button.setAttribute("aria-pressed",String(state.light)));
+  $$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"));
+}
 const languages={ru:"Русский",kk:"Қазақша",en:"English"};
 function selectLanguage(value){
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
@@ -933,7 +939,11 @@ function selectFont(value){
   document.body.classList.remove("font-small","font-large");
   if(value!=="normal")document.body.classList.add("font-"+value);
   $("#fontLabel").textContent={small:"Компактный",normal:"Обычный",large:"Крупный"}[value];
-  $$("[data-font]").forEach(el=>el.classList.toggle("selected",el.dataset.font===value));
+  $$("[data-font]").forEach(el=>{
+    const active=el.dataset.font===value;
+    el.classList.toggle("selected",active);
+    el.setAttribute("aria-pressed",String(active));
+  });
   closePopovers();
   notify("Выбран размер текста для предпросмотра.");
 }
@@ -1269,6 +1279,31 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     touchChat(chat);threads.unshift(chat);displayThread(chat);
     return chat;
   }
+  // Locale-aware search that maps case-expanded characters back to original text.
+  // For example: capital İ lowercases to two code units, so raw lowercase offsets
+  // cannot be used to highlight the correct characters in an original message.
+  function findTextMatch(text,query){
+    // Unicode capital İ folds to i + combining dot. Ignore that dot so
+    // Kazakh Latin searches for "istan" still find "İSTAN".
+    const fold=value=>value.toLocaleLowerCase().replace(/\u0307/g,"");
+    const needle=fold(query);
+    if(!needle)return null;
+    const folded=fold(text);
+    const start=folded.indexOf(needle);
+    if(start<0)return null;
+    if(folded.length===text.length)return {start,end:start+needle.length};
+    const starts=[],ends=[];
+    for(let offset=0;offset<text.length;){
+      const symbol=String.fromCodePoint(text.codePointAt(offset));
+      const next=offset+symbol.length;
+      const segment=fold(symbol);
+      for(let n=0;n<segment.length;n++){starts.push(offset);ends.push(next)}
+      if(!segment&&ends.length)ends[ends.length-1]=next;
+      offset=next;
+    }
+    if(start+needle.length>ends.length)return null;
+    return {start:starts[start],end:ends[start+needle.length-1]};
+  }
   function renderSessionHistory(){
     const list=$("#historyList"),recent=$("#recentChats"),summary=$("#historySearchSummary");
     list.replaceChildren();recent.replaceChildren();
@@ -1277,8 +1312,8 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const saved=threads.filter(c=>!c.temporary)
       .sort((a,b)=>Number(b.pinned)-Number(a.pinned)||newestFirst(a,b));
     const shown=saved.filter(c=>!value||
-      c.title.toLocaleLowerCase().includes(value)||
-      c.messages.some(m=>m.content.toLocaleLowerCase().includes(value)));
+      findTextMatch(c.title,query)||
+      c.messages.some(m=>findTextMatch(m.content,query)));
     const language=window.KazI18n?.language||"ru";
     if(summary){
       summary.textContent=language==="en"
@@ -1295,17 +1330,16 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         make("p","",value?"Попробуйте другое слово. Недавние чаты слева остаются доступны.":"История доступна, пока открыта эта вкладка. После обновления страницы разговоры исчезнут."));
       list.append(empty);
     }
-    function highlighted(target,text){
-      const start=value?text.toLocaleLowerCase().indexOf(value):-1;
-      if(start<0){target.textContent=text;return}
-      target.append(document.createTextNode(text.slice(0,start)),
-        make("mark","session-search-hit",text.slice(start,start+query.length)),
-        document.createTextNode(text.slice(start+query.length)));
+    function highlighted(target,text,range=value?findTextMatch(text,query):null){
+      if(!range){target.textContent=text;return}
+      target.append(document.createTextNode(text.slice(0,range.start)),
+        make("mark","session-search-hit",text.slice(range.start,range.end)),
+        document.createTextNode(text.slice(range.end)));
     }
     for(const c of shown){
       const card=make("div","session-chat-row"+(c.id===current?" active":""));
       const name=button("","open-chat",c.id,"session-chat-name");
-      const matchIndex=value?c.messages.findIndex(m=>m.content.toLocaleLowerCase().includes(value)):-1;
+      const matchIndex=value?c.messages.findIndex(m=>findTextMatch(m.content,query)):-1;
       if(matchIndex>=0)name.dataset.matchIndex=String(matchIndex);
       name.setAttribute("aria-label","Открыть чат: "+c.title);
       if(c.pinned)name.append(make("span","session-pin","📌 "));
@@ -1316,11 +1350,15 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       if(value){
         const matched=matchIndex>=0?c.messages[matchIndex]:null;
         if(matched){
-          const at=matched.content.toLocaleLowerCase().indexOf(value);
-          const from=Math.max(0,at-38),to=Math.min(matched.content.length,at+query.length+46);
+          const range=findTextMatch(matched.content,query);
+          let from=Math.max(0,range.start-38),to=Math.min(matched.content.length,range.end+46);
+          // Never cut an emoji or another supplementary Unicode character in half.
+          if(from>0&&/[\uDC00-\uDFFF]/.test(matched.content[from]))from--;
+          if(to<matched.content.length&&/[\uDC00-\uDFFF]/.test(matched.content[to]))to++;
           const snippet=make("div","session-search-snippet");
           if(from)snippet.append(document.createTextNode("…"));
-          highlighted(snippet,matched.content.slice(from,to));
+          highlighted(snippet,matched.content.slice(from,to),
+            {start:range.start-from,end:range.end-from});
           if(to<matched.content.length)snippet.append(document.createTextNode("…"));
           card.append(snippet);
         }
@@ -1575,11 +1613,11 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
           const textNode=bubble.querySelector(":scope > span");
           if(phrase&&textNode){
             const content=textNode.textContent;
-            const match=content.toLocaleLowerCase().indexOf(phrase.toLocaleLowerCase());
-            if(match>=0){
-              textNode.replaceChildren(document.createTextNode(content.slice(0,match)),
-                make("mark","session-search-hit",content.slice(match,match+phrase.length)),
-                document.createTextNode(content.slice(match+phrase.length)));
+            const match=findTextMatch(content,phrase);
+            if(match){
+              textNode.replaceChildren(document.createTextNode(content.slice(0,match.start)),
+                make("mark","session-search-hit",content.slice(match.start,match.end)),
+                document.createTextNode(content.slice(match.end)));
             }
           }
           bubble.scrollIntoView({block:"center"});
@@ -1945,7 +1983,14 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         notify("Сначала напишите сообщение.");return;
       }
       if(number===7){showScreen("projects");return}
-      if(number===10){if(abort)abort.abort("manual");else notify("Сейчас нет активного ответа.");return}
+      if(number===10){
+        if(abort){
+          // Reveal the conversation before cancelling so Retry and status are visible.
+          showScreen(selected()?"chat":"welcome");
+          abort.abort("manual");
+        }else notify("Сейчас нет активного ответа.");
+        return;
+      }
       if(number===15){sessionNewChat(false);return}
       if(number===16){
         // The reasoning menu lives in the composer, hidden on the Tools screen.

@@ -117,7 +117,13 @@ function selectReason(value){
   else if(lang==="kk")notify('Ойлау деңгейі: '+label+'. ЖИ қосылғанда қолданылады.');
   else notify("Выбран уровень «"+label+"». Подключение к модели — на следующем этапе.");
 }
-function toggleTheme(){state.light=!state.light;document.body.classList.toggle("light",state.light);$("#themeLabel").textContent=state.light?"Светлая":"Тёмная";$$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"))}
+function toggleTheme(){
+  state.light=!state.light;
+  document.body.classList.toggle("light",state.light);
+  $("#themeLabel").textContent=state.light?"Светлая":"Тёмная";
+  $$('[data-action="toggle-theme"]').forEach(button=>button.setAttribute("aria-pressed",String(state.light)));
+  $$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"));
+}
 const languages={ru:"Русский",kk:"Қазақша",en:"English"};
 function selectLanguage(value){
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
@@ -135,7 +141,11 @@ function selectFont(value){
   document.body.classList.remove("font-small","font-large");
   if(value!=="normal")document.body.classList.add("font-"+value);
   $("#fontLabel").textContent={small:"Компактный",normal:"Обычный",large:"Крупный"}[value];
-  $$("[data-font]").forEach(el=>el.classList.toggle("selected",el.dataset.font===value));
+  $$("[data-font]").forEach(el=>{
+    const active=el.dataset.font===value;
+    el.classList.toggle("selected",active);
+    el.setAttribute("aria-pressed",String(active));
+  });
   closePopovers();
   notify("Выбран размер текста для предпросмотра.");
 }

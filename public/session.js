@@ -137,6 +137,31 @@
     touchChat(chat);threads.unshift(chat);displayThread(chat);
     return chat;
   }
+  // Locale-aware search that maps case-expanded characters back to original text.
+  // For example: capital İ lowercases to two code units, so raw lowercase offsets
+  // cannot be used to highlight the correct characters in an original message.
+  function findTextMatch(text,query){
+    // Unicode capital İ folds to i + combining dot. Ignore that dot so
+    // Kazakh Latin searches for "istan" still find "İSTAN".
+    const fold=value=>value.toLocaleLowerCase().replace(/\u0307/g,"");
+    const needle=fold(query);
+    if(!needle)return null;
+    const folded=fold(text);
+    const start=folded.indexOf(needle);
+    if(start<0)return null;
+    if(folded.length===text.length)return {start,end:start+needle.length};
+    const starts=[],ends=[];
+    for(let offset=0;offset<text.length;){
+      const symbol=String.fromCodePoint(text.codePointAt(offset));
+      const next=offset+symbol.length;
+      const segment=fold(symbol);
+      for(let n=0;n<segment.length;n++){starts.push(offset);ends.push(next)}
+      if(!segment&&ends.length)ends[ends.length-1]=next;
+      offset=next;
+    }
+    if(start+needle.length>ends.length)return null;
+    return {start:starts[start],end:ends[start+needle.length-1]};
+  }
   function renderSessionHistory(){
     const list=$("#historyList"),recent=$("#recentChats"),summary=$("#historySearchSummary");
     list.replaceChildren();recent.replaceChildren();
@@ -145,8 +170,8 @@
     const saved=threads.filter(c=>!c.temporary)
       .sort((a,b)=>Number(b.pinned)-Number(a.pinned)||newestFirst(a,b));
     const shown=saved.filter(c=>!value||
-      c.title.toLocaleLowerCase().includes(value)||
-      c.messages.some(m=>m.content.toLocaleLowerCase().includes(value)));
+      findTextMatch(c.title,query)||
+      c.messages.some(m=>findTextMatch(m.content,query)));
     const language=window.KazI18n?.language||"ru";
     if(summary){
       summary.textContent=language==="en"
@@ -163,17 +188,16 @@
         make("p","",value?"Попробуйте другое слово. Недавние чаты слева остаются доступны.":"История доступна, пока открыта эта вкладка. После обновления страницы разговоры исчезнут."));
       list.append(empty);
     }
-    function highlighted(target,text){
-      const start=value?text.toLocaleLowerCase().indexOf(value):-1;
-      if(start<0){target.textContent=text;return}
-      target.append(document.createTextNode(text.slice(0,start)),
-        make("mark","session-search-hit",text.slice(start,start+query.length)),
-        document.createTextNode(text.slice(start+query.length)));
+    function highlighted(target,text,range=value?findTextMatch(text,query):null){
+      if(!range){target.textContent=text;return}
+      target.append(document.createTextNode(text.slice(0,range.start)),
+        make("mark","session-search-hit",text.slice(range.start,range.end)),
+        document.createTextNode(text.slice(range.end)));
     }
     for(const c of shown){
       const card=make("div","session-chat-row"+(c.id===current?" active":""));
       const name=button("","open-chat",c.id,"session-chat-name");
-      const matchIndex=value?c.messages.findIndex(m=>m.content.toLocaleLowerCase().includes(value)):-1;
+      const matchIndex=value?c.messages.findIndex(m=>findTextMatch(m.content,query)):-1;
       if(matchIndex>=0)name.dataset.matchIndex=String(matchIndex);
       name.setAttribute("aria-label","Открыть чат: "+c.title);
       if(c.pinned)name.append(make("span","session-pin","📌 "));
@@ -184,11 +208,15 @@
       if(value){
         const matched=matchIndex>=0?c.messages[matchIndex]:null;
         if(matched){
-          const at=matched.content.toLocaleLowerCase().indexOf(value);
-          const from=Math.max(0,at-38),to=Math.min(matched.content.length,at+query.length+46);
+          const range=findTextMatch(matched.content,query);
+          let from=Math.max(0,range.start-38),to=Math.min(matched.content.length,range.end+46);
+          // Never cut an emoji or another supplementary Unicode character in half.
+          if(from>0&&/[\uDC00-\uDFFF]/.test(matched.content[from]))from--;
+          if(to<matched.content.length&&/[\uDC00-\uDFFF]/.test(matched.content[to]))to++;
           const snippet=make("div","session-search-snippet");
           if(from)snippet.append(document.createTextNode("…"));
-          highlighted(snippet,matched.content.slice(from,to));
+          highlighted(snippet,matched.content.slice(from,to),
+            {start:range.start-from,end:range.end-from});
           if(to<matched.content.length)snippet.append(document.createTextNode("…"));
           card.append(snippet);
         }
@@ -443,11 +471,11 @@
           const textNode=bubble.querySelector(":scope > span");
           if(phrase&&textNode){
             const content=textNode.textContent;
-            const match=content.toLocaleLowerCase().indexOf(phrase.toLocaleLowerCase());
-            if(match>=0){
-              textNode.replaceChildren(document.createTextNode(content.slice(0,match)),
-                make("mark","session-search-hit",content.slice(match,match+phrase.length)),
-                document.createTextNode(content.slice(match+phrase.length)));
+            const match=findTextMatch(content,phrase);
+            if(match){
+              textNode.replaceChildren(document.createTextNode(content.slice(0,match.start)),
+                make("mark","session-search-hit",content.slice(match.start,match.end)),
+                document.createTextNode(content.slice(match.end)));
             }
           }
           bubble.scrollIntoView({block:"center"});
@@ -813,7 +841,14 @@
         notify("Сначала напишите сообщение.");return;
       }
       if(number===7){showScreen("projects");return}
-      if(number===10){if(abort)abort.abort("manual");else notify("Сейчас нет активного ответа.");return}
+      if(number===10){
+        if(abort){
+          // Reveal the conversation before cancelling so Retry and status are visible.
+          showScreen(selected()?"chat":"welcome");
+          abort.abort("manual");
+        }else notify("Сейчас нет активного ответа.");
+        return;
+      }
       if(number===15){sessionNewChat(false);return}
       if(number===16){
         // The reasoning menu lives in the composer, hidden on the Tools screen.

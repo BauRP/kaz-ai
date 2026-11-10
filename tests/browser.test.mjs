@@ -1663,3 +1663,99 @@ test('existing tools show localized warnings without altering drafts or automati
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('history search highlights case-expanding Unicode letters at correct original indices',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Начальная тема');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('До İSTANBUL и далее');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('istan');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#historyList .session-search-snippet mark').textContent(),'İSTAN');
+    await page.locator('#historySearch').fill('stan');
+    assert.equal(await page.locator('#historyList .session-search-snippet mark').textContent(),'STAN');
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#chatMessages .session-jump-hit mark').textContent(),'STAN');
+    assert.ok((await page.locator('#chatMessages .session-jump-hit').innerText()).includes('İSTANBUL'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('Stop response from Tools returns to visible chat and offers retry without a duplicate question',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  let release;
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    const gate=new Promise(resolve=>{release=resolve});
+    let requests=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        const call=++requests;
+        if(call===1)await gate;
+        try{return await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:call===1?'Запоздавший ответ':'Новый ответ после остановки'})})}catch{return}
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Отменить через инструменты');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('preview-safe-test-key-12345678901234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-10"]').click();
+    assert.equal(await page.locator('#view-chat').isVisible(),true);
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('остановлена'));
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    release();
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Новый ответ после остановки'));
+    assert.equal(requests,2);
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    assert.ok(!(await page.locator('#chatMessages').innerText()).includes('Запоздавший ответ'));
+    assert.deepEqual(errors,[]);
+  }finally{release?.();await browser.close()}
+});
+test('theme and font settings announce their current state across navigation and keep drafts',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Текст оставляем без изменений');
+    const theme=page.locator('.topbar [data-action="toggle-theme"]');
+    const settingsTheme=page.locator('#view-settings [data-action="toggle-theme"]');
+    assert.equal(await theme.getAttribute('aria-pressed'),'false');
+    await theme.click();
+    assert.equal(await theme.getAttribute('aria-pressed'),'true');
+    assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('light')),true);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    assert.equal(await settingsTheme.getAttribute('aria-pressed'),'true');
+    await settingsTheme.click();
+    assert.equal(await theme.getAttribute('aria-pressed'),'false');
+    assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('light')),false);
+    await page.locator('#fontToggle').click();
+    assert.equal(await page.locator('[data-font="normal"]').getAttribute('aria-pressed'),'true');
+    await page.locator('[data-font="large"]').click();
+    assert.equal(await page.locator('[data-font="large"]').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.locator('[data-font="normal"]').getAttribute('aria-pressed'),'false');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#fontToggle').click();
+    assert.equal(await page.locator('[data-font="large"]').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.locator('#messageInput').inputValue(),'Текст оставляем без изменений');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

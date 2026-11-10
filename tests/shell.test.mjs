@@ -15,7 +15,7 @@ test('responsive layouts including phones and reduced motion',()=>{assert.match(
 test('no external CDN or remote script injection',()=>{assert.doesNotMatch(html,/<script[^>]+src="https?:/);assert.doesNotMatch(html,/<link[^>]+href="https?:/);assert.doesNotMatch(js,/innerHTML\s*=/);});
 
 test('reason selector initialization uses a collection of buttons',()=>{
-  assert.ok(js.includes('$$("[data-reason=medium]").forEach('));
+  assert.ok(js.includes('$$("[data-reason]").forEach('));
   assert.ok(!js.includes('; $("[data-reason=medium]").forEach('));
   assert.ok(!js.includes(';$("[data-reason=medium]").forEach('));
 });
@@ -60,8 +60,8 @@ test('standalone preview preserves exact active CSS and JavaScript',()=>{
   const preview=readFileSync('public/preview.html','utf8');
   assert.ok(preview.includes(css),'Preview must contain the current stylesheet without modification');
   assert.ok(preview.includes(js),'Preview must contain the current JavaScript without modification');
-  assert.ok(js.includes('$$("[data-reason=medium]").forEach'),'Startup must select a collection');
-  assert.ok(preview.includes('$$("[data-reason=medium]").forEach'),'Preview must keep double-dollar selector');
+  assert.ok(js.includes('$$("[data-reason]").forEach'),'Startup must select a collection');
+  assert.ok(preview.includes('$$("[data-reason]").forEach'),'Preview must keep double-dollar selector');
 });
 test('design preview provides interactive menus and an accessible Google dialog',()=>{
   const preview=readFileSync('public/preview.html','utf8');

@@ -4,3 +4,12 @@
 body{overflow-wrap:anywhere}
 nav,.top,.langbar{min-width:0}
 nav a,footer a{overflow-wrap:anywhere}
+
+/* About technology manifesto on the search-indexable information page. */
+.about-story h2{font-size:clamp(26px,4vw,38px);margin:20px 0 12px}
+.about-story h3{font-size:clamp(21px,3vw,26px);line-height:1.35;margin:30px 0 12px}
+.about-story h4{font-size:19px;line-height:1.4;margin:24px 0 9px}
+.about-story .about-slogan{font-size:18px;color:var(--ink)}
+.about-story .about-metric{font-size:22px;color:var(--ink);font-weight:700}
+.about-story-divider{border:0;border-top:1px solid var(--line);margin:31px 0}
+.about-story .about-ending{font-size:18px;color:var(--ink)}

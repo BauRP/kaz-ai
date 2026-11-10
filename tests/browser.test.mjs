@@ -368,7 +368,9 @@ test('Kaz AI starts with a clean chat and opens About outside the conversation',
       assert.ok(await page.locator('#view-about').isVisible());
       assert.equal(await page.locator('#view-chat').isVisible(),false);
       assert.equal(await page.locator('.composer-region').isVisible(),false);
-      assert.ok((await page.locator('#view-about').innerText()).includes('149 млрд параметров'));
+      assert.ok((await page.locator('#view-about').innerText()).includes('148,83 миллиарда параметров'));
+      assert.ok((await page.locator('#view-about').innerText()).includes('Kaz AI Ultra'));
+      assert.ok((await page.locator('#view-about').innerText()).includes('Kaz AI Vision'));
       await page.locator('#aboutHelp summary').click();
       assert.ok((await page.locator('.about-help-content').innerText()).includes('Инструкции'));
       await page.locator('[data-action="back-to-chat"]').click();
@@ -1404,5 +1406,32 @@ test('existing Retry answer tool recovers the latest unanswered question without
     assert.equal(await page.locator('.message-user').count(),1);
     assert.equal(await page.locator('.message-assistant').count(),1);
     assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('new About story remains readable, inside the same tab and without horizontal scrolling',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    for(const viewport of [{width:390,height:844},{width:1366,height:850}]){
+      const page=await browser.newPage({viewport});
+      const errors=[];page.on('pageerror',e=>errors.push(e.message));
+      await page.goto(appUrl);
+      const before=page.url();
+      if(viewport.width<760)await page.locator('[data-action="toggle-sidebar"]').click();
+      await page.locator('.primary-nav [data-screen="about"]').click();
+      assert.equal(page.url(),before,'About should stay in same tab and page');
+      assert.equal(await page.locator('#view-about').isVisible(),true);
+      assert.equal(await page.locator('.about-story h2').count(),2);
+      assert.ok((await page.locator('.about-story').innerText()).includes('148,83 миллиарда параметров'));
+      assert.ok((await page.locator('.about-story').innerText()).includes('Black Forest Labs'));
+      assert.ok((await page.locator('.about-story').innerText()).includes('Полноценное подключение находится на этапе разработки.'));
+      const widths=await page.evaluate(()=>({document:document.documentElement.scrollWidth,viewport:innerWidth}));
+      assert.ok(widths.document<=widths.viewport,'No horizontal overflow: '+JSON.stringify(widths));
+      await page.locator('#aboutHelp summary').click();
+      assert.equal(await page.locator('.about-help-content').isVisible(),true);
+      assert.deepEqual(errors,[]);
+      await page.close();
+    }
   }finally{await browser.close()}
 });

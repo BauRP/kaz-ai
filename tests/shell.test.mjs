@@ -121,7 +121,8 @@ test('About navigation is after Settings and the chat welcome has no SEO article
   assert.doesNotMatch(html,/seo-home-intro|seo-home-links|info-links/);
   assert.doesNotMatch(css,/\.seo-home-intro\s*\{/);
   const aboutText=readFileSync('public/about/index.html','utf8');
-  for(const word of ['149 млрд параметров','117 млрд параметров','FLUX.2 dev','Помощь пользователям Kaz AI']){assert.ok(aboutText.includes(word));assert.ok(html.includes(word)||word==='Помощь пользователям Kaz AI');}
+  for(const word of ['116,83 миллиарда параметров','148,83 миллиарда параметров','Kaz AI Ultra','Kaz AI Vision','FLUX.2 dev']){assert.ok(aboutText.includes(word),'Static About: '+word);assert.ok(html.includes(word),'In-app About: '+word)}
+  assert.ok(aboutText.includes('Помощь пользователям Kaz AI'));
 });
 test('user messages no longer render copy, edit or reply buttons',()=>{
   const session=readFileSync('public/session.js','utf8');
@@ -131,4 +132,33 @@ test('user messages no longer render copy, edit or reply buttons',()=>{
   assert.match(session,/if\(message\.role==="assistant"\)\{/);
   assert.doesNotMatch(session,/if\(message\.role==="user"\)actions/);
   assert.match(session,/retry-answer/);
+});
+
+test('About introduces the Kazakhstan platform honestly and preserves full approved manifesto',()=>{
+  const standalone=readFileSync('public/about/index.html','utf8');
+  const preview=readFileSync('public/preview.html','utf8');
+  const first='Kaz AI — создаваемый в Казахстане веб-сервис для общения с искусственным интеллектом. Он задуман для вопросов, подготовки текстов, переводов, программирования, обучения и помощи с документами.';
+  const added='Он также задуман как пространство, где идеи превращаются в новые знания, полезные решения и собственные проекты.';
+  const markers=[
+    'Казахстанский искусственный интеллект нового поколения',
+    'Интеллект. Технологии. Возможности будущего.',
+    '116,83 миллиарда параметров','5,13 млрд','32 миллиарда параметров',
+    '148,83 миллиарда параметров','Mixture of Experts (MoE)',
+    'разработанной OpenAI','разработанной Black Forest Labs',
+    'Технологическая основа','Масштаб технологий Kaz AI',
+    'Возможности и развитие','Разработано в Казахстане','Текущий этап развития',
+    'настоящие ответы нейросети пока не подключены',
+    'Реализация зависит от технических возможностей и условий лицензирования.',
+    'Большие технологии начинаются с больших идей.'
+  ];
+  for(const page of [html,standalone,preview]){
+    assert.ok(page.includes(first));
+    assert.ok(page.includes(added));
+    for(const value of markers)assert.ok(page.includes(value),'Missing About text: '+value);
+    assert.ok(!page.includes('ИИ для текста и изображений</h2>'));
+    assert.ok(!page.includes('Kaz AI — создаваемый в Казахстане веб-сервис для общения с искусственным интеллектом на русском'));
+  }
+  assert.ok(html.includes('data-screen="about" class="nav-item about-nav-link"'));
+  assert.ok(!html.includes('target="_blank"'));
+  assert.match(standalone,/<section id="help">/);
 });

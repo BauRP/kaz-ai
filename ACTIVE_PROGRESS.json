@@ -1,32 +1,32 @@
 {
   "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
-  "basis": "21 approved unfinished directions and completed calculator archived separately. Verified code commits b4687158 and 9fdba5ba by GitHub Actions 42957396524 and 42959496122: unit, Chrome desktop/mobile browser, Cloudflare dry-run and HTTP checks. Changes cover history pin focus, project dialogs, active chat deletion, running AI status and normalized Unicode search. Percentages are engineering estimates; live GPT-OSS not connected.",
+  "basis": "Current 21 approved light-medium directions; calculator archived separately. Code commit f72ec115eb4d5837d12c9209ed59bed83fd8b5d7 verified by GitHub Actions 42962865112 (58 unit tests, 66 browser tests, Cloudflare dry-run and HTTP smoke). Improved Unicode fallback, retry accessibility, provider error classification and language switching. Scores are engineering estimates, not live-AI verification.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
   "date": "2026-11-11",
-  "previous": 76,
-  "now": 76.28571428571429,
-  "delta": 0.2857142857142918,
+  "previous": 76.28571428571429,
+  "now": 76.45238095238095,
+  "delta": 0.1666666666666572,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 90.5,
-      "now": 91,
-      "delta": 0.5
+      "previous": 91,
+      "now": 91.15,
+      "delta": 0.15000000000000568
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 34.2,
-      "now": 34.4,
-      "delta": 0.19999999999999574
+      "previous": 34.4,
+      "now": 34.6,
+      "delta": 0.20000000000000284
     },
     {
       "name": "Настройки",
       "count": 6,
       "previous": 86.66666666666667,
-      "now": 86.66666666666667,
-      "delta": 0
+      "now": 86.83333333333333,
+      "delta": 0.1666666666666572
     }
   ],
   "items": [
@@ -44,20 +44,20 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 89,
+      "previous": 90,
       "now": 90,
-      "delta": 1,
-      "summary": "История: действия закрепления сохраняют клавиатурный фокус после изменения порядка карточек.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
       "id": 3,
       "name": "Поиск по перепискам",
       "group": "Чаты",
-      "previous": 97,
-      "now": 98,
-      "delta": 1,
-      "summary": "Поиск: сравниваются эквивалентные Unicode-написания, при этом подсветка и сообщения сохраняют исходный текст.",
+      "previous": 98,
+      "now": 98.5,
+      "delta": 0.5,
+      "summary": "Поиск устойчивее в старых браузерах без Intl.Segmenter: составные Unicode-буквы подсвечиваются целиком; кешируется анализатор символов.",
       "status": "in_progress"
     },
     {
@@ -74,30 +74,30 @@
       "id": 5,
       "name": "Удалить чат",
       "group": "Чаты",
-      "previous": 97,
+      "previous": 98,
       "now": 98,
-      "delta": 1,
-      "summary": "Удаление: после подтверждения удаления активного чата фокус переходит на пустое поле ввода.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
       "id": 6,
       "name": "Закрепить чат",
       "group": "Чаты",
-      "previous": 93,
+      "previous": 94,
       "now": 94,
-      "delta": 1,
-      "summary": "Закрепление: после закрепления или открепления клавиатурный фокус остаётся на нужной кнопке.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
       "id": 7,
       "name": "Папки и проекты",
       "group": "Чаты",
-      "previous": 95,
+      "previous": 96,
       "now": 96,
-      "delta": 1,
-      "summary": "Проекты: после добавления, удаления и переноса чата восстановлен фокус на доступном элементе управления.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -105,9 +105,9 @@
       "name": "Повторить ответ",
       "group": "Чаты",
       "previous": 72,
-      "now": 72,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 73,
+      "delta": 1,
+      "summary": "Повтор запроса переводит клавиатурный фокус на видимую кнопку «Остановить» после скрытия кнопки повтора. Ответ и вопрос не дублируются.",
       "status": "in_progress"
     },
     {
@@ -134,10 +134,10 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 56,
-      "now": 57,
+      "previous": 57,
+      "now": 58,
       "delta": 1,
-      "summary": "Обычный чат: индикатор выполняющегося запроса вновь показывается при возвращении из истории, без дублирования запроса.",
+      "summary": "Сервер точнее различает временное ограничение частоты запросов и дневную квоту, в том числе при вложенных и структурированных ошибках провайдера. Реальное подключение ИИ пока не подтверждено.",
       "status": "in_progress"
     },
     {
@@ -215,9 +215,9 @@
       "name": "Язык интерфейса",
       "group": "Настройки",
       "previous": 74,
-      "now": 74,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 75,
+      "delta": 1,
+      "summary": "Подключена локализация уведомления о недоступности ИИ и кнопки «Повторить запрос» во время переключения языка. Русский, английский и казахский проверены в браузере.",
       "status": "in_progress"
     },
     {
@@ -258,7 +258,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 77.0909090909091,
-  "overall_now": 77.36363636363636,
-  "overall_delta": 0.27272727272726627
+  "overall_previous": 77.36363636363636,
+  "overall_now": 77.52272727272727,
+  "overall_delta": 0.1590909090909065
 }

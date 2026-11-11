@@ -1,0 +1,264 @@
+{
+  "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
+  "basis": "21 approved unfinished directions and completed calculator archived separately. Verified code commits b4687158 and 9fdba5ba by GitHub Actions 42957396524 and 42959496122: unit, Chrome desktop/mobile browser, Cloudflare dry-run and HTTP checks. Changes cover history pin focus, project dialogs, active chat deletion, running AI status and normalized Unicode search. Percentages are engineering estimates; live GPT-OSS not connected.",
+  "branch": "chatgpt/kaz-ai-shell-20261108",
+  "date": "2026-11-11",
+  "previous": 76,
+  "now": 76.28571428571429,
+  "delta": 0.2857142857142918,
+  "groups": [
+    {
+      "name": "Чаты",
+      "count": 10,
+      "previous": 90.5,
+      "now": 91,
+      "delta": 0.5
+    },
+    {
+      "name": "Интеллект",
+      "count": 5,
+      "previous": 34.2,
+      "now": 34.4,
+      "delta": 0.19999999999999574
+    },
+    {
+      "name": "Настройки",
+      "count": 6,
+      "previous": 86.66666666666667,
+      "now": 86.66666666666667,
+      "delta": 0
+    }
+  ],
+  "items": [
+    {
+      "id": 1,
+      "name": "Новый чат",
+      "group": "Чаты",
+      "previous": 95,
+      "now": 95,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 2,
+      "name": "История чатов",
+      "group": "Чаты",
+      "previous": 89,
+      "now": 90,
+      "delta": 1,
+      "summary": "История: действия закрепления сохраняют клавиатурный фокус после изменения порядка карточек.",
+      "status": "in_progress"
+    },
+    {
+      "id": 3,
+      "name": "Поиск по перепискам",
+      "group": "Чаты",
+      "previous": 97,
+      "now": 98,
+      "delta": 1,
+      "summary": "Поиск: сравниваются эквивалентные Unicode-написания, при этом подсветка и сообщения сохраняют исходный текст.",
+      "status": "in_progress"
+    },
+    {
+      "id": 4,
+      "name": "Переименовать чат",
+      "group": "Чаты",
+      "previous": 93,
+      "now": 93,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 5,
+      "name": "Удалить чат",
+      "group": "Чаты",
+      "previous": 97,
+      "now": 98,
+      "delta": 1,
+      "summary": "Удаление: после подтверждения удаления активного чата фокус переходит на пустое поле ввода.",
+      "status": "in_progress"
+    },
+    {
+      "id": 6,
+      "name": "Закрепить чат",
+      "group": "Чаты",
+      "previous": 93,
+      "now": 94,
+      "delta": 1,
+      "summary": "Закрепление: после закрепления или открепления клавиатурный фокус остаётся на нужной кнопке.",
+      "status": "in_progress"
+    },
+    {
+      "id": 7,
+      "name": "Папки и проекты",
+      "group": "Чаты",
+      "previous": 95,
+      "now": 96,
+      "delta": 1,
+      "summary": "Проекты: после добавления, удаления и переноса чата восстановлен фокус на доступном элементе управления.",
+      "status": "in_progress"
+    },
+    {
+      "id": 9,
+      "name": "Повторить ответ",
+      "group": "Чаты",
+      "previous": 72,
+      "now": 72,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 10,
+      "name": "Остановить ответ",
+      "group": "Чаты",
+      "previous": 80,
+      "now": 80,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 13,
+      "name": "Оценка ответа",
+      "group": "Чаты",
+      "previous": 94,
+      "now": 94,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 15,
+      "name": "Обычный чат с GPT-OSS",
+      "group": "Интеллект",
+      "previous": 56,
+      "now": 57,
+      "delta": 1,
+      "summary": "Обычный чат: индикатор выполняющегося запроса вновь показывается при возвращении из истории, без дублирования запроса.",
+      "status": "in_progress"
+    },
+    {
+      "id": 16,
+      "name": "Уровни рассуждения",
+      "group": "Интеллект",
+      "previous": 58,
+      "now": 58,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 22,
+      "name": "Переводчик с ИИ",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 23,
+      "name": "Программирование с ИИ",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 24,
+      "name": "Подготовка документов",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 40,
+      "name": "Личные инструкции",
+      "group": "Настройки",
+      "previous": 86,
+      "now": 86,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 41,
+      "name": "Временный чат",
+      "group": "Настройки",
+      "previous": 91,
+      "now": 91,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 42,
+      "name": "Светлая и тёмная тема",
+      "group": "Настройки",
+      "previous": 91,
+      "now": 91,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 43,
+      "name": "Язык интерфейса",
+      "group": "Настройки",
+      "previous": 74,
+      "now": 74,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 44,
+      "name": "Размер текста",
+      "group": "Настройки",
+      "previous": 82,
+      "now": 82,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 45,
+      "name": "Экспорт истории",
+      "group": "Настройки",
+      "previous": 96,
+      "now": 96,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    }
+  ],
+  "completed_ids": [
+    25
+  ],
+  "completed_count": 1,
+  "incomplete_count": 21,
+  "completed_items": [
+    {
+      "id": 25,
+      "name": "Простой калькулятор",
+      "group": "Интеллект",
+      "previous": 100,
+      "now": 100,
+      "delta": 0,
+      "summary": "Базовый автономный калькулятор завершён, проверен и исключён из всех списков незавершённых задач.",
+      "status": "completed"
+    }
+  ],
+  "overall_previous": 77.0909090909091,
+  "overall_now": 77.36363636363636,
+  "overall_delta": 0.27272727272726627
+}

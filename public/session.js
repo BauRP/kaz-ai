@@ -635,12 +635,16 @@
     if(action==="stop"){abort?.abort("manual");return}
     if(action==="retry-request"){
       if(abort){notify("Дождитесь завершения текущего запроса.");return}
+      const fromRetryButton=document.activeElement?.id==="sessionRetry";
       const c=selected(),last=c?.messages.at(-1);
       if(last?.role==="user"){showStatus("");runAI(c)}
       else if(last?.role==="assistant"&&last.id===retryAnswerId){
         const target=retryAnswerId;
         showStatus("");runAI(c,target);
       }else notify("Не найден вопрос для повторной отправки.");
+      // Clearing the old banner hides Retry before runAI can inspect focus.
+      // At this point runAI has synchronously opened Stop for an active request.
+      if(fromRetryButton&&abort&&!$("#sessionStop").hidden)$("#sessionStop").focus();
       return;
     }
     if(action==="temp-toggle"){

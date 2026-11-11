@@ -608,7 +608,7 @@
     "#view-tools .search-bar","#view-settings .panel-heading",
     "#view-settings .settings-list","#toolGroups",
     "#attachMenu","#reasonMenu","#fontMenu","#languageMenu","#settingsLanguageMenu",
-    "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay","#statusBanner","#toast"
+    "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay","#statusBanner","#sessionRetry","#toast"
   ];
   const captured=new WeakMap();
   let language="ru";

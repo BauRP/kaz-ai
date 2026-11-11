@@ -2076,11 +2076,11 @@ test('Unicode search preserves accent highlights when Intl.Segmenter is unavaila
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Латинский тест');
     await page.locator('#sendButton').click();
-    await page.locator('#messageInput').fill('Cafe\\u0301 and more');
+    await page.locator('#messageInput').fill('Cafe\u0301 and more');
     await page.locator('#sendButton').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('CAFÉ');
-    assert.equal(await page.locator('#historyList .session-search-snippet mark').textContent(),'Cafe\\u0301');
+    assert.equal(await page.locator('#historyList .session-search-snippet mark').textContent(),'Cafe\u0301');
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });

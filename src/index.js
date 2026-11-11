@@ -44,9 +44,15 @@ function validatedInput(payload){
   return {messages,effort:payload.effort,instructions:(payload.instructions||"").trim()};
 }
 function classifyAILimit(error){
-  const msg=String(error?.message||error||"").toLowerCase();
+  // Cloudflare may reject with an Error, a nested cause, or a structured HTTP status.
+  // A plain 429 means temporary throttling; never call that a daily quota exhaustion.
+  const details=[error?.message,error?.error?.message,error?.cause?.message,
+    typeof error?.error==="string"?error.error:"",typeof error==="string"?error:""];
+  const msg=details.filter(x=>typeof x==="string").join(" ").toLowerCase();
   if(/daily|neurons|quota exceeded|quota exhausted|billing limit|budget exceeded|exceeded your account limit/.test(msg))return "daily";
   if(/\b429\b|rate limit|too many requests|throttl/.test(msg))return "rate";
+  const status=Number(error?.status??error?.statusCode??error?.response?.status);
+  if(status===429)return "rate";
   return null;
 }
 export default {

@@ -1989,3 +1989,98 @@ test('Unicode search matches precomposed and decomposed letters while showing or
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('retrying an AI request moves keyboard focus from the hidden Retry button to Stop',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  let release;
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    const gate=new Promise(resolve=>{release=resolve});
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        calls++;
+        if(calls===1)return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({code:'AI_UNAVAILABLE',message:'Ответ ИИ сейчас недоступен. Попробуйте позже.'})});
+        await gate;
+        try{return await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Успешный повтор'})})}catch{return}
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Проверка безопасного повтора');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('preview-safe-test-key-12345678901234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionRetry')?.hidden===false);
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    assert.equal(await page.evaluate(()=>document.activeElement?.id),'sessionStop');
+    assert.equal(await page.locator('#sessionRetry').isVisible(),false);
+    assert.equal(calls,2);
+    release();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Успешный повтор'));
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    assert.deepEqual(errors,[]);
+  }finally{release?.();await browser.close()}
+});
+
+test('AI pending and error messages remain localized when switching language mid-request',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  let release;
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    const gate=new Promise(resolve=>{release=resolve});
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        await gate;
+        try{return await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({code:'AI_UNAVAILABLE',message:'Ответ ИИ сейчас недоступен. Попробуйте позже.'})})}catch{return}
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Ошибка должна быть переведена');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('preview-safe-test-key-12345678901234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Processing your request'));
+    assert.equal(await page.locator('#sessionStop').innerText(),'Stop');
+    release();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('AI response is unavailable'));
+    assert.equal(await page.locator('#sessionRetry').innerText(),'Retry request');
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('ЖИ жауабы'));
+    assert.equal(await page.locator('#sessionRetry').innerText(),'Сұрауды қайталау');
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.deepEqual(errors,[]);
+  }finally{release?.();await browser.close()}
+});
+
+test('Unicode search preserves accent highlights when Intl.Segmenter is unavailable',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.addInitScript(()=>{Intl.Segmenter=undefined});
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Латинский тест');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Cafe\\u0301 and more');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('CAFÉ');
+    assert.equal(await page.locator('#historyList .session-search-snippet mark').textContent(),'Cafe\\u0301');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

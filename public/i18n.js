@@ -597,7 +597,8 @@
   "Открыть чат": {"en":"Open chat","kk":"Чатты ашу"},
   "Закреплённый чат": {"en":"Pinned chat","kk":"Бекітілген чат"},
   "Убрать из проекта": {"en":"Remove from project","kk":"Жобадан алып тастау"},
-  "Выбран размер текста для предпросмотра.": {"en":"Preview text size updated.","kk":"Алдын ала қараудағы мәтін өлшемі өзгертілді."}
+  "Выбран размер текста для предпросмотра.": {"en":"Preview text size updated.","kk":"Алдын ала қараудағы мәтін өлшемі өзгертілді."},
+  "Ответ ИИ сейчас недоступен. Попробуйте позже.": {"en":"AI response is unavailable. Try again later.","kk":"ЖИ жауабы қазір қолжетімсіз. Кейінірек қайталаңыз."}
 };
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",

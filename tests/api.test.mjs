@@ -101,3 +101,28 @@ test('request payload larger than 50 KB in Cyrillic is rejected by byte size',as
   assert.equal(response.status,413);
   assert.equal(calls.length,0);
 });
+
+test('structured HTTP 429 without a message is a temporary rate limit, not daily exhaustion',async()=>{
+  const {env}=envWithAI(async()=>{throw {status:429,error:{code:'TOO_MANY_REQUESTS'}}});
+  const response=await worker.fetch(post(good),env);
+  assert.equal(response.status,429);
+  assert.equal((await response.json()).code,'AI_RATE_LIMITED');
+});
+
+test('nested Cloudflare error reasons preserve daily quota versus short-term throttling',async()=>{
+  const daily=envWithAI(async()=>{throw {cause:{message:'Daily neurons quota exceeded'}}});
+  const response=await worker.fetch(post(good),daily.env);
+  assert.equal(response.status,429);
+  assert.equal((await response.json()).code,'AI_QUOTA_EXHAUSTED');
+  const rate=envWithAI(async()=>{throw {error:{message:'Too Many Requests'},statusCode:429}});
+  const limited=await worker.fetch(post(good),rate.env);
+  assert.equal(limited.status,429);
+  assert.equal((await limited.json()).code,'AI_RATE_LIMITED');
+});
+
+test('structured unrelated provider errors are not mistaken for quota failures',async()=>{
+  const {env}=envWithAI(async()=>{throw {status:503,error:{message:'Service unavailable'}}});
+  const response=await worker.fetch(post(good),env);
+  assert.equal(response.status,503);
+  assert.equal((await response.json()).code,'AI_UNAVAILABLE');
+});

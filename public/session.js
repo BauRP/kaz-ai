@@ -151,7 +151,9 @@
     return chat;
   }
   // Match equivalent Unicode spellings while highlighting the exact original text.
-  // NFC equates letters such as é and e + combining accent, without rewriting messages.
+  // Cache the grapheme segmenter so repeated searches don't rebuild it for every match.
+  const graphemes=typeof Intl.Segmenter==="function"
+    ?new Intl.Segmenter(undefined,{granularity:"grapheme"}):null;
   function findTextMatch(text,query){
     const fold=value=>value.normalize("NFC").toLocaleLowerCase()
       .replace(/\u0307/g,"").replace(/\u03c2/g,"\u03c3");
@@ -168,16 +170,23 @@
       for(let n=0;n<normalized.length;n++){starts.push(offset);ends.push(end)}
       if(!normalized&&ends.length)ends[ends.length-1]=end;
     };
-    if(typeof Intl.Segmenter==="function"){
+    if(graphemes){
       // Graphemes keep combining marks attached to their visible base letter.
-      for(const {segment,index} of new Intl.Segmenter(undefined,{granularity:"grapheme"}).segment(text)){
-        append(segment,index);
-      }
+      for(const {segment,index} of graphemes.segment(text))append(segment,index);
     }else{
+      // Older browsers without Intl.Segmenter still group combining marks with
+      // their base character instead of corrupting highlights of decomposed text.
+      let combined="",startOffset=0;
       for(let offset=0;offset<text.length;){
         const symbol=String.fromCodePoint(text.codePointAt(offset));
-        append(symbol,offset);offset+=symbol.length;
+        if(combined&&!/\p{M}/u.test(symbol)){
+          append(combined,startOffset);combined="";
+        }
+        if(!combined)startOffset=offset;
+        combined+=symbol;
+        offset+=symbol.length;
       }
+      if(combined)append(combined,startOffset);
     }
     if(start+needle.length>ends.length)return null;
     return {start:starts[start],end:ends[start+needle.length-1]};
@@ -357,10 +366,13 @@
       configureAccess(()=>runAI(chat,replaceId));return;
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
+    const previousFocus=document.activeElement;
     const controller=new AbortController();abort=controller;pending=chat.id;retryAnswerId=null;
     const timeout=setTimeout(()=>controller.abort("timeout"),45000);
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
+    // Retry hides its own button; focus the visible Stop control, not a hidden element.
+    if(previousFocus?.id==="sessionRetry"||previousFocus?.closest("#view-tools"))stop.focus();
     const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
       .map(m=>({role:m.role,content:m.role==="assistant"?m.content.slice(0,4000):m.content}));
     // Preserve full recent messages, but do not exceed the server's 50 KB payload cap.

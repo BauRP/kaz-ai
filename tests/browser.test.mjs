@@ -1855,3 +1855,112 @@ test('locked fourth reasoning level is never labelled as selected',async()=>{
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('pinning preserves keyboard focus after history cards reorder',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первый чат');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Второй чат');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const pin=page.locator('#historyList [data-session="pin-chat"]').last();
+    await pin.click();
+    assert.equal(await page.locator('#historyList [data-session="pin-chat"][aria-pressed="true"]').count(),1);
+    assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'pin-chat');
+    assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-pressed')),'true');
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('#historyList [data-session="pin-chat"][aria-pressed="true"]').count(),0);
+    assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'pin-chat');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('project changes and removing chats restore visible keyboard focus',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Задачи команды');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Работа');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'new-project');
+    await page.locator('[data-session="add-chat-to-project"]').click();
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('[data-session="remove-chat-from-project"]').click();
+    assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'open-chat');
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Задачи команды'));
+    await page.locator('[data-session="delete-project"]').click();
+    await page.locator('#sessionBody [data-session="dialog-confirm"]').click();
+    assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'new-project');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('deleting active chat returns keyboard focus to the clean composer',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Удалить только этот чат');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="delete-chat"]').click();
+    await page.locator('#sessionBody [data-session="dialog-confirm"]').click();
+    assert.equal(await page.evaluate(()=>document.activeElement?.id),'messageInput');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+    assert.equal(await page.locator('#messageInput').inputValue(),'');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('pending AI status reappears on returning to the same chat without duplicate requests',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  let release;
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    const gate=new Promise(resolve=>{release=resolve});
+    let requests=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        requests++;
+        await gate;
+        try{return await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Готовый ответ'})})}catch{return}
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Проверяем возврат к ответу');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('preview-safe-test-key-12345678901234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    assert.equal(await page.locator('#statusBanner').isVisible(),false);
+    await page.evaluate(()=>showScreen('chat'));
+    assert.equal(await page.locator('#statusBanner').isVisible(),true);
+    assert.ok((await page.locator('#statusBanner').innerText()).includes('Анализирую'));
+    assert.equal(requests,1);
+    release();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Готовый ответ'));
+    assert.equal(await page.locator('#statusBanner').isVisible(),false);
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    assert.deepEqual(errors,[]);
+  }finally{release?.();await browser.close()}
+});

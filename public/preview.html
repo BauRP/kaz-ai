@@ -1245,10 +1245,22 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     focus.focus();
   }
   function closeDialog(){
-    $("#sessionOverlay").hidden=true;
+    const previous=modalReturn;
+    const overlay=$("#sessionOverlay");
+    overlay.hidden=true;
     $("#sessionBody").replaceChildren();
     $("#sessionTitle").textContent="";
-    if(modalReturn&&typeof modalReturn.focus==="function")modalReturn.focus();
+    // A project or chat action can replace the opening button while the modal is open.
+    // Never leave keyboard focus in a disconnected or hidden element after Save/Delete.
+    const fallback=state.screen==="projects"
+      ?$("#projectsWorkspace [data-session='new-project']")
+      :state.screen==="history"
+        ?$("#historySearch")
+        :$("#messageInput");
+    const visible=element=>element?.isConnected&&!element.closest("[hidden]")&&typeof element.focus==="function";
+    if(visible(previous))previous.focus();
+    else if(visible(fallback))fallback.focus();
+    else $("#messageInput")?.focus();
     modalReturn=null;
   }
   const addButtons=(target,items)=>{
@@ -1633,13 +1645,31 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       return
     }
     if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{chat.title=v;renderHistory();renderSessionProjects()});return}
-    if(action==="pin-chat"&&chat){chat.pinned=!chat.pinned;renderHistory();return}
+    if(action==="pin-chat"&&chat){
+      const focused=document.activeElement?.dataset.session==="pin-chat"
+        &&document.activeElement.dataset.id===chat.id;
+      chat.pinned=!chat.pinned;renderHistory();
+      // Reordering rebuilds the history list. Restore focus to the same action.
+      if(focused){
+        const next=Array.from(document.querySelectorAll('#historyList [data-session="pin-chat"]'))
+          .find(el=>el.dataset.id===chat.id);
+        next?.focus();
+      }
+      return;
+    }
     if(action==="export-chat"&&chat&&!chat.temporary){
       download("Kaz-AI-"+safeExportName(chat.title)+".txt",exportText(chat),"text/plain;charset=utf-8");
       notify("Переписка скачана в текстовый файл.");return
     }
     if(action==="remove-chat-from-project"&&chat){
-      chat.projectId=null;renderSessionProjects();renderHistory();notify("Чат перемещён в «Без проекта».");return
+      const focused=document.activeElement?.dataset.session==="remove-chat-from-project";
+      chat.projectId=null;renderSessionProjects();renderHistory();
+      if(focused){
+        const next=Array.from(document.querySelectorAll('#projectsWorkspace [data-session="open-chat"]'))
+          .find(el=>el.dataset.id===chat.id);
+        next?.focus();
+      }
+      notify("Чат перемещён в «Без проекта».");return
     }
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
       if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;$("#sessionStop").hidden=true;showStatus("")}
@@ -2027,7 +2057,8 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     baseShowScreen(name);
     // Status and Retry belong to the current conversation, not Settings or Projects.
     const banner=$("#statusBanner"),retry=$("#sessionRetry");
-    if(name==="chat"&&statusRetryable)banner.hidden=false;
+    // A pending request must remain visible when returning from History or Tools.
+    if(name==="chat"&&(statusRetryable||(pending===current&&Boolean(banner.textContent))))banner.hidden=false;
     if(retry)retry.hidden=name!=="chat"||!statusRetryable;
     if(name==="projects")renderSessionProjects();
   };

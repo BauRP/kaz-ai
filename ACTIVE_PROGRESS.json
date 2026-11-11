@@ -1,32 +1,32 @@
 {
   "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
-  "basis": "21 approved unfinished directions; the simple calculator remains completed and excluded. Commit 006aa5b2fd11d51c8cd28bd83c1734f99b4a8d14 tested by GitHub Actions 42941685541 (unit, browser, Cloudflare build and HTTP smoke). New language accessibility, pin/project/ratings and search Escape behavior. Percentages are engineering estimates, not AI-availability claims.",
+  "basis": "21 approved unfinished directions and completed calculator archived separately. Verified code commits b4687158 and 9fdba5ba by GitHub Actions 42957396524 and 42959496122: unit, Chrome desktop/mobile browser, Cloudflare dry-run and HTTP checks. Changes cover history pin focus, project dialogs, active chat deletion, running AI status and normalized Unicode search. Percentages are engineering estimates; live GPT-OSS not connected.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
   "date": "2026-11-11",
-  "previous": 75.66666666666667,
-  "now": 76,
-  "delta": 0.3333333333333286,
+  "previous": 76,
+  "now": 76.28571428571429,
+  "delta": 0.2857142857142918,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 90.1,
-      "now": 90.5,
-      "delta": 0.4000000000000057
+      "previous": 90.5,
+      "now": 91,
+      "delta": 0.5
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 34,
-      "now": 34.2,
-      "delta": 0.20000000000000284
+      "previous": 34.2,
+      "now": 34.4,
+      "delta": 0.19999999999999574
     },
     {
       "name": "Настройки",
       "count": 6,
-      "previous": 86.33333333333333,
+      "previous": 86.66666666666667,
       "now": 86.66666666666667,
-      "delta": 0.3333333333333428
+      "delta": 0
     }
   ],
   "items": [
@@ -44,20 +44,20 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 88,
-      "now": 89,
+      "previous": 89,
+      "now": 90,
       "delta": 1,
-      "summary": "История: названия закреплённых чатов и кнопки открытия теперь имеют корректные доступные подписи при смене языка.",
+      "summary": "История: действия закрепления сохраняют клавиатурный фокус после изменения порядка карточек.",
       "status": "in_progress"
     },
     {
       "id": 3,
       "name": "Поиск по перепискам",
       "group": "Чаты",
-      "previous": 96,
-      "now": 97,
+      "previous": 97,
+      "now": 98,
       "delta": 1,
-      "summary": "Поиск: Escape очищает поисковое выражение и возвращает список без потери переписки или черновика.",
+      "summary": "Поиск: сравниваются эквивалентные Unicode-написания, при этом подсветка и сообщения сохраняют исходный текст.",
       "status": "in_progress"
     },
     {
@@ -75,9 +75,9 @@
       "name": "Удалить чат",
       "group": "Чаты",
       "previous": 97,
-      "now": 97,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 98,
+      "delta": 1,
+      "summary": "Удаление: после подтверждения удаления активного чата фокус переходит на пустое поле ввода.",
       "status": "in_progress"
     },
     {
@@ -85,19 +85,19 @@
       "name": "Закрепить чат",
       "group": "Чаты",
       "previous": 93,
-      "now": 93,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 94,
+      "delta": 1,
+      "summary": "Закрепление: после закрепления или открепления клавиатурный фокус остаётся на нужной кнопке.",
       "status": "in_progress"
     },
     {
       "id": 7,
       "name": "Папки и проекты",
       "group": "Чаты",
-      "previous": 94,
-      "now": 95,
+      "previous": 95,
+      "now": 96,
       "delta": 1,
-      "summary": "Проекты: доступные названия открытия и удаления чата из папки локализуются, имена пользовательских проектов не меняются.",
+      "summary": "Проекты: после добавления, удаления и переноса чата восстановлен фокус на доступном элементе управления.",
       "status": "in_progress"
     },
     {
@@ -124,10 +124,10 @@
       "id": 13,
       "name": "Оценка ответа",
       "group": "Чаты",
-      "previous": 93,
+      "previous": 94,
       "now": 94,
-      "delta": 1,
-      "summary": "Оценка: названия кнопок положительной и отрицательной оценки обновляются на русском, английском и казахском без перерисовки текста ответа.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -135,19 +135,19 @@
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
       "previous": 56,
-      "now": 56,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 57,
+      "delta": 1,
+      "summary": "Обычный чат: индикатор выполняющегося запроса вновь показывается при возвращении из истории, без дублирования запроса.",
       "status": "in_progress"
     },
     {
       "id": 16,
       "name": "Уровни рассуждения",
       "group": "Интеллект",
-      "previous": 57,
+      "previous": 58,
       "now": 58,
-      "delta": 1,
-      "summary": "Уровни рассуждения: исправлено доступное состояние выбора, заблокированный четвёртый уровень остаётся неактивным.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -214,10 +214,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 72,
+      "previous": 74,
       "now": 74,
-      "delta": 2,
-      "summary": "Языки: перевод статусов всех инструментов, названий действий для чтения с экрана, уведомления о выборе языка и размера текста; пользовательские сообщения не переводятся.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -258,7 +258,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 76.77272727272727,
-  "overall_now": 77.0909090909091,
-  "overall_delta": 0.3181818181818272
+  "overall_previous": 77.0909090909091,
+  "overall_now": 77.36363636363636,
+  "overall_delta": 0.27272727272726627
 }

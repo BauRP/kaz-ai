@@ -1759,3 +1759,99 @@ test('theme and font settings announce their current state across navigation and
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('history search Escape clears the filter without losing chat or draft',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Павлодар и университет');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Этот черновик не потерять');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('нет такого совпадения');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),0);
+    await page.locator('#historySearch').press('Escape');
+    assert.equal(await page.locator('#historySearch').inputValue(),'');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#messageInput').inputValue(),'Этот черновик не потерять');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('tools show accurate localized readiness and accessible labels after language changes',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    assert.equal(await page.locator('#toast').textContent(),'Interface language: English');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    assert.match(await page.locator('#toolGroups [data-feature="tool-1"]').getAttribute('aria-label'),/Working$/);
+    assert.match(await page.locator('#toolGroups [data-feature="tool-15"]').getAttribute('aria-label'),/Partly working$/);
+    assert.match(await page.locator('#toolGroups [data-feature="tool-17"]').getAttribute('aria-label'),/Planned$/);
+    assert.equal(await page.locator('#toolGroups [data-feature="tool-15"] small').textContent(),'Partly working');
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    assert.equal(await page.locator('#toast').textContent(),'Интерфейс тілі: Қазақша');
+    assert.match(await page.locator('#toolGroups [data-feature="tool-1"]').getAttribute('aria-label'),/Жұмыс істейді$/);
+    assert.match(await page.locator('#toolGroups [data-feature="tool-15"]').getAttribute('aria-label'),/Ішінара$/);
+    assert.match(await page.locator('#toolGroups [data-feature="tool-17"]').getAttribute('aria-label'),/Жоспарда$/);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('chat pins and reply ratings have localized accessible names without changing user text',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>new URL(route.request().url()).pathname==='/api/chat'
+      ?route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Надёжный ответ'})})
+      :route.fulfill({status:200,contentType:'text/html',body:html}));
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Настройки проекта');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('preview-safe-test-key-12345678901234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Надёжный ответ'));
+    await page.locator('.sidebar [data-screen="history"]').click();
+    assert.equal(await page.locator('#historyList .session-chat-name').getAttribute('aria-label'),'Открыть чат: Настройки проекта');
+    await page.locator('#historyList [data-session="pin-chat"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    assert.equal(await page.locator('#historyList .session-chat-name').getAttribute('aria-label'),'Pinned chat: Настройки проекта');
+    assert.equal(await page.locator('#historyList [data-session="pin-chat"]').getAttribute('aria-label'),'Unpin: Настройки проекта');
+    await page.locator('#historyList .session-chat-name').click();
+    assert.equal(await page.locator('#chatMessages [data-session="rate-up"]').getAttribute('aria-label'),'Positive response rating');
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    assert.equal(await page.locator('#chatMessages [data-session="rate-up"]').getAttribute('aria-label'),'Жауапқа оң баға');
+    assert.ok((await page.locator('#chatMessages').innerText()).includes('Настройки проекта'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('locked fourth reasoning level is never labelled as selected',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#reasonToggle').click();
+    await page.locator('[data-reason="high"]').click();
+    assert.equal(await page.locator('[data-reason="high"]').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.locator('[data-feature="deep-reason"]').getAttribute('aria-pressed'),null);
+    assert.equal(await page.locator('#currentReason').textContent(),'Высокий');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

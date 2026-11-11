@@ -593,7 +593,11 @@
   "Дождитесь завершения предыдущего запроса.": {"en":"Wait for the previous request to finish.","kk":"Алдыңғы сұраудың аяқталуын күтіңіз."},
   "Дождитесь завершения текущего запроса.": {"en":"Wait for the current request to finish.","kk":"Ағымдағы сұраудың аяқталуын күтіңіз."},
   "Завершите предыдущий запрос.": {"en":"Finish the previous request first.","kk":"Алдымен алдыңғы сұрауды аяқтаңыз."},
-  "Ключ принят для текущей вкладки. Проверка происходит при запросе.": {"en":"Key entered for this tab. It will be checked on the next request.","kk":"Кілт осы қойынды үшін енгізілді. Ол келесі сұрауда тексеріледі."}
+  "Ключ принят для текущей вкладки. Проверка происходит при запросе.": {"en":"Key entered for this tab. It will be checked on the next request.","kk":"Кілт осы қойынды үшін енгізілді. Ол келесі сұрауда тексеріледі."},
+  "Открыть чат": {"en":"Open chat","kk":"Чатты ашу"},
+  "Закреплённый чат": {"en":"Pinned chat","kk":"Бекітілген чат"},
+  "Убрать из проекта": {"en":"Remove from project","kk":"Жобадан алып тастау"},
+  "Выбран размер текста для предпросмотра.": {"en":"Preview text size updated.","kk":"Алдын ала қараудағы мәтін өлшемі өзгертілді."}
 };
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",

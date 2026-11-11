@@ -108,7 +108,7 @@ function selectReason(value){
   $$("[data-reason]").forEach(btn=>{
     const active=btn.dataset.reason===value;
     btn.classList.toggle("selected",active);
-    if(value!=="deep")btn.setAttribute("aria-pressed",String(active));
+    if(btn.dataset.reason!=="deep")btn.setAttribute("aria-pressed",String(active));
   });
   closePopovers();
   const lang=window.KazI18n?.language||"ru";
@@ -132,9 +132,11 @@ function selectLanguage(value){
   $$("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
   closePopovers();
   window.KazI18n?.set(value);
-  renderHistory();
+  if(window.KazSession?.refreshLocale)window.KazSession.refreshLocale();
+  else renderHistory();
   renderTools($("#toolsSearch").value);
-  notify("Язык интерфейса: "+languages[value]);
+  const notification={ru:"Язык интерфейса: ",en:"Interface language: ",kk:"Интерфейс тілі: "};
+  notify(notification[value]+languages[value]);
 }
 function selectFont(value){
   if(!["small","normal","large"].includes(value))return;
@@ -147,7 +149,7 @@ function selectFont(value){
     el.setAttribute("aria-pressed",String(active));
   });
   closePopovers();
-  notify("Выбран размер текста для предпросмотра.");
+  notify(window.KazI18n?.translate?.("Выбран размер текста для предпросмотра.")||"Выбран размер текста для предпросмотра.");
 }
 function openGoogle(){
   state.dialogTrigger=document.activeElement;

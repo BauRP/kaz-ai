@@ -32,6 +32,7 @@
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="",retryAnswerId=null;
   let statusRetryable=false;
   const nextId=()=>String(++serial);
+  const uiText=value=>window.KazI18n?.translate?.(value)||value;
   const selected=()=>threads.find(c=>c.id===current)||null;
   const displayThread=c=>{
     const next=c?.id||null;
@@ -199,7 +200,7 @@
       const name=button("","open-chat",c.id,"session-chat-name");
       const matchIndex=value?c.messages.findIndex(m=>findTextMatch(m.content,query)):-1;
       if(matchIndex>=0)name.dataset.matchIndex=String(matchIndex);
-      name.setAttribute("aria-label","Открыть чат: "+c.title);
+      name.setAttribute("aria-label",uiText(c.pinned?"Закреплённый чат":"Открыть чат")+": "+c.title);
       if(c.pinned)name.append(make("span","session-pin","📌 "));
       const label=make("span","session-chat-label");
       highlighted(label,c.title);
@@ -223,7 +224,7 @@
       }
       const ops=make("div","session-chat-ops");
       ops.append(
-        (()=>{const pin=button(c.pinned?"Открепить":"Закрепить","pin-chat",c.id);pin.setAttribute("aria-pressed",String(Boolean(c.pinned)));return pin})(),
+        (()=>{const pin=button(c.pinned?"Открепить":"Закрепить","pin-chat",c.id);pin.setAttribute("aria-pressed",String(Boolean(c.pinned)));pin.setAttribute("aria-label",uiText(c.pinned?"Открепить":"Закрепить")+": "+c.title);return pin})(),
         button("Название","rename-chat",c.id),
         button("Проект","assign-chat",c.id),
         button("Скачать","export-chat",c.id),
@@ -233,6 +234,7 @@
     }
     for(const c of saved.slice(0,6)){
       const entry=button((c.pinned?"📌 ":"")+c.title,"open-chat",c.id,"recent-item session-recent");
+      entry.setAttribute("aria-label",uiText(c.pinned?"Закреплённый чат":"Открыть чат")+": "+c.title);
       recent.append(entry);
     }
     if(!saved.length)recent.append(make("div","sidebar-empty","Нет переписок"));
@@ -250,8 +252,8 @@
         const up=button("👍","rate-up",message.id),down=button("👎","rate-down",message.id);
         if(message.rating==="up")up.classList.add("selected");
         if(message.rating==="down")down.classList.add("selected");
-        up.setAttribute("aria-label","Положительная оценка ответа");
-        down.setAttribute("aria-label","Отрицательная оценка ответа");
+        up.setAttribute("aria-label",uiText("Положительная оценка ответа"));
+        down.setAttribute("aria-label",uiText("Отрицательная оценка ответа"));
         up.setAttribute("aria-pressed",String(message.rating==="up"));
         down.setAttribute("aria-pressed",String(message.rating==="down"));
         actions.append(up,down,button("Повторить ответ","retry-answer",message.id));
@@ -280,8 +282,11 @@
       if(!chats.length)card.append(make("p","session-help","Пока нет чатов в этом проекте."));
       for(const c of chats){
         const row=make("div","session-project-chat-row");
-        row.append(button("↳ "+c.title,"open-chat",c.id,"session-project-chat"),
-          button("Убрать","remove-chat-from-project",c.id,"session-button"));
+        const open=button("↳ "+c.title,"open-chat",c.id,"session-project-chat");
+        open.setAttribute("aria-label",uiText("Открыть чат")+": "+c.title);
+        const remove=button("Убрать","remove-chat-from-project",c.id,"session-button");
+        remove.setAttribute("aria-label",uiText("Убрать из проекта")+": "+c.title);
+        row.append(open,remove);
         card.append(row);
       }
       addButtons(card,[{label:"＋ Добавить чат",action:"add-chat-to-project",id:project.id},
@@ -710,6 +715,11 @@
       historyInput.closest(".search-bar")?.append(clear);
       const updateSearch=()=>{clear.hidden=!historyInput.value};
       historyInput.addEventListener("input",updateSearch);
+      historyInput.addEventListener("keydown",event=>{
+        if(event.key!=="Escape"||!historyInput.value)return;
+        event.preventDefault();event.stopPropagation();
+        historyInput.value="";updateSearch();renderHistory();
+      });
       clear.addEventListener("click",()=>{historyInput.value="";updateSearch();renderHistory();historyInput.focus()});
     }
     const projectsView=$("#view-projects");
@@ -800,13 +810,9 @@
     for(const card of document.querySelectorAll("#toolGroups [data-feature^='tool-']")){
       const id=Number(card.dataset.feature.slice(5));
       const status=card.querySelector("small");
-      if(working.has(id)){
-        if(status)status.textContent="Работает";
-        card.setAttribute("aria-label",card.querySelector("strong")?.textContent||"Инструмент");
-      }else if(partial.has(id)){
-        if(status)status.textContent="Частично";
-        card.setAttribute("aria-label",(card.querySelector("strong")?.textContent||"Инструмент")+", частично реализовано");
-      }
+      const statusKey=working.has(id)?"Работает":partial.has(id)?"Частично":"В плане";
+      if(status)status.textContent=uiText(statusKey);
+      card.setAttribute("aria-label",uiText(card.querySelector("strong")?.textContent||"Инструмент")+", "+uiText(statusKey));
     }
   };
   showFeature=function(key){
@@ -888,5 +894,13 @@
   window.KazSession={snapshot:()=>({
     threads:threads.map(c=>({id:c.id,title:c.title,messages:c.messages.length,pinned:c.pinned,temporary:c.temporary,projectId:c.projectId})),
     projects:projects.map(p=>({id:p.id,name:p.name})),active:current,draftCount:drafts.size
-  }),compute,sendMessage};
+  }),compute,sendMessage,refreshLocale:()=>{
+    renderHistory();
+    renderSessionProjects();
+    for(const [action,key] of [["rate-up","Положительная оценка ответа"],["rate-down","Отрицательная оценка ответа"]]){
+      for(const control of document.querySelectorAll('#chatMessages [data-session="'+action+'"]')){
+        control.setAttribute("aria-label",uiText(key));
+      }
+    }
+  }};
 })();

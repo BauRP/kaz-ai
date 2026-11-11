@@ -1964,3 +1964,28 @@ test('pending AI status reappears on returning to the same chat without duplicat
     assert.deepEqual(errors,[]);
   }finally{release?.();await browser.close()}
 });
+
+test('Unicode search matches precomposed and decomposed letters while showing original text',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Тема изучения');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Cafe\u0301 рядом с ёлкой');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('CAFÉ');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#historyList .session-search-snippet mark').textContent(),'Cafe\u0301');
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#chatMessages .session-jump-hit mark').textContent(),'Cafe\u0301');
+    assert.ok((await page.locator('#chatMessages').innerText()).includes('Cafe\u0301 рядом'));
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('Е\u0308ЛКОЙ');
+    assert.equal(await page.locator('#historyList .session-search-snippet mark').textContent(),'ёлкой');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

@@ -1294,13 +1294,11 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     touchChat(chat);threads.unshift(chat);displayThread(chat);
     return chat;
   }
-  // Locale-aware search that maps case-expanded characters back to original text.
-  // For example: capital İ lowercases to two code units, so raw lowercase offsets
-  // cannot be used to highlight the correct characters in an original message.
+  // Match equivalent Unicode spellings while highlighting the exact original text.
+  // NFC equates letters such as é and e + combining accent, without rewriting messages.
   function findTextMatch(text,query){
-    // Unicode capital İ folds to i + combining dot. Ignore that dot so
-    // Kazakh Latin searches for "istan" still find "İSTAN".
-    const fold=value=>value.toLocaleLowerCase().replace(/\u0307/g,"");
+    const fold=value=>value.normalize("NFC").toLocaleLowerCase()
+      .replace(/\u0307/g,"").replace(/\u03c2/g,"\u03c3");
     const needle=fold(query);
     if(!needle)return null;
     const folded=fold(text);
@@ -1308,13 +1306,22 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     if(start<0)return null;
     if(folded.length===text.length)return {start,end:start+needle.length};
     const starts=[],ends=[];
-    for(let offset=0;offset<text.length;){
-      const symbol=String.fromCodePoint(text.codePointAt(offset));
-      const next=offset+symbol.length;
-      const segment=fold(symbol);
-      for(let n=0;n<segment.length;n++){starts.push(offset);ends.push(next)}
-      if(!segment&&ends.length)ends[ends.length-1]=next;
-      offset=next;
+    const append=(symbol,offset)=>{
+      const end=offset+symbol.length;
+      const normalized=fold(symbol);
+      for(let n=0;n<normalized.length;n++){starts.push(offset);ends.push(end)}
+      if(!normalized&&ends.length)ends[ends.length-1]=end;
+    };
+    if(typeof Intl.Segmenter==="function"){
+      // Graphemes keep combining marks attached to their visible base letter.
+      for(const {segment,index} of new Intl.Segmenter(undefined,{granularity:"grapheme"}).segment(text)){
+        append(segment,index);
+      }
+    }else{
+      for(let offset=0;offset<text.length;){
+        const symbol=String.fromCodePoint(text.codePointAt(offset));
+        append(symbol,offset);offset+=symbol.length;
+      }
     }
     if(start+needle.length>ends.length)return null;
     return {start:starts[start],end:ends[start+needle.length-1]};

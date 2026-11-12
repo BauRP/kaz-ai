@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const d=JSON.parse(readFileSync('ACTIVE_PROGRESS.json','utf8'));
-const prior=JSON.parse(readFileSync('progress/2026-11-13-before-unicode-drafts-project.json','utf8'));
+const prior=JSON.parse(readFileSync('progress/2026-11-13-before-ime-legacy-unicode.json','utf8'));
 const report=readFileSync('ACTIVE_PROGRESS.md','utf8');
 const activeIds=new Set([1,2,3,4,5,6,7,9,10,13,15,16,22,23,24,40,41,42,43,44,45]);
 const mean=(xs,key)=>xs.reduce((sum,x)=>sum+x[key],0)/xs.length;

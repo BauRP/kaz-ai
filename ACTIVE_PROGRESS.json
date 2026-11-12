@@ -1,32 +1,32 @@
 {
   "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
-  "basis": "21 approved active directions, calculator archived at 100%. Verified commit 033f79fea55be37bdfb5633716897a007d098012, GitHub Actions 43319275996: 62 unit tests, 85 browser regressions, Cloudflare dry-run and HTTP smoke all successful. Unicode search mapping, full emoji snippets, project reassignment focus, preserving whitespace-only text helper drafts. Engineering estimates; live GPT-OSS not connected.",
+  "basis": "21 unfinished approved directions; calculator archived at 100%. Code commit 99fedc851506320652cd693b83e8ec2f93568a59 verified in GitHub Actions 43327277252: 64 unit tests, 90 browser tests, Cloudflare Worker dry-run and HTTP smoke. Legacy-browser emoji sequence segmentation and CJK/Kazakh IME Enter submit safety. Scores are engineering estimates; live GPT-OSS not connected.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
-  "date": "2026-11-12",
-  "previous": 77.07142857142857,
-  "now": 77.1547619047619,
-  "delta": 0.0833333333333286,
+  "date": "2026-11-13",
+  "previous": 77.1547619047619,
+  "now": 77.22619047619048,
+  "delta": 0.07142857142858361,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 91.9,
-      "now": 92,
+      "previous": 92,
+      "now": 92.1,
       "delta": 0.09999999999999432
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 35.1,
+      "previous": 35.25,
       "now": 35.25,
-      "delta": 0.14999999999999858
+      "delta": 0
     },
     {
       "name": "Настройки",
       "count": 6,
       "previous": 87.33333333333333,
-      "now": 87.33333333333333,
-      "delta": 0
+      "now": 87.41666666666667,
+      "delta": 0.08333333333334281
     }
   ],
   "items": [
@@ -35,9 +35,9 @@
       "name": "Новый чат",
       "group": "Чаты",
       "previous": 96,
-      "now": 96,
-      "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "now": 96.5,
+      "delta": 0.5,
+      "summary": "Подтверждение символа через языковую клавиатуру больше не отправляет недописанное сообщение; заголовки с составными emoji не повреждаются на старых браузерах.",
       "status": "in_progress"
     },
     {
@@ -45,19 +45,19 @@
       "name": "История чатов",
       "group": "Чаты",
       "previous": 90,
-      "now": 90,
-      "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "now": 90.25,
+      "delta": 0.25,
+      "summary": "История сохраняет целые составные emoji в коротких фрагментах результатов поиска и при переходе к сообщению, в том числе в браузерах без Intl.Segmenter.",
       "status": "in_progress"
     },
     {
       "id": 3,
       "name": "Поиск по перепискам",
       "group": "Чаты",
-      "previous": 99,
-      "now": 99.5,
-      "delta": 0.5,
-      "summary": "Поиск по истории теперь сопоставляет точные позиции сложных Unicode-символов, не разрезает составные emoji и корректно показывает фрагменты сообщений.",
+      "previous": 99.5,
+      "now": 99.75,
+      "delta": 0.25,
+      "summary": "Подсветка найденного текста правильно группирует основные последовательности emoji, символы с модификаторами и флаги без Intl.Segmenter.",
       "status": "in_progress"
     },
     {
@@ -67,7 +67,7 @@
       "previous": 94,
       "now": 94,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -77,7 +77,7 @@
       "previous": 98,
       "now": 98,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -87,17 +87,17 @@
       "previous": 94,
       "now": 94,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
       "id": 7,
       "name": "Папки и проекты",
       "group": "Чаты",
-      "previous": 97.5,
+      "previous": 98,
       "now": 98,
-      "delta": 0.5,
-      "summary": "Перенос чата в существующий проект обновляет историю и папки одновременно, сохраняя фокус клавиатуры и содержание переписки.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -107,7 +107,7 @@
       "previous": 74.5,
       "now": 74.5,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -117,7 +117,7 @@
       "previous": 82,
       "now": 82,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -127,7 +127,7 @@
       "previous": 94,
       "now": 94,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -137,7 +137,7 @@
       "previous": 60.5,
       "now": 60.5,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -147,37 +147,37 @@
       "previous": 58,
       "now": 58,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
       "id": 22,
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
-      "previous": 19,
+      "previous": 19.25,
       "now": 19.25,
-      "delta": 0.25,
-      "summary": "Подготовка перевода больше не перезаписывает черновики, содержащие только пробелы и переводы строк. Реальный перевод ИИ не подключён.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
       "id": 23,
       "name": "Программирование с ИИ",
       "group": "Интеллект",
-      "previous": 19,
+      "previous": 19.25,
       "now": 19.25,
-      "delta": 0.25,
-      "summary": "Помощник программирования сохраняет все незавершённые черновики, включая пробельные; реальная генерация кода ИИ не подключена.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
       "id": 24,
       "name": "Подготовка документов",
       "group": "Интеллект",
-      "previous": 19,
+      "previous": 19.25,
       "now": 19.25,
-      "delta": 0.25,
-      "summary": "Подготовка запросов на документы не подменяет несохранённый черновик из пробелов; создание файлов по-прежнему отложено.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -187,7 +187,7 @@
       "previous": 86,
       "now": 86,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -197,7 +197,7 @@
       "previous": 92,
       "now": 92,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -207,7 +207,7 @@
       "previous": 91,
       "now": 91,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -217,7 +217,7 @@
       "previous": 76,
       "now": 76,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -227,7 +227,7 @@
       "previous": 82,
       "now": 82,
       "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -235,9 +235,9 @@
       "name": "Экспорт истории",
       "group": "Настройки",
       "previous": 97,
-      "now": 97,
-      "delta": 0,
-      "summary": "Без изменения в текущем цикле.",
+      "now": 97.5,
+      "delta": 0.5,
+      "summary": "Короткие названия файлов TXT строятся без разрыва составных emoji на браузерах без Intl.Segmenter; исходные сообщения остаются неизменными.",
       "status": "in_progress"
     }
   ],
@@ -258,7 +258,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 78.11363636363636,
-  "overall_now": 78.19318181818181,
-  "overall_delta": 0.07954545454545325
+  "overall_previous": 78.19318181818181,
+  "overall_now": 78.26136363636364,
+  "overall_delta": 0.06818181818182723
 }

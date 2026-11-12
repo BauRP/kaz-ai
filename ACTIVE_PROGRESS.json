@@ -1,32 +1,32 @@
 {
   "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
-  "basis": "21 approved unfinished directions, completed calculator archived separately. GitHub Actions 43233100778 on commit 4dce3510a14019b00ebc3d0390f3d6cb90874782 validated 62 basic and 73 browser tests, Cloudflare build and HTTP checks. Fixes: show ungrouped chats with no projects, Unicode safe exported filenames, localized clear-search accessible labels, and fail-closed server key config. Percentages are engineering estimates, live GPT-OSS remains unconnected.",
+  "basis": "Approved 21 unfinished directions, completed calculator excluded. Code commit 5b51cfc2e023beda13bb1fc1fd8a39db0a2b6ab2 passed GitHub Actions 43258312924: 62 unit tests, 76 Chrome browser tests, Cloudflare dry-run, HTTP smoke. Work: keyboard focus after editing chats and project cards; grapheme-safe titles and downloads including browser filename sanitization. Estimates, not proof of live GPT-OSS availability.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
   "date": "2026-11-11",
-  "previous": 76.66666666666667,
-  "now": 76.78571428571429,
-  "delta": 0.1190476190476204,
+  "previous": 76.78571428571429,
+  "now": 76.9047619047619,
+  "delta": 0.11904761904760619,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 91.4,
-      "now": 91.55,
-      "delta": 0.14999999999999147
+      "previous": 91.55,
+      "now": 91.75,
+      "delta": 0.20000000000000284
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 34.8,
+      "previous": 34.9,
       "now": 34.9,
-      "delta": 0.10000000000000142
+      "delta": 0
     },
     {
       "name": "Настройки",
       "count": 6,
-      "previous": 87,
-      "now": 87.08333333333333,
-      "delta": 0.0833333333333286
+      "previous": 87.08333333333333,
+      "now": 87.16666666666667,
+      "delta": 0.08333333333334281
     }
   ],
   "items": [
@@ -35,9 +35,9 @@
       "name": "Новый чат",
       "group": "Чаты",
       "previous": 95.5,
-      "now": 95.5,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 96,
+      "delta": 0.5,
+      "summary": "Названия новых чатов обрезаются по целым видимым Unicode-символам: составные emoji с соединителями остаются неповреждёнными.",
       "status": "in_progress"
     },
     {
@@ -54,10 +54,10 @@
       "id": 3,
       "name": "Поиск по перепискам",
       "group": "Чаты",
-      "previous": 98.5,
+      "previous": 99,
       "now": 99,
-      "delta": 0.5,
-      "summary": "Очистка поиска теперь корректно обозначена для программ чтения с экрана на русском, английском и казахском, а поисковый текст сохраняется при смене языка.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -65,9 +65,9 @@
       "name": "Переименовать чат",
       "group": "Чаты",
       "previous": 93,
-      "now": 93,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 94,
+      "delta": 1,
+      "summary": "После переименования чата клавиатурный фокус возвращается на ту же команду, даже если карточка истории была заново отрисована.",
       "status": "in_progress"
     },
     {
@@ -94,10 +94,10 @@
       "id": 7,
       "name": "Папки и проекты",
       "group": "Чаты",
-      "previous": 96,
-      "now": 97,
-      "delta": 1,
-      "summary": "В разделе проектов чаты без папок доступны даже до создания первого проекта и после удаления последней папки; действия открытия доступны с клавиатуры.",
+      "previous": 97,
+      "now": 97.5,
+      "delta": 0.5,
+      "summary": "После переименования проекта или добавления чата клавиатурный фокус остаётся на соответствующем действии; переписки не теряются.",
       "status": "in_progress"
     },
     {
@@ -134,10 +134,10 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 59,
+      "previous": 59.5,
       "now": 59.5,
-      "delta": 0.5,
-      "summary": "При некорректной серверной настройке секретного ключа ИИ не запускается, возвращается понятная ошибка конфигурации.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -234,10 +234,10 @@
       "id": 45,
       "name": "Экспорт истории",
       "group": "Настройки",
-      "previous": 96,
-      "now": 96.5,
+      "previous": 96.5,
+      "now": 97,
       "delta": 0.5,
-      "summary": "При экспорте отдельного чата длинное имя файла обрезается по целым Unicode-символам и не повреждает emoji.",
+      "summary": "Экспорт отдельного чата не разделяет составные emoji при обрезке длинного имени; проверено поведение загрузки Chrome и оригинального содержимого TXT.",
       "status": "in_progress"
     }
   ],
@@ -258,7 +258,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 77.72727272727273,
-  "overall_now": 77.8409090909091,
+  "overall_previous": 77.8409090909091,
+  "overall_now": 77.95454545454545,
   "overall_delta": 0.11363636363635976
 }

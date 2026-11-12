@@ -2210,3 +2210,77 @@ test('chat title ends at a complete emoji without corrupt surrogate halves',asyn
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('projects show ungrouped chats before any folder and after deleting the last folder',async()=>{
+  const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Обычная переписка без папки');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Пока нет проектов'));
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Без проекта'));
+    assert.equal(await page.locator('#projectsWorkspace [data-session="open-chat"]').count(),1);
+    assert.equal(await page.locator('#projectsWorkspace [data-session="open-chat"]').getAttribute('aria-label'),'Открыть чат: Обычная переписка без папки');
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Рабочая папка');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('[data-session="add-chat-to-project"]').click();
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('[data-session="delete-project"]').click();
+    await page.locator('#sessionBody [data-session="dialog-confirm"]').click();
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Обычная переписка без папки'));
+    assert.equal(await page.locator('#projectsWorkspace [data-session="open-chat"]').count(),1);
+    await page.locator('#projectsWorkspace [data-session="open-chat"]').click();
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('individual TXT export does not split an emoji in long filenames',async()=>{
+  const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820},acceptDownloads:true});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Проверка длинного имени файла');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="rename-chat"]').click();
+    const longName='Я'.repeat(69)+'😀'+'конец';
+    await page.locator('#sessionBody input').fill(longName);
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    const started=page.waitForEvent('download');
+    await page.locator('#historyList [data-session="export-chat"]').click();
+    const download=await started;
+    assert.equal(download.suggestedFilename(),'Kaz-AI-'+'Я'.repeat(69)+'😀'+'.txt');
+    const body=readFileSync(await download.path(),'utf8');
+    assert.ok(body.includes('Проверка длинного имени файла'));
+    assert.ok(body.includes(longName));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('clear-history-search accessible label follows RU EN KK and preserves search text',async()=>{
+  const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('қарапайым');
+    assert.equal(await page.locator('#sessionClearSearch').getAttribute('aria-label'),'Очистить поиск переписок');
+    for(const [language,expected] of [['en','Clear chat search'],['kk','Чат іздеуін тазалау'],['ru','Очистить поиск переписок']]){
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+language+'"]').click();
+      assert.equal(await page.locator('#sessionClearSearch').getAttribute('aria-label'),expected);
+      assert.equal(await page.locator('#historySearch').inputValue(),'қарапайым');
+    }
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

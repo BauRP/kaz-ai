@@ -72,7 +72,8 @@
   const baseShowScreen=showScreen;
   const baseShowFeature=showFeature;
   const baseToggleTheme=toggleTheme;
-  const safeExportName=name=>name.normalize("NFKC").replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,"").slice(0,70)||"chat";
+  const safeExportName=name=>Array.from(name.normalize("NFKC")
+    .replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,"")).slice(0,70).join("")||"chat";
   const exportText=c=>{
     const lang=window.KazI18n?.language||"ru";
     const labels={
@@ -215,7 +216,10 @@
           :(value?"Найдено переписок: "+shown.length+" из "+saved.length:"Переписок в текущей вкладке: "+saved.length);
     }
     const clearButton=$("#sessionClearSearch");
-    if(clearButton)clearButton.textContent=language==="en"?"Clear":language==="kk"?"Тазалау":"Очистить";
+    if(clearButton){
+      clearButton.textContent=language==="en"?"Clear":language==="kk"?"Тазалау":"Очистить";
+      clearButton.setAttribute("aria-label",uiText("Очистить поиск переписок"));
+    }
     if(!shown.length){
       const empty=make("div","empty-card");
       empty.append(make("h2","",value?"Совпадений не найдено":"Пока нет чатов"),
@@ -304,7 +308,7 @@
     if(!projects.length){
       const empty=make("div","empty-card");
       empty.append(make("h2","","Пока нет проектов"),make("p","","Создайте папку, чтобы сгруппировать переписки текущего сеанса."));
-      target.append(empty);return;
+      target.append(empty);
     }
     for(const project of projects){
       const card=make("section","session-project-card");
@@ -332,7 +336,11 @@
     if(ungrouped.length){
       const box=make("section","session-project-card");
       box.append(make("h2","","Без проекта"));
-      for(const c of ungrouped)box.append(button("↳ "+c.title,"open-chat",c.id,"session-project-chat"));
+      for(const c of ungrouped){
+        const open=button("↳ "+c.title,"open-chat",c.id,"session-project-chat");
+        open.setAttribute("aria-label",uiText("Открыть чат")+": "+c.title);
+        box.append(open);
+      }
       target.append(box);
     }
   }

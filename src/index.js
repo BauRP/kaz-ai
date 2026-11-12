@@ -99,7 +99,9 @@ export default {
     if(request.method!=="POST")return codeError("METHOD_NOT_ALLOWED","Используйте POST.",405);
     const origin=request.headers.get("origin");
     if(origin&&origin!==url.origin)return codeError("ORIGIN_MISMATCH","Недопустимый источник запроса.",403);
-    if(!env.KAZ_AI_ACCESS_KEY||!env.AI)return codeError("ACCESS_REQUIRED","Серверный ИИ ещё не настроен.",503);
+    if(typeof env.KAZ_AI_ACCESS_KEY!=="string"||env.KAZ_AI_ACCESS_KEY.length<24
+       ||env.KAZ_AI_ACCESS_KEY.length>1000||!env.AI)
+      return codeError("ACCESS_REQUIRED","Серверный ИИ ещё не настроен.",503);
     const auth=request.headers.get("authorization")||"";
     const permitted=await equalSecret(auth.startsWith("Bearer ")?auth.slice(7):"",env.KAZ_AI_ACCESS_KEY);
     if(!permitted)return codeError("ACCESS_REQUIRED","Неверный ключ доступа к тестовому ИИ.",401);

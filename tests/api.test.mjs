@@ -182,3 +182,13 @@ test('invalid UTF-8 request is rejected before AI without a 500 response',async(
   assert.equal((await response.json()).code,'INVALID_REQUEST');
   assert.equal(calls.length,0);
 });
+
+test('misconfigured short or oversized server secrets fail closed before running AI',async()=>{
+  const {env,calls}=envWithAI();
+  for(const secret of ['short','x'.repeat(1001),42]){
+    const response=await worker.fetch(post(good),{...env,KAZ_AI_ACCESS_KEY:secret});
+    assert.equal(response.status,503);
+    assert.equal((await response.json()).code,'ACCESS_REQUIRED');
+  }
+  assert.equal(calls.length,0);
+});

@@ -635,7 +635,13 @@
         }
         body.append(select);
         const save=button("Сохранить","dialog-save",null,"session-primary");
-        save.addEventListener("click",()=>{chat.projectId=select.value||null;closeDialog();renderSessionProjects();notify("Проект чата изменён.")});
+        save.addEventListener("click",()=>{
+          chat.projectId=select.value||null;
+          // Rebuild first so closing the dialog can return keyboard focus to
+          // the current history action, not a detached old button.
+          renderSessionProjects();renderHistory();closeDialog();
+          notify("Проект чата изменён.");
+        });
         body.append(save);
         if(!projects.length)body.append(make("p","session-help","Сначала создайте проект в разделе «Проекты»."));
       });return}

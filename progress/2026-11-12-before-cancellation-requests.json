@@ -1,0 +1,264 @@
+{
+  "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
+  "basis": "Current 21 approved light-medium directions; calculator archived separately. Code commit f72ec115eb4d5837d12c9209ed59bed83fd8b5d7 verified by GitHub Actions 42962865112 (58 unit tests, 66 browser tests, Cloudflare dry-run and HTTP smoke). Improved Unicode fallback, retry accessibility, provider error classification and language switching. Scores are engineering estimates, not live-AI verification.",
+  "branch": "chatgpt/kaz-ai-shell-20261108",
+  "date": "2026-11-11",
+  "previous": 76.28571428571429,
+  "now": 76.45238095238095,
+  "delta": 0.1666666666666572,
+  "groups": [
+    {
+      "name": "Чаты",
+      "count": 10,
+      "previous": 91,
+      "now": 91.15,
+      "delta": 0.15000000000000568
+    },
+    {
+      "name": "Интеллект",
+      "count": 5,
+      "previous": 34.4,
+      "now": 34.6,
+      "delta": 0.20000000000000284
+    },
+    {
+      "name": "Настройки",
+      "count": 6,
+      "previous": 86.66666666666667,
+      "now": 86.83333333333333,
+      "delta": 0.1666666666666572
+    }
+  ],
+  "items": [
+    {
+      "id": 1,
+      "name": "Новый чат",
+      "group": "Чаты",
+      "previous": 95,
+      "now": 95,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 2,
+      "name": "История чатов",
+      "group": "Чаты",
+      "previous": 90,
+      "now": 90,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 3,
+      "name": "Поиск по перепискам",
+      "group": "Чаты",
+      "previous": 98,
+      "now": 98.5,
+      "delta": 0.5,
+      "summary": "Поиск устойчивее в старых браузерах без Intl.Segmenter: составные Unicode-буквы подсвечиваются целиком; кешируется анализатор символов.",
+      "status": "in_progress"
+    },
+    {
+      "id": 4,
+      "name": "Переименовать чат",
+      "group": "Чаты",
+      "previous": 93,
+      "now": 93,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 5,
+      "name": "Удалить чат",
+      "group": "Чаты",
+      "previous": 98,
+      "now": 98,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 6,
+      "name": "Закрепить чат",
+      "group": "Чаты",
+      "previous": 94,
+      "now": 94,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 7,
+      "name": "Папки и проекты",
+      "group": "Чаты",
+      "previous": 96,
+      "now": 96,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 9,
+      "name": "Повторить ответ",
+      "group": "Чаты",
+      "previous": 72,
+      "now": 73,
+      "delta": 1,
+      "summary": "Повтор запроса переводит клавиатурный фокус на видимую кнопку «Остановить» после скрытия кнопки повтора. Ответ и вопрос не дублируются.",
+      "status": "in_progress"
+    },
+    {
+      "id": 10,
+      "name": "Остановить ответ",
+      "group": "Чаты",
+      "previous": 80,
+      "now": 80,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 13,
+      "name": "Оценка ответа",
+      "group": "Чаты",
+      "previous": 94,
+      "now": 94,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 15,
+      "name": "Обычный чат с GPT-OSS",
+      "group": "Интеллект",
+      "previous": 57,
+      "now": 58,
+      "delta": 1,
+      "summary": "Сервер точнее различает временное ограничение частоты запросов и дневную квоту, в том числе при вложенных и структурированных ошибках провайдера. Реальное подключение ИИ пока не подтверждено.",
+      "status": "in_progress"
+    },
+    {
+      "id": 16,
+      "name": "Уровни рассуждения",
+      "group": "Интеллект",
+      "previous": 58,
+      "now": 58,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 22,
+      "name": "Переводчик с ИИ",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 23,
+      "name": "Программирование с ИИ",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 24,
+      "name": "Подготовка документов",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 40,
+      "name": "Личные инструкции",
+      "group": "Настройки",
+      "previous": 86,
+      "now": 86,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 41,
+      "name": "Временный чат",
+      "group": "Настройки",
+      "previous": 91,
+      "now": 91,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 42,
+      "name": "Светлая и тёмная тема",
+      "group": "Настройки",
+      "previous": 91,
+      "now": 91,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 43,
+      "name": "Язык интерфейса",
+      "group": "Настройки",
+      "previous": 74,
+      "now": 75,
+      "delta": 1,
+      "summary": "Подключена локализация уведомления о недоступности ИИ и кнопки «Повторить запрос» во время переключения языка. Русский, английский и казахский проверены в браузере.",
+      "status": "in_progress"
+    },
+    {
+      "id": 44,
+      "name": "Размер текста",
+      "group": "Настройки",
+      "previous": 82,
+      "now": 82,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 45,
+      "name": "Экспорт истории",
+      "group": "Настройки",
+      "previous": 96,
+      "now": 96,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    }
+  ],
+  "completed_ids": [
+    25
+  ],
+  "completed_count": 1,
+  "incomplete_count": 21,
+  "completed_items": [
+    {
+      "id": 25,
+      "name": "Простой калькулятор",
+      "group": "Интеллект",
+      "previous": 100,
+      "now": 100,
+      "delta": 0,
+      "summary": "Базовый автономный калькулятор завершён, проверен и исключён из всех списков незавершённых задач.",
+      "status": "completed"
+    }
+  ],
+  "overall_previous": 77.36363636363636,
+  "overall_now": 77.52272727272727,
+  "overall_delta": 0.1590909090909065
+}

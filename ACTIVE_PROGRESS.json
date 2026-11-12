@@ -1,32 +1,32 @@
 {
   "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
-  "basis": "Current 21 approved light-medium directions; calculator archived separately. Code commit f72ec115eb4d5837d12c9209ed59bed83fd8b5d7 verified by GitHub Actions 42962865112 (58 unit tests, 66 browser tests, Cloudflare dry-run and HTTP smoke). Improved Unicode fallback, retry accessibility, provider error classification and language switching. Scores are engineering estimates, not live-AI verification.",
+  "basis": "21 approved unfinished directions, completed basic calculator archived. GitHub Actions 43154536739 verified code commit 24c1952f47673a53626a4aab04363c36fb6b92b6: server unit, Chrome browser, Cloudflare build and HTTP smoke. New bounded request streams, immediate cancellation, safe regeneration retries, temporary mode synchronization and Unicode-safe new chat titles. Readiness is an engineering estimate; real GPT-OSS remains unconnected.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
   "date": "2026-11-11",
-  "previous": 76.28571428571429,
-  "now": 76.45238095238095,
-  "delta": 0.1666666666666572,
+  "previous": 76.45238095238095,
+  "now": 76.66666666666667,
+  "delta": 0.2142857142857224,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 91,
-      "now": 91.15,
-      "delta": 0.15000000000000568
+      "previous": 91.15,
+      "now": 91.4,
+      "delta": 0.25
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 34.4,
-      "now": 34.6,
-      "delta": 0.20000000000000284
+      "previous": 34.6,
+      "now": 34.8,
+      "delta": 0.19999999999999574
     },
     {
       "name": "Настройки",
       "count": 6,
-      "previous": 86.66666666666667,
-      "now": 86.83333333333333,
-      "delta": 0.1666666666666572
+      "previous": 86.83333333333333,
+      "now": 87,
+      "delta": 0.1666666666666714
     }
   ],
   "items": [
@@ -35,9 +35,9 @@
       "name": "Новый чат",
       "group": "Чаты",
       "previous": 95,
-      "now": 95,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 95.5,
+      "delta": 0.5,
+      "summary": "Заголовок нового чата безопасно обрезается по целым Unicode-символам: emoji и другие символы не повреждаются.",
       "status": "in_progress"
     },
     {
@@ -54,10 +54,10 @@
       "id": 3,
       "name": "Поиск по перепискам",
       "group": "Чаты",
-      "previous": 98,
+      "previous": 98.5,
       "now": 98.5,
-      "delta": 0.5,
-      "summary": "Поиск устойчивее в старых браузерах без Intl.Segmenter: составные Unicode-буквы подсвечиваются целиком; кешируется анализатор символов.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -104,10 +104,10 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 72,
-      "now": 73,
+      "previous": 73,
+      "now": 74,
       "delta": 1,
-      "summary": "Повтор запроса переводит клавиатурный фокус на видимую кнопку «Остановить» после скрытия кнопки повтора. Ответ и вопрос не дублируются.",
+      "summary": "После немедленной остановки запроса повтор доступен без ожидания сетевого соединения, включая замену последнего ответа без удаления предыдущего.",
       "status": "in_progress"
     },
     {
@@ -115,9 +115,9 @@
       "name": "Остановить ответ",
       "group": "Чаты",
       "previous": 80,
-      "now": 80,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 81,
+      "delta": 1,
+      "summary": "Кнопка остановки сразу разблокирует интерфейс и предотвращает применение запоздавшего ответа, даже если транспорт не завершился.",
       "status": "in_progress"
     },
     {
@@ -134,10 +134,10 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 57,
-      "now": 58,
+      "previous": 58,
+      "now": 59,
       "delta": 1,
-      "summary": "Сервер точнее различает временное ограничение частоты запросов и дневную квоту, в том числе при вложенных и структурированных ошибках провайдера. Реальное подключение ИИ пока не подтверждено.",
+      "summary": "Сервер читает тело запроса с жёстким пределом 50 КБ по потоку и корректно отвергает повреждённый UTF-8, не расходуя ресурсы модели.",
       "status": "in_progress"
     },
     {
@@ -195,9 +195,9 @@
       "name": "Временный чат",
       "group": "Настройки",
       "previous": 91,
-      "now": 91,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 92,
+      "delta": 1,
+      "summary": "При переходе из временного чата к сохранённому переключатель временного режима возвращается в правильное состояние; временные сообщения не попадают в историю.",
       "status": "in_progress"
     },
     {
@@ -214,10 +214,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 74,
+      "previous": 75,
       "now": 75,
-      "delta": 1,
-      "summary": "Подключена локализация уведомления о недоступности ИИ и кнопки «Повторить запрос» во время переключения языка. Русский, английский и казахский проверены в браузере.",
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -258,7 +258,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 77.36363636363636,
-  "overall_now": 77.52272727272727,
-  "overall_delta": 0.1590909090909065
+  "overall_previous": 77.52272727272727,
+  "overall_now": 77.72727272727273,
+  "overall_delta": 0.20454545454546746
 }

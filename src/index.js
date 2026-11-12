@@ -8,6 +8,31 @@ const json=(data,status=200)=>new Response(JSON.stringify(data),{
   }
 });
 const codeError=(code,message,status)=>json({code,message},status);
+const MAX_CHAT_BYTES=50000;
+// The content-length header is optional and cannot be trusted to enforce the
+// limit. Read in bounded chunks, cancelling oversized streams immediately.
+async function readLimitedBody(request){
+  if(!request.body)return {raw:""};
+  const reader=request.body.getReader();
+  const decoder=new TextDecoder("utf-8",{fatal:true});
+  let bytes=0,raw="";
+  try{
+    while(true){
+      const {value,done}=await reader.read();
+      if(done)break;
+      bytes+=value.byteLength;
+      if(bytes>MAX_CHAT_BYTES){
+        void reader.cancel("request exceeds 50 KB").catch(()=>{});
+        return {tooLarge:true};
+      }
+      raw+=decoder.decode(value,{stream:true});
+    }
+    raw+=decoder.decode();
+    return {raw};
+  }finally{
+    reader.releaseLock();
+  }
+}
 async function equalSecret(a,b){
   if(typeof a!=="string"||typeof b!=="string"||b.length<24||a.length>1000)return false;
   const encoder=new TextEncoder();
@@ -81,11 +106,12 @@ export default {
     if(!/^application\/json(?:;|$)/i.test(request.headers.get("content-type")||""))
       return codeError("INVALID_REQUEST","Требуется JSON.",415);
     const length=Number(request.headers.get("content-length")||0);
-    if(length>50000)return codeError("INVALID_REQUEST","Слишком длинный запрос.",413);
-    let raw;
-    try{raw=await request.text()}catch{return codeError("INVALID_REQUEST","Ошибка чтения запроса.",400)}
-    if(new TextEncoder().encode(raw).byteLength>50000)return codeError("INVALID_REQUEST","Слишком длинный запрос.",413);
-    let payload;try{payload=JSON.parse(raw)}catch{return codeError("INVALID_REQUEST","Некорректный JSON.",400)}
+    if(length>MAX_CHAT_BYTES)return codeError("INVALID_REQUEST","Слишком длинный запрос.",413);
+    let body;
+    try{body=await readLimitedBody(request)}
+    catch{return codeError("INVALID_REQUEST","Ошибка чтения запроса.",400)}
+    if(body.tooLarge)return codeError("INVALID_REQUEST","Слишком длинный запрос.",413);
+    let payload;try{payload=JSON.parse(body.raw)}catch{return codeError("INVALID_REQUEST","Некорректный JSON.",400)}
     const input=validatedInput(payload);
     if(!input)return codeError("INVALID_REQUEST","Неподдерживаемый запрос.",400);
     const messages=[

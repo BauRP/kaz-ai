@@ -126,3 +126,59 @@ test('structured unrelated provider errors are not mistaken for quota failures',
   assert.equal(response.status,503);
   assert.equal((await response.json()).code,'AI_UNAVAILABLE');
 });
+
+test('a chunked request without Content-Length stops at the 50 KB stream limit',async()=>{
+  const {env,calls}=envWithAI();
+  let cancelled=false;
+  const stream=new ReadableStream({
+    start(controller){
+      controller.enqueue(new Uint8Array(30000));
+      controller.enqueue(new Uint8Array(30000));
+    },
+    cancel(){cancelled=true}
+  });
+  const request=new Request('https://private.example/api/chat',{
+    method:'POST',duplex:'half',body:stream,
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN,Origin:'https://private.example'}
+  });
+  assert.equal(request.headers.get('content-length'),null);
+  const response=await worker.fetch(request,env);
+  assert.equal(response.status,413);
+  assert.equal((await response.json()).code,'INVALID_REQUEST');
+  assert.equal(cancelled,true);
+  assert.equal(calls.length,0);
+});
+test('a JSON request split inside a Cyrillic UTF-8 character is accepted',async()=>{
+  const {env,calls}=envWithAI();
+  const source=new TextEncoder().encode(JSON.stringify(good));
+  const middle=source.indexOf(0xd0);
+  assert.ok(middle>0);
+  const body=new ReadableStream({
+    start(controller){
+      controller.enqueue(source.slice(0,middle+1));
+      controller.enqueue(source.slice(middle+1));
+      controller.close();
+    }
+  });
+  const request=new Request('https://private.example/api/chat',{
+    method:'POST',duplex:'half',body,
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN,Origin:'https://private.example'}
+  });
+  const response=await worker.fetch(request,env);
+  assert.equal(response.status,200);
+  assert.equal((await response.json()).text,'Ответ модели');
+  assert.equal(calls.length,1);
+  assert.equal(calls[0][1].messages.at(-1).content,good.messages[0].content);
+});
+test('invalid UTF-8 request is rejected before AI without a 500 response',async()=>{
+  const {env,calls}=envWithAI();
+  const request=new Request('https://private.example/api/chat',{
+    method:'POST',
+    body:new Uint8Array([0x7b,0x22,0xc3,0x28,0x22,0x7d]),
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN,Origin:'https://private.example'}
+  });
+  const response=await worker.fetch(request,env);
+  assert.equal(response.status,400);
+  assert.equal((await response.json()).code,'INVALID_REQUEST');
+  assert.equal(calls.length,0);
+});

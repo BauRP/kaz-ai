@@ -2084,3 +2084,129 @@ test('Unicode search preserves accent highlights when Intl.Segmenter is unavaila
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('manual Stop immediately unlocks retry while the old request remains unresolved',async()=>{
+  const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  let release;
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    const gate=new Promise(resolve=>{release=resolve});
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        const order=++calls;
+        if(order===1)await gate;
+        try{return await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:order===1?'Устаревший ответ':'Новый ответ'})})}catch{return}
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Остановка без ожидания сети');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('safe-test-protected-key-123456789012345');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.locator('#sessionStop').click();
+    assert.equal(await page.locator('#sessionStop').isVisible(),false);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    assert.equal(await page.evaluate(()=>document.activeElement?.id),'sessionRetry');
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Новый ответ'));
+    assert.equal(calls,2);
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    release();
+    await page.waitForTimeout(150);
+    assert.ok(!(await page.locator('#chatMessages').innerText()).includes('Устаревший ответ'));
+    assert.deepEqual(errors,[]);
+  }finally{release?.();await browser.close()}
+});
+
+test('stop and retry of regeneration keeps original reply until a real replacement succeeds',async()=>{
+  const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  let release;
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    const gate=new Promise(resolve=>{release=resolve});
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        const order=++calls;
+        if(order===2)await gate;
+        try{return await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:order===1?'Исходный ответ':order===2?'Ненужный ответ':'Успешная замена'})})}catch{return}
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Проверить замену ответа');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('safe-test-protected-key-123456789012345');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Исходный ответ'));
+    await page.locator('[data-session="retry-answer"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.locator('#sessionStop').click();
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    assert.ok((await page.locator('#chatMessages').innerText()).includes('Исходный ответ'));
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Успешная замена'));
+    release();
+    await page.waitForTimeout(120);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.ok(!(await page.locator('#chatMessages').innerText()).includes('Ненужный ответ'));
+    assert.equal(calls,3);
+    assert.deepEqual(errors,[]);
+  }finally{release?.();await browser.close()}
+});
+
+test('opening a saved chat after a temporary chat switches off temporary mode safely',async()=>{
+  const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Сохранённая тема');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#sessionTemporary').check();
+    await page.locator('#messageInput').fill('Временная секретная тема');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').first().click();
+    assert.equal(await page.locator('#sessionTemporary').isChecked(),false);
+    assert.equal(await page.locator('#chatMessages .message-user').count(),1);
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Второй сохранённый чат');
+    await page.locator('#sendButton').click();
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads.length,2);
+    assert.ok(snapshot.threads.every(x=>x.temporary===false));
+    assert.ok(snapshot.threads.every(x=>!x.title.includes('секретная')));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('chat title ends at a complete emoji without corrupt surrogate halves',async()=>{
+  const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    const message='А'.repeat(54)+'😀'+'продолжение';
+    await page.locator('#messageInput').fill(message);
+    await page.locator('#sendButton').click();
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads[0].title,'А'.repeat(54)+'😀');
+    assert.equal(await page.locator('.message-user').first().innerText(),message);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

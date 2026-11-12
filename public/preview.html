@@ -1173,7 +1173,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const suffix=last===1&&lastTwo!==11?"чат":last>=2&&last<=4&&(lastTwo<12||lastTwo>14)?"чата":"чатов";
     return count+" "+suffix;
   };
-  let current=null,serial=0,modalReturn=null,abort=null,pending=null,personalInstructions="",aiAccessKey="",retryAnswerId=null;
+  let current=null,serial=0,modalReturn=null,abort=null,pending=null,pendingReplaceId=null,personalInstructions="",aiAccessKey="",retryAnswerId=null;
   let statusRetryable=false;
   const nextId=()=>String(++serial);
   const uiText=value=>window.KazI18n?.translate?.(value)||value;
@@ -1194,6 +1194,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     }
     state.chat=c?c.messages:[];
     state.draftTitle=c?c.title:"Новый чат";
+    // A saved chat is never temporary, even if the previous composer was.
+    const temporarySetting=$("#sessionTemporary");
+    if(c&&temporarySetting)temporarySetting.checked=Boolean(c.temporary);
   };
   const composeText=()=>$("#messageInput").value.trim();
   function showStatus(text,quota=false,retryable=false){
@@ -1289,7 +1292,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   }
   function newThread(firstMessage){
     const temporary=Boolean($("#sessionTemporary")?.checked);
-    const chat={id:nextId(),title:firstMessage.slice(0,55)||"Новый чат",
+    // Never cut a surrogate pair in half when the first message contains emoji.
+    const title=Array.from(firstMessage).slice(0,55).join("")||"Новый чат";
+    const chat={id:nextId(),title,
       messages:[],pinned:false,projectId:null,temporary};
     touchChat(chat);threads.unshift(chat);displayThread(chat);
     return chat;
@@ -1511,7 +1516,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
     const previousFocus=document.activeElement;
-    const controller=new AbortController();abort=controller;pending=chat.id;retryAnswerId=null;
+    const controller=new AbortController();abort=controller;pending=chat.id;pendingReplaceId=replaceId;retryAnswerId=null;
     const timeout=setTimeout(()=>controller.abort("timeout"),45000);
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
@@ -1533,7 +1538,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     while(history.length>1&&history[0].role!=="user")history.shift();
     if(!history.length||history.at(-1).role!=="user"){
       showStatus("Запрос слишком большой. Сократите последнее сообщение.",false,true);
-      clearTimeout(timeout);abort=null;pending=null;stop.hidden=true;resizeInput();
+      clearTimeout(timeout);abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput();
       return;
     }
     try{
@@ -1594,8 +1599,27 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       }
     }finally{
       clearTimeout(timeout);
-      if(abort===controller){abort=null;pending=null;stop.hidden=true;resizeInput()}
+      if(abort===controller){abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput()}
     }
+  }
+  function stopActiveRequest(){
+    const controller=abort;
+    if(!controller)return;
+    const chat=selected(),replaceId=pendingReplaceId;
+    const canRetry=Boolean(chat&&chat.id===pending&&(
+      replaceId ? chat.messages.at(-1)?.id===replaceId
+        : chat.messages.at(-1)?.role==="user"
+    ));
+    // Detach before signalling cancellation: even if the transport ignores Abort,
+    // a late answer is rejected by the active-controller identity checks.
+    abort=null;pending=null;pendingReplaceId=null;
+    controller.abort("manual");
+    $("#sessionStop").hidden=true;
+    retryAnswerId=replaceId;
+    showStatus("Генерация ответа остановлена.",false,canRetry);
+    resizeInput();
+    if(canRetry&&!$("#sessionRetry").hidden)$("#sessionRetry").focus();
+    else $("#messageInput").focus();
   }
   function sendMessage(){
     const text=composeText();if(!text||abort)return;
@@ -1776,7 +1800,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       }
 
     }
-    if(action==="stop"){abort?.abort("manual");return}
+    if(action==="stop"){stopActiveRequest();return}
     if(action==="retry-request"){
       if(abort){notify("Дождитесь завершения текущего запроса.");return}
       const fromRetryButton=document.activeElement?.id==="sessionRetry";
@@ -2048,7 +2072,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         if(abort){
           // Reveal the conversation before cancelling so Retry and status are visible.
           showScreen(selected()?"chat":"welcome");
-          abort.abort("manual");
+          stopActiveRequest();
         }else notify("Сейчас нет активного ответа.");
         return;
       }

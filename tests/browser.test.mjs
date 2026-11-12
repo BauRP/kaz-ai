@@ -2472,7 +2472,7 @@ test('static accessible control names switch RU EN KK and back without changing 
     await page.locator('#messageInput').fill('Текст пользователя должен сохраниться');
     await page.locator('#sendButton').click();
     const selectors={'#historySearch':['Поиск по перепискам','Search chats','Чаттардан іздеу'],
-      '#reasonToggle':['Уровень рассуждения','Reasoning level','Ойлау деңгейі'],
+      '#reasonMenu':['Уровень рассуждения','Reasoning level','Ойлау деңгейі'],
       '#sendButton':['Отправить сообщение','Send message','Хабарлама жіберу']};
     for(const [i,language] of ['ru','en','kk','ru'].entries()){
       if(i>0){

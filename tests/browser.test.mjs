@@ -2372,3 +2372,92 @@ test('compound emoji remain whole in first-message titles and exported TXT filen
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('AI timeout unlocks Retry even if a stalled fetch ignores AbortSignal, and rejects late answer',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  let release;
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    const gate=new Promise(resolve=>{release=resolve});
+    let calls=0;
+    await page.addInitScript(()=>{
+      const baseSetTimeout=window.setTimeout.bind(window);
+      window.setTimeout=(callback,delay,...args)=>
+        baseSetTimeout(callback,delay===45000?600:delay,...args);
+    });
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        const index=++calls;
+        if(index===1)await gate;
+        try{
+          return await route.fulfill({
+            status:200,contentType:'application/json',
+            body:JSON.stringify({text:index===1?'Устаревший ответ после тайм-аута':'Свежий ответ'})
+          });
+        }catch{return}
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Ответ должен завершиться по времени');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('safe-private-key-for-testing-123456789');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.waitForFunction(()=>document.querySelector('#sessionRetry')?.hidden===false,{timeout:5000});
+    assert.equal(await page.locator('#sessionStop').isVisible(),false);
+    assert.ok((await page.locator('#statusBanner').innerText()).includes('45 секунд'));
+    assert.equal(await page.locator('#sendButton').isDisabled(),true);
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Свежий ответ'));
+    assert.equal(calls,2);
+    release();
+    await page.waitForTimeout(150);
+    assert.ok(!(await page.locator('#chatMessages').innerText()).includes('Устаревший ответ'));
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    assert.deepEqual(errors,[]);
+  }finally{release?.();await browser.close()}
+});
+
+test('timed-out AI status stays hidden in History and restores Retry when returning to chat',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  let release;
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    const gate=new Promise(resolve=>{release=resolve});
+    await page.addInitScript(()=>{
+      const native=window.setTimeout.bind(window);
+      window.setTimeout=(callback,ms,...args)=>native(callback,ms===45000?700:ms,...args);
+    });
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        calls++;
+        await gate;
+        try{return await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Старый ответ'})})}catch{return}
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Проверяем фоновый тайм-аут');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('safe-private-key-for-testing-123456789');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true,{timeout:5000});
+    assert.equal(await page.locator('#sessionRetry').isVisible(),false);
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    assert.ok((await page.locator('#statusBanner').innerText()).includes('45 секунд'));
+    assert.equal(calls,1);
+    assert.deepEqual(errors,[]);
+  }finally{release?.();await browser.close()}
+});

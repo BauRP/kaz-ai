@@ -141,7 +141,7 @@
   };
   function sessionNewChat(temporary=false){
     if(abort)abort.abort("navigation");
-    abort=null;pending=null;
+    abort=null;pending=null;pendingReplaceId=null;
     $("#sessionStop").hidden=true;
     for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){drafts.delete(threads[i].id);threads.splice(i,1)}
     if(current&&threads.some(thread=>thread.id===current)){
@@ -392,7 +392,11 @@
     if(abort){notify("Завершите предыдущий запрос.");return}
     const previousFocus=document.activeElement;
     const controller=new AbortController();abort=controller;pending=chat.id;pendingReplaceId=replaceId;retryAnswerId=null;
-    const timeout=setTimeout(()=>controller.abort("timeout"),45000);
+    // Some browsers/transports ignore AbortSignal until the connection finishes.
+    // Finish the UI state at the deadline rather than waiting for fetch to reject.
+    const timeout=setTimeout(()=>{
+      if(abort===controller)stopActiveRequest("timeout");
+    },45000);
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
     // Retry hides its own button; focus the visible Stop control, not a hidden element.
@@ -477,7 +481,7 @@
       if(abort===controller){abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput()}
     }
   }
-  function stopActiveRequest(){
+  function stopActiveRequest(reason="manual"){
     const controller=abort;
     if(!controller)return;
     const chat=selected(),replaceId=pendingReplaceId;
@@ -488,13 +492,20 @@
     // Detach before signalling cancellation: even if the transport ignores Abort,
     // a late answer is rejected by the active-controller identity checks.
     abort=null;pending=null;pendingReplaceId=null;
-    controller.abort("manual");
+    controller.abort(reason);
     $("#sessionStop").hidden=true;
     retryAnswerId=replaceId;
-    showStatus("Генерация ответа остановлена.",false,canRetry);
+    const message=reason==="timeout"
+      ?"ИИ не ответил за 45 секунд. Попробуйте повторить запрос."
+      :"Генерация ответа остановлена.";
+    showStatus(message,false,canRetry);
     resizeInput();
-    if(canRetry&&!$("#sessionRetry").hidden)$("#sessionRetry").focus();
-    else $("#messageInput").focus();
+    // Automatic timeout must not steal focus when the user is reading History
+    // or editing another field. Manual stop is an explicit keyboard action.
+    if(reason==="manual"){
+      if(canRetry&&!$("#sessionRetry").hidden)$("#sessionRetry").focus();
+      else $("#messageInput").focus();
+    }
   }
   function sendMessage(){
     const text=composeText();if(!text||abort)return;
@@ -529,7 +540,7 @@
     if(action==="open-chat"&&chat){
       if(current!==chat.id){
         if(abort)abort.abort("navigation");
-        abort=null;pending=null;$("#sessionStop").hidden=true;
+        abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;
         showStatus("");
         const old=selected();
         if(old?.temporary){
@@ -590,7 +601,7 @@
       notify("Чат перемещён в «Без проекта».");return
     }
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
-      if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;$("#sessionStop").hidden=true;showStatus("")}
+      if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;showStatus("")}
       const i=threads.indexOf(chat);threads.splice(i,1);drafts.delete(chat.id);
       if(current===chat.id)sessionNewChat(false);
       renderHistory();renderSessionProjects();

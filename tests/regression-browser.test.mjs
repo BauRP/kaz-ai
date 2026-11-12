@@ -87,3 +87,29 @@ test('translation, coding and document draft helpers preserve whitespace-only dr
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
   });
 });
+
+
+test('assigning an existing chat to a folder updates both screens and keeps keyboard focus',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill('Сохранённый разговор');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Дела');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const action=page.locator('#historyList [data-session="assign-chat"]');
+    await action.click();
+    await page.locator('#sessionBody select').selectOption({label:'Дела'});
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'assign-chat');
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Сохранённый разговор'));
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads[0].projectId,snapshot.projects[0].id);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.ok((await page.locator('#chatMessages').innerText()).includes('Сохранённый разговор'));
+  });
+});

@@ -54,7 +54,9 @@
     const temporarySetting=$("#sessionTemporary");
     if(c&&temporarySetting)temporarySetting.checked=Boolean(c.temporary);
   };
-  const composeText=()=>$("#messageInput").value.trim();
+  // A message may start with indentation or end with an intentional newline.
+  // Reject whitespace-only input, but do not silently rewrite valid code/text.
+  const composeText=()=>$("#messageInput").value;
   function showStatus(text,quota=false,retryable=false){
     const banner=$("#statusBanner");
     banner.textContent=text;
@@ -161,7 +163,7 @@
   function newThread(firstMessage){
     const temporary=Boolean($("#sessionTemporary")?.checked);
     // Never cut a surrogate pair in half when the first message contains emoji.
-    const title=shortText(firstMessage,55)||"Новый чат";
+    const title=shortText(firstMessage.trimStart(),55)||"Новый чат";
     const chat={id:nextId(),title,
       messages:[],pinned:false,projectId:null,temporary};
     touchChat(chat);threads.unshift(chat);displayThread(chat);
@@ -529,7 +531,7 @@
     }
   }
   function sendMessage(){
-    const text=composeText();if(!text||abort)return;
+    const text=composeText();if(!text.trim()||abort)return;
     if(text.length>4000){notify("Сообщение длиннее 4000 символов. Сократите его перед отправкой.");return}
     const chat=(state.screen==="welcome"?newThread(text):selected()||newThread(text));
     chat.messages.push({id:nextId(),role:"user",content:text});
@@ -939,8 +941,10 @@
         heading.textContent=count+" "+plural;
       }
     }
-    const working=new Set([1,2,3,4,5,6,7,13,25,40,41,42,44,45]);
-    const partial=new Set([9,10,15,16,22,23,24,43]);
+    // Ratings and instruction input are available, but their real effect still
+    // depends on a connected AI answer; do not label them fully working.
+    const working=new Set([1,2,3,4,5,6,7,25,41,42,44,45]);
+    const partial=new Set([9,10,13,15,16,22,23,24,40,43]);
     for(const card of document.querySelectorAll("#toolGroups [data-feature^='tool-']")){
       const id=Number(card.dataset.feature.slice(5));
       const status=card.querySelector("small");

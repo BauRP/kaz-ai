@@ -113,3 +113,52 @@ test('assigning an existing chat to a folder updates both screens and keeps keyb
     assert.ok((await page.locator('#chatMessages').innerText()).includes('Сохранённый разговор'));
   });
 });
+
+test('code indentation survives send, history navigation and TXT export',async()=>{
+  await withPage(async page=>{
+    const source='  function demo() {\n    return 42;\n  }\n';
+    await page.locator('#messageInput').fill(source);
+    await page.locator('#sendButton').click();
+    assert.equal(await page.locator('#chatMessages .message-user > span').textContent(),source);
+    const before=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(before.threads[0].title,'function demo() {\n    return 42;\n  }\n');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#chatMessages .message-user > span').textContent(),source);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const pending=page.waitForEvent('download');
+    await page.locator('#historyList [data-session="export-chat"]').click();
+    const file=await pending;
+    const {readFileSync}=await import('node:fs');
+    assert.ok(readFileSync(await file.path(),'utf8').includes('Вы: '+source));
+  });
+});
+
+test('AI-dependent rating and personal instructions accurately show partial status',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    for(const id of [13,40]){
+      assert.equal(await page.locator('#toolGroups [data-feature="tool-'+id+'"] small').innerText(),'Частично');
+    }
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    for(const id of [13,40]){
+      assert.equal(await page.locator('#toolGroups [data-feature="tool-'+id+'"] small').innerText(),'Partly working');
+    }
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    for(const id of [13,40]){
+      const status=await page.locator('#toolGroups [data-feature="tool-'+id+'"] small').innerText();
+      assert.notEqual(status,'Жұмыс істейді');
+      assert.notEqual(status,'Работает');
+    }
+  });
+});
+
+test('whitespace-only input cannot create a new message',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill(' \n\t  ');
+    assert.equal(await page.locator('#sendButton').isDisabled(),true);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+  });
+});

@@ -61,7 +61,9 @@ function validatedInput(payload){
   const messages=[];
   for(const m of payload.messages){
     if(!m||!["user","assistant"].includes(m.role)||typeof m.content!=="string"||!m.content.trim()||m.content.length>4000)return null;
-    messages.push({role:m.role,content:m.content.trim()});
+    // Preserve leading indentation and trailing newlines in code or documents.
+    // The trim above is validation-only, not an edit to user content.
+    messages.push({role:m.role,content:m.content});
   }
   if(messages.at(-1).role!=="user")return null;
   if(!["low","medium","high"].includes(payload.effort))return null;

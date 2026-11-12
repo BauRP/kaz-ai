@@ -192,3 +192,28 @@ test('misconfigured short or oversized server secrets fail closed before running
   }
   assert.equal(calls.length,0);
 });
+
+test('AI forwards original indentation and trailing newlines without rewriting user code',async()=>{
+  const {env,calls}=envWithAI();
+  const code='  function test() {\n    return 42;\n  }\n\n';
+  const reply='  Результат с форматированием \n';
+  const payload={messages:[
+    {role:'user',content:'Начальный вопрос'},
+    {role:'assistant',content:reply},
+    {role:'user',content:code}
+  ],effort:'medium',instructions:'используй код'};
+  const response=await worker.fetch(post(payload),env);
+  assert.equal(response.status,200);
+  assert.equal(calls.length,1);
+  assert.deepEqual(calls[0][1].messages.slice(1),payload.messages);
+});
+
+test('empty or whitespace-only messages remain invalid after preserving formatting',async()=>{
+  const {env,calls}=envWithAI();
+  for(const content of ['', '  \n \t  ']){
+    const response=await worker.fetch(post({...good,messages:[{role:'user',content}]}),env);
+    assert.equal(response.status,400);
+    assert.equal((await response.json()).code,'INVALID_REQUEST');
+  }
+  assert.equal(calls.length,0);
+});

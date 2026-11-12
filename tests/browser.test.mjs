@@ -2362,7 +2362,10 @@ test('compound emoji remain whole in first-message titles and exported TXT filen
     const pending=page.waitForEvent('download');
     await page.locator('#historyList [data-session="export-chat"]').click();
     const file=await pending;
-    assert.equal(file.suggestedFilename(),'Kaz-AI-'+'А'.repeat(69)+joined+'.txt');
+    // Chromium replaces the zero-width joiner in a download filename with an
+    // underscore. The source chat title and TXT body must keep it unchanged.
+    const filename=file.suggestedFilename();
+    assert.equal(filename,'Kaz-AI-'+'А'.repeat(69)+joined.replace(/\u200d/g,'_')+'.txt');
     const body=readFileSync(await file.path(),'utf8');
     assert.ok(body.includes(downloadTitle));
     assert.ok(body.includes(title));

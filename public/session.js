@@ -74,11 +74,8 @@
   const baseShowScreen=showScreen;
   const baseShowFeature=showFeature;
   const baseToggleTheme=toggleTheme;
-  // Never split a visible emoji sequence (including joiners and skin tones).
-  // The old-browser fallback still protects surrogate pairs.
-  const shortText=(value,max)=>graphemes
-    ?Array.from(graphemes.segment(value),part=>part.segment).slice(0,max).join("")
-    :Array.from(value).slice(0,max).join("");
+  // Count whole visible symbols including emoji sequences in older browsers.
+  const shortText=(value,max)=>Array.from(textSegments(value),part=>part.segment).slice(0,max).join("");
   const safeExportName=name=>shortText(name.normalize("NFKC")
     .replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,""),70)||"chat";
   const exportText=c=>{
@@ -173,6 +170,25 @@
   // Cache the grapheme segmenter so repeated searches don't rebuild it for every match.
   const graphemes=typeof Intl.Segmenter==="function"
     ?new Intl.Segmenter(undefined,{granularity:"grapheme"}):null;
+  function* textSegments(value){
+    if(graphemes){yield* graphemes.segment(value);return}
+    // Conservative fallback, not a complete Unicode segmentation algorithm.
+    let combined="",startIndex=0,offset=0,regionalCount=0;
+    for(const symbol of value){
+      const extender=/\p{M}|\p{Emoji_Modifier}/u.test(symbol)||symbol==="\u200d";
+      const regional=/\p{Regional_Indicator}/u.test(symbol);
+      const attaches=combined&&(extender||combined.endsWith("\u200d")||(regional&&regionalCount===1));
+      if(combined&&!attaches){
+        yield {segment:combined,index:startIndex};
+        combined="";regionalCount=0;
+      }
+      if(!combined)startIndex=offset;
+      combined+=symbol;offset+=symbol.length;
+      if(regional)regionalCount++;
+      else if(!extender)regionalCount=0;
+    }
+    if(combined)yield {segment:combined,index:startIndex};
+  }
   function findTextMatch(text,query){
     const fold=value=>value.normalize("NFC").toLocaleLowerCase()
       .replace(/\u0307/g,"").replace(/\u03c2/g,"\u03c3");
@@ -193,42 +209,20 @@
       for(let n=0;n<normalized.length;n++){starts.push(offset);ends.push(end)}
       if(!normalized&&ends.length)ends[ends.length-1]=end;
     };
-    if(graphemes){
-      // Graphemes keep combining marks attached to their visible base letter.
-      for(const {segment,index} of graphemes.segment(text)){
-        append(segment,index);
-        if(ends.length>=start+needle.length)break;
-      }
-    }else{
-      // Older browsers without Intl.Segmenter still group combining marks with
-      // their base character instead of corrupting highlights of decomposed text.
-      let combined="",startOffset=0;
-      for(let offset=0;offset<text.length;){
-        const symbol=String.fromCodePoint(text.codePointAt(offset));
-        if(combined&&!/\p{M}/u.test(symbol)){
-          append(combined,startOffset);combined="";
-        }
-        if(!combined)startOffset=offset;
-        combined+=symbol;
-        offset+=symbol.length;
-      }
-      if(combined)append(combined,startOffset);
+    for(const {segment,index} of textSegments(text)){
+      append(segment,index);
+      if(ends.length>=start+needle.length)break;
     }
     if(start+needle.length>ends.length)return null;
     return {start:starts[start],end:ends[start+needle.length-1]};
   }
   function searchExcerptBounds(text,range){
     let from=Math.max(0,range.start-38),to=Math.min(text.length,range.end+46);
-    if(graphemes){
-      for(const {segment,index} of graphemes.segment(text)){
-        const end=index+segment.length;
-        if(index<from&&from<end)from=index;
-        if(index<to&&to<end)to=end;
-        if(index>=to)break;
-      }
-    }else{
-      if(from>0&&/[\uDC00-\uDFFF]/.test(text[from]))from--;
-      if(to<text.length&&/[\uDC00-\uDFFF]/.test(text[to]))to++;
+    for(const {segment,index} of textSegments(text)){
+      const end=index+segment.length;
+      if(index<from&&from<end)from=index;
+      if(index<to&&to<end)to=end;
+      if(index>=to)break;
     }
     return {from,to};
   }

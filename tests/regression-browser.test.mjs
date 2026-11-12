@@ -162,3 +162,40 @@ test('whitespace-only input cannot create a new message',async()=>{
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
   });
 });
+
+
+test('old browser fallback preserves family emoji in title and search highlighting',async()=>{
+  await withPage(async page=>{
+    await page.addInitScript(()=>{Object.defineProperty(Intl,'Segmenter',{value:undefined,configurable:true})});
+    await page.reload();
+    const family='👨‍👩‍👧‍👦';
+    await page.locator('#messageInput').fill('З'.repeat(54)+family+'конец');
+    await page.locator('#sendButton').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads[0].title,'З'.repeat(54)+family);
+    await page.locator('#messageInput').fill('Семья '+family+' вместе');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('👨');
+    assert.equal(await page.locator('#historyList .session-search-snippet mark').textContent(),family);
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#chatMessages .session-jump-hit mark').textContent(),family);
+  });
+});
+
+test('IME confirmation keyCode 229 does not send unfinished Kazakh input',async()=>{
+  await withPage(async page=>{
+    const input=page.locator('#messageInput');
+    await input.fill('Қазақша мәтін');
+    await page.evaluate(()=>{
+      const field=document.querySelector('#messageInput');
+      const event=new KeyboardEvent('keydown',{bubbles:true,cancelable:true,key:'Enter',isComposing:false});
+      Object.defineProperty(event,'keyCode',{get:()=>229});
+      field.dispatchEvent(event);
+    });
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+    assert.equal(await input.inputValue(),'Қазақша мәтін');
+    await input.press('Enter');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+    assert.equal(await page.locator('.message-user').count(),1);
+  });
+});

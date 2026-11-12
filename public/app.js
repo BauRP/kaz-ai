@@ -220,7 +220,12 @@ document.addEventListener("keydown",event=>{
 });
 $("#drawerScrim").addEventListener("click",()=>setDrawer(false));
 $("#messageInput").addEventListener("input",resizeInput);
-$("#messageInput").addEventListener("keydown",event=>{if(event.key==="Enter"&&!event.shiftKey&&!event.isComposing){event.preventDefault();submitMessage()}});
+$("#messageInput").addEventListener("keydown",event=>{
+  // Some input methods confirm a character with keyCode 229 after composition.
+  if(event.key==="Enter"&&!event.shiftKey&&!event.isComposing&&event.keyCode!==229){
+    event.preventDefault();submitMessage();
+  }
+});
 $("#sendButton").addEventListener("click",submitMessage);
 $("#historySearch").addEventListener("input",()=>renderHistory());
 $("#toolsSearch").addEventListener("input",event=>renderTools(event.target.value));

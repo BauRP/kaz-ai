@@ -599,7 +599,21 @@
   "Убрать из проекта": {"en":"Remove from project","kk":"Жобадан алып тастау"},
   "Выбран размер текста для предпросмотра.": {"en":"Preview text size updated.","kk":"Алдын ала қараудағы мәтін өлшемі өзгертілді."},
   "Ответ ИИ сейчас недоступен. Попробуйте позже.": {"en":"AI response is unavailable. Try again later.","kk":"ЖИ жауабы қазір қолжетімсіз. Кейінірек қайталаңыз."},
-  "Очистить поиск переписок": {"en":"Clear chat search","kk":"Чат іздеуін тазалау"}
+  "Очистить поиск переписок": {"en":"Clear chat search","kk":"Чат іздеуін тазалау"},
+  "Боковое меню": {"en":"Sidebar","kk":"Бүйірлік мәзір"},
+  "На главную Kaz AI": {"en":"Kaz AI home","kk":"Kaz AI басты беті"},
+  "Закрыть меню": {"en":"Close menu","kk":"Мәзірді жабу"},
+  "Разделы": {"en":"Sections","kk":"Бөлімдер"},
+  "Открыть меню": {"en":"Open menu","kk":"Мәзірді ашу"},
+  "Переключить тему": {"en":"Toggle theme","kk":"Тақырыпты ауыстыру"},
+  "Выбор языка интерфейса": {"en":"Interface language","kk":"Интерфейс тілі"},
+  "Главная Kaz AI": {"en":"Kaz AI home","kk":"Kaz AI басты беті"},
+  "Добавить файл или изображение": {"en":"Add file or image","kk":"Файл немесе сурет қосу"},
+  "Голосовой ввод — позже": {"en":"Voice input — coming later","kk":"Дауыспен енгізу — кейінірек"},
+  "Отправить сообщение": {"en":"Send message","kk":"Хабарлама жіберу"},
+  "Закрыть окно входа": {"en":"Close sign-in window","kk":"Кіру терезесін жабу"},
+  "Ключ доступа": {"en":"Access key","kk":"Қол жеткізу кілті"},
+  "Ключ доступа слишком длинный. Максимум 1000 символов.": {"en":"Access key too long. Maximum 1,000 characters.","kk":"Қол жеткізу кілті тым ұзын. Ең көбі 1000 таңба."}
 };
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",
@@ -612,6 +626,9 @@
     "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay","#statusBanner","#sessionRetry","#toast"
   ];
   const captured=new WeakMap();
+  // Preserve authored accessible names across RU/EN/KK switches. A dynamic
+  // label containing a chat title remains untouched unless it is an exact key.
+  const originalAria=new WeakMap();
   let language="ru";
   function shouldSkip(node){
     const parent=node.parentElement;
@@ -634,12 +651,22 @@
     if(!root||!root.isConnected)return;
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
     let node;while((node=walker.nextNode()))translateNode(node);
-    for(const element of [root,...root.querySelectorAll("input[placeholder],textarea[placeholder]")]){
-      if(!element.hasAttribute?.("placeholder"))continue;
-      if(!element.dataset.originalPlaceholder)element.dataset.originalPlaceholder=element.getAttribute("placeholder");
-      const original=element.dataset.originalPlaceholder;
+    for(const element of [root,...root.querySelectorAll("input[placeholder],textarea[placeholder],[aria-label]")]){
+      if(element.hasAttribute?.("placeholder")){
+        if(!element.dataset.originalPlaceholder)element.dataset.originalPlaceholder=element.getAttribute("placeholder");
+        const original=element.dataset.originalPlaceholder;
+        const translated=language==="ru"?original:(dictionary[original]?.[language]||original);
+        if(element.placeholder!==translated)element.placeholder=translated;
+      }
+      if(!element.hasAttribute?.("aria-label"))continue;
+      const value=element.getAttribute("aria-label");
+      let original=originalAria.get(element);
+      // Controls can change labels themselves. Treat unexpected new values as
+      // fresh authored text instead of restoring an outdated cached label.
+      if(original&&![original,dictionary[original]?.en,dictionary[original]?.kk].includes(value))original=null;
+      if(!original){original=value;originalAria.set(element,original)}
       const translated=language==="ru"?original:(dictionary[original]?.[language]||original);
-      if(element.placeholder!==translated)element.placeholder=translated;
+      if(value!==translated)element.setAttribute("aria-label",translated);
     }
   }
   function refresh(){

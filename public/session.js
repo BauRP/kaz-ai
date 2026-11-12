@@ -369,8 +369,10 @@
       body.append(field);
       const save=button("Подключить","dialog-save",null,"session-primary");
       save.addEventListener("click",()=>{
-        if(field.value.trim().length<24){notify("Введите ключ не короче 24 символов.");return}
-        aiAccessKey=field.value.trim();field.value="";closeDialog();
+        const key=field.value.trim();
+        if(key.length<24){notify("Введите ключ не короче 24 символов.");return}
+        if(key.length>1000){notify("Ключ доступа слишком длинный. Максимум 1000 символов.");return}
+        aiAccessKey=key;field.value="";closeDialog();
         notify("Ключ принят для текущей вкладки. Проверка происходит при запросе.");
         if(typeof afterSave==="function")afterSave();
       });

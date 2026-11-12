@@ -2461,3 +2461,51 @@ test('timed-out AI status stays hidden in History and restores Retry when return
     assert.deepEqual(errors,[]);
   }finally{release?.();await browser.close()}
 });
+
+test('static accessible control names switch RU EN KK and back without changing user chat text',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Текст пользователя должен сохраниться');
+    await page.locator('#sendButton').click();
+    const selectors={'#historySearch':['Поиск по перепискам','Search chats','Чаттардан іздеу'],
+      '#reasonToggle':['Уровень рассуждения','Reasoning level','Ойлау деңгейі'],
+      '#sendButton':['Отправить сообщение','Send message','Хабарлама жіберу']};
+    for(const [i,language] of ['ru','en','kk','ru'].entries()){
+      if(i>0){
+        await page.locator('#languageToggle').click();
+        await page.locator('#languageMenu [data-language="'+language+'"]').click();
+      }
+      const index=language==='ru'?0:language==='en'?1:2;
+      for(const [selector,values] of Object.entries(selectors)){
+        assert.equal(await page.locator(selector).getAttribute('aria-label'),values[index],selector+' at '+language);
+      }
+      assert.ok((await page.locator('#chatMessages').innerText()).includes('Текст пользователя должен сохраниться'));
+      assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+    }
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('AI access dialog validates the same 1,000-character maximum as the server',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('[data-session="ai-access"]').click();
+    const field=page.locator('#sessionBody input[type=password]');
+    await field.fill('a'.repeat(1001));
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    assert.match(await page.locator('#toast').innerText(),/Максимум 1000/);
+    await page.locator('#sessionClose').click();
+    assert.equal(await page.locator('#sessionBody input[type=password]').count(),0);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

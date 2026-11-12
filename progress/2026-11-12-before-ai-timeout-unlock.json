@@ -1,0 +1,264 @@
+{
+  "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
+  "basis": "Approved 21 unfinished directions, completed calculator excluded. Code commit 5b51cfc2e023beda13bb1fc1fd8a39db0a2b6ab2 passed GitHub Actions 43258312924: 62 unit tests, 76 Chrome browser tests, Cloudflare dry-run, HTTP smoke. Work: keyboard focus after editing chats and project cards; grapheme-safe titles and downloads including browser filename sanitization. Estimates, not proof of live GPT-OSS availability.",
+  "branch": "chatgpt/kaz-ai-shell-20261108",
+  "date": "2026-11-11",
+  "previous": 76.78571428571429,
+  "now": 76.9047619047619,
+  "delta": 0.11904761904760619,
+  "groups": [
+    {
+      "name": "Чаты",
+      "count": 10,
+      "previous": 91.55,
+      "now": 91.75,
+      "delta": 0.20000000000000284
+    },
+    {
+      "name": "Интеллект",
+      "count": 5,
+      "previous": 34.9,
+      "now": 34.9,
+      "delta": 0
+    },
+    {
+      "name": "Настройки",
+      "count": 6,
+      "previous": 87.08333333333333,
+      "now": 87.16666666666667,
+      "delta": 0.08333333333334281
+    }
+  ],
+  "items": [
+    {
+      "id": 1,
+      "name": "Новый чат",
+      "group": "Чаты",
+      "previous": 95.5,
+      "now": 96,
+      "delta": 0.5,
+      "summary": "Названия новых чатов обрезаются по целым видимым Unicode-символам: составные emoji с соединителями остаются неповреждёнными.",
+      "status": "in_progress"
+    },
+    {
+      "id": 2,
+      "name": "История чатов",
+      "group": "Чаты",
+      "previous": 90,
+      "now": 90,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 3,
+      "name": "Поиск по перепискам",
+      "group": "Чаты",
+      "previous": 99,
+      "now": 99,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 4,
+      "name": "Переименовать чат",
+      "group": "Чаты",
+      "previous": 93,
+      "now": 94,
+      "delta": 1,
+      "summary": "После переименования чата клавиатурный фокус возвращается на ту же команду, даже если карточка истории была заново отрисована.",
+      "status": "in_progress"
+    },
+    {
+      "id": 5,
+      "name": "Удалить чат",
+      "group": "Чаты",
+      "previous": 98,
+      "now": 98,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 6,
+      "name": "Закрепить чат",
+      "group": "Чаты",
+      "previous": 94,
+      "now": 94,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 7,
+      "name": "Папки и проекты",
+      "group": "Чаты",
+      "previous": 97,
+      "now": 97.5,
+      "delta": 0.5,
+      "summary": "После переименования проекта или добавления чата клавиатурный фокус остаётся на соответствующем действии; переписки не теряются.",
+      "status": "in_progress"
+    },
+    {
+      "id": 9,
+      "name": "Повторить ответ",
+      "group": "Чаты",
+      "previous": 74,
+      "now": 74,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 10,
+      "name": "Остановить ответ",
+      "group": "Чаты",
+      "previous": 81,
+      "now": 81,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 13,
+      "name": "Оценка ответа",
+      "group": "Чаты",
+      "previous": 94,
+      "now": 94,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 15,
+      "name": "Обычный чат с GPT-OSS",
+      "group": "Интеллект",
+      "previous": 59.5,
+      "now": 59.5,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 16,
+      "name": "Уровни рассуждения",
+      "group": "Интеллект",
+      "previous": 58,
+      "now": 58,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 22,
+      "name": "Переводчик с ИИ",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 23,
+      "name": "Программирование с ИИ",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 24,
+      "name": "Подготовка документов",
+      "group": "Интеллект",
+      "previous": 19,
+      "now": 19,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 40,
+      "name": "Личные инструкции",
+      "group": "Настройки",
+      "previous": 86,
+      "now": 86,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 41,
+      "name": "Временный чат",
+      "group": "Настройки",
+      "previous": 92,
+      "now": 92,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 42,
+      "name": "Светлая и тёмная тема",
+      "group": "Настройки",
+      "previous": 91,
+      "now": 91,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 43,
+      "name": "Язык интерфейса",
+      "group": "Настройки",
+      "previous": 75,
+      "now": 75,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 44,
+      "name": "Размер текста",
+      "group": "Настройки",
+      "previous": 82,
+      "now": 82,
+      "delta": 0,
+      "summary": "Без нового изменения в данном пакете.",
+      "status": "in_progress"
+    },
+    {
+      "id": 45,
+      "name": "Экспорт истории",
+      "group": "Настройки",
+      "previous": 96.5,
+      "now": 97,
+      "delta": 0.5,
+      "summary": "Экспорт отдельного чата не разделяет составные emoji при обрезке длинного имени; проверено поведение загрузки Chrome и оригинального содержимого TXT.",
+      "status": "in_progress"
+    }
+  ],
+  "completed_ids": [
+    25
+  ],
+  "completed_count": 1,
+  "incomplete_count": 21,
+  "completed_items": [
+    {
+      "id": 25,
+      "name": "Простой калькулятор",
+      "group": "Интеллект",
+      "previous": 100,
+      "now": 100,
+      "delta": 0,
+      "summary": "Базовый автономный калькулятор завершён, проверен и исключён из всех списков незавершённых задач.",
+      "status": "completed"
+    }
+  ],
+  "overall_previous": 77.8409090909091,
+  "overall_now": 77.95454545454545,
+  "overall_delta": 0.11363636363635976
+}

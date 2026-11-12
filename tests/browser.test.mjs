@@ -2284,3 +2284,88 @@ test('clear-history-search accessible label follows RU EN KK and preserves searc
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('renaming a chat and a project restores focus to the same action after rebuilding cards',async()=>{
+  const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первый вопрос');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Черновик, который нельзя потерять');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="rename-chat"]').click();
+    await page.locator('#sessionBody input').fill('Новое имя чата');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'rename-chat');
+    assert.ok((await page.locator('#historyList').innerText()).includes('Новое имя чата'));
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Проект номер один');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('[data-session="rename-project"]').click();
+    await page.locator('#sessionBody input').fill('Переименованная папка');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'rename-project');
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Переименованная папка'));
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'Черновик, который нельзя потерять');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('adding a chat to a project preserves keyboard focus and its saved conversation',async()=>{
+  const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('План на неделю');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Рабочий проект');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('[data-session="add-chat-to-project"]').click();
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'add-chat-to-project');
+    assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('План на неделю'));
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads.length,1);
+    assert.equal(snapshot.threads[0].projectId,snapshot.projects[0].id);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('compound emoji remain whole in first-message titles and exported TXT filenames',async()=>{
+  const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820},acceptDownloads:true});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(appUrl);
+    const family='👨‍👩‍👧‍👦';
+    const title='З'.repeat(54)+family+'Хвост';
+    await page.locator('#messageInput').fill(title);
+    await page.locator('#sendButton').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads[0].title,'З'.repeat(54)+family);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="rename-chat"]').click();
+    const joined='👩🏽‍💻';
+    const downloadTitle='А'.repeat(69)+joined+'после';
+    await page.locator('#sessionBody input').fill(downloadTitle);
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    const pending=page.waitForEvent('download');
+    await page.locator('#historyList [data-session="export-chat"]').click();
+    const file=await pending;
+    assert.equal(file.suggestedFilename(),'Kaz-AI-'+'А'.repeat(69)+joined+'.txt');
+    const body=readFileSync(await file.path(),'utf8');
+    assert.ok(body.includes(downloadTitle));
+    assert.ok(body.includes(title));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

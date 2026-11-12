@@ -72,8 +72,13 @@
   const baseShowScreen=showScreen;
   const baseShowFeature=showFeature;
   const baseToggleTheme=toggleTheme;
-  const safeExportName=name=>Array.from(name.normalize("NFKC")
-    .replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,"")).slice(0,70).join("")||"chat";
+  // Never split a visible emoji sequence (including joiners and skin tones).
+  // The old-browser fallback still protects surrogate pairs.
+  const shortText=(value,max)=>graphemes
+    ?Array.from(graphemes.segment(value),part=>part.segment).slice(0,max).join("")
+    :Array.from(value).slice(0,max).join("");
+  const safeExportName=name=>shortText(name.normalize("NFKC")
+    .replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,""),70)||"chat";
   const exportText=c=>{
     const lang=window.KazI18n?.language||"ru";
     const labels={
@@ -110,15 +115,21 @@
     overlay.hidden=true;
     $("#sessionBody").replaceChildren();
     $("#sessionTitle").textContent="";
-    // A project or chat action can replace the opening button while the modal is open.
-    // Never leave keyboard focus in a disconnected or hidden element after Save/Delete.
+    // Editing chats/projects rebuilds their buttons. Restore focus to the same
+    // action and item when it still exists, rather than jumping to the page top.
+    const scope=state.screen==="projects"?"#projectsWorkspace"
+      :state.screen==="history"?"#historyList":null;
+    const action=previous?.dataset?.session;
+    const id=previous?.dataset?.id;
+    const matching=scope&&action?Array.from(document.querySelectorAll(scope+" [data-session]"))
+      .find(el=>el.dataset.session===action&&el.dataset.id===id):null;
     const fallback=state.screen==="projects"
       ?$("#projectsWorkspace [data-session='new-project']")
-      :state.screen==="history"
-        ?$("#historySearch")
-        :$("#messageInput");
-    const visible=element=>element?.isConnected&&!element.closest("[hidden]")&&typeof element.focus==="function";
+      :state.screen==="history" ?$("#historySearch"):$("#messageInput");
+    const visible=element=>element?.isConnected&&!element.closest("[hidden]")
+      &&typeof element.focus==="function";
     if(visible(previous))previous.focus();
+    else if(visible(matching))matching.focus();
     else if(visible(fallback))fallback.focus();
     else $("#messageInput")?.focus();
     modalReturn=null;
@@ -150,7 +161,7 @@
   function newThread(firstMessage){
     const temporary=Boolean($("#sessionTemporary")?.checked);
     // Never cut a surrogate pair in half when the first message contains emoji.
-    const title=Array.from(firstMessage).slice(0,55).join("")||"Новый чат";
+    const title=shortText(firstMessage,55)||"Новый чат";
     const chat={id:nextId(),title,
       messages:[],pinned:false,projectId:null,temporary};
     touchChat(chat);threads.unshift(chat);displayThread(chat);
@@ -617,7 +628,7 @@
         save.addEventListener("click",()=>{
           const chosen=threads.find(c=>c.id===select.value);
           if(!chosen||chosen.temporary){notify("Этот чат уже недоступен.");return}
-          chosen.projectId=project.id;closeDialog();renderSessionProjects();renderHistory();
+          chosen.projectId=project.id;renderSessionProjects();renderHistory();closeDialog();
           notify("Чат добавлен в проект.");
         });
         body.append(save);

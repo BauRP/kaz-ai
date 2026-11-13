@@ -641,7 +641,7 @@ test('recent chats reorder by activity while pinned chats remain at the top',asy
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
-test('closing access-key modal removes hidden password input; temporary drafts do not survive removal',async()=>{
+test('closing access-key modal removes hidden password input; temporary draft is deleted only after clearing it',async()=>{
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -657,6 +657,12 @@ test('closing access-key modal removes hidden password input; temporary drafts d
     await page.locator('#messageInput').fill('Временное сообщение');
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Секретный несохранённый черновик');
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    // The new safety rule prevents deleting unsent private text by accident.
+    assert.equal(await page.locator('#messageInput').inputValue(),'Секретный несохранённый черновик');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+    // Clearing the draft deliberately permits removing the temporary chat.
+    await page.locator('#messageInput').fill('');
     await page.locator('.sidebar [data-action="new-chat"]').click();
     const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
     assert.equal(snapshot.threads.length,0);

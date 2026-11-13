@@ -1435,12 +1435,18 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         }
       }
       const ops=make("div","session-chat-ops");
-      ops.append(
-        (()=>{const pin=button(c.pinned?"Открепить":"Закрепить","pin-chat",c.id);pin.setAttribute("aria-pressed",String(Boolean(c.pinned)));pin.setAttribute("aria-label",uiText(c.pinned?"Открепить":"Закрепить")+": "+c.title);return pin})(),
-        button("Название","rename-chat",c.id),
-        button("Проект","assign-chat",c.id),
-        button("Скачать","export-chat",c.id),
-        button("Удалить","delete-chat",c.id,"session-button session-danger")
+      const chatAction=(label,action,css)=>{
+        const control=button(label,action,c.id,css||"session-button");
+        control.setAttribute("aria-label",uiText(label)+": "+c.title);
+        return control;
+      };
+      const pin=chatAction(c.pinned?"Открепить":"Закрепить","pin-chat");
+      pin.setAttribute("aria-pressed",String(Boolean(c.pinned)));
+      ops.append(pin,
+        chatAction("Название","rename-chat"),
+        chatAction("Проект","assign-chat"),
+        chatAction("Скачать","export-chat"),
+        chatAction("Удалить","delete-chat","session-button session-danger")
       );
       card.append(ops);list.append(card);
     }
@@ -1505,6 +1511,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         ...(chats.some(c=>c.messages.length)?[{label:"Скачать чаты",action:"export-project",id:project.id}]:[]),
         {label:"Переименовать",action:"rename-project",id:project.id},
         {label:"Удалить проект",action:"delete-project",id:project.id,className:"session-button session-danger"}]);
+      for(const control of card.querySelectorAll(".session-actions [data-session]")){
+        control.setAttribute("aria-label",uiText(control.textContent)+": "+project.name);
+      }
       target.append(card);
     }
     const ungrouped=threads.filter(c=>!c.projectId&&!c.temporary).sort(newestFirst);
@@ -1689,7 +1698,12 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       body.append(field);
       const save=button("Сохранить","dialog-save",null,"session-primary");
       save.addEventListener("click",()=>{const next=field.value.trim();if(!next){notify("Введите название.");return}if(onSave(next)===false)return;closeDialog()});
-      field.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save.click()}});
+      // IME confirmation must not save a half-composed Kazakh or other name.
+      field.addEventListener("keydown",e=>{
+        if(e.key==="Enter"&&!e.isComposing&&e.keyCode!==229){
+          e.preventDefault();save.click();
+        }
+      });
       body.append(save);
     });
   }
@@ -1923,8 +1937,10 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       body.append(field);
       const prepare=button("Подготовить запрос","dialog-save",null,"session-primary");
       prepare.addEventListener("click",()=>{
-        const value=field.value.trim();
-        if(!value){notify("Сначала введите текст или описание задачи.");field.focus();return}
+        // Leading whitespace and final newlines can be meaningful in code or
+        // source text. Validate using trim, but preserve the original payload.
+        const value=field.value;
+        if(!value.trim()){notify("Сначала введите текст или описание задачи.");field.focus();return}
         const input=$("#messageInput");
         if(input.value.length){notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");return}
         let prompt="";

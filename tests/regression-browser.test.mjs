@@ -199,3 +199,93 @@ test('IME confirmation keyCode 229 does not send unfinished Kazakh input',async(
     assert.equal(await page.locator('.message-user').count(),1);
   });
 });
+
+
+test('text helpers preserve leading whitespace and trailing newlines without automatic send',async()=>{
+  await withPage(async page=>{
+    const sample='  if (ready) {\n    return value;\n  }\n\n';
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    for(const feature of [22,23,24]){
+      await page.locator('#toolGroups [data-feature="tool-'+feature+'"]').click();
+      if(feature===22)await page.locator('#sessionBody select').selectOption('en');
+      await page.locator('#sessionBody textarea').fill(sample);
+      await page.locator('#sessionBody [data-session="dialog-save"]').click();
+      assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+      const result=await page.locator('#messageInput').inputValue();
+      assert.ok(result.endsWith('\n\n'+sample),'whitespace changed for tool-'+feature+': '+JSON.stringify(result.slice(-70)));
+      assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+      await page.locator('#messageInput').fill('');
+      await page.locator('.sidebar [data-screen="tools"]').click();
+    }
+  });
+});
+
+test('IME confirmation does not prematurely rename a chat or create a project',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill('Исходный чат');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="rename-chat"]').click();
+    const name=page.locator('#sessionBody input');
+    await name.fill('Жаңа атау');
+    await page.evaluate(()=>{
+      const input=document.querySelector('#sessionBody input');
+      const key=new KeyboardEvent('keydown',{bubbles:true,cancelable:true,key:'Enter',isComposing:false});
+      Object.defineProperty(key,'keyCode',{get:()=>229});
+      input.dispatchEvent(key);
+    });
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads[0].title,'Исходный чат');
+    await name.press('Enter');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads[0].title,'Жаңа атау');
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Қазақша жоба');
+    await page.evaluate(()=>{
+      const input=document.querySelector('#sessionBody input');
+      input.dispatchEvent(new KeyboardEvent('keydown',{bubbles:true,cancelable:true,key:'Enter',isComposing:true}));
+    });
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,0);
+    await page.locator('#sessionBody input').press('Enter');
+    const projects=(await page.evaluate(()=>window.KazSession.snapshot())).projects;
+    assert.equal(projects.length,1);
+    assert.equal(projects[0].name,'Қазақша жоба');
+  });
+});
+
+test('chat and project action accessibility labels identify their item on RU EN and KK',async()=>{
+  await withPage(async page=>{
+    for(const title of ['Первый уникальный чат','Второй уникальный чат']){
+      if(title.startsWith('Второй'))await page.locator('.sidebar [data-action="new-chat"]').click();
+      await page.locator('#messageInput').fill(title);
+      await page.locator('#sendButton').click();
+    }
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Рабочая папка');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    for(const [lang,rename,remove,download] of [
+      ['ru','Название','Удалить','Скачать'],['en','Rename','Delete','Download'],['kk','Атау','Жою','Жүктеп алу']
+    ]){
+      if(lang!=='ru'){
+        await page.locator('#languageToggle').click();
+        await page.locator('#languageMenu [data-language="'+lang+'"]').click();
+      }
+      await page.locator('.sidebar [data-screen="history"]').click();
+      const rows=page.locator('#historyList .session-chat-row');
+      assert.equal(await rows.count(),2);
+      for(const i of [0,1]){
+        const row=rows.nth(i);
+        const name=(await row.locator('.session-chat-label').textContent()).trim();
+        assert.equal(await row.locator('[data-session="rename-chat"]').getAttribute('aria-label'),rename+': '+name);
+        assert.equal(await row.locator('[data-session="delete-chat"]').getAttribute('aria-label'),remove+': '+name);
+        assert.equal(await row.locator('[data-session="export-chat"]').getAttribute('aria-label'),download+': '+name);
+      }
+      await page.locator('.sidebar [data-screen="projects"]').click();
+      const control=page.locator('#projectsWorkspace [data-session="rename-project"]');
+      const verb=lang==='en'?'Rename':lang==='kk'?'Қайта атау':'Переименовать';
+      assert.equal(await control.getAttribute('aria-label'),verb+': Рабочая папка');
+    }
+  });
+});

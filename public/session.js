@@ -138,7 +138,15 @@
     for(const item of items)actions.append(button(item.label,item.action,item.id,item.className||"session-button"));
     target.append(actions);
   };
-  function sessionNewChat(temporary=false){
+  function sessionNewChat(temporary=false,allowDiscard=false){
+    // An accidental New Chat click must not destroy an unsent welcome or
+    // temporary conversation draft. Saved-chat drafts are kept separately.
+    const input=$("#messageInput");
+    if(!allowDiscard&&input?.value.length&&(!selected()||selected().temporary)){
+      notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");
+      input.focus();
+      return;
+    }
     if(abort)abort.abort("navigation");
     abort=null;pending=null;pendingReplaceId=null;
     $("#sessionStop").hidden=true;
@@ -634,7 +642,7 @@
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
       if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;showStatus("")}
       const i=threads.indexOf(chat);threads.splice(i,1);drafts.delete(chat.id);
-      if(current===chat.id)sessionNewChat(false);
+      if(current===chat.id)sessionNewChat(false,true);
       renderHistory();renderSessionProjects();
     });return}
     if(action==="assign-chat"&&chat){

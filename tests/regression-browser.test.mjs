@@ -355,3 +355,60 @@ test('IME Escape does not erase chat search or close a naming dialog prematurely
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,0);
   });
 });
+
+test('new chat does not discard an unsent welcome or temporary conversation draft',async()=>{
+  await withPage(async page=>{
+    const composer=page.locator('#messageInput');
+    const newChat=page.locator('.sidebar [data-action="new-chat"]');
+    await composer.fill('Черновик приветственного сообщения');
+    await newChat.click();
+    assert.equal(await composer.inputValue(),'Черновик приветственного сообщения');
+    assert.match(await page.locator('#toast').innerText(),/есть черновик/);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+    await composer.fill('');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#sessionTemporary').check();
+    await composer.fill('Приватное сообщение');
+    await page.locator('#sendButton').click();
+    await composer.fill('Секретный неотправленный черновик');
+    await newChat.click();
+    assert.equal(await composer.inputValue(),'Секретный неотправленный черновик');
+    const blocked=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(blocked.threads.length,1);
+    assert.equal(blocked.threads[0].temporary,true);
+    await composer.fill('');
+    await newChat.click();
+    assert.equal(await composer.inputValue(),'');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+  });
+});
+
+test('IME Escape never closes Google or feature dialogs before composition finishes',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar .google-button').click();
+    const google=page.locator('#googleOverlay');
+    assert.equal(await google.isVisible(),true);
+    await page.evaluate(()=>{
+      document.dispatchEvent(new KeyboardEvent('keydown',{
+        key:'Escape',isComposing:true,bubbles:true,cancelable:true
+      }));
+    });
+    assert.equal(await google.isVisible(),true);
+    await page.keyboard.press('Escape');
+    assert.equal(await google.isVisible(),false);
+    await page.locator('#attachToggle').click();
+    await page.locator('#attachMenu [data-feature="file"]').click();
+    const modal=page.locator('#modalOverlay');
+    assert.equal(await modal.isVisible(),true);
+    await page.evaluate(()=>{
+      const event=new KeyboardEvent('keydown',{
+        key:'Escape',bubbles:true,cancelable:true
+      });
+      Object.defineProperty(event,'keyCode',{get:()=>229});
+      document.dispatchEvent(event);
+    });
+    assert.equal(await modal.isVisible(),true);
+    await page.keyboard.press('Escape');
+    assert.equal(await modal.isVisible(),false);
+  });
+});

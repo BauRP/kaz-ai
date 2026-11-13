@@ -209,6 +209,9 @@ document.addEventListener("click",event=>{
   if(!event.target.closest(".popover-anchor"))closePopovers();
 });
 document.addEventListener("keydown",event=>{
+  // Escape confirms or cancels a character in many Kazakh/Asian input methods.
+  // Do not close a feature dialog or menu while text composition is active.
+  if(event.isComposing||event.keyCode===229)return;
   if(event.key==="Escape"){if(!$("#googleOverlay").hidden){closeGoogle();return}if(!$("#modalOverlay").hidden){closeModal();return}closePopovers();setDrawer(false)}
   if(!$("#googleOverlay").hidden&&event.key==="Tab"){
     const controls=$$("#googleOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];

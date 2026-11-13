@@ -465,3 +465,56 @@ test('blocked new-chat navigation reveals the draft behind Settings or Tools',as
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
   });
 });
+
+test('brand Home handles unsent temporary and welcome drafts without double navigation',async()=>{
+  await withPage(async page=>{
+    const composer=page.locator('#messageInput');
+    const home=page.locator('[data-action="home"]');
+    await composer.fill('Черновик перед первым чатом');
+    await home.click();
+    assert.equal(await page.locator('#view-welcome').isVisible(),true);
+    assert.equal(await composer.inputValue(),'Черновик перед первым чатом');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+    await composer.fill('');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#sessionTemporary').check();
+    await composer.fill('Сообщение временного чата');
+    await page.locator('#sendButton').click();
+    await composer.fill('Неотправленное личное сообщение');
+    await home.click();
+    assert.equal(await page.locator('#view-chat').isVisible(),true);
+    assert.equal(await composer.inputValue(),'Неотправленное личное сообщение');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+    assert.equal(await page.locator('#sessionTemporary').isChecked(),true);
+    await composer.fill('');
+    await home.click();
+    assert.equal(await page.locator('#view-welcome').isVisible(),true);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+  });
+});
+
+test('rejected temporary toggle reveals the unsent draft rather than hiding it behind settings',async()=>{
+  await withPage(async page=>{
+    const composer=page.locator('#messageInput');
+    const toggle=page.locator('#sessionTemporary');
+    await composer.fill('Важный черновик перед переключением');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await toggle.click();
+    assert.equal(await toggle.isChecked(),false);
+    assert.equal(await page.locator('#view-welcome').isVisible(),true);
+    assert.equal(await composer.inputValue(),'Важный черновик перед переключением');
+    assert.equal(await composer.evaluate(input=>document.activeElement===input),true);
+    await composer.fill('');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await toggle.check();
+    await composer.fill('Вопрос временного чата');
+    await page.locator('#sendButton').click();
+    await composer.fill('Приватный черновик');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await toggle.click();
+    assert.equal(await toggle.isChecked(),true);
+    assert.equal(await page.locator('#view-chat').isVisible(),true);
+    assert.equal(await composer.inputValue(),'Приватный черновик');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+  });
+});

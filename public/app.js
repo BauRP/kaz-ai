@@ -181,7 +181,7 @@ function featureModal(title,description){state.dialogTrigger=document.activeElem
 function closeModal(){$("#modalOverlay").hidden=true;if(state.dialogTrigger&&typeof state.dialogTrigger.focus==="function")state.dialogTrigger.focus();state.dialogTrigger=null}
 function showFeature(key){if(key==="google"){openGoogle();return}if(key==="languages"){togglePopover("language",$("#languageToggle"));return}const data=featureDescriptions[key];if(data)featureModal(...data);else if(key.startsWith("tool-")){const n=Number(key.slice(5));const item=FEATURE_GROUPS.flatMap(g=>g.items).find(i=>i[0]===n);if(item)featureModal(item[1],item[2]+". Сейчас подготовлена только кнопка и место в интерфейсе. Реализация — на согласованном этапе.")}else featureModal("Функция появится позже","Сейчас разрабатывается только оболочка сайта.")}
 function handleAction(action,trigger){switch(action){
-  case"home":showScreen("welcome");break;
+  case"home":newChat();break;
   case"back-to-chat":showScreen(state.aboutReturnScreen||"welcome");$("#mainContent").scrollTop=state.aboutReturnScroll||0;break;
   case"new-chat":newChat();break;
   case"close-sidebar":setDrawer(false);break;

@@ -764,6 +764,8 @@
       if(unsent.length&&(!active||active.temporary)){
         checkbox.checked=!requested;
         notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");
+        // Settings hides the composer. Show the draft before asking to clear it.
+        showScreen(active?"chat":"welcome");
         $("#messageInput").focus();
         return;
       }
@@ -926,9 +928,6 @@
     const retry=button("Повторить запрос","retry-request",null,"session-retry");
     retry.id="sessionRetry";retry.hidden=true;
     $("#statusBanner").insertAdjacentElement("afterend",retry);
-    document.addEventListener("click",e=>{
-      if(e.target.closest('[data-action="home"]'))sessionNewChat(false);
-    },true);
     document.addEventListener("click",e=>{
       const target=e.target.closest("[data-session]");if(!target)return;
       const action=target.dataset.session;

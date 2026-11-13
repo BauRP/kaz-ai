@@ -1,18 +1,18 @@
 {
   "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
-  "basis": "21 approved active directions; calculator archived at 100%. Code commit 08582b698e1c2dd8c89e61afac9a6bf9e2ce84e4 verified in GitHub Actions 43363340870: 64 unit tests, 95 browser tests, Cloudflare dry-run and HTTP smoke. Temporary-chat draft protection, IME-safe Escape in history search/dialogs and shortcuts. Scores are engineering estimates and not live GPT-OSS validation.",
+  "basis": "21 согласованное направление: защита приватных черновиков при переходе из временного чата, возврат к видимому полю ввода и два новых браузерных теста. Реальное подключение GPT-OSS и Google не подтверждено. Прогресс — инженерная оценка.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
   "date": "2026-11-13",
-  "previous": 77.33333333333333,
-  "now": 77.39047619047619,
-  "delta": 0.057142857142864045,
+  "previous": 77.39047619047619,
+  "now": 77.42380952380952,
+  "delta": 0.03333333333333144,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.2,
-      "now": 92.22,
-      "delta": 0.01999999999999602
+      "previous": 92.22,
+      "now": 92.25,
+      "delta": 0.030000000000001137
     },
     {
       "name": "Интеллект",
@@ -24,9 +24,9 @@
     {
       "name": "Настройки",
       "count": 6,
-      "previous": 87.5,
-      "now": 87.66666666666667,
-      "delta": 0.1666666666666714
+      "previous": 87.66666666666667,
+      "now": 87.73333333333333,
+      "delta": 0.06666666666666288
     }
   ],
   "items": [
@@ -35,9 +35,9 @@
       "name": "Новый чат",
       "group": "Чаты",
       "previous": 96.5,
-      "now": 96.5,
-      "delta": 0,
-      "summary": "Без нового изменения в текущем пакете.",
+      "now": 96.7,
+      "delta": 0.20000000000000284,
+      "summary": "Новый чат не скрывает неотправленный текст: показывает черновик вместо случайного удаления.",
       "status": "in_progress"
     },
     {
@@ -45,29 +45,29 @@
       "name": "История чатов",
       "group": "Чаты",
       "previous": 90.25,
-      "now": 90.25,
-      "delta": 0,
-      "summary": "Без нового изменения в текущем пакете.",
+      "now": 90.35,
+      "delta": 0.09999999999999432,
+      "summary": "При открытии сохранённой переписки проверяется, нет ли неотправленного текста временного чата.",
       "status": "in_progress"
     },
     {
       "id": 3,
       "name": "Поиск по перепискам",
       "group": "Чаты",
-      "previous": 99.75,
+      "previous": 99.85,
       "now": 99.85,
-      "delta": 0.09999999999999432,
-      "summary": "Поиск не очищается случайно клавишей Escape, пока языковая клавиатура подтверждает символ; пользовательский фильтр остаётся на месте.",
+      "delta": 0,
+      "summary": "Без нового изменения в текущем пакете.",
       "status": "in_progress"
     },
     {
       "id": 4,
       "name": "Переименовать чат",
       "group": "Чаты",
-      "previous": 94.5,
+      "previous": 94.6,
       "now": 94.6,
-      "delta": 0.09999999999999432,
-      "summary": "Окно переименования не закрывается при Escape во время составления текста через языковую клавиатуру.",
+      "delta": 0,
+      "summary": "Без нового изменения в текущем пакете.",
       "status": "in_progress"
     },
     {
@@ -194,10 +194,10 @@
       "id": 41,
       "name": "Временный чат",
       "group": "Настройки",
-      "previous": 92,
-      "now": 93,
-      "delta": 1,
-      "summary": "Переключение временного чата не стирает неотправленный черновик: переход блокируется с предупреждением, а переключатель возвращается в исходное состояние.",
+      "previous": 93,
+      "now": 93.4,
+      "delta": 0.4000000000000057,
+      "summary": "Приватный черновик нельзя потерять при открытии обычного чата; после очистки переход работает.",
       "status": "in_progress"
     },
     {
@@ -258,7 +258,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 78.36363636363636,
-  "overall_now": 78.41818181818182,
-  "overall_delta": 0.05454545454546178
+  "overall_previous": 78.41818181818182,
+  "overall_now": 78.45,
+  "overall_delta": 0.0318181818181813
 }

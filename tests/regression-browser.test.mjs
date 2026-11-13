@@ -595,3 +595,37 @@ test('pinning from Tools shows the reordered history and focuses the changed con
     assert.equal(await page.locator('#messageInput').inputValue(),'Неотправленный текст');
   });
 });
+
+test('tools search recognizes names in all three languages without changing the selected interface',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    const search=page.locator('#toolsSearch');
+    const results=page.locator('#toolGroups [data-feature="tool-22"]');
+    for(const [query,expectedLang] of [
+      ['Translator','ru'],
+      ['АУДАРМАШЫ','ru'],
+      ['Переводчик','ru']
+    ]){
+      await search.fill(query);
+      assert.equal(await results.count(),1,query);
+      assert.equal(await page.locator('html').getAttribute('lang'),expectedLang);
+    }
+    await search.fill('Translator');
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    assert.equal(await search.inputValue(),'Translator');
+    assert.equal(await results.count(),1);
+    assert.equal(await page.locator('html').getAttribute('lang'),'kk');
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    assert.equal(await search.inputValue(),'Translator');
+    assert.equal(await results.count(),1);
+    await search.fill('Аудармашы');
+    assert.equal(await results.count(),1);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="ru"]').click();
+    assert.equal(await search.inputValue(),'Аудармашы');
+    assert.equal(await results.count(),1);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+  });
+});

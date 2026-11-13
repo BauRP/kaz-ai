@@ -95,9 +95,14 @@ function renderChat(){const target=$("#chatMessages");target.replaceChildren();f
 function submitMessage(){if(window.KazSession?.sendMessage){window.KazSession.sendMessage();return}const input=$("#messageInput");const value=input.value.trim();if(!value)return;if(state.chat.length===0)state.draftTitle=value.slice(0,52);addChatMessage("user",value);input.value="";resizeInput();showScreen("chat");const banner=$("#statusBanner");banner.textContent="Оболочка готова. Ответ нейросети пока недоступен: GPT-OSS 120B подключим на следующем этапе.";banner.hidden=false;notify("Сообщение показано только в демо. На сервер ничего не отправлено.");$("#mainContent").scrollTop=$("#mainContent").scrollHeight}
 function renderHistory(){const target=$("#historyList"),recent=$("#recentChats");recent.replaceChildren();const search=($("#historySearch").value||"").trim().toLocaleLowerCase();const has=state.chat.some(m=>m.role==="user")&&state.draftTitle.toLocaleLowerCase().includes(search);if(!has){const empty=node("div","empty-card");empty.append(icon("chat"),node("h2","","Пока нет сохранённых переписок"),node("p","","На этом этапе разговоры существуют только в текущем открытом сеансе. Постоянное хранение подключим позже."));target.replaceChildren(empty);const hint=node("div","sidebar-empty","История пока не сохраняется");recent.append(hint);return}const card=node("button","history-card subtle-cta",state.draftTitle+" · демо-сеанс");card.type="button";card.addEventListener("click",()=>showScreen("chat"));target.replaceChildren(card);const entry=node("button","recent-item");entry.type="button";entry.append(icon("chat"),node("span","",state.draftTitle));entry.addEventListener("click",()=>showScreen("chat"));recent.append(entry)}
 function renderTools(query=""){const target=$("#toolGroups");target.replaceChildren();const value=query.toLocaleLowerCase().trim();let total=0;for(const group of FEATURE_GROUPS){const list=group.items.filter(item=>{
-  const translate=window.KazI18n?.translate;
-  return [item[1],item[2],translate?.(item[1]),translate?.(item[2])]
-    .filter(Boolean).join(" ").toLocaleLowerCase().includes(value);
+  const translateFor=window.KazI18n?.translateFor;
+  const names=[item[1],item[2]];
+  // Search all three available languages, not just the currently selected
+  // interface language. This keeps search results stable when switching RU/KK/EN.
+  if(translateFor)for(const lang of ["ru","kk","en"]){
+    names.push(translateFor(lang,item[1]),translateFor(lang,item[2]));
+  }
+  return names.join(" ").toLocaleLowerCase().includes(value);
 });if(!list.length)continue;total+=list.length;const section=node("section","tool-group");const title=node("h2","tool-group-title");title.append(node("span","",group.title),node("small","",list.length+" функций"));section.append(title);const grid=node("div","tool-grid");for(const [number,name,description,iconName] of list){const card=node("button","tool-card");card.type="button";card.dataset.feature="tool-"+number;card.setAttribute("aria-label",name+", функция будет подключена позже");const head=node("div","tool-card-top");head.append(icon(iconName),node("small","","В плане"));card.append(head,node("strong","",name),node("p","",description));grid.append(card)}section.append(grid);target.append(section)}if(!total)target.append(node("p","","Ничего не найдено"))}
 function selectReason(value){
   if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){

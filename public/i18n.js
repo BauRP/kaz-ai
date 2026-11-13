@@ -697,7 +697,12 @@
     if(!["ru","kk","en"].includes(next))return;
     language=next;refresh();
   }
-  window.KazI18n={set,refresh,translate:value=>language==="ru"?value:(dictionary[value]?.[language]||value),get language(){return language}};
+  // Read-only translations for language-independent tool discovery.
+  // Never change the selected language while indexing names.
+  const translateFor=(lang,value)=>
+    lang==="ru"?value:(dictionary[value]?.[lang]||value);
+  window.KazI18n={set,refresh,translate:value=>translateFor(language,value),
+    translateFor,get language(){return language}};
   window.addEventListener("DOMContentLoaded",()=>{
     refresh();
     for(const selector of selectors){

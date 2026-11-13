@@ -739,7 +739,17 @@
       return;
     }
     if(action==="temp-toggle"){
-      sessionNewChat(Boolean($("#sessionTemporary").checked));return;
+      const checkbox=$("#sessionTemporary"),requested=Boolean(checkbox.checked);
+      const active=selected(),unsent=$("#messageInput").value;
+      // A saved chat keeps its own draft when starting a new session. But the
+      // welcome draft or an active temporary draft would otherwise be erased.
+      if(unsent.length&&(!active||active.temporary)){
+        checkbox.checked=!requested;
+        notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");
+        $("#messageInput").focus();
+        return;
+      }
+      sessionNewChat(requested);return;
     }
     if(action==="export"){
       const saved=threads.filter(c=>!c.temporary&&c.messages.length).sort(newestFirst);
@@ -862,6 +872,8 @@
       const updateSearch=()=>{clear.hidden=!historyInput.value};
       historyInput.addEventListener("input",updateSearch);
       historyInput.addEventListener("keydown",event=>{
+        // Escape during keyboard composition rejects a candidate, not the search.
+        if(event.isComposing||event.keyCode===229)return;
         if(event.key!=="Escape"||!historyInput.value)return;
         event.preventDefault();event.stopPropagation();
         historyInput.value="";updateSearch();renderHistory();
@@ -911,6 +923,8 @@
     // this module replaced it. Enforce the pending-request lock after that handler.
     $("#messageInput").addEventListener("input",()=>{if(abort)$("#sendButton").disabled=true});
     document.addEventListener("keydown",event=>{
+      // Shortcuts must not interrupt conversion in a language input method.
+      if(event.isComposing||event.keyCode===229)return;
       if((event.ctrlKey||event.metaKey)&&!event.altKey&&event.key.toLowerCase()==="k"
          &&$("#sessionOverlay").hidden&&$("#modalOverlay").hidden&&$("#googleOverlay").hidden){
         event.preventDefault();showScreen("history");
@@ -920,6 +934,7 @@
     overlay.addEventListener("click",e=>{if(e.target===overlay)closeDialog()});
     document.addEventListener("keydown",e=>{
       if(overlay.hidden)return;
+      if(e.isComposing||e.keyCode===229)return;
       if(e.key==="Escape"){e.preventDefault();e.stopImmediatePropagation();closeDialog();return}
       if(e.key!=="Tab")return;
       const focusable=Array.from(dialog.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),a[href]'))

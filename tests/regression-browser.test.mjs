@@ -289,3 +289,67 @@ test('chat and project action accessibility labels identify their item on RU EN 
     }
   });
 });
+
+
+test('temporary-mode toggle preserves unsent welcome and temporary-chat drafts',async()=>{
+  await withPage(async page=>{
+    const composer=page.locator('#messageInput');
+    const toggle=page.locator('#sessionTemporary');
+    await composer.fill('Незавершённый черновик до первого чата');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await toggle.check();
+    assert.equal(await toggle.isChecked(),false,'must reject a destructive switch');
+    assert.equal(await composer.inputValue(),'Незавершённый черновик до первого чата');
+    assert.match(await page.locator('#toast').innerText(),/есть черновик/);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+    await composer.fill('');
+    await toggle.check();
+    assert.equal(await toggle.isChecked(),true);
+    await composer.fill('Приватный разговор');
+    await page.locator('#sendButton').click();
+    const state=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(state.threads.length,1);
+    assert.equal(state.threads[0].temporary,true);
+    await composer.fill('Неотправленный приватный черновик');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await toggle.uncheck();
+    assert.equal(await toggle.isChecked(),true,'active temporary draft must remain');
+    assert.equal(await composer.inputValue(),'Неотправленный приватный черновик');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+    await composer.fill('');
+    await toggle.uncheck();
+    assert.equal(await toggle.isChecked(),false);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+    assert.equal(await composer.inputValue(),'');
+  });
+});
+
+test('IME Escape does not erase chat search or close a naming dialog prematurely',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill('Тестовая переписка для поиска');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const search=page.locator('#historySearch');
+    await search.fill('Тестовая');
+    await search.evaluate(input=>{
+      const event=new KeyboardEvent('keydown',{key:'Escape',isComposing:true,bubbles:true,cancelable:true});
+      input.dispatchEvent(event);
+    });
+    assert.equal(await search.inputValue(),'Тестовая');
+    await search.press('Escape');
+    assert.equal(await search.inputValue(),'');
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    const projectName=page.locator('#sessionBody input');
+    await projectName.fill('Название, ещё вводится');
+    await projectName.evaluate(input=>{
+      const event=new KeyboardEvent('keydown',{key:'Escape',isComposing:true,bubbles:true,cancelable:true});
+      input.dispatchEvent(event);
+    });
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    assert.equal(await projectName.inputValue(),'Название, ещё вводится');
+    await projectName.press('Escape');
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,0);
+  });
+});

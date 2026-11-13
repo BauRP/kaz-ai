@@ -679,6 +679,15 @@
       kk:{welcome:"Kaz AI",chat:"Әңгіме",history:"Чаттар",projects:"Жобалар",tools:"Құралдар",settings:"Баптаулар",about:"Жоба туралы"}};
     const title=document.querySelector("#pageTitle");
     if(title&&typeof state!=="undefined"&&state.screen){const next=labels[language][state.screen]||"Kaz AI";if(title.textContent!==next)title.textContent=next}
+    // These region labels are outside the translated controls. Update only
+    // their accessible names: never walk through chat messages or user drafts.
+    for(const [selector,original] of [["#sidebar","Боковое меню"],
+      ["#view-welcome","Главная Kaz AI"],["#view-chat","Переписка"]]){
+      const region=document.querySelector(selector);
+      if(!region)continue;
+      const translated=language==="ru"?original:(dictionary[original]?.[language]||original);
+      if(region.getAttribute("aria-label")!==translated)region.setAttribute("aria-label",translated);
+    }
     document.documentElement.lang=language==="kk"?"kk":language==="en"?"en":"ru";
   }
   const observer=new MutationObserver(changes=>{

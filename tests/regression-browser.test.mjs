@@ -521,3 +521,28 @@ test('rejected temporary toggle reveals the unsent draft rather than hiding it b
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
   });
 });
+
+test('English and Kazakh accessible region names follow the interface language without altering user text',async()=>{
+  await withPage(async page=>{
+    const sidebar=page.locator('#sidebar'),welcome=page.locator('#view-welcome'),chat=page.locator('#view-chat');
+    assert.equal(await sidebar.getAttribute('aria-label'),'Боковое меню');
+    assert.equal(await welcome.getAttribute('aria-label'),'Главная Kaz AI');
+    assert.equal(await chat.getAttribute('aria-label'),'Переписка');
+    const composer=page.locator('#messageInput');
+    await composer.fill('Переписка');
+    await page.locator('#sendButton').click();
+    for(const [lang,sidebarLabel,welcomeLabel,chatLabel] of [
+      ['en','Sidebar','Kaz AI home','Conversation'],
+      ['kk','Бүйірлік мәзір','Kaz AI басты беті','Әңгіме'],
+      ['ru','Боковое меню','Главная Kaz AI','Переписка']
+    ]){
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+lang+'"]').click();
+      assert.equal(await sidebar.getAttribute('aria-label'),sidebarLabel);
+      assert.equal(await welcome.getAttribute('aria-label'),welcomeLabel);
+      assert.equal(await chat.getAttribute('aria-label'),chatLabel);
+      assert.equal(await page.locator('#chatMessages .message-user > span').textContent(),'Переписка');
+      assert.equal(await page.locator('html').getAttribute('lang'),lang);
+    }
+  });
+});

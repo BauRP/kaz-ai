@@ -297,7 +297,8 @@ test('temporary-mode toggle preserves unsent welcome and temporary-chat drafts',
     const toggle=page.locator('#sessionTemporary');
     await composer.fill('Незавершённый черновик до первого чата');
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await toggle.check();
+    // Click, not Playwright.check(): the app intentionally reverses this change.
+    await toggle.click();
     assert.equal(await toggle.isChecked(),false,'must reject a destructive switch');
     assert.equal(await composer.inputValue(),'Незавершённый черновик до первого чата');
     assert.match(await page.locator('#toast').innerText(),/есть черновик/);

@@ -304,6 +304,8 @@ test('temporary-mode toggle preserves unsent welcome and temporary-chat drafts',
     assert.match(await page.locator('#toast').innerText(),/есть черновик/);
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
     await composer.fill('');
+    // The rejected switch deliberately returned to the visible composer.
+    await page.locator('.sidebar [data-screen="settings"]').click();
     await toggle.check();
     assert.equal(await toggle.isChecked(),true);
     await composer.fill('Приватный разговор');
@@ -319,6 +321,7 @@ test('temporary-mode toggle preserves unsent welcome and temporary-chat drafts',
     assert.equal(await composer.inputValue(),'Неотправленный приватный черновик');
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
     await composer.fill('');
+    await page.locator('.sidebar [data-screen="settings"]').click();
     await toggle.uncheck();
     assert.equal(await toggle.isChecked(),false);
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);

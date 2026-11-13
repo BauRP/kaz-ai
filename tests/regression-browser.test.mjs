@@ -313,7 +313,8 @@ test('temporary-mode toggle preserves unsent welcome and temporary-chat drafts',
     assert.equal(state.threads[0].temporary,true);
     await composer.fill('Неотправленный приватный черновик');
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await toggle.uncheck();
+    // App restores the checkbox because a temporary draft is still present.
+    await toggle.click();
     assert.equal(await toggle.isChecked(),true,'active temporary draft must remain');
     assert.equal(await composer.inputValue(),'Неотправленный приватный черновик');
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);

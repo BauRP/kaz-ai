@@ -958,7 +958,7 @@ test('ratings and pin controls expose their toggled state to assistive technolog
   }finally{await browser.close()}
 });
 
-test('temporary chat never leaks an unsent private draft into the new-chat composer',async()=>{
+test('temporary drafts require explicit clearing before opening saved chats',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -972,6 +972,11 @@ test('temporary chat never leaks an unsent private draft into the new-chat compo
     await page.locator('#messageInput').fill('Временная переписка');
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('СЕКРЕТНЫЙ_ЧЕРНОВИК_ВРЕМЕННОГО_ЧАТА');
+    await page.locator('#recentChats [data-session="open-chat"]').first().click();
+    // A saved chat cannot be opened by accidentally losing the private draft.
+    assert.equal(await page.locator('#messageInput').inputValue(),'СЕКРЕТНЫЙ_ЧЕРНОВИК_ВРЕМЕННОГО_ЧАТА');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,2);
+    await page.locator('#messageInput').fill('');
     await page.locator('#recentChats [data-session="open-chat"]').first().click();
     assert.equal(await page.locator('#messageInput').inputValue(),'');
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);

@@ -546,3 +546,52 @@ test('English and Kazakh accessible region names follow the interface language w
     }
   });
 });
+
+test('project names differing only by repeated Unicode spaces do not create duplicate folders',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Планы  2027');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,1);
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Планы\u00a02027');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,1);
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    assert.match(await page.locator('#toast').innerText(),/уже есть/);
+    await page.locator('#sessionBody input').fill('Другие планы');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,2);
+    await page.locator('#projectsWorkspace [data-session="rename-project"]').last().click();
+    await page.locator('#sessionBody input').fill('Планы    2027');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.projects.length,2);
+    assert.equal(snapshot.projects.at(-1).name,'Другие планы');
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    await page.locator('#sessionClose').click();
+  });
+});
+
+test('pinning from Tools shows the reordered history and focuses the changed control',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill('Сохранённый разговор');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Неотправленный текст');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-6"]').click();
+    assert.equal(await page.locator('#view-history').isVisible(),true);
+    const pin=page.locator('#historyList [data-session="pin-chat"]');
+    assert.equal(await pin.getAttribute('aria-pressed'),'true');
+    assert.equal(await pin.evaluate(el=>document.activeElement===el),true);
+    assert.equal(await page.locator('#messageInput').inputValue(),'Неотправленный текст');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-6"]').click();
+    assert.equal(await page.locator('#view-history').isVisible(),true);
+    assert.equal(await pin.getAttribute('aria-pressed'),'false');
+    assert.equal(await pin.evaluate(el=>document.activeElement===el),true);
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'Неотправленный текст');
+  });
+});

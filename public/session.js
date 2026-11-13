@@ -701,7 +701,7 @@
       });return
     }
     // NFKC also treats visually equivalent Unicode forms as one project name.
-    const projectKey=name=>name.trim().normalize("NFKC").toLocaleLowerCase();
+    const projectKey=name=>name.normalize("NFKC").trim().replace(/\s+/gu," ").toLocaleLowerCase();
     const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&projectKey(p.name)===projectKey(name));
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{
       if(duplicateProject(name)){notify("Проект с таким названием уже есть.");return false}
@@ -1005,7 +1005,16 @@
         const lastAssistant=[...chat.messages].reverse().find(m=>m.role==="assistant");
         if(number===4)return handle("rename-chat",chat.id);
         if(number===5)return handle("delete-chat",chat.id);
-        if(number===6)return handle("pin-chat",chat.id);
+        if(number===6){
+          // A Tools card must show the result of its action: the pin changes
+          // inside History, which was otherwise hidden behind Tools.
+          showScreen("history");
+          handle("pin-chat",chat.id);
+          const pin=Array.from(document.querySelectorAll('#historyList [data-session="pin-chat"]'))
+            .find(control=>control.dataset.id===chat.id);
+          pin?.focus();
+          return;
+        }
         if(number===9){
           showScreen("chat");
           if(chat.messages.at(-1)?.role==="user")return handle("retry-request");

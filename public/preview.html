@@ -1296,6 +1296,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const input=$("#messageInput");
     if(!allowDiscard&&input?.value.length&&(!selected()||selected().temporary)){
       notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");
+      // Reveal the unsent draft when New Chat was pressed from another screen.
+      const destination=selected()?"chat":"welcome";
+      if(state.screen!==destination)showScreen(destination);
       input.focus();
       return;
     }
@@ -1730,10 +1733,17 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const project=projects.find(p=>p.id===id);
     if(action==="open-chat"&&chat){
       if(current!==chat.id){
+        const old=selected();
+        // Do not discard an unsent private draft when opening a saved chat.
+        if(old?.temporary&&$("#messageInput").value.length){
+          notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");
+          showScreen("chat");
+          $("#messageInput").focus();
+          return;
+        }
         if(abort)abort.abort("navigation");
         abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;
         showStatus("");
-        const old=selected();
         if(old?.temporary){
           const i=threads.indexOf(old);
           if(i>=0){threads.splice(i,1);drafts.delete(old.id)}

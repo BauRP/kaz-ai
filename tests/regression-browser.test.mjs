@@ -412,3 +412,56 @@ test('IME Escape never closes Google or feature dialogs before composition finis
     assert.equal(await modal.isVisible(),false);
   });
 });
+
+test('opening a saved conversation never loses an unsent temporary draft',async()=>{
+  await withPage(async page=>{
+    const composer=page.locator('#messageInput');
+    await composer.fill('Сохранённая тема');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#sessionTemporary').check();
+    await composer.fill('Секретное отправленное сообщение');
+    await page.locator('#sendButton').click();
+    await composer.fill('Приватный черновик, нельзя потерять');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').first().click();
+    assert.equal(await page.locator('#view-chat').isVisible(),true);
+    assert.equal(await composer.inputValue(),'Приватный черновик, нельзя потерять');
+    let snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads.length,2);
+    assert.equal(snapshot.threads.find(x=>x.id===snapshot.active).temporary,true);
+    assert.equal(await page.locator('#sessionTemporary').isChecked(),true);
+    assert.match(await page.locator('#toast').innerText(),/есть черновик/);
+    await composer.fill('');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').first().click();
+    snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads.length,1);
+    assert.equal(snapshot.threads[0].temporary,false);
+    assert.equal(snapshot.active,snapshot.threads[0].id);
+    assert.equal(await page.locator('#sessionTemporary').isChecked(),false);
+  });
+});
+
+test('blocked new-chat navigation reveals the draft behind Settings or Tools',async()=>{
+  await withPage(async page=>{
+    const composer=page.locator('#messageInput');
+    await composer.fill('Черновик на стартовом экране');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    assert.equal(await page.locator('#view-welcome').isVisible(),true);
+    assert.equal(await composer.inputValue(),'Черновик на стартовом экране');
+    assert.equal(await composer.evaluate(e=>document.activeElement===e),true);
+    await composer.fill('');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#sessionTemporary').check();
+    await composer.fill('Тема временного разговора');
+    await page.locator('#sendButton').click();
+    await composer.fill('Временный черновик');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    assert.equal(await page.locator('#view-chat').isVisible(),true);
+    assert.equal(await composer.inputValue(),'Временный черновик');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
+  });
+});

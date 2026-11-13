@@ -1,32 +1,32 @@
 {
   "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
-  "basis": "21 unfinished approved directions; calculator archived at 100%. Code commit 99fedc851506320652cd693b83e8ec2f93568a59 verified in GitHub Actions 43327277252: 64 unit tests, 90 browser tests, Cloudflare Worker dry-run and HTTP smoke. Legacy-browser emoji sequence segmentation and CJK/Kazakh IME Enter submit safety. Scores are engineering estimates; live GPT-OSS not connected.",
+  "basis": "Current 21 approved directions (calculator completed separately). Code commit 21fcdfc47f06ebbc4199399a8f32734fea57e859 verified by GitHub Actions 43335875894: 64 unit tests, 93 browser tests, Cloudflare dry-run and HTTP smoke. Fixes: preserve text-helper source whitespace, avoid premature IME Enter on name editing, localize specific chat/project control labels. Engineering estimates; live GPT-OSS not connected.",
   "branch": "chatgpt/kaz-ai-shell-20261108",
   "date": "2026-11-13",
-  "previous": 77.1547619047619,
-  "now": 77.22619047619048,
-  "delta": 0.07142857142858361,
+  "previous": 77.22619047619048,
+  "now": 77.33333333333333,
+  "delta": 0.10714285714284699,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92,
-      "now": 92.1,
-      "delta": 0.09999999999999432
+      "previous": 92.1,
+      "now": 92.2,
+      "delta": 0.10000000000000853
     },
     {
       "name": "Интеллект",
       "count": 5,
       "previous": 35.25,
-      "now": 35.25,
-      "delta": 0
+      "now": 35.4,
+      "delta": 0.14999999999999858
     },
     {
       "name": "Настройки",
       "count": 6,
-      "previous": 87.33333333333333,
-      "now": 87.41666666666667,
-      "delta": 0.08333333333334281
+      "previous": 87.41666666666667,
+      "now": 87.5,
+      "delta": 0.0833333333333286
     }
   ],
   "items": [
@@ -34,30 +34,30 @@
       "id": 1,
       "name": "Новый чат",
       "group": "Чаты",
-      "previous": 96,
+      "previous": 96.5,
       "now": 96.5,
-      "delta": 0.5,
-      "summary": "Подтверждение символа через языковую клавиатуру больше не отправляет недописанное сообщение; заголовки с составными emoji не повреждаются на старых браузерах.",
+      "delta": 0,
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 90,
+      "previous": 90.25,
       "now": 90.25,
-      "delta": 0.25,
-      "summary": "История сохраняет целые составные emoji в коротких фрагментах результатов поиска и при переходе к сообщению, в том числе в браузерах без Intl.Segmenter.",
+      "delta": 0,
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
       "id": 3,
       "name": "Поиск по перепискам",
       "group": "Чаты",
-      "previous": 99.5,
+      "previous": 99.75,
       "now": 99.75,
-      "delta": 0.25,
-      "summary": "Подсветка найденного текста правильно группирует основные последовательности emoji, символы с модификаторами и флаги без Intl.Segmenter.",
+      "delta": 0,
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -65,9 +65,9 @@
       "name": "Переименовать чат",
       "group": "Чаты",
       "previous": 94,
-      "now": 94,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 94.5,
+      "delta": 0.5,
+      "summary": "Переименование чатов защищено от преждевременного сохранения при подтверждении символов клавишей Enter во время языкового ввода.",
       "status": "in_progress"
     },
     {
@@ -77,7 +77,7 @@
       "previous": 98,
       "now": 98,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -87,7 +87,7 @@
       "previous": 94,
       "now": 94,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -95,9 +95,9 @@
       "name": "Папки и проекты",
       "group": "Чаты",
       "previous": 98,
-      "now": 98,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 98.5,
+      "delta": 0.5,
+      "summary": "Кнопки проектов различаются по названиям папок на трёх языках, а ввод имени папки через языковую клавиатуру не создаёт проект раньше времени.",
       "status": "in_progress"
     },
     {
@@ -107,7 +107,7 @@
       "previous": 74.5,
       "now": 74.5,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -117,7 +117,7 @@
       "previous": 82,
       "now": 82,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -127,7 +127,7 @@
       "previous": 94,
       "now": 94,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -137,7 +137,7 @@
       "previous": 60.5,
       "now": 60.5,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -147,7 +147,7 @@
       "previous": 58,
       "now": 58,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -155,9 +155,9 @@
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
       "previous": 19.25,
-      "now": 19.25,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 19.5,
+      "delta": 0.25,
+      "summary": "Инструмент перевода сохраняет исходные пробелы, отступы и конечные переносы строк в подготовленном запросе без автоматической отправки.",
       "status": "in_progress"
     },
     {
@@ -165,9 +165,9 @@
       "name": "Программирование с ИИ",
       "group": "Интеллект",
       "previous": 19.25,
-      "now": 19.25,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 19.5,
+      "delta": 0.25,
+      "summary": "Инструмент программирования сохраняет отступы исходного кода и конечные переносы строк, не изменяя введённый текст.",
       "status": "in_progress"
     },
     {
@@ -175,9 +175,9 @@
       "name": "Подготовка документов",
       "group": "Интеллект",
       "previous": 19.25,
-      "now": 19.25,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 19.5,
+      "delta": 0.25,
+      "summary": "Подготовка документов сохраняет весь введённый текст вместе с отступами и переносами строк и не отправляет его автоматически.",
       "status": "in_progress"
     },
     {
@@ -187,7 +187,7 @@
       "previous": 86,
       "now": 86,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -197,7 +197,7 @@
       "previous": 92,
       "now": 92,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -207,7 +207,7 @@
       "previous": 91,
       "now": 91,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
@@ -215,9 +215,9 @@
       "name": "Язык интерфейса",
       "group": "Настройки",
       "previous": 76,
-      "now": 76,
-      "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "now": 76.5,
+      "delta": 0.5,
+      "summary": "Подписи одинаковых кнопок в списках чатов и проектов теперь включают название конкретного разговора или папки и правильно переводятся на RU/EN/KK.",
       "status": "in_progress"
     },
     {
@@ -227,17 +227,17 @@
       "previous": 82,
       "now": 82,
       "delta": 0,
-      "summary": "Без нового изменения в данном пакете.",
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     },
     {
       "id": 45,
       "name": "Экспорт истории",
       "group": "Настройки",
-      "previous": 97,
+      "previous": 97.5,
       "now": 97.5,
-      "delta": 0.5,
-      "summary": "Короткие названия файлов TXT строятся без разрыва составных emoji на браузерах без Intl.Segmenter; исходные сообщения остаются неизменными.",
+      "delta": 0,
+      "summary": "Без новых изменений в данном пакете.",
       "status": "in_progress"
     }
   ],
@@ -258,7 +258,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 78.19318181818181,
-  "overall_now": 78.26136363636364,
-  "overall_delta": 0.06818181818182723
+  "overall_previous": 78.26136363636364,
+  "overall_now": 78.36363636363636,
+  "overall_delta": 0.10227272727271952
 }

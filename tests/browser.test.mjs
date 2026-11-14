@@ -2627,3 +2627,63 @@ test('server setup failure keeps valid key for retry, unlike a rejected key',asy
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+
+test('export sanitizes invisible direction overrides in chat filename, preserving original message',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820},acceptDownloads:true});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    const original='Отчёт\u202Ecod.exe\u2067 завершён';
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill(original);
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const download=page.waitForEvent('download');
+    await page.locator('#historyList [data-session="export-chat"]').click();
+    const file=await download;
+    assert.ok(file.suggestedFilename().endsWith('.txt'));
+    assert.doesNotMatch(file.suggestedFilename(),/[\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/u);
+    const body=readFileSync(await file.path(),'utf8');
+    assert.ok(body.includes(original),'filename normalization must not rewrite exported conversation');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('rejected key and server setup errors show correct English and Kazakh text',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    const html=readFileSync('public/preview.html','utf8');
+    let requests=0;
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        requests++;
+        const serverNotReady=requests===1;
+        return route.fulfill({status:serverNotReady?503:401,contentType:'application/json',
+          body:JSON.stringify({code:'ACCESS_REQUIRED',message:'Backend issue'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    await page.locator('#messageInput').fill('Verify locale');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('valid-private-test-key-1234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('AI is not configured on the server yet'));
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    assert.ok((await page.locator('#statusBanner').textContent()).includes('Серверде ЖИ әлі бапталмаған'));
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Қолжетімділік кілті қабылданбады'));
+    assert.equal(requests,2);
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

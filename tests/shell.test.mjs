@@ -172,14 +172,28 @@ test('the basic calculator is isolated from chat state and bundled before the se
   assert.doesNotMatch(calculator,/\beval\s*\(|\bFunction\s*\(|\bfetch\s*\(|localStorage|sessionStorage|indexedDB/);
 });
 
-test('Silver owner-supplied logo is the exact PNG displayed in a standalone browser tab',()=>{
-  const favicon=readFileSync('public/favicon.png');
-  assert.ok(favicon.length>500&&favicon.length<20000,'Optimized PNG');
-  assert.equal(favicon.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
-  assert.equal(favicon.readUInt32BE(16),64,'width');
-  assert.equal(favicon.readUInt32BE(20),64,'height');
-  assert.match(html,/<link rel="icon" href="\.\/favicon\.png\?v=20261114" type="image\/png" sizes="64x64">/);
+test('Silver Kaz AI browser tab icon supports ICO and PNG at real URLs',()=>{
+  const ico=readFileSync('public/favicon-v2.ico');
+  assert.ok(ico.length>1000,'ICO file exists');
+  assert.equal(ico.readUInt16LE(0),0,'ICO reserved field');
+  assert.equal(ico.readUInt16LE(2),1,'ICO image format');
+  assert.equal(ico.readUInt16LE(4),3,'ICO includes 3 sizes');
+  const imageSizes=[16,32,48];
+  for(const [i,size] of imageSizes.entries()){
+    assert.equal(ico.readUInt8(6+i*16),size,'ICO width '+size);
+    assert.equal(ico.readUInt8(7+i*16),size,'ICO height '+size);
+    const len=ico.readUInt32LE(6+i*16+8),offset=ico.readUInt32LE(6+i*16+12);
+    assert.equal(ico.subarray(offset,offset+8).toString('hex'),'89504e470d0a1a0a','PNG inside ICO '+size);
+    const img=readFileSync('public/favicon-'+size+'-v2.png');
+    assert.equal(img.readUInt32BE(16),size,'PNG width');
+    assert.equal(img.readUInt32BE(20),size,'PNG height');
+    assert.deepEqual(ico.subarray(offset,offset+len),img,'ICO embeds the same PNG '+size);
+  }
   const preview=readFileSync('public/preview.html','utf8');
-  assert.ok(preview.includes('<link rel="icon" href="data:image/png;base64,'+favicon.toString('base64')+'" type="image/png" sizes="64x64">'),'Standalone preview must embed the exact image, never fetch a neighboring resource');
-  assert.doesNotMatch(preview,/data:image\/svg\+xml,%3Csvg/);
+  for(const page of [html,preview]){
+    for(const file of ['favicon-v2.ico','favicon-32-v2.png','favicon-16-v2.png']){
+      assert.ok(page.includes('href="./'+file+'"'),'Missing browser favicon '+file);
+    }
+    assert.doesNotMatch(page,/href="data:image\/png;base64,/,'Avoid data URI favicon');
+  }
 });

@@ -2560,3 +2560,70 @@ test('browser keeps formatted replies and sends emoji-safe context to GPT',async
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+
+test('dismissed private-key dialog keeps the original question retryable without duplicates',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    const html=readFileSync('public/preview.html','utf8');
+    let requests=0;
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        requests++;
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Ответ на сохранённый вопрос'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Мой исходный вопрос');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionClose').click();
+    assert.equal(await page.locator('#sessionBody input[type=password]').count(),0);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads[0].messages,1);
+    await page.locator('#sessionRetry').click();
+    await page.locator('#sessionBody input[type=password]').fill('valid-private-test-key-1234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ на сохранённый вопрос'));
+    assert.equal((await page.locator('.message-user').count()),1);
+    assert.equal((await page.locator('.message-assistant').count()),1);
+    assert.equal(requests,1);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('server setup failure keeps valid key for retry, unlike a rejected key',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    const html=readFileSync('public/preview.html','utf8');
+    let requests=0;
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        requests++;
+        return route.fulfill({status:requests===1?503:200,contentType:'application/json',body:JSON.stringify(
+          requests===1?{code:'ACCESS_REQUIRED',message:'AI binding missing'}:{text:'Сервер восстановился'}
+        )});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Проверить сервер');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('valid-private-test-key-1234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Серверный ИИ ещё не настроен'));
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    await page.locator('#sessionRetry').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false,'retry must not ask for the same valid key');
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Сервер восстановился'));
+    assert.equal(requests,2);
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

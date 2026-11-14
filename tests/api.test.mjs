@@ -56,9 +56,11 @@ test('validated requests reach GPT-OSS 120B with selected reasoning effort',asyn
   }
   assert.equal(calls.length,3);
   assert.ok(calls.every(([model])=>model==='@cf/openai/gpt-oss-120b'));
-  assert.deepEqual(calls.map(([,x])=>x.reasoning_effort),['low','medium','high']);
-  assert.equal(calls[0][1].messages.at(-1).content,good.messages[0].content);
-  assert.equal(calls[0][1].max_tokens,1200);
+  assert.deepEqual(calls.map(([,x])=>x.reasoning?.effort),['low','medium','high']);
+  assert.equal(calls[0][1].input.at(-1).content,good.messages[0].content);
+  assert.equal(calls[0][1].stream,false);
+  assert.ok(calls.every(([,args])=>!('reasoning_effort' in args)),'Use official Responses API input');
+  assert.ok(calls.every(([,args])=>!('messages' in args)),'Do not mix request formats');
 });
 test('rejects reserved deeper reasoning and system-message injection',async()=>{
   const {env,calls}=envWithAI();
@@ -168,7 +170,7 @@ test('a JSON request split inside a Cyrillic UTF-8 character is accepted',async(
   assert.equal(response.status,200);
   assert.equal((await response.json()).text,'Ответ модели');
   assert.equal(calls.length,1);
-  assert.equal(calls[0][1].messages.at(-1).content,good.messages[0].content);
+  assert.equal(calls[0][1].input.at(-1).content,good.messages[0].content);
 });
 test('invalid UTF-8 request is rejected before AI without a 500 response',async()=>{
   const {env,calls}=envWithAI();
@@ -205,7 +207,7 @@ test('AI forwards original indentation and trailing newlines without rewriting u
   const response=await worker.fetch(post(payload),env);
   assert.equal(response.status,200);
   assert.equal(calls.length,1);
-  assert.deepEqual(calls[0][1].messages.slice(1),payload.messages);
+  assert.deepEqual(calls[0][1].input.slice(1),payload.messages);
 });
 
 test('empty or whitespace-only messages remain invalid after preserving formatting',async()=>{

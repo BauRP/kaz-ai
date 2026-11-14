@@ -125,10 +125,13 @@ export default {
       ...input.messages
     ];
     try{
+      // Cloudflare's GPT-OSS Workers binding supports Responses API input
+      // with reasoning.effort. The older reasoning_effort field is not part of
+      // its published input schema and may silently leave the level unchanged.
       const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
-        messages,
-        reasoning_effort:input.effort,
-        max_tokens:1200
+        input:messages,
+        reasoning:{effort:input.effort},
+        stream:false
       });
       const text=answerText(result);
       if(!text.trim())return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);

@@ -217,3 +217,22 @@ test('empty or whitespace-only messages remain invalid after preserving formatti
   }
   assert.equal(calls.length,0);
 });
+
+test('model answers retain meaningful leading and trailing whitespace',async()=>{
+  const text='  function example() {\n    return 42;\n  }\n\n';
+  const formats=[
+    {output_text:text},{response:text},
+    {output:[{type:'message',content:[{type:'output_text',text}]}]},
+    {choices:[{message:{content:text}}]}
+  ];
+  for(const result of formats){
+    const {env}=envWithAI(async()=>result);
+    const response=await worker.fetch(post(good),env);
+    assert.equal(response.status,200);
+    assert.equal((await response.json()).text,text);
+  }
+  const {env}=envWithAI(async()=>({output_text:' \n  '}));
+  const blank=await worker.fetch(post(good),env);
+  assert.equal(blank.status,502);
+  assert.equal((await blank.json()).code,'AI_EMPTY');
+});

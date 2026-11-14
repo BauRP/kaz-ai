@@ -42,17 +42,18 @@ async function equalSecret(a,b){
   return result===0;
 }
 function answerText(result){
-  if(typeof result?.output_text==="string"&&result.output_text.trim())return result.output_text.trim();
-  if(typeof result?.response==="string"&&result.response.trim())return result.response.trim();
+  if(typeof result?.output_text==="string"&&result.output_text.trim())return result.output_text;
+  if(typeof result?.response==="string"&&result.response.trim())return result.response;
   if(Array.isArray(result?.output)){
     const pieces=[];
     for(const item of result.output){
       if(item?.type!=="message"||!Array.isArray(item.content))continue;
       for(const part of item.content)if((part?.type==="output_text"||part?.type==="text")&&typeof part.text==="string")pieces.push(part.text);
     }
-    return pieces.join("\n").trim();
+    const combined=pieces.join("\n");
+    if(combined.trim())return combined;
   }
-  if(typeof result?.choices?.[0]?.message?.content==="string")return result.choices[0].message.content.trim();
+  if(typeof result?.choices?.[0]?.message?.content==="string")return result.choices[0].message.content;
   return "";
 }
 function validatedInput(payload){
@@ -130,7 +131,7 @@ export default {
         max_tokens:1200
       });
       const text=answerText(result);
-      if(!text)return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
+      if(!text.trim())return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
       return json({text,model:"gpt-oss-120b",effort:input.effort});
     }catch(e){
       const kind=classifyAILimit(e);

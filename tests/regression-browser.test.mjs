@@ -725,3 +725,39 @@ test('project assignment dialog heading follows English and Kazakh interface cho
       'The user-authored title must remain unchanged');
   });
 });
+
+test('project dialog localizes commands without translating the project title',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill('Saved discussion');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('#projectsWorkspace [data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Жоба & Study');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    for(const [lang,title] of [
+      ['en','Add chat to “Жоба & Study”'],['kk','«Жоба & Study» жобасына чат қосу']
+    ]){
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+lang+'"]').click();
+      await page.locator('#projectsWorkspace [data-session="add-chat-to-project"]').click();
+      assert.equal(await page.locator('#sessionTitle').innerText(),title);
+      await page.locator('#sessionClose').click();
+    }
+  });
+});
+
+test('GPT access dialog help is translated to English and Kazakh',async()=>{
+  await withPage(async page=>{
+    for(const [lang,title] of [
+      ['en','GPT-OSS 120B access'],['kk','GPT-OSS 120B-ке қол жеткізу']
+    ]){
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+lang+'"]').click();
+      await page.locator('.sidebar [data-screen="settings"]').click();
+      await page.locator('[data-session="ai-access"]').click();
+      assert.equal(await page.locator('#sessionTitle').innerText(),title);
+      assert.equal(await page.locator('#sessionBody input[type="password"]').count(),1);
+      await page.locator('#sessionClose').click();
+    }
+  });
+});

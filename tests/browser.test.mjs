@@ -2520,3 +2520,43 @@ test('AI access dialog validates the same 1,000-character maximum as the server'
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('browser keeps formatted replies and sends emoji-safe context to GPT',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),
+    headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    const requests=[];
+    const prefix='  const value = 42;\n';
+    const original=prefix+'A'.repeat(3999-prefix.length)+'😀'+'\n';
+    assert.equal(original.slice(0,4000).charCodeAt(3999)>=0xD800,true);
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        requests.push(route.request().postDataJSON());
+        return route.fulfill({status:200,contentType:'application/json',
+          body:JSON.stringify({text:requests.length===1?original:'Второй ответ'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Проверь код');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('local-private-test-key-123456789');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant > span')?.textContent.length>3950);
+    assert.equal(await page.locator('.message-assistant > span').first().textContent(),original);
+    await page.locator('#messageInput').fill('Следующий вопрос');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelectorAll('.message-assistant').length===2);
+    assert.equal(requests.length,2);
+    const previous=requests[1].messages.find(m=>m.role==='assistant').content;
+    assert.ok(previous.length<=4000);
+    assert.ok(!/[\uD800-\uDBFF]$/u.test(previous));
+    assert.ok(!previous.includes('�'));
+    assert.equal(requests[1].messages.at(-1).content,'Следующий вопрос');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

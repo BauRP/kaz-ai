@@ -1605,7 +1605,10 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     // Retry hides its own button; focus the visible Stop control, not a hidden element.
     if(previousFocus?.id==="sessionRetry"||previousFocus?.closest("#view-tools"))stop.focus();
     const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
-      .map(m=>({role:m.role,content:m.role==="assistant"?m.content.slice(0,4000):m.content}));
+      // Do not split a Unicode surrogate pair when shortening AI context.
+      .map(m=>({role:m.role,content:m.role==="assistant"
+        ?m.content.slice(0,4000).replace(/[\uD800-\uDBFF]$/u,"")
+        :m.content}));
     // Preserve full recent messages, but do not exceed the server's 50 KB payload cap.
     // Account for JSON encoding, user instructions and non-ASCII characters.
     const encoder=new TextEncoder();
@@ -1656,9 +1659,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       if(!data||typeof data.text!=="string"||!data.text.trim())throw new Error("EMPTY_RESPONSE");
       if(replaceId){
         const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
-        if(existing){existing.content=data.text.trim();existing.rating=null}
+        if(existing){existing.content=data.text;existing.rating=null}
       }else{
-        if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text.trim()});
+        if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text});
       }
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
       showStatus("");
@@ -1849,7 +1852,12 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     if(action==="add-chat-to-project"&&project){
       const available=threads.filter(c=>!c.temporary&&c.projectId!==project.id);
       if(!available.length){notify("Нет других чатов для добавления.");return}
-      openDialog("Добавить чат в «"+project.name+"»","Можно выбрать чат без проекта или перенести из другого проекта.",body=>{
+      // Keep the user-written project name unchanged across interface languages.
+      const lang=window.KazI18n?.language||"ru";
+      const title=lang==="en"?"Add chat to “"+project.name+"”"
+        :lang==="kk"?"«"+project.name+"» жобасына чат қосу"
+          :"Добавить чат в «"+project.name+"»";
+      openDialog(title,"Можно выбрать чат без проекта или перенести из другого проекта.",body=>{
         const select=make("select","session-input");
         select.setAttribute("aria-label","Выберите чат для проекта");
         for(const candidate of available){
@@ -2855,6 +2863,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   "Для экспорта пока нет переписок.": {"en":"No conversations to export yet.","kk":"Экспорттауға әзірше әңгімелер жоқ."},
   "Переместить в проект": {"en":"Move to project","kk":"Жобаға көшіру"},
   "Добавить чат в проект": {"en":"Add chat to project","kk":"Чатты жобаға қосу"},
+  "Доступ к GPT-OSS 120B": {"en":"GPT-OSS 120B access","kk":"GPT-OSS 120B-ке қол жеткізу"},
+  "Защитный ключ задаётся владельцем в Cloudflare. Он действует только в этой открытой вкладке и не сохраняется на устройстве.": {"en":"The owner sets the access key in Cloudflare. It works only in this tab and is not stored on the device.","kk":"Қорғау кілтін иесі Cloudflare-де орнатады. Ол тек осы қойындыда жұмыс істейді және құрылғыда сақталмайды."},
+  "Можно выбрать чат без проекта или перенести из другого проекта.": {"en":"Choose an ungrouped chat or move one from another project.","kk":"Жобасыз чатты таңдаңыз немесе оны басқа жобадан ауыстырыңыз."},
   "Положительная оценка ответа": {"en":"Positive response rating","kk":"Жауапқа оң баға"},
   "Отрицательная оценка ответа": {"en":"Negative response rating","kk":"Жауапқа теріс баға"},
   "Сначала введите текст или описание задачи.": {"en":"Enter a text or task description first.","kk":"Алдымен мәтінді немесе тапсырма сипаттамасын енгізіңіз."},

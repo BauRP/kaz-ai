@@ -446,7 +446,10 @@
     // Retry hides its own button; focus the visible Stop control, not a hidden element.
     if(previousFocus?.id==="sessionRetry"||previousFocus?.closest("#view-tools"))stop.focus();
     const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
-      .map(m=>({role:m.role,content:m.role==="assistant"?m.content.slice(0,4000):m.content}));
+      // Do not split a Unicode surrogate pair when shortening AI context.
+      .map(m=>({role:m.role,content:m.role==="assistant"
+        ?m.content.slice(0,4000).replace(/[\uD800-\uDBFF]$/u,"")
+        :m.content}));
     // Preserve full recent messages, but do not exceed the server's 50 KB payload cap.
     // Account for JSON encoding, user instructions and non-ASCII characters.
     const encoder=new TextEncoder();
@@ -497,9 +500,9 @@
       if(!data||typeof data.text!=="string"||!data.text.trim())throw new Error("EMPTY_RESPONSE");
       if(replaceId){
         const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
-        if(existing){existing.content=data.text.trim();existing.rating=null}
+        if(existing){existing.content=data.text;existing.rating=null}
       }else{
-        if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text.trim()});
+        if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text});
       }
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
       showStatus("");
@@ -690,7 +693,12 @@
     if(action==="add-chat-to-project"&&project){
       const available=threads.filter(c=>!c.temporary&&c.projectId!==project.id);
       if(!available.length){notify("Нет других чатов для добавления.");return}
-      openDialog("Добавить чат в «"+project.name+"»","Можно выбрать чат без проекта или перенести из другого проекта.",body=>{
+      // Keep the user-written project name unchanged across interface languages.
+      const lang=window.KazI18n?.language||"ru";
+      const title=lang==="en"?"Add chat to “"+project.name+"”"
+        :lang==="kk"?"«"+project.name+"» жобасына чат қосу"
+          :"Добавить чат в «"+project.name+"»";
+      openDialog(title,"Можно выбрать чат без проекта или перенести из другого проекта.",body=>{
         const select=make("select","session-input");
         select.setAttribute("aria-label","Выберите чат для проекта");
         for(const candidate of available){

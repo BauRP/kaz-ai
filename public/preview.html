@@ -1589,7 +1589,12 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       return;
     }
     if(!aiAccessKey){
-      showStatus("Для подключения ИИ укажи приватный ключ доступа.");
+      // Keep the submitted question retryable if the user closes the key dialog.
+      const mayRetry=replaceId
+        ? chat.messages.at(-1)?.id===replaceId
+        : chat.messages.at(-1)?.role==="user";
+      retryAnswerId=replaceId;
+      showStatus("Для подключения ИИ укажи приватный ключ доступа.",false,Boolean(mayRetry));
       configureAccess(()=>runAI(chat,replaceId));return;
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
@@ -1642,12 +1647,16 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
           showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);
         }else if(data?.code==="ACCESS_REQUIRED"){
           // An invalid key should not force the user to send the same question twice.
-          aiAccessKey="";
+          // Server setup errors (503) do not imply that the submitted key is wrong.
+          const serverNotReady=response.status===503;
+          if(!serverNotReady)aiAccessKey="";
           retryAnswerId=replaceId;
           const mayRetry=replaceId
             ? chat.messages.at(-1)?.id===replaceId
             : chat.messages.at(-1)?.role==="user";
-          showStatus("Ключ доступа не принят или ИИ на сервере ещё не настроен.",false,Boolean(mayRetry));
+          showStatus(serverNotReady
+            ?"Серверный ИИ ещё не настроен. Повторите запрос после настройки сервера."
+            :"Ключ доступа не принят. Введите новый ключ и повторите запрос.",false,Boolean(mayRetry));
         }
         else{
           retryAnswerId=replaceId;

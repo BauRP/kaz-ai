@@ -25,8 +25,11 @@ export function buildPreview(){
   }
   const inline=scripts.map(code=>'<script>\n'+code+'\n</script>').join('\n');
   preview=once(preview,'</body>',inline+'\n</body>','body');
-  preview=once(preview,'href="./favicon.svg"',
-    'href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E"','favicon');
+  // The preview is hosted beside the same favicon.png asset. Keep a real
+  // relative favicon rather than the previous empty SVG placeholder.
+  if(!preview.includes('<link rel="icon" href="./favicon.png" type="image/png" sizes="64x64">')){
+    throw new Error('Missing Lotus favicon link in preview');
+  }
   if(![css,...scripts].every(source=>preview.includes(source))){
     throw new Error('Preview content changed unexpectedly during generation');
   }

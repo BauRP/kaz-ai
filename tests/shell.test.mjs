@@ -171,3 +171,15 @@ test('the basic calculator is isolated from chat state and bundled before the se
   assert.ok(calculator.includes('window.KazCalculator=Object.freeze({compute,format})'));
   assert.doesNotMatch(calculator,/\beval\s*\(|\bFunction\s*\(|\bfetch\s*\(|localStorage|sessionStorage|indexedDB/);
 });
+
+test('Lotus favicon is a real transparent PNG used by live and preview tabs',()=>{
+  const favicon=readFileSync('public/favicon.png');
+  assert.ok(favicon.length>500&&favicon.length<20000,'Small optimized favicon expected');
+  assert.equal(favicon.subarray(0,8).toString('hex'),'89504e470d0a1a0a','PNG magic header');
+  assert.equal(favicon.readUInt32BE(16),64,'favicon width');
+  assert.equal(favicon.readUInt32BE(20),64,'favicon height');
+  assert.match(html,/<link rel="icon" href="\.\/favicon\.png" type="image\/png" sizes="64x64">/);
+  const preview=readFileSync('public/preview.html','utf8');
+  assert.match(preview,/<link rel="icon" href="\.\/favicon\.png" type="image\/png" sizes="64x64">/);
+  assert.doesNotMatch(preview,/data:image\/svg\+xml,%3Csvg/,'Remove empty preview icon');
+});

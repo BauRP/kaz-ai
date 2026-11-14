@@ -1058,8 +1058,18 @@
       if(number===40)return handle("instructions");
       if(number===41){showScreen("settings");$("#sessionTemporary").focus();return}
       if(number===42){toggleTheme();return}
-      if(number===43){togglePopover("language",$("#languageToggle"));return}
-      if(number===44){showScreen("settings");togglePopover("font");return}
+      if(number===43){
+        // The tool card becomes hidden behind a menu. Focus the visible trigger.
+        togglePopover("language",$("#languageToggle"));
+        $("#languageToggle").focus();
+        return;
+      }
+      if(number===44){
+        showScreen("settings");
+        togglePopover("font");
+        $("#fontToggle").focus();
+        return;
+      }
       if(number===45)return handle("export");
     }
     if(key==="tool-25"){showCalculator();return}

@@ -629,3 +629,65 @@ test('tools search recognizes names in all three languages without changing the 
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
   });
 });
+
+test('all active light and medium tool names and descriptions have English and Kazakh translations',async()=>{
+  await withPage(async page=>{
+    const active=[1,2,3,4,5,6,7,9,10,13,15,16,22,23,24,40,41,42,43,44,45];
+    const original=await page.evaluate(ids=>ids.map(id=>{
+      const item=FEATURE_GROUPS.flatMap(g=>g.items).find(x=>x[0]===id);
+      return {id,title:item[1],description:item[2]};
+    }),active);
+    const composer=page.locator('#messageInput');
+    await composer.fill('Не менять: Қазақша, русский, English');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    for(const lang of ['en','kk']){
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+lang+'"]').click();
+      const values=await page.evaluate(ids=>ids.map(id=>{
+        const item=FEATURE_GROUPS.flatMap(g=>g.items).find(x=>x[0]===id);
+        const card=document.querySelector('#toolGroups [data-feature="tool-'+id+'"]');
+        return {id,title:card.querySelector('strong').textContent,
+          description:card.querySelector('p').textContent,
+          targetTitle:window.KazI18n.translateFor(window.KazI18n.language,item[1]),
+          targetDescription:window.KazI18n.translateFor(window.KazI18n.language,item[2])};
+      }),active);
+      assert.equal(values.length,21);
+      for(const item of values){
+        const baseline=original.find(x=>x.id===item.id);
+        assert.equal(item.title,item.targetTitle,'Title for '+lang+' feature '+item.id);
+        assert.equal(item.description,item.targetDescription,'Description for '+lang+' feature '+item.id);
+        assert.notEqual(item.description,baseline.description,'Untranslated '+lang+' description for '+item.id);
+      }
+      for(const id of [5,6,7,10,13,15,16,23,24,42])
+        assert.notEqual(values.find(x=>x.id===id).title,original.find(x=>x.id===id).title,
+          'Untranslated '+lang+' title for '+id);
+      assert.equal(await composer.inputValue(),'Не менять: Қазақша, русский, English');
+      assert.equal(await page.locator('html').getAttribute('lang'),lang);
+    }
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="ru"]').click();
+    for(const item of original){
+      const card=page.locator('#toolGroups [data-feature="tool-'+item.id+'"]');
+      assert.equal(await card.locator('strong').textContent(),item.title);
+      assert.equal(await card.locator('p').textContent(),item.description);
+    }
+  });
+});
+
+test('language and font tools move keyboard focus from hidden cards onto visible controls',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-43"]').click();
+    assert.equal(await page.locator('#languageMenu').isVisible(),true);
+    assert.equal(await page.locator('#languageToggle').getAttribute('aria-expanded'),'true');
+    assert.equal(await page.locator('#languageToggle').evaluate(el=>document.activeElement===el),true);
+    await page.keyboard.press('Escape');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-44"]').click();
+    assert.equal(await page.locator('#view-settings').isVisible(),true);
+    assert.equal(await page.locator('#fontMenu').isVisible(),true);
+    assert.equal(await page.locator('#fontToggle').getAttribute('aria-expanded'),'true');
+    assert.equal(await page.locator('#fontToggle').evaluate(el=>document.activeElement===el),true);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+  });
+});

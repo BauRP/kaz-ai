@@ -20,40 +20,18 @@ test('reason selector initialization uses a collection of buttons',()=>{
   assert.ok(!js.includes(';$("[data-reason=medium]").forEach('));
 });
 
-test('custom Kaz AI wordmark is styled and language slogan removed',()=>{
-  const preview = readFileSync('public/preview.html','utf8');
-  for(const page of [html,preview]){
-    assert.doesNotMatch(page,/Ваш помощник на казахском, русском и английском языках/);
-    assert.match(page,/class="hero-wordmark"/);
-    assert.match(page,/class="brand-wordmark"/);
-  }
-  assert.match(css,/hero-copy h1\.hero-wordmark/);
-  assert.match(css,/body\.light \.hero-copy h1\.hero-wordmark/);
-  assert.match(preview,/<style>[\s\S]*?hero-wordmark/);
-  assert.match(preview,/<script>[\s\S]*?FEATURE_GROUPS/);
-});
-
-test('photographic Earth design remains separate from functioning UI',()=>{
+test('approved compact logo stays in the sidebar, and the welcome center is empty',()=>{
  const preview=readFileSync('public/preview.html','utf8');
- assert.match(html,/class="earth-sphere"/);
- assert.match(html,/class="hero-logo-line"/);
- assert.doesNotMatch(html,/id="earthFill"/);
- assert.match(css,/url\("\.\/earth\.webp"\)/);
- assert.match(preview,/url\("\.\/earth\.webp"\)/);
- assert.doesNotMatch(html,/Ваш помощник на казахском, русском и английском языках/);
- assert.doesNotMatch(html,/class="feature-cards"/);
-});
-
-test('cinematic Earth is not a clipped photographic strip',()=>{
- const preview=readFileSync('public/preview.html','utf8');
- assert.match(html,/class="earth-sphere"/);
- assert.match(css,/\.earth-photo\{[\s\S]*?height:100%/);
- assert.match(css,/mask-image:linear-gradient\(to bottom/);
- assert.match(html,/class="kaz-corner kaz-corner-tl"/);
- assert.match(html,/class="orbit-ribbon"/);
- assert.doesNotMatch(html,/Интеллект нового поколения/);
- assert.doesNotMatch(html,/Ваш помощник на казахском, русском и английском языках/);
- assert.ok(preview.includes('earth-photo'));
+ for(const page of [html,preview]){
+  assert.match(page,/<img class="brand-logo" src="data:image\/webp;base64,/);
+  assert.match(page,/class="brand-wordmark">Kaz <b>AI<\/b>/);
+  const welcome=page.match(/<section id="view-welcome"[^>]*>([\s\S]*?)<\/section>/);
+  assert.ok(welcome,'Welcome view must exist');
+  assert.equal(welcome[1].trim(),'','No central logo, heading or decoration in the chat center');
+  assert.doesNotMatch(page,/class="hero-logo-line"/);
+ }
+ assert.match(css,/\.sidebar-header \.brand-logo\{display:block;width:28px;height:28px/);
+ assert.match(preview,/<script>[\s\S]*?FEATURE_GROUPS/);
 });
 
 test('standalone preview preserves exact active CSS and JavaScript',()=>{

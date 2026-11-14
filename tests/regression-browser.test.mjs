@@ -691,3 +691,37 @@ test('language and font tools move keyboard focus from hidden cards onto visible
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
   });
 });
+
+test('private GPT access key submits on Enter but never during IME composition',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('[data-session="ai-access"]').click();
+    const field=page.locator('#sessionBody input[type="password"]');
+    await field.fill('123456789012345678901234');
+    await field.evaluate(input=>input.dispatchEvent(new KeyboardEvent('keydown',{
+      key:'Enter',bubbles:true,isComposing:true
+    })));
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true,'IME Enter must not submit');
+    await field.press('Enter');
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false,'Enter saves the key');
+    assert.equal(await page.locator('#sessionBody input[type="password"]').count(),0,'Password input removed');
+    assert.match(await page.locator('#toast').innerText(),/Ключ принят/);
+  });
+});
+
+test('project assignment dialog heading follows English and Kazakh interface choices',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill('Project assignment locale');
+    await page.locator('#sendButton').click();
+    for(const [lang,expected] of [['en','Add chat to project'],['kk','Чатты жобаға қосу']]){
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+lang+'"]').click();
+      await page.locator('.sidebar [data-screen="history"]').click();
+      await page.locator('#historyList [data-session="assign-chat"]').click();
+      assert.equal(await page.locator('#sessionTitle').innerText(),expected);
+      await page.locator('#sessionClose').click();
+    }
+    assert.ok((await page.locator('#historyList').innerText()).includes('Project assignment locale'),
+      'The user-authored title must remain unchanged');
+  });
+});

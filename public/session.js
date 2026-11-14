@@ -403,6 +403,13 @@
       field.placeholder="Ключ доступа";field.setAttribute("aria-label","Ключ доступа");
       body.append(field);
       const save=button("Подключить","dialog-save",null,"session-primary");
+      // Password inputs outside a form do not submit on Enter. Support
+      // keyboard confirmation, without saving an unfinished IME composition.
+      field.addEventListener("keydown",event=>{
+        if(event.key==="Enter"&&!event.isComposing&&event.keyCode!==229){
+          event.preventDefault();save.click();
+        }
+      });
       save.addEventListener("click",()=>{
         const key=field.value.trim();
         if(key.length<24){notify("Введите ключ не короче 24 символов.");return}

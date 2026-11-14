@@ -498,6 +498,9 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
 .about-story .about-ending{color:var(--text)}
 @media(max-width:760px){.about-story h3{font-size:16px}.about-story h4{font-size:14px}.about-story .about-metric{font-size:17px}}
 
+/* Approved compact sidebar logo, with the center of the chat deliberately empty. */
+.sidebar-header .brand-logo{display:block;width:28px;height:28px;flex:none;object-fit:contain}
+
 </style>
   
   
@@ -538,7 +541,7 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
   <aside class="sidebar" id="sidebar" aria-label="Боковое меню">
     <div class="sidebar-header">
       <button type="button" class="brand" data-action="home" aria-label="На главную Kaz AI">
-        <svg class="brand-mark"><use href="#logo-mark"/></svg><span class="brand-wordmark">Kaz <b>AI</b></span>
+        <img class="brand-logo" src="data:image/webp;base64,UklGRlgHAABXRUJQVlA4WAoAAAAQAAAAPwAAPwAAQUxQSDkEAAAB8HXbtmnbtrYPKJda67Jt27Zt27ZtWxt3tm3btm17T1bkki9aa73P3duKiAnA87uFGGxEFtGNNhYDlt396D2XA2wcAcvf94vK+tuHV0YYg2HNT0lOl762IcIIwmIf1ILm7m2+Pr9ssJmLOFvZ3Ulyga5Emj37oJceZ/HPBZs1w8o/UPMu2fT3VWAzFrDez9VI0p1Nc9b7/9iiMCz3bRU66WTV75ddNDYAS9GmQcSrlTsks96OgGktJkP/UusGwFKYImBv1sZuzX4Y4hQhGWBrLQ7AbJnPfOqaXRYDEFOYAAH3igtLKbnpSURMGFIEsMSu137sK0vCgIRXSnO+9MieiwOI0QYs2l0L1F3wUAw2EGIEsPQBT3xprvQeGDqXc75L9QcvOGZtAJaioWvY/tnPfOMzL9wRwQDAUgKA9Y9/8c8ocR4fRAIQsEtlK4WSfvaWi9c3ACkagABgWQABgMUEIGx+9bt+JYm5tKpjEQEYlv6lGslaqqT/ffy2vVcAYClaSAEhBcRkAFba997PzpNUciVZ9YeNEADA8FYVdr2VIql85yWnroVeMwMMwOpnvOK7TVIpjb1ZH4sB3YQblenudDpZc5P0jw/cvNcSZgBgaeer3/03SS3XRifde55A6ok4qDWS9B6ylVwllefQibhnjqSaa+OwO5tOQewJWPuXqj3upDtJtrLQ561vAcHW+oMWFE7p3vTvtWE9CPZB5R5OnnUXEhIu1kJO7CTpRZ8xQ3/Cgz1dn6ToO8ubWfiCymT9WY8jDgQc4Y1Odzp9AtZ2NBbH/lykreh4pAHD6v8SnXRysqw3YTG8Spne8cn8L5sjDMDwSVUnSXfSh8g5m2KjP3mlO+mcuOizyWwo4hHlmktlayXXNpT1IG5QJp3dVnKprdWSy0J/ERKGE47nfEmsTd1cmneKvr7sl1TYbaW4JJGS5H4G4gQBm/1Xv3jD9Uftvf8pt73yK/+Q1DrN5zw319mtkv71tdfcdc7hR15w/6s/8/sFGyFMACx1/8XrYnDJbc957Z8lOkmqkU5Kf33DWdsvjUHbeJ+E6VOKIcSUDMDKF851dhtJNs69dXUAllKMMaYUMH1IAYMWUgC+p0q6k+6s+uXqSCkYBi3Eqaa2Jb8/iVf9emMLmO3FOk66u7Pp1xtgTD6WRpJO0uuYuqNydzpH5L3jcac73dnGMzgycjykk3R6HZPTnWOppPeOwbDYj1Xp7PWmX284c2v/R63jPf6vbWYs4lRVd+dg0alIs2Qpvld5ig8izlLEKaWy66Q76dVPQ5ydgF3/UvuGa/nHbggzdOwfVRp9glr1zV1mCIb13illDme1Z5eBYYYDcNHflVtPK/rJsUDATIeILd4jZZJZet3qWMww6wl27T+VW9bfzgUSRhgCtvmopPdujmgYpSUsdutvbw1IGG0AlgMCRmwB0TBuw/M+AFZQOCD4AgAAMBAAnQEqQABAAD51MJRGJKMiITAUDviQDolnDcDlR5oBtneez0zPeOb857R/salERVLxEaSDFz6JecNUA/jn9Q/4PXs/Yz2K/1EV9VLPkmANhjMFtfXoBGcPcp0IlJ0NDMLEdDFj3f2vPllKT/6oMQbzftbDYgksfte5DFDtOy2AoVQ3c1RBYLQAAP73vOH78vVMf9SNp/yYP/gz9FFofXZ+4+F8nMuX9Ok0f2sdd3RPNlYkGDtppUH818cGDWpLa+SdcA0wVvu8MK+bHhThZE5Wq1T2XEsmYDCibLkJBENaiZWbQ+wo+IBKIjsZon9lSy1EH0bp2/rkfwqtfkeAZN4Jm6+lez5C60w8yXXvSzNal+BEp14qXESe8rXRsx7H/TYe4FY+y70+riOgNmH7dwpT22EDUBFHtzfAl1/203zaw7VbPMsd7+ln4ps9Rodn4WBiXPRzwd51XKvajLLov8OXY0bf93VsVuTNANwSSKy1TAgYjgNUSqd427TB57eB1yqhx4jBIf7BJhL5FLHMRAYn66KpfkNNF1PO+HEIfCI2H2rdoHy5etBetHyyjLGCvVJL4Pe14qix4mEYiwDeet+y2cE28ZYPm+0QfF0TuMLrJ1XdwKBA7ok+90YWGzucHm67smKzkqEJg7ft9+goWqmXMcNMdZWLtW1Ov1PuZiAroxQsUbQGbFMpk1FEBnxI2z/LnEPdYAENH5cf/Af/8u6v/89QNwMftilUmE/XoRu+WZuaE9JZN8F7IHT2t0f/LHOQ1jGCArB3qE8p3F22gHWoMF1ItJuD7G1HW38IO5/Vl/s52nMl3kXzN5ysNzUp8NUWadXBoWf7wDRrpr9RtNiIvCvsjAWyPl/+DwUQm/8y8ZuguoQjcTOCLyiMjO64c2PPEWK25pTwroKLSJTguVhbHLz788cKUOgZAb7dkdOQCeSLBqpnO2/klQA21xfGCDkWA1M8CyTsKqfREgh3eg1NGDuGrkFT4BowTWxjiH43WBpwJoAAAA==" width="28" height="28" alt="" aria-hidden="true"><span class="brand-wordmark">Kaz <b>AI</b></span>
       </button>
       <button type="button" class="icon-button close-sidebar" data-action="close-sidebar" aria-label="Закрыть меню"><svg class="icon"><use href="#ic-close"/></svg></button>
     </div>
@@ -584,40 +587,6 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
     </header>
     <main class="main-content" id="mainContent">
       <section id="view-welcome" class="view view-welcome" aria-label="Главная Kaz AI">
-        <div class="hero-visual" aria-hidden="true">
-          <div class="starfield"></div>
-          <div class="nebula"></div>
-          <div class="earth-sphere" aria-hidden="true"><div class="earth-photo"></div><div class="earth-shade"></div></div>
-          <svg class="orbit-art" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <linearGradient id="orbit-cyan" x1="0" x2="1"><stop stop-color="#149cff" stop-opacity=".12"/><stop offset=".4" stop-color="#6ffaff" stop-opacity=".96"/><stop offset="1" stop-color="#009cff" stop-opacity=".32"/></linearGradient>
-              <linearGradient id="orbit-gold" x1="0" x2="1"><stop stop-color="#f7ac41" stop-opacity=".08"/><stop offset=".58" stop-color="#ffd578" stop-opacity=".8"/><stop offset="1" stop-color="#ffc45c" stop-opacity=".08"/></linearGradient>
-            </defs>
-            <ellipse cx="480" cy="234" rx="420" ry="116" transform="rotate(-11 480 234)" fill="none" stroke="url(#orbit-cyan)" stroke-width="1.4"/>
-            <ellipse cx="480" cy="234" rx="415" ry="112" transform="rotate(12 480 234)" fill="none" stroke="url(#orbit-gold)" stroke-width="1.1"/>
-            <ellipse cx="480" cy="234" rx="386" ry="112" transform="rotate(6 480 234)" fill="none" stroke="#30c8ff" stroke-width=".8" opacity=".35"/>
-            <g fill="#7cfaff" stroke="#5cecff" stroke-width="2">
-              <circle cx="92" cy="285" r="3.8"/><circle cx="868" cy="189" r="3.5"/>
-              <circle cx="673" cy="119" r="2.3"/><circle cx="277" cy="341" r="2.3"/>
-            </g>
-            <g fill="#ffd272"><circle cx="205" cy="128" r="3.3"/><circle cx="802" cy="310" r="2.5"/></g>
-            <g stroke="#a7f9ff" stroke-width=".8" opacity=".8">
-              <path d="M92 272v26m-13-13h26M868 176v26m-13-13h26M205 116v24m-12-12h24"/>
-            </g>
-            <path d="M155 211q130-117 277-126" fill="none" stroke="#42eeff" stroke-width="3" opacity=".65" stroke-dasharray="1 5"/>
-          </svg>
-          <svg class="orbit-ribbon" viewBox="0 0 390 90" aria-hidden="true"><g stroke="#6bf1ff" fill="none" stroke-width="1.6"><path d="M4 75Q192 -36 386 21" stroke-width="3"/><path d="M4 89Q191 -17 386 36" stroke-width="1.2"/><path d="M40 73c17-34 32-30 39-16 7 17-18 20-20 6-2-12 12-17 20-7m17-6c17-34 32-30 39-16 7 17-18 20-20 6-2-12 12-17 20-7m17-6c17-34 32-30 39-16 7 17-18 20-20 6-2-12 12-17 20-7m17-6c17-34 32-30 39-16 7 17-18 20-20 6-2-12 12-17 20-7"/><path d="M55 56l12-12 12 12-12 12zM113 41l11-11 11 11-11 11zM171 28l10-10 10 10-10 10zM228 20l8-8 8 8-8 8z"/></g></svg>
-          <svg class="kaz-corner kaz-corner-tl" viewBox="0 0 108 108" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"><path d="M9 8h87M9 8v87M17 20c40-2 61 10 54 35-4 15-20 15-26 5-5-9 1-17 11-17 12 0 12 14 3 14M17 36c25 9 33 27 17 36-11 6-19-4-11-11M34 15c14 13 35 12 39 3M19 19l10 10-10 10-10-10zM47 23l8 8-8 8-8-8zM18 87c18-18 38-5 48-27" /><path d="M72 16c9 15 16 23 25 25M16 73c20 5 18 22 33 24" stroke-width="1.8"/></g></svg>
-          <svg class="kaz-corner kaz-corner-tr" viewBox="0 0 108 108" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"><path d="M9 8h87M9 8v87M17 20c40-2 61 10 54 35-4 15-20 15-26 5-5-9 1-17 11-17 12 0 12 14 3 14M17 36c25 9 33 27 17 36-11 6-19-4-11-11M34 15c14 13 35 12 39 3M19 19l10 10-10 10-10-10zM47 23l8 8-8 8-8-8zM18 87c18-18 38-5 48-27" /><path d="M72 16c9 15 16 23 25 25M16 73c20 5 18 22 33 24" stroke-width="1.8"/></g></svg>
-          <svg class="kaz-corner kaz-corner-bl" viewBox="0 0 108 108" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"><path d="M9 8h87M9 8v87M17 20c40-2 61 10 54 35-4 15-20 15-26 5-5-9 1-17 11-17 12 0 12 14 3 14M17 36c25 9 33 27 17 36-11 6-19-4-11-11M34 15c14 13 35 12 39 3M19 19l10 10-10 10-10-10zM47 23l8 8-8 8-8-8zM18 87c18-18 38-5 48-27" /><path d="M72 16c9 15 16 23 25 25M16 73c20 5 18 22 33 24" stroke-width="1.8"/></g></svg>
-          <svg class="kaz-corner kaz-corner-br" viewBox="0 0 108 108" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"><path d="M9 8h87M9 8v87M17 20c40-2 61 10 54 35-4 15-20 15-26 5-5-9 1-17 11-17 12 0 12 14 3 14M17 36c25 9 33 27 17 36-11 6-19-4-11-11M34 15c14 13 35 12 39 3M19 19l10 10-10 10-10-10zM47 23l8 8-8 8-8-8zM18 87c18-18 38-5 48-27" /><path d="M72 16c9 15 16 23 25 25M16 73c20 5 18 22 33 24" stroke-width="1.8"/></g></svg>
-          <div class="ornament ornament-left"><svg viewBox="0 0 110 200"><g fill="none" stroke="currentColor" stroke-width="2.5"><path d="M0 28Q38-4 69 29T109 90M0 75q38 36 70 0t40-12M0 122q38-38 70 0t40 35M0 178q38-36 70 0"/><path d="m40 30 18 18-18 18-18-18Z M48 108l18 18-18 18-18-18Z M40 160l18 18-18 18-18-18Z"/></g></svg></div>
-          <div class="ornament ornament-right"><svg viewBox="0 0 110 200"><g fill="none" stroke="currentColor" stroke-width="2.5"><path d="M0 28Q38-4 69 29T109 90M0 75q38 36 70 0t40-12M0 122q38-38 70 0t40 35M0 178q38-36 70 0"/><path d="m40 30 18 18-18 18-18-18Z M48 108l18 18-18 18-18-18Z M40 160l18 18-18 18-18-18Z"/></g></svg></div>
-        </div>
-        <div class="hero-copy">
-          <div class="hero-logo-line"><svg class="hero-logo-mark" aria-hidden="true"><use href="#logo-mark"/></svg><h1 class="hero-wordmark">Kaz <span>AI</span></h1></div>
-          <span class="hero-accent"><span></span><svg class="brand-mark"><use href="#logo-mark"/></svg><span></span></span>
-        </div>
       </section>
       <section id="view-chat" class="view view-chat" hidden aria-label="Переписка"><div id="chatMessages" class="chat-messages" aria-live="polite"></div></section>
       <section id="view-history" class="view view-panel" hidden aria-labelledby="historyHeading">

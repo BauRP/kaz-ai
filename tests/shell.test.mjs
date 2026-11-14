@@ -30,7 +30,7 @@ test('approved compact logo stays in the sidebar, and the welcome center is empt
   assert.equal(welcome[1].trim(),'','No central logo, heading or decoration in the chat center');
   assert.doesNotMatch(page,/class="hero-logo-line"/);
  }
- assert.match(css,/\.sidebar-header \.brand-logo\{display:block;width:28px;height:28px/);
+ assert.match(css,/\.sidebar-header \.brand-logo\{display:block;width:28px;height:28px;flex:none;object-fit:contain;transform:translateY\(-3px\)\}/);
  assert.match(preview,/<script>[\s\S]*?FEATURE_GROUPS/);
 });
 

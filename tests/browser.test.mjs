@@ -353,7 +353,12 @@ test('Kaz AI starts with a clean chat and opens About outside the conversation',
       const errors=[];page.on('pageerror',e=>errors.push(e.message));
       await page.goto(appUrl);
       assert.equal(await page.title(),'Kaz AI — Казахстанский искусственный интеллект онлайн');
-      assert.ok(await page.locator('.hero-wordmark').isVisible());
+      assert.equal(await page.locator('#view-welcome').innerText(),'');
+      assert.equal(await page.locator('#view-welcome').locator('*').count(),0);
+      const logo=page.locator('.sidebar-header .brand-logo');
+      assert.equal(await logo.count(),1);
+      const size=await logo.evaluate(el=>({width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height,loaded:el.complete&&el.naturalWidth>0}));
+      assert.deepEqual(size,{width:28,height:28,loaded:true});
       assert.ok(await page.locator('#messageInput').isVisible());
       assert.equal(await page.locator('.seo-home-intro').count(),0);
       assert.equal(await page.locator('.info-links').count(),0);

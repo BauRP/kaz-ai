@@ -482,4 +482,4 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
 @media(max-width:760px){.about-story h3{font-size:16px}.about-story h4{font-size:14px}.about-story .about-metric{font-size:17px}}
 
 /* Approved compact sidebar logo, with the center of the chat deliberately empty. */
-.sidebar-header .brand-logo{display:block;width:28px;height:28px;flex:none;object-fit:contain}
+.sidebar-header .brand-logo{display:block;width:28px;height:28px;flex:none;object-fit:contain;transform:translateY(-3px)}

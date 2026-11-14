@@ -77,7 +77,10 @@
   // Count whole visible symbols including emoji sequences in older browsers.
   const shortText=(value,max)=>Array.from(textSegments(value),part=>part.segment).slice(0,max).join("");
   const safeExportName=name=>shortText(name.normalize("NFKC")
-    .replace(/[\\/:*?"<>|\x00-\x1f]/g,"").trim().replace(/^\.+/,""),70)||"chat";
+    // Strip filename controls, including direction overrides that disguise extensions.
+    // Exported conversation contents are never modified.
+    .replace(/[\\/:*?"<>|\x00-\x1f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/gi,"")
+    .trim().replace(/^\.+/,""),70)||"chat";
   const exportText=c=>{
     const lang=window.KazI18n?.language||"ru";
     const labels={
@@ -125,7 +128,7 @@
     const fallback=state.screen==="projects"
       ?$("#projectsWorkspace [data-session='new-project']")
       :state.screen==="history" ?$("#historySearch"):$("#messageInput");
-    const visible=element=>element?.isConnected&&!element.closest("[hidden]")
+    const visible=element=>element?.isConnected&&!element.disabled&&!element.closest("[hidden]")
       &&typeof element.focus==="function";
     if(visible(previous))previous.focus();
     else if(visible(matching))matching.focus();

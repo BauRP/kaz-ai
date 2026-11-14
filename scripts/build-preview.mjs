@@ -25,11 +25,11 @@ export function buildPreview(){
   }
   const inline=scripts.map(code=>'<script>\n'+code+'\n</script>').join('\n');
   preview=once(preview,'</body>',inline+'\n</body>','body');
-  // The preview is hosted beside the same favicon.png asset. Keep a real
-  // relative favicon rather than the previous empty SVG placeholder.
-  if(!preview.includes('<link rel="icon" href="./favicon.png" type="image/png" sizes="64x64">')){
-    throw new Error('Missing Lotus favicon link in preview');
-  }
+  // Preview HTML is served from third-party static mirrors. Embed the real PNG
+  // so tab icons work even if a mirror does not serve neighboring image assets.
+  const favicon=readFileSync(path('favicon.png')).toString('base64');
+  preview=once(preview,'href="./favicon.png?v=20261114"',
+    'href="data:image/png;base64,'+favicon+'"','self-contained browser tab icon');
   if(![css,...scripts].every(source=>preview.includes(source))){
     throw new Error('Preview content changed unexpectedly during generation');
   }

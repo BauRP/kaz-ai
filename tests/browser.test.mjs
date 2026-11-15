@@ -2843,3 +2843,85 @@ test('chat export removes additional invisible filename controls but preserves o
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+
+test('high readiness: Unicode compatibility search highlights the exact original grapheme',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Офис: ﬁнал');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('final');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#historyList .session-chat-label mark').innerText(),'ﬁнал');
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#chatMessages .session-jump-hit mark').innerText(),'ﬁнал');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('high readiness: long emoji export title stays within 255 UTF-8 bytes and keeps full text',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820},acceptDownloads:true});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    const userText='Важный текст для сохранения';
+    await page.locator('#messageInput').fill(userText);
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const longTitle='👩🏽‍💻'.repeat(40);
+    await page.locator('#historyList [data-session="rename-chat"]').click();
+    await page.locator('#sessionBody input').fill(longTitle);
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#historyList [data-session="export-chat"]').click()]);
+    const filename=download.suggestedFilename();
+    assert.ok(new TextEncoder().encode(filename).length<=255,'download filename must fit common filesystem limit');
+    assert.ok(filename.endsWith('.txt'));
+    assert.ok(filename.startsWith('Kaz-AI-'));
+    assert.doesNotMatch(filename,/\uFFFD/u,'filename cannot contain a replacement character');
+    const body=readFileSync(await download.path(),'utf8');
+    assert.ok(body.includes(userText));
+    assert.ok(body.includes(longTitle),'exported conversation must contain the original title');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('high readiness: deleting a chat removes it from its project and leaves other chats intact',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первый чат');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Второй чат');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('#projectsWorkspace [data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Рабочая папка');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('#projectsWorkspace [data-session="add-chat-to-project"]').click();
+    await page.locator('#sessionBody select').selectOption({index:0});
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const row=page.locator('#historyList .session-chat-row').filter({hasText:'Первый чат'});
+    await row.locator('[data-session="delete-chat"]').click();
+    await page.locator('#sessionBody [data-session="dialog-confirm"]').click();
+    const threads=await page.evaluate(()=>window.KazSession.snapshot().threads);
+    assert.equal(threads.length,1);
+    assert.equal(threads[0].title,'Второй чат');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    const project=page.locator('#projectsWorkspace .session-project-card').filter({hasText:'Рабочая папка'});
+    assert.equal(await project.locator('.session-project-chat-row').count(),0);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

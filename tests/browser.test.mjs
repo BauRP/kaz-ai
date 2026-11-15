@@ -3053,3 +3053,28 @@ test('high readiness: multi-chat history export keeps separators, BOM, and Unico
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+
+test('high readiness: chunked individual TXT export preserves exact original separators and line breaks',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820},acceptDownloads:true});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первый короткий');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Следующая\n  строка 🇰🇿');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#historyList [data-session="export-chat"]').click()]);
+    const text=readFileSync(await download.path(),'utf8');
+    const expected='\uFEFF'
+      +'Kaz AI — Первый короткий\n'
+      +'Экспорт текущей переписки (без сохранения в облаке)\n'
+      +'\nВы: Первый короткий\n'
+      +'\nВы: Следующая\n  строка 🇰🇿\n';
+    assert.equal(text,expected,'chunked Blob export must be byte-for-byte equivalent to prior TXT structure');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

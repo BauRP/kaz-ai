@@ -261,11 +261,18 @@
     // Cache the matching message index for this render. Previously every
     // message was searched once for filtering and again for the snippet.
     const matchingMessage=new Map();
+    const matchingTitle=new Map();
     const shown=saved.filter(c=>{
       if(!value)return true;
-      const index=c.messages.findIndex(m=>findTextMatch(m.content,query));
-      matchingMessage.set(c.id,index);
-      return Boolean(findTextMatch(c.title,query))||index>=0;
+      const titleMatch=findTextMatch(c.title,query);
+      matchingTitle.set(c.id,titleMatch);
+      let index=-1,range=null;
+      for(let i=0;i<c.messages.length;i++){
+        const found=findTextMatch(c.messages[i].content,query);
+        if(found){index=i;range=found;break}
+      }
+      matchingMessage.set(c.id,{index,range});
+      return Boolean(titleMatch)||index>=0;
     });
     const language=window.KazI18n?.language||"ru";
     if(summary){
@@ -295,18 +302,18 @@
     for(const c of shown){
       const card=make("div","session-chat-row"+(c.id===current?" active":""));
       const name=button("","open-chat",c.id,"session-chat-name");
-      const matchIndex=value?(matchingMessage.get(c.id)??-1):-1;
+      const matchIndex=value?(matchingMessage.get(c.id)?.index??-1):-1;
       if(matchIndex>=0)name.dataset.matchIndex=String(matchIndex);
       name.setAttribute("aria-label",uiText(c.pinned?"Закреплённый чат":"Открыть чат")+": "+c.title);
       if(c.pinned)name.append(make("span","session-pin","📌 "));
       const label=make("span","session-chat-label");
-      highlighted(label,c.title);
+      highlighted(label,c.title,value?matchingTitle.get(c.id):null);
       name.append(label);
       card.append(name);
       if(value){
         const matched=matchIndex>=0?c.messages[matchIndex]:null;
         if(matched){
-          const range=findTextMatch(matched.content,query);
+          const range=matchingMessage.get(c.id).range;
           const {from,to}=searchExcerptBounds(matched.content,range);
           const snippet=make("div","session-search-snippet");
           if(from)snippet.append(document.createTextNode("…"));

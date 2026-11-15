@@ -2852,14 +2852,14 @@ test('high readiness: Unicode compatibility search highlights the exact original
     const page=await browser.newPage({viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
-    await page.locator('#messageInput').fill('Офис: ﬁнал');
+    await page.locator('#messageInput').fill('Офис: ﬁnal');
     await page.locator('#sendButton').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('final');
     assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
-    assert.equal(await page.locator('#historyList .session-chat-label mark').innerText(),'ﬁнал');
+    assert.equal(await page.locator('#historyList .session-chat-label mark').innerText(),'ﬁnal');
     await page.locator('#historyList [data-session="open-chat"]').click();
-    assert.equal(await page.locator('#chatMessages .session-jump-hit mark').innerText(),'ﬁнал');
+    assert.equal(await page.locator('#chatMessages .session-jump-hit mark').innerText(),'ﬁnal');
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
@@ -2909,7 +2909,7 @@ test('high readiness: deleting a chat removes it from its project and leaves oth
     await page.locator('#sessionBody input').fill('Рабочая папка');
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.locator('#projectsWorkspace [data-session="add-chat-to-project"]').click();
-    await page.locator('#sessionBody select').selectOption({index:0});
+    await page.locator('#sessionBody select').selectOption({index:1});
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const row=page.locator('#historyList .session-chat-row').filter({hasText:'Первый чат'});

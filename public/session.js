@@ -107,7 +107,9 @@
     ].join("\n");
   };
   function download(name,body,mime){
-    const blob=new Blob([mime.startsWith("text/plain")?"\uFEFF":"",body],{type:mime});
+    // Blob accepts parts directly. Multi-chat exports should not concatenate
+    // the entire history into one additional giant JavaScript string.
+    const blob=new Blob([mime.startsWith("text/plain")?"\uFEFF":"",...(Array.isArray(body)?body:[body])],{type:mime});
     const url=URL.createObjectURL(blob);
     const link=document.createElement("a");link.href=url;link.download=name;document.body.append(link);link.click();link.remove();
     setTimeout(()=>URL.revokeObjectURL(url),30000);
@@ -742,8 +744,11 @@
     if(action==="export-project"&&project){
       const saved=threads.filter(c=>c.projectId===project.id&&!c.temporary&&c.messages.length).sort(newestFirst);
       if(!saved.length){notify("В этом проекте пока нет переписок для скачивания.");return}
+      const separator="\n\n"+"=".repeat(45)+"\n\n";
+      const parts=[];
+      saved.forEach((chat,index)=>{if(index)parts.push(separator);parts.push(exportText(chat))});
       download("Kaz-AI-project-"+safeExportName(project.name)+".txt",
-        saved.map(exportText).join("\n\n"+"=".repeat(45)+"\n\n"),"text/plain;charset=utf-8");
+        parts,"text/plain;charset=utf-8");
       notify("Переписки проекта скачаны. Временные чаты не включены.");return
     }
     if(action==="add-chat-to-project"&&project){
@@ -854,8 +859,10 @@
     if(action==="export"){
       const saved=threads.filter(c=>!c.temporary&&c.messages.length).sort(newestFirst);
       if(!saved.length){notify("Для экспорта пока нет переписок.");return}
-      const text=saved.map(exportText).join("\n\n"+"=".repeat(45)+"\n\n");
-      download("Kaz-AI-history.txt",text,"text/plain;charset=utf-8");
+      const separator="\n\n"+"=".repeat(45)+"\n\n";
+      const parts=[];
+      saved.forEach((chat,index)=>{if(index)parts.push(separator);parts.push(exportText(chat))});
+      download("Kaz-AI-history.txt",parts,"text/plain;charset=utf-8");
       notify("История текущей вкладки скачана. Временные чаты не включены.");return;
     }
     if(action==="ai-access"){configureAccess();return}

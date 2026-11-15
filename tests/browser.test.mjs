@@ -3028,3 +3028,27 @@ test('97 percent directions: cached history search preserves title and message m
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+
+test('high readiness: multi-chat history export keeps separators, BOM, and Unicode in original order',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820},acceptDownloads:true});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первый 🧪 разговор');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Екінші қазақша 🇰🇿 разговор');
+    await page.locator('#sendButton').click();
+    const [download]=await Promise.all([page.waitForEvent('download'),page.locator('[data-feature="export"]').click()]);
+    const body=readFileSync(await download.path(),'utf8');
+    assert.ok(body.startsWith('\uFEFF'),'Windows UTF-8 BOM must remain intact');
+    assert.equal(download.suggestedFilename(),'Kaz-AI-history.txt');
+    assert.equal((body.match(/={45}/g)||[]).length,1,'two conversations have one separator');
+    assert.ok(body.indexOf('Екінші қазақша 🇰🇿 разговор')<body.indexOf('Первый 🧪 разговор'),'newest conversation exported first');
+    assert.equal((body.match(/Экспорт текущей переписки/g)||[]).length,2);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

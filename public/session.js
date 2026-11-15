@@ -79,7 +79,7 @@
   const safeExportName=name=>shortText(name.normalize("NFKC")
     // Strip filename controls, including direction overrides that disguise extensions.
     // Exported conversation contents are never modified.
-    .replace(/[\\/:*?"<>|\x00-\x1f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/gi,"")
+    .replace(/[\\/:*?"<>|\x00-\x1f\x7f-\x9f\u00ad\u034f\u061c\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060\u2066-\u2069\ufeff]/gi,"")
     .trim().replace(/^\.+/,""),70)||"chat";
   const exportText=c=>{
     const lang=window.KazI18n?.language||"ru";
@@ -205,7 +205,7 @@
   }
   function findTextMatch(text,query){
     const fold=value=>value.normalize("NFC").toLocaleLowerCase()
-      .replace(/\u0307/g,"").replace(/\u03c2/g,"\u03c3");
+      .replace(/\u0307/g,"").replace(/\u03c2/g,"\u03c3").replace(/ё/g,"е");
     const needle=fold(query);
     if(!needle)return null;
     const folded=fold(text);

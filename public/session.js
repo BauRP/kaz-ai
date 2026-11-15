@@ -374,6 +374,16 @@
   function renderSessionProjects(){
     const target=$("#projectsWorkspace");if(!target)return;
     target.replaceChildren();
+    // Group saved chats once per render instead of scanning all threads twice
+    // for every folder. Unknown/removed folder IDs fall back to "Без проекта".
+    const grouped=new Map(projects.map(project=>[project.id,[]]));
+    const ungrouped=[];
+    for(const chat of threads){
+      if(chat.temporary)continue;
+      const bucket=grouped.get(chat.projectId);
+      if(bucket)bucket.push(chat);
+      else ungrouped.push(chat);
+    }
     const top=make("div","session-project-header");
     top.append(make("p","session-help","Папки группируют чаты. Общей памяти, файлов и облачного хранения у них пока нет."));
     top.append(button("＋ Новый проект","new-project",null,"session-primary"));
@@ -386,9 +396,9 @@
     for(const project of projects){
       const card=make("section","session-project-card");
       const header=make("div","session-project-title");
-      header.append(make("h2","",project.name),make("small","",projectCountLabel(threads.filter(c=>c.projectId===project.id&&!c.temporary).length)));
+      const chats=grouped.get(project.id).sort(newestFirst);
+      header.append(make("h2","",project.name),make("small","",projectCountLabel(chats.length)));
       card.append(header);
-      const chats=threads.filter(c=>c.projectId===project.id&&!c.temporary).sort(newestFirst);
       if(!chats.length)card.append(make("p","session-help","Пока нет чатов в этом проекте."));
       for(const c of chats){
         const row=make("div","session-project-chat-row");
@@ -408,7 +418,7 @@
       }
       target.append(card);
     }
-    const ungrouped=threads.filter(c=>!c.projectId&&!c.temporary).sort(newestFirst);
+    ungrouped.sort(newestFirst);
     if(ungrouped.length){
       const box=make("section","session-project-card");
       box.append(make("h2","","Без проекта"));

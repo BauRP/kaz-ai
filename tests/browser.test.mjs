@@ -2948,3 +2948,83 @@ test('high readiness: invisible formatting characters cannot create duplicate pr
     assert.deepEqual(errors,[]);
   } finally { await browser.close() }
 });
+
+
+test('97 percent directions: projects reject names made entirely of invisible Unicode',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('#projectsWorkspace [data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('\u200b\u2060\u00ad\ufeff');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true,'invalid name keeps dialog open');
+    assert.equal(await page.locator('#toast').innerText(),'Введите название.');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,0);
+    await page.locator('#sessionBody input').fill('Рабочие проекты');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,1);
+    await page.locator('#projectsWorkspace [data-session="rename-project"]').click();
+    await page.locator('#sessionBody input').fill('\u200b\u2060\ufeff');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects[0].name,'Рабочие проекты');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('97 percent directions: double confirmation cannot delete another chat',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Первый сохранённый чат');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Второй сохранённый чат');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const toDelete=page.locator('#historyList .session-chat-row').filter({hasText:'Первый сохранённый чат'});
+    await toDelete.locator('[data-session="delete-chat"]').click();
+    await page.evaluate(()=>{
+      const confirmation=document.querySelector('#sessionBody [data-session="dialog-confirm"]');
+      confirmation.click();
+      confirmation.click();
+    });
+    const remaining=await page.evaluate(()=>window.KazSession.snapshot().threads);
+    assert.deepEqual(remaining.map(t=>t.title),['Второй сохранённый чат']);
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('97 percent directions: cached history search preserves title and message matches',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Где найти ёлку');
+    await page.locator('#sendButton').click();
+    await page.locator('#messageInput').fill('Праздничная ёлка рядом');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('елку');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#historyList .session-chat-label mark').innerText(),'ёлку');
+    assert.equal(await page.locator('#historyList .session-search-snippet mark').innerText(),'ёлку');
+    await page.locator('#historySearch').fill('рядом');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#historyList .session-search-snippet mark').innerText(),'рядом');
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#chatMessages .session-jump-hit mark').innerText(),'рядом');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

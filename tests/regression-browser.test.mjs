@@ -559,7 +559,7 @@ test('project names differing only by repeated Unicode spaces do not create dupl
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,1);
     assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
-    assert.match(await page.locator('#toast').innerText(),/уже есть/);
+    assert.match(await page.locator('#toast').innerText(),/уже существует/);
     await page.locator('#sessionBody input').fill('Другие планы');
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,2);

@@ -2692,3 +2692,78 @@ test('rejected key and server setup errors show correct English and Kazakh text'
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+
+test('daily Cloudflare quota leaves original question retryable after reset without duplicates',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const html=readFileSync('public/preview.html','utf8');
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        calls++;
+        return route.fulfill({status:calls===1?429:200,contentType:'application/json',
+          body:JSON.stringify(calls===1?{code:'AI_QUOTA_EXHAUSTED',message:'Daily exhausted'}:{text:'Ответ после обновления лимита'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Важный вопрос без дублей');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('private-safe-test-access-key-1234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Дневной лимит'));
+    assert.equal(await page.locator('#statusBanner').isVisible(),true);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.equal(calls,1,'quota failure must not silently resend');
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ после обновления лимита'));
+    assert.equal(calls,2);
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),false);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('daily quota during answer regeneration keeps original reply until manual Retry succeeds',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const html=readFileSync('public/preview.html','utf8');
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        calls++;
+        return route.fulfill({status:calls===2?429:200,contentType:'application/json',
+          body:JSON.stringify(calls===2?{code:'AI_QUOTA_EXHAUSTED',message:'Daily exhausted'}:
+            {text:calls===1?'Первоначальный ответ':'Улучшенный ответ после лимита'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Мой вопрос для повторного ответа');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionBody input[type=password]').fill('private-safe-test-access-key-1234567890');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Первоначальный ответ'));
+    await page.locator('[data-session="retry-answer"]').click();
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Дневной лимит'));
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    assert.ok((await page.locator('.message-assistant').innerText()).includes('Первоначальный ответ'));
+    assert.equal(calls,2,'quota failure must not silently regenerate');
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Улучшенный ответ после лимита'));
+    assert.equal(calls,3);
+    assert.equal(await page.locator('.message-user').count(),1);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    assert.ok(!(await page.locator('.message-assistant').innerText()).includes('Первоначальный ответ'));
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

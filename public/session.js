@@ -92,19 +92,20 @@
     }
     return result.replace(/[. ]+$/u,"")||"chat";
   };
-  const exportText=c=>{
+  // Build each transcript as Blob parts. Even one huge conversation no longer
+  // needs a second complete JavaScript string or a mapped array of all messages.
+  const exportParts=c=>{
     const lang=window.KazI18n?.language||"ru";
     const labels={
       ru:{note:"Экспорт текущей переписки (без сохранения в облаке)",user:"Вы: "},
       en:{note:"Current conversation export (not saved to the cloud)",user:"You: "},
       kk:{note:"Ағымдағы әңгіме экспорты (бұлтта сақталмайды)",user:"Сіз: "}
     }[lang];
-    return [
-      "Kaz AI — "+c.title,
-      labels.note,
-      "",
-      ...c.messages.map(m=>(m.role==="assistant"?"Kaz AI: ":labels.user)+m.content+"\n")
-    ].join("\n");
+    const parts=["Kaz AI — ",c.title,"\n",labels.note,"\n"];
+    for(const m of c.messages){
+      parts.push("\n",m.role==="assistant"?"Kaz AI: ":labels.user,m.content,"\n");
+    }
+    return parts;
   };
   function download(name,body,mime){
     // Blob accepts parts directly. Multi-chat exports should not concatenate
@@ -700,7 +701,7 @@
       return;
     }
     if(action==="export-chat"&&chat&&!chat.temporary){
-      download("Kaz-AI-"+safeExportName(chat.title)+".txt",exportText(chat),"text/plain;charset=utf-8");
+      download("Kaz-AI-"+safeExportName(chat.title)+".txt",exportParts(chat),"text/plain;charset=utf-8");
       notify("Переписка скачана в текстовый файл.");return
     }
     if(action==="remove-chat-from-project"&&chat){
@@ -746,7 +747,10 @@
       if(!saved.length){notify("В этом проекте пока нет переписок для скачивания.");return}
       const separator="\n\n"+"=".repeat(45)+"\n\n";
       const parts=[];
-      saved.forEach((chat,index)=>{if(index)parts.push(separator);parts.push(exportText(chat))});
+      saved.forEach((chat,index)=>{
+        if(index)parts.push(separator);
+        for(const segment of exportParts(chat))parts.push(segment);
+      });
       download("Kaz-AI-project-"+safeExportName(project.name)+".txt",
         parts,"text/plain;charset=utf-8");
       notify("Переписки проекта скачаны. Временные чаты не включены.");return
@@ -861,7 +865,10 @@
       if(!saved.length){notify("Для экспорта пока нет переписок.");return}
       const separator="\n\n"+"=".repeat(45)+"\n\n";
       const parts=[];
-      saved.forEach((chat,index)=>{if(index)parts.push(separator);parts.push(exportText(chat))});
+      saved.forEach((chat,index)=>{
+        if(index)parts.push(separator);
+        for(const segment of exportParts(chat))parts.push(segment);
+      });
       download("Kaz-AI-history.txt",parts,"text/plain;charset=utf-8");
       notify("История текущей вкладки скачана. Временные чаты не включены.");return;
     }

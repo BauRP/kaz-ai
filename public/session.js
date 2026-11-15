@@ -758,10 +758,12 @@
       .trim().replace(/\s+/gu," ").toLocaleLowerCase();
     const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&projectKey(p.name)===projectKey(name));
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{
+      if(!projectKey(name)){notify(uiText("Введите название."));return false}
       if(duplicateProject(name)){notify(uiText("Проект с таким названием уже существует."));return false}
       projects.push({id:nextId(),name});renderSessionProjects();
     });return}
     if(action==="rename-project"&&project){textDialog("Название проекта","Название",project.name,name=>{
+      if(!projectKey(name)){notify(uiText("Введите название."));return false}
       if(duplicateProject(name,project.id)){notify(uiText("Проект с таким названием уже существует."));return false}
       project.name=name;renderSessionProjects();
     });return}

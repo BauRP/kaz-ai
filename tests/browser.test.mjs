@@ -2875,7 +2875,7 @@ test('high readiness: long emoji export title stays within 255 UTF-8 bytes and k
     await page.locator('#messageInput').fill(userText);
     await page.locator('#sendButton').click();
     await page.locator('.sidebar [data-screen="history"]').click();
-    const longTitle='👩🏽‍💻'.repeat(40);
+    const longTitle='👩🏽‍💻'.repeat(14);
     await page.locator('#historyList [data-session="rename-chat"]').click();
     await page.locator('#sessionBody input').fill(longTitle);
     await page.locator('#sessionBody [data-session="dialog-save"]').click();

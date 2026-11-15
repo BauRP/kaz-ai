@@ -3124,3 +3124,50 @@ test('high readiness: multiple projects retain exact counts and chat isolation a
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('new invisible Unicode characters do not create hidden or duplicate projects',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    for(const hidden of ['\u034f','\u180e','\u2061\u2062\u2063\u2064']){
+      await page.locator('#sessionBody input').fill(hidden);
+      await page.locator('#sessionBody [data-session="dialog-save"]').click();
+      assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+      assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,0);
+    }
+    await page.locator('#sessionBody input').fill('Рабочие дела');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Рабочие\u034f\u2061 дела');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).projects.length,1);
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('TXT export preserves invisible characters in content but cleans file name',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820},acceptDownloads:true});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    const original='Важное\u034f\u180e\u2061\u2062\u2063\u2064 содержание 🇰🇿';
+    await page.locator('#messageInput').fill(original);
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const [started]=await Promise.all([page.waitForEvent('download'),page.locator('#historyList [data-session="export-chat"]').click()]);
+    const filename=started.suggestedFilename();
+    assert.ok(filename.startsWith('Kaz-AI-')&&filename.endsWith('.txt'));
+    assert.doesNotMatch(filename,/[\u034f\u180e\u2061-\u2064]/u);
+    const saved=readFileSync(await started.path(),'utf8');
+    assert.ok(saved.includes(original),'TXT preserves original message exactly');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

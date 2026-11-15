@@ -831,7 +831,7 @@ const REASONS = Object.freeze({
 });
 const state = {screen:"welcome",reason:"medium",chat:[],draftTitle:"Новый чат",light:false,dialogTrigger:null,toastTimer:null};
 const $ = selector => document.querySelector(selector);
-const $$ = selector => Array.from(document.querySelectorAll(selector));
+const $ = selector => Array.from(document.querySelectorAll(selector));
 const viewNames = ["welcome","chat","history","projects","tools","settings","about"];
 const viewLabels = {welcome:"Kaz AI",chat:"Переписка",history:"Чаты",projects:"Проекты",tools:"Инструменты",settings:"Настройки",about:"О проекте"};
 function icon(id){const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("class","icon");svg.setAttribute("aria-hidden","true");const use = document.createElementNS("http://www.w3.org/2000/svg","use");use.setAttribute("href","#ic-"+id);svg.append(use);return svg}
@@ -851,7 +851,7 @@ function togglePopover(kind,trigger){
   if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
 }
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
-function showScreen(screen){if(!viewNames.includes(screen))return;if(screen==="about"&&state.screen!=="about"){state.aboutReturnScreen=state.screen;state.aboutReturnScroll=$("#mainContent").scrollTop}state.screen=screen;document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>{
+function showScreen(screen){if(!viewNames.includes(screen))return;if(screen==="about"&&state.screen!=="about"){state.aboutReturnScreen=state.screen;state.aboutReturnScroll=$("#mainContent").scrollTop}state.screen=screen;document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$(".primary-nav [data-screen]").forEach(button=>{
   const active=button.dataset.screen===screen;
   button.classList.toggle("active",active);
   if(active)button.setAttribute("aria-current","page");
@@ -879,7 +879,7 @@ function selectReason(value){
   }
   state.reason=value;
   $("#currentReason").textContent=REASONS[value].name;
-  $$("[data-reason]").forEach(btn=>{
+  $("[data-reason]").forEach(btn=>{
     const active=btn.dataset.reason===value;
     btn.classList.toggle("selected",active);
     if(btn.dataset.reason!=="deep")btn.setAttribute("aria-pressed",String(active));
@@ -895,15 +895,15 @@ function toggleTheme(){
   state.light=!state.light;
   document.body.classList.toggle("light",state.light);
   $("#themeLabel").textContent=state.light?"Светлая":"Тёмная";
-  $$('[data-action="toggle-theme"]').forEach(button=>button.setAttribute("aria-pressed",String(state.light)));
-  $$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"));
+  $('[data-action="toggle-theme"]').forEach(button=>button.setAttribute("aria-pressed",String(state.light)));
+  $(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"));
 }
 const languages={ru:"Русский",kk:"Қазақша",en:"English"};
 function selectLanguage(value){
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
   state.language=value;
-  $$(".language-current").forEach(el=>{el.textContent=languages[value]});
-  $$("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
+  $(".language-current").forEach(el=>{el.textContent=languages[value]});
+  $("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
   closePopovers();
   window.KazI18n?.set(value);
   if(window.KazSession?.refreshLocale)window.KazSession.refreshLocale();
@@ -917,7 +917,7 @@ function selectFont(value){
   document.body.classList.remove("font-small","font-large");
   if(value!=="normal")document.body.classList.add("font-"+value);
   $("#fontLabel").textContent={small:"Компактный",normal:"Обычный",large:"Крупный"}[value];
-  $$("[data-font]").forEach(el=>{
+  $("[data-font]").forEach(el=>{
     const active=el.dataset.font===value;
     el.classList.toggle("selected",active);
     el.setAttribute("aria-pressed",String(active));
@@ -988,12 +988,12 @@ document.addEventListener("keydown",event=>{
   if(event.isComposing||event.keyCode===229)return;
   if(event.key==="Escape"){if(!$("#googleOverlay").hidden){closeGoogle();return}if(!$("#modalOverlay").hidden){closeModal();return}closePopovers();setDrawer(false)}
   if(!$("#googleOverlay").hidden&&event.key==="Tab"){
-    const controls=$$("#googleOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];
+    const controls=$("#googleOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];
     if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
     return;
   }
-  if(!$("#modalOverlay").hidden&&event.key==="Tab"){const controls=$$("#modalOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}
+  if(!$("#modalOverlay").hidden&&event.key==="Tab"){const controls=$("#modalOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}
 });
 $("#drawerScrim").addEventListener("click",()=>setDrawer(false));
 $("#messageInput").addEventListener("input",resizeInput);
@@ -1011,7 +1011,7 @@ $("#messageInput").addEventListener("input",()=>{
   if($("#sessionStop")?.hidden===false||$("#sessionRetry")?.hidden===false)return;
   banner.hidden=true;
 });
-renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$$("[data-reason]").forEach(button=>{const selected=button.dataset.reason==="medium";button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");
+renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$("[data-reason]").forEach(button=>{const selected=button.dataset.reason==="medium";button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");
 
 </script>
 <script>
@@ -1207,7 +1207,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   const safeExportName=name=>{
     const cleaned=name.normalize("NFKC")
       // Remove filename controls only, never edit the exported conversation.
-      .replace(/[\\/:*?"<>|\x00-\x1f\x7f-\x9f\u00ad\u034f\u061c\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060\u2066-\u2069\ufeff]/gi,"")
+      .replace(/[\\/:*?"<>|\x00-\x1f\x7f-\x9f\u00ad\u034f\u061c\u180e\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]/gi,"")
       .trim().replace(/^\.+/,"");
     // Filesystems often limit names to 255 UTF-8 bytes. Leave room for both
     // "Kaz-AI-project-" and ".txt", without splitting emoji or accents.
@@ -1922,7 +1922,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     // Compare visually identical project names as one, without rewriting
     // the user's original label shown in Projects or exported transcripts.
     const projectKey=name=>name.normalize("NFKC")
-      .replace(/[\u00ad\u061c\u200b\u200e\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/gu,"")
+      .replace(/[\u00ad\u034f\u061c\u180e\u200b\u200e\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]/gu,"")
       .trim().replace(/\s+/gu," ").toLocaleLowerCase();
     const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&projectKey(p.name)===projectKey(name));
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{

@@ -79,7 +79,7 @@
   const safeExportName=name=>{
     const cleaned=name.normalize("NFKC")
       // Remove filename controls only, never edit the exported conversation.
-      .replace(/[\\/:*?"<>|\x00-\x1f\x7f-\x9f\u00ad\u034f\u061c\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060\u2066-\u2069\ufeff]/gi,"")
+      .replace(/[\\/:*?"<>|\x00-\x1f\x7f-\x9f\u00ad\u034f\u061c\u180e\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]/gi,"")
       .trim().replace(/^\.+/,"");
     // Filesystems often limit names to 255 UTF-8 bytes. Leave room for both
     // "Kaz-AI-project-" and ".txt", without splitting emoji or accents.
@@ -794,7 +794,7 @@
     // Compare visually identical project names as one, without rewriting
     // the user's original label shown in Projects or exported transcripts.
     const projectKey=name=>name.normalize("NFKC")
-      .replace(/[\u00ad\u061c\u200b\u200e\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/gu,"")
+      .replace(/[\u00ad\u034f\u061c\u180e\u200b\u200e\u200f\u202a-\u202e\u2060-\u2064\u2066-\u2069\ufeff]/gu,"")
       .trim().replace(/\s+/gu," ").toLocaleLowerCase();
     const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&projectKey(p.name)===projectKey(name));
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{

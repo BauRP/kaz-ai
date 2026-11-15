@@ -619,7 +619,15 @@
   function confirmDialog(title,explanation,onYes){
     openDialog(title,explanation,body=>{
       const yes=button("Удалить","dialog-confirm",null,"session-danger-button");
-      yes.addEventListener("click",()=>{onYes();closeDialog()});
+      // Make destructive confirmations single-use even if the button receives
+      // multiple queued clicks or keyboard activations.
+      let confirmed=false;
+      yes.addEventListener("click",()=>{
+        if(confirmed)return;
+        confirmed=true;
+        yes.disabled=true;
+        try{onYes()}finally{closeDialog()}
+      });
       body.append(yes);
     });
   }

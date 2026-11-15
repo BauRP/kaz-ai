@@ -1386,9 +1386,15 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const value=query.toLocaleLowerCase();
     const saved=threads.filter(c=>!c.temporary)
       .sort((a,b)=>Number(b.pinned)-Number(a.pinned)||newestFirst(a,b));
-    const shown=saved.filter(c=>!value||
-      findTextMatch(c.title,query)||
-      c.messages.some(m=>findTextMatch(m.content,query)));
+    // Cache the matching message index for this render. Previously every
+    // message was searched once for filtering and again for the snippet.
+    const matchingMessage=new Map();
+    const shown=saved.filter(c=>{
+      if(!value)return true;
+      const index=c.messages.findIndex(m=>findTextMatch(m.content,query));
+      matchingMessage.set(c.id,index);
+      return Boolean(findTextMatch(c.title,query))||index>=0;
+    });
     const language=window.KazI18n?.language||"ru";
     if(summary){
       summary.textContent=language==="en"
@@ -1417,7 +1423,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     for(const c of shown){
       const card=make("div","session-chat-row"+(c.id===current?" active":""));
       const name=button("","open-chat",c.id,"session-chat-name");
-      const matchIndex=value?c.messages.findIndex(m=>findTextMatch(m.content,query)):-1;
+      const matchIndex=value?(matchingMessage.get(c.id)??-1):-1;
       if(matchIndex>=0)name.dataset.matchIndex=String(matchIndex);
       name.setAttribute("aria-label",uiText(c.pinned?"Закреплённый чат":"Открыть чат")+": "+c.title);
       if(c.pinned)name.append(make("span","session-pin","📌 "));

@@ -36,7 +36,12 @@ test('site exposes crawlable links to static information pages',()=>{
   assert.match(about,/href="\.\.\/help\/"/);
   for(const route of routes)assert.ok(file(route+'/index.html').includes('href="../about/"'),'Missing static About link: '+route);
   assert.match(main,/<meta property="og:title"/);
-  assert.match(main,/<h1 class="hero-wordmark"/,'Do not replace chatbot design');
+  // The owner explicitly approved an empty welcome center. The chatbot
+  // controls and sidebar branding must remain, but the old hero title must not return.
+  const welcome=main.match(/<section id="view-welcome"[^>]*>([\s\S]*?)<\/section>/);
+  assert.ok(welcome,'Welcome screen retained');
+  assert.equal(welcome[1].trim(),'','Approved welcome center stays empty');
+  assert.match(main,/class="brand-wordmark">Kaz <b>AI<\/b>/,'Sidebar branding retained');
   assert.match(main,/id="messageInput"/,'Chat retained');
   assert.match(main,/data-action="toggle-reason"/,'Reasoning control retained');
 });

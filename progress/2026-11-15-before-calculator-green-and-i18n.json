@@ -1,0 +1,264 @@
+{
+  "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
+  "basis": "При окончании дневного лимита Workers AI теперь сохраняется ручной повтор исходного вопроса или регенерации ответа. Прежний ответ остаётся до успешной замены, повтор не добавляет второй пользовательский вопрос. Добавлены два браузерных теста; проверены синтаксис и точная сборка предпросмотра. Полный браузерный CI и реальный облачный ответ не подтверждены.",
+  "branch": "chatgpt/kaz-ai-shell-20261108",
+  "date": "2026-11-15",
+  "previous": 77.59285714285713,
+  "now": 77.60714285714283,
+  "delta": 0.014285714285705353,
+  "groups": [
+    {
+      "name": "Чаты",
+      "count": 10,
+      "previous": 92.32000000000001,
+      "now": 92.34,
+      "delta": 0.01999999999999602
+    },
+    {
+      "name": "Интеллект",
+      "count": 5,
+      "previous": 35.629999999999995,
+      "now": 35.65,
+      "delta": 0.020000000000003126
+    },
+    {
+      "name": "Настройки",
+      "count": 6,
+      "previous": 88.01666666666667,
+      "now": 88.01666666666667,
+      "delta": 0
+    }
+  ],
+  "items": [
+    {
+      "id": 1,
+      "name": "Новый чат",
+      "group": "Чаты",
+      "previous": 96.8,
+      "now": 96.8,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 2,
+      "name": "История чатов",
+      "group": "Чаты",
+      "previous": 90.35,
+      "now": 90.35,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 3,
+      "name": "Поиск по перепискам",
+      "group": "Чаты",
+      "previous": 99.85,
+      "now": 99.85,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 4,
+      "name": "Переименовать чат",
+      "group": "Чаты",
+      "previous": 94.65,
+      "now": 94.65,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 5,
+      "name": "Удалить чат",
+      "group": "Чаты",
+      "previous": 98,
+      "now": 98,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 6,
+      "name": "Закрепить чат",
+      "group": "Чаты",
+      "previous": 94.1,
+      "now": 94.1,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 7,
+      "name": "Папки и проекты",
+      "group": "Чаты",
+      "previous": 98.7,
+      "now": 98.7,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 9,
+      "name": "Повторить ответ",
+      "group": "Чаты",
+      "previous": 74.75,
+      "now": 74.95,
+      "delta": 0.20000000000000284,
+      "summary": "Восстановление повтора после дневного лимита без повторной отправки или потери старого ответа.",
+      "status": "in_progress"
+    },
+    {
+      "id": 10,
+      "name": "Остановить ответ",
+      "group": "Чаты",
+      "previous": 82,
+      "now": 82,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 13,
+      "name": "Оценка ответа",
+      "group": "Чаты",
+      "previous": 94,
+      "now": 94,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 15,
+      "name": "Обычный чат с GPT-OSS",
+      "group": "Интеллект",
+      "previous": 61.2,
+      "now": 61.3,
+      "delta": 0.09999999999999432,
+      "summary": "При ошибке дневной квоты ответ GPT-OSS не теряется, доступен безопасный ручной повтор после сброса лимита.",
+      "status": "in_progress"
+    },
+    {
+      "id": 16,
+      "name": "Уровни рассуждения",
+      "group": "Интеллект",
+      "previous": 58.25,
+      "now": 58.25,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 22,
+      "name": "Переводчик с ИИ",
+      "group": "Интеллект",
+      "previous": 19.5,
+      "now": 19.5,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 23,
+      "name": "Программирование с ИИ",
+      "group": "Интеллект",
+      "previous": 19.6,
+      "now": 19.6,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 24,
+      "name": "Подготовка документов",
+      "group": "Интеллект",
+      "previous": 19.6,
+      "now": 19.6,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 40,
+      "name": "Личные инструкции",
+      "group": "Настройки",
+      "previous": 86,
+      "now": 86,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 41,
+      "name": "Временный чат",
+      "group": "Настройки",
+      "previous": 93.6,
+      "now": 93.6,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 42,
+      "name": "Светлая и тёмная тема",
+      "group": "Настройки",
+      "previous": 91,
+      "now": 91,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 43,
+      "name": "Язык интерфейса",
+      "group": "Настройки",
+      "previous": 77.8,
+      "now": 77.8,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 44,
+      "name": "Размер текста",
+      "group": "Настройки",
+      "previous": 82.1,
+      "now": 82.1,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    },
+    {
+      "id": 45,
+      "name": "Экспорт истории",
+      "group": "Настройки",
+      "previous": 97.6,
+      "now": 97.6,
+      "delta": 0,
+      "summary": "Без изменений в текущем цикле.",
+      "status": "in_progress"
+    }
+  ],
+  "completed_ids": [
+    25
+  ],
+  "completed_count": 1,
+  "incomplete_count": 21,
+  "completed_items": [
+    {
+      "id": 25,
+      "name": "Простой калькулятор",
+      "group": "Интеллект",
+      "previous": 100,
+      "now": 100,
+      "delta": 0,
+      "summary": "Базовый автономный калькулятор завершён, проверен и исключён из всех списков незавершённых задач.",
+      "status": "completed"
+    }
+  ],
+  "overall_previous": 78.61136363636362,
+  "overall_now": 78.62499999999999,
+  "overall_delta": 0.013636363636365445
+}

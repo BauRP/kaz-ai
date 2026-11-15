@@ -76,11 +76,22 @@
   const baseToggleTheme=toggleTheme;
   // Count whole visible symbols including emoji sequences in older browsers.
   const shortText=(value,max)=>Array.from(textSegments(value),part=>part.segment).slice(0,max).join("");
-  const safeExportName=name=>shortText(name.normalize("NFKC")
-    // Strip filename controls, including direction overrides that disguise extensions.
-    // Exported conversation contents are never modified.
-    .replace(/[\\/:*?"<>|\x00-\x1f\x7f-\x9f\u00ad\u034f\u061c\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060\u2066-\u2069\ufeff]/gi,"")
-    .trim().replace(/^\.+/,""),70)||"chat";
+  const safeExportName=name=>{
+    const cleaned=name.normalize("NFKC")
+      // Remove filename controls only, never edit the exported conversation.
+      .replace(/[\\/:*?"<>|\x00-\x1f\x7f-\x9f\u00ad\u034f\u061c\u200b\u200e\u200f\u2028\u2029\u202a-\u202e\u2060\u2066-\u2069\ufeff]/gi,"")
+      .trim().replace(/^\.+/,"");
+    // Filesystems often limit names to 255 UTF-8 bytes. Leave room for both
+    // "Kaz-AI-project-" and ".txt", without splitting emoji or accents.
+    const encoder=new TextEncoder();
+    let result="",bytes=0,count=0;
+    for(const {segment} of textSegments(cleaned)){
+      const size=encoder.encode(segment).length;
+      if(bytes+size>180||count>=70)break;
+      result+=segment;bytes+=size;count++;
+    }
+    return result.replace(/[. ]+$/u,"")||"chat";
+  };
   const exportText=c=>{
     const lang=window.KazI18n?.language||"ru";
     const labels={
@@ -204,7 +215,7 @@
     if(combined)yield {segment:combined,index:startIndex};
   }
   function findTextMatch(text,query){
-    const fold=value=>value.normalize("NFC").toLocaleLowerCase()
+    const fold=value=>value.normalize("NFKC").toLocaleLowerCase()
       .replace(/\u0307/g,"").replace(/\u03c2/g,"\u03c3").replace(/ё/g,"е");
     const needle=fold(query);
     if(!needle)return null;
@@ -213,7 +224,7 @@
     if(start<0)return null;
     // Equal lengths can still hide an expansion and contraction at different
     // offsets; joined emoji also must be highlighted as whole visible symbols.
-    const complex=text.normalize("NFC")!==text
+    const complex=text.normalize("NFKC")!==text
       || /[\u200d\uFE0E\uFE0F]|\p{M}|\p{Emoji_Modifier}|\p{Regional_Indicator}/u.test(text);
     if(!complex&&folded.length===text.length)return {start,end:start+needle.length};
     const starts=[],ends=[];
@@ -681,7 +692,11 @@
     }
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
       if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;showStatus("")}
-      const i=threads.indexOf(chat);threads.splice(i,1);drafts.delete(chat.id);
+      const i=threads.indexOf(chat);
+      // A detached confirmation can fire twice. Never delete a different chat
+      // when its original target has already been removed.
+      if(i<0)return;
+      threads.splice(i,1);drafts.delete(chat.id);
       if(current===chat.id)sessionNewChat(false,true);
       renderHistory();renderSessionProjects();
     });return}
@@ -747,7 +762,10 @@
       project.name=name;renderSessionProjects();
     });return}
     if(action==="delete-project"&&project){confirmDialog("Удалить проект?","Чаты не удалятся, они перейдут в раздел «Без проекта».",()=>{
-      const i=projects.indexOf(project);projects.splice(i,1);
+      const i=projects.indexOf(project);
+      // Prevent a stale confirmation from accidentally deleting the last project.
+      if(i<0)return;
+      projects.splice(i,1);
       for(const c of threads)if(c.projectId===project.id)c.projectId=null;
       renderSessionProjects();renderHistory();
     });return}

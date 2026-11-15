@@ -57,8 +57,8 @@ test('human report reflects the 21 working features without misleading AI claims
   assert.doesNotMatch(report,/\| 29 \| Создание изображений/);
   const fullList=report.slice(report.indexOf('## Все 22 направления:'),report.indexOf('## Прогресс по группам'));
   assert.match(fullList,/\| 25 \|/,'Completed calculator must stay visible in the main progress list');
-  assert.match(fullList,/completed-calculator-name\\.svg/);
-  assert.match(fullList,/completed-calculator-100\\.svg/);
-  assert.match(fullList,/completed-calculator-done\\.svg/);
+  assert.match(fullList,/completed-calculator-name\.svg/);
+  assert.match(fullList,/completed-calculator-100\.svg/);
+  assert.match(fullList,/completed-calculator-done\.svg/);
   assert.equal((fullList.match(/\| 25 \|/g)||[]).length,1,'Calculator listed once in main table');
 });

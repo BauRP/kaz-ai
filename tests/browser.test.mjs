@@ -2797,3 +2797,49 @@ test('duplicate project warning follows selected Kaz AI language',async()=>{
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('history search treats Russian е and ё as the same while highlighting original spelling',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Всё готово, ёлка наряжена');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('все');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#historyList .session-chat-label mark').textContent(),'Всё');
+    await page.locator('#historySearch').fill('елка');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#historyList .session-chat-label mark').textContent(),'ёлка');
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#chatMessages .session-jump-hit mark').textContent(),'ёлка');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('chat export removes additional invisible filename controls but preserves original chat text',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820},acceptDownloads:true});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(appUrl);
+    const original='Отчёт\\u200b\\u2060\\ufeff\\u2028\\u2029\\u00ad\\u034f\\u007f и символы 👩‍💻';
+    await page.locator('#messageInput').fill(original);
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    const [download]=await Promise.all([
+      page.waitForEvent('download'),
+      page.locator('#historyList [data-session="export-chat"]').click()
+    ]);
+    const name=download.suggestedFilename();
+    assert.ok(name.startsWith('Kaz-AI-')&&name.endsWith('.txt'));
+    assert.doesNotMatch(name,/[\\u007f-\\u009f\\u00ad\\u034f\\u200b\\u2028\\u2029\\u2060\\ufeff]/u);
+    const body=readFileSync(await download.path(),'utf8');
+    assert.ok(body.includes(original),'export must preserve message bytes and original Unicode');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

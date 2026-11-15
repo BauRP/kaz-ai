@@ -2767,3 +2767,33 @@ test('daily quota during answer regeneration keeps original reply until manual R
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+
+test('duplicate project warning follows selected Kaz AI language',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('#projectsWorkspace [data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Тест жобасы');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    await page.locator('#projectsWorkspace [data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Тест жобасы');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true,'duplicate must keep dialog open');
+    assert.equal(await page.locator('#toast').innerText(),'Мұндай атауы бар жоба бұрыннан бар.');
+    await page.locator('#sessionClose').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    await page.locator('#projectsWorkspace [data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Тест жобасы');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#toast').innerText(),'A project with this name already exists.');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

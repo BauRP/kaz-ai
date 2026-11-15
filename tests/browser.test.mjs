@@ -2925,3 +2925,26 @@ test('high readiness: deleting a chat removes it from its project and leaves oth
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+
+test('high readiness: invisible formatting characters cannot create duplicate projects',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try {
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('#projectsWorkspace [data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Мой проект');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('#projectsWorkspace [data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Мой\u200b проект');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true,'same-looking name cannot create a second project');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().projects)).length,1);
+    await page.locator('#sessionClose').click();
+    assert.equal(await page.locator('#projectsWorkspace .session-project-card').count(),1);
+    assert.deepEqual(errors,[]);
+  } finally { await browser.close() }
+});

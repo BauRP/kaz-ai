@@ -485,7 +485,15 @@
       // An outdated answer cannot change the status of a different chat.
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat)||current!==chat.id)return;
       if(!response.ok){
-        if(data?.code==="AI_QUOTA_EXHAUSTED")showStatus("Дневной лимит ИИ исчерпан. Попробуйте после его обновления.",true);
+        if(data?.code==="AI_QUOTA_EXHAUSTED"){
+          // A quota reset must not require resending and duplicating a question.
+          // Retrying remains manual: never spend the user's quota automatically.
+          retryAnswerId=replaceId;
+          const mayRetry=replaceId
+            ? chat.messages.at(-1)?.id===replaceId
+            : chat.messages.at(-1)?.role==="user";
+          showStatus("Дневной лимит ИИ исчерпан. Попробуйте после его обновления.",true,Boolean(mayRetry));
+        }
         else if(data?.code==="AI_RATE_LIMITED"){
           retryAnswerId=replaceId;
           showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);

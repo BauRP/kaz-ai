@@ -3042,6 +3042,7 @@ test('high readiness: multi-chat history export keeps separators, BOM, and Unico
     await page.locator('.sidebar [data-action="new-chat"]').click();
     await page.locator('#messageInput').fill('Екінші қазақша 🇰🇿 разговор');
     await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
     const [download]=await Promise.all([page.waitForEvent('download'),page.locator('[data-feature="export"]').click()]);
     const body=readFileSync(await download.path(),'utf8');
     assert.ok(body.startsWith('\uFEFF'),'Windows UTF-8 BOM must remain intact');

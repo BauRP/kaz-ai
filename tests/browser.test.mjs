@@ -3078,3 +3078,49 @@ test('high readiness: chunked individual TXT export preserves exact original sep
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+
+test('high readiness: multiple projects retain exact counts and chat isolation after reassignment and deletion',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    for(const title of ['Первый архив','Второй архив','Третий архив']){
+      await page.locator('.sidebar [data-action="new-chat"]').click();
+      await page.locator('#messageInput').fill(title);
+      await page.locator('#sendButton').click();
+    }
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    for(const name of ['Проект Альфа','Проект Бета']){
+      await page.locator('#projectsWorkspace [data-session="new-project"]').click();
+      await page.locator('#sessionBody input').fill(name);
+      await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    }
+    const alpha=()=>page.locator('#projectsWorkspace .session-project-card').filter({has:page.locator('h2:text-is("Проект Альфа")')});
+    const beta=()=>page.locator('#projectsWorkspace .session-project-card').filter({has:page.locator('h2:text-is("Проект Бета")')});
+    await alpha().locator('[data-session="add-chat-to-project"]').click();
+    await page.locator('#sessionBody select').selectOption({label:'Первый архив'});
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await beta().locator('[data-session="add-chat-to-project"]').click();
+    await page.locator('#sessionBody select').selectOption({label:'Второй архив'});
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await alpha().locator('.session-project-title small').innerText(),'1 чат');
+    assert.equal(await beta().locator('.session-project-title small').innerText(),'1 чат');
+    await beta().locator('[data-session="add-chat-to-project"]').click();
+    await page.locator('#sessionBody select').selectOption({label:'Первый архив'});
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await alpha().locator('.session-project-title small').innerText(),'0 чатов');
+    assert.equal(await beta().locator('.session-project-title small').innerText(),'2 чата');
+    await beta().locator('[data-session="delete-project"]').click();
+    await page.locator('#sessionBody [data-session="dialog-confirm"]').click();
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.projects.length,1);
+    assert.equal(snapshot.threads.length,3);
+    assert.ok(snapshot.threads.every(chat=>!chat.projectId));
+    assert.equal(await alpha().locator('.session-project-title small').innerText(),'0 чатов');
+    assert.equal(await page.locator('#projectsWorkspace .session-project-card').filter({has:page.locator('h2:text-is("Без проекта")')}).locator('[data-session="open-chat"]').count(),3);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

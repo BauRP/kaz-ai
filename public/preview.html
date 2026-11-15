@@ -1879,7 +1879,11 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       });return
     }
     // NFKC also treats visually equivalent Unicode forms as one project name.
-    const projectKey=name=>name.normalize("NFKC").trim().replace(/\s+/gu," ").toLocaleLowerCase();
+    // Compare visually identical project names as one, without rewriting
+    // the user's original label shown in Projects or exported transcripts.
+    const projectKey=name=>name.normalize("NFKC")
+      .replace(/[\u00ad\u061c\u200b\u200e\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/gu,"")
+      .trim().replace(/\s+/gu," ").toLocaleLowerCase();
     const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&projectKey(p.name)===projectKey(name));
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{
       if(duplicateProject(name)){notify(uiText("Проект с таким названием уже существует."));return false}

@@ -2827,7 +2827,7 @@ test('chat export removes additional invisible filename controls but preserves o
     const page=await browser.newPage({viewport:{width:1240,height:820},acceptDownloads:true});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto(appUrl);
-    const original='Отчёт\\u200b\\u2060\\ufeff\\u2028\\u2029\\u00ad\\u034f\\u007f и символы 👩‍💻';
+    const original='Отчёт\u200b\u2060\ufeff\u2028\u2029\u00ad\u034f\u007f и символы 👩‍💻';
     await page.locator('#messageInput').fill(original);
     await page.locator('#sendButton').click();
     await page.locator('.sidebar [data-screen="history"]').click();
@@ -2837,7 +2837,7 @@ test('chat export removes additional invisible filename controls but preserves o
     ]);
     const name=download.suggestedFilename();
     assert.ok(name.startsWith('Kaz-AI-')&&name.endsWith('.txt'));
-    assert.doesNotMatch(name,/[\\u007f-\\u009f\\u00ad\\u034f\\u200b\\u2028\\u2029\\u2060\\ufeff]/u);
+    assert.doesNotMatch(name,/[\u007f-\u009f\u00ad\u034f\u200b\u2028\u2029\u2060\ufeff]/u);
     const body=readFileSync(await download.path(),'utf8');
     assert.ok(body.includes(original),'export must preserve message bytes and original Unicode');
     assert.deepEqual(errors,[]);

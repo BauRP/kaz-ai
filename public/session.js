@@ -739,11 +739,11 @@
     const projectKey=name=>name.normalize("NFKC").trim().replace(/\s+/gu," ").toLocaleLowerCase();
     const duplicateProject=(name,except=null)=>projects.some(p=>p.id!==except&&projectKey(p.name)===projectKey(name));
     if(action==="new-project"){textDialog("Новый проект","Название проекта","",name=>{
-      if(duplicateProject(name)){notify("Проект с таким названием уже есть.");return false}
+      if(duplicateProject(name)){notify(uiText("Проект с таким названием уже существует."));return false}
       projects.push({id:nextId(),name});renderSessionProjects();
     });return}
     if(action==="rename-project"&&project){textDialog("Название проекта","Название",project.name,name=>{
-      if(duplicateProject(name,project.id)){notify("Проект с таким названием уже есть.");return false}
+      if(duplicateProject(name,project.id)){notify(uiText("Проект с таким названием уже существует."));return false}
       project.name=name;renderSessionProjects();
     });return}
     if(action==="delete-project"&&project){confirmDialog("Удалить проект?","Чаты не удалятся, они перейдут в раздел «Без проекта».",()=>{

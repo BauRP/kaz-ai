@@ -1203,7 +1203,16 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   const baseShowFeature=showFeature;
   const baseToggleTheme=toggleTheme;
   // Count whole visible symbols including emoji sequences in older browsers.
-  const shortText=(value,max)=>Array.from(textSegments(value),part=>part.segment).slice(0,max).join("");
+  const shortText=(value,max)=>{
+    // Stop scanning the input after the title limit, rather than collecting
+    // thousands of Unicode segments for a 55-symbol chat name.
+    let title="",count=0;
+    for(const {segment} of textSegments(value)){
+      if(count>=max)break;
+      title+=segment;count++;
+    }
+    return title;
+  };
   const safeExportName=name=>{
     const cleaned=name.normalize("NFKC")
       // Remove filename controls only, never edit the exported conversation.

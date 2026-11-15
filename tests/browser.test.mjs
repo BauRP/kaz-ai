@@ -3171,3 +3171,24 @@ test('TXT export preserves invisible characters in content but cleans file name'
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('new chat title stops after 55 complete graphemes even for a long input',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    const family='👨‍👩‍👧‍👦';
+    const initial='А'.repeat(54)+family+'я'.repeat(3600);
+    await page.locator('#messageInput').fill(initial);
+    await page.locator('#sendButton').click();
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads.length,1);
+    assert.equal(snapshot.threads[0].title,'А'.repeat(54)+family);
+    assert.equal(snapshot.threads[0].messages[0].content,initial);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    assert.equal(await page.locator('#historyList .session-chat-label').textContent(),'А'.repeat(54)+family);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

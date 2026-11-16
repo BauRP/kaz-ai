@@ -2701,8 +2701,8 @@ test('browser keeps formatted replies and sends emoji-safe context to GPT',async
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Проверь код');
     await page.locator('#sendButton').click();
-    await page.waitForFunction(()=>document.querySelector('.message-assistant > span')?.textContent.length>3950);
-    assert.equal(await page.locator('.message-assistant > span').first().textContent(),original);
+    await page.waitForFunction(()=>document.querySelector('.message-assistant .rich-answer')?.textContent.length>3950);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages[1].content)),original);
     await page.locator('#messageInput').fill('Следующий вопрос');
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelectorAll('.message-assistant').length===2);

@@ -332,7 +332,9 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
     stream:true
   };
   let upstreamReader=null,heartbeat=null,closed=false;
-  let collected="",sseTail="";
+  let collected="",sseTail="",upstreamBytesSeen=false;
+  let activeStage=verifyProof?"Готовлю решение":"ИИ отвечает";
+  const startedAt=Date.now();
   const decode=new TextDecoder();
   const responseBody=new ReadableStream({
     start(controller){
@@ -351,7 +353,18 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
       // inference call, so intermediaries do not wait for the complete answer.
       write(": connected\n\n");
       if(verifyProof)write("event: progress\ndata: "+JSON.stringify({message:"Готовлю решение и проверяю все этапы…"})+"\n\n");
-      heartbeat=setInterval(()=>write(": keepalive\n\n"),15000);
+      // Heartbeats keep an otherwise silent response active during long
+      // inference and independent review. Proof mode also shows a meaningful
+      // stage and elapsed time without leaking an unverified answer.
+      heartbeat=setInterval(()=>{
+        write(": keepalive\n\n");
+        if(verifyProof&&!closed){
+          const seconds=Math.max(0,Math.floor((Date.now()-startedAt)/1000));
+          write("event: progress\ndata: "+JSON.stringify({
+            message:activeStage+"… "+seconds+" с"
+          })+"\n\n");
+        }
+      },15000);
       void (async()=>{
         try{
           const upstream=await env.AI.run("@cf/openai/gpt-oss-120b",opts);
@@ -363,6 +376,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
             const {done,value}=await upstreamReader.read();
             if(done)break;
             if(value?.byteLength){
+              upstreamBytesSeen=true;
               if(!verifyProof)write(value);
               if(verifyProof){
                 sseTail+=decode.decode(value,{stream:true}).replace(/\r\n/g,"\n");
@@ -381,7 +395,10 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
           // Regular chats still stream each chunk immediately.
           if(!closed&&verifyProof){
             if(!collected.trim())throw new Error("Empty proof answer");
-            const stage=message=>write("event: progress\ndata: "+JSON.stringify({message:message+"…"})+"\n\n");
+            const stage=message=>{
+              activeStage=message;
+              write("event: progress\ndata: "+JSON.stringify({message:message+"…"})+"\n\n");
+            };
             const question=messages.at(-1)?.content||"";
             const finalAnswer=auditMode==="engineering"
               ?await verifyEngineering(env,question,collected,effort,stage)
@@ -394,15 +411,17 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
         }catch(error){
           if(!closed){
             const kind=classifyAILimit(error);
-            const code=kind==="daily"?"AI_QUOTA_EXHAUSTED":kind==="rate"?"AI_RATE_LIMITED":"AI_UNAVAILABLE";
+            const code=kind==="daily"?"AI_QUOTA_EXHAUSTED":kind==="rate"?"AI_RATE_LIMITED":upstreamBytesSeen?"AI_RESPONSE_INTERRUPTED":"AI_UNAVAILABLE";
             const message=kind==="daily"
               ?"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."
               :kind==="rate"
                 ?"Слишком много запросов за короткое время. Попробуйте позднее."
-                :"Не удалось получить ответ ИИ. Попробуйте позже.";
+                :upstreamBytesSeen?"Сервис ИИ прервал обработку ответа. Попробуйте повторить запрос.":"Не удалось связаться с сервисом ИИ. Попробуйте позже.";
             write("event: error\ndata: "+JSON.stringify({code,message})+"\n\n");
           }
         }finally{
+          // Stop timers and release model transport when processing ends.
+          // No automatic retries: a second inference could be billed twice.
           if(upstreamReader){try{upstreamReader.releaseLock()}catch{}}
           finish();
         }

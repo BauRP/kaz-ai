@@ -271,8 +271,6 @@ test('real browser: retry a failed request without duplicating question; cancel 
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Задача после сбоя');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input').fill('test-key-12345678901234567890123');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.locator('#sessionRetry').waitFor({state:'visible'});
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),1);
     await page.locator('#sessionRetry').click();

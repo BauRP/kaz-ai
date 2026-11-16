@@ -535,7 +535,7 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
 .rich-answer .answer-code-copy:hover{background:rgba(70,198,246,.16)}
 .rich-answer pre{margin:0;padding:.9em 1.05em;overflow-x:auto;white-space:pre;max-width:100%;line-height:1.6}
 .rich-answer pre code,.rich-answer .answer-inline-code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#a4e3ff}
-.rich-answer .answer-inline-code{border-radius:5px;padding:.12em .38em;background:rgba(53,176,221,.12);overflow-wrap:anywhere}
+.rich-answer .answer-inline-code{border-radius:5px;padding:.12em .38em;background:rgba(53,176,221,.12);color:var(--text);overflow-wrap:anywhere}
 .rich-answer .answer-math{font-family:"Cambria Math","STIX Two Math",Georgia,serif}
 .rich-answer .answer-math-block{display:block;max-width:100%;overflow-x:auto;padding:.75em 1em;margin:1em 0;white-space:pre;text-align:center;border-radius:9px;background:rgba(54,167,216,.09);font-size:1.1em}
 .rich-answer.answer-plain-fallback{white-space:pre-wrap}
@@ -1888,7 +1888,10 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         let lastPaint=0;
         const streamed=await readAIStream(response,(value,status)=>{
           if(abort!==controller||controller.signal.aborted||current!==chat.id)return;
-          if(Date.now()-lastPaint<100&&!status)return;
+          // Avoid parsing huge Markdown replies every 100 ms; long answers
+          // update less often, keeping scrolling and Stop responsive.
+          const minInterval=Math.min(1200,120+Math.floor(value.length/40));
+          if(!status&&Date.now()-lastPaint<minInterval)return;
           lastPaint=Date.now();
           if(value&&window.KazFormat?.render){
             answerSpan.replaceChildren(window.KazFormat.render(value));

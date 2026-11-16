@@ -562,7 +562,10 @@
         let lastPaint=0;
         const streamed=await readAIStream(response,(value,status)=>{
           if(abort!==controller||controller.signal.aborted||current!==chat.id)return;
-          if(Date.now()-lastPaint<100&&!status)return;
+          // Avoid parsing huge Markdown replies every 100 ms; long answers
+          // update less often, keeping scrolling and Stop responsive.
+          const minInterval=Math.min(1200,120+Math.floor(value.length/40));
+          if(!status&&Date.now()-lastPaint<minInterval)return;
           lastPaint=Date.now();
           if(value&&window.KazFormat?.render){
             answerSpan.replaceChildren(window.KazFormat.render(value));

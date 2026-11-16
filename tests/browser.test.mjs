@@ -3421,12 +3421,12 @@ test('interrupted SSE keeps incomplete text visible and manual retry restores a 
     assert.match(await page.locator('#chatMessages').innerText(),/Начало длинного ответа/);
     assert.match(await page.locator('#chatMessages').innerText(),/Ответ прервался/);
     assert.match(await page.locator('#statusBanner').innerText(),/Передача ответа прервалась/);
-    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)).length,1,
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),1,
       'Incomplete answer must not enter conversation history');
     await page.locator('#sessionRetry').click();
     await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('Полный ответ после повтора'));
     assert.equal(await page.locator('#chatMessages .message-assistant').count(),1);
-    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)).length,2);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),2);
     assert.equal(await page.locator('#sessionRetry').isVisible(),false);
     assert.equal(count,2,'Only user clicking Retry starts a second inference');
     assert.deepEqual(errors,[]);
@@ -3451,6 +3451,6 @@ test('provider SSE outage is not falsely blamed on user internet connectivity',a
     await page.locator('#sessionRetry').waitFor({state:'visible'});
     assert.match(await page.locator('#statusBanner').innerText(),/Сервис ИИ временно недоступен/);
     assert.doesNotMatch(await page.locator('#statusBanner').innerText(),/Проверьте подключение/);
-    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)).length,1);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),1);
   }finally{await browser.close()}
 });

@@ -48,7 +48,7 @@ test('site exposes crawlable links to static information pages',()=>{
 });
 
 test('social previews expose the canonical Kaz AI logo without JavaScript',()=>{
-  const origin='https://kaz-ai.tengrize.workers.dev',image=origin+'/kaz-ai-share.png';
+  const origin='https://kaz-ai.tengrize.workers.dev',image=origin+'/kaz-ai-logo-20261116.png';
   assert.ok(main.includes('<meta property="og:url" content="'+origin+'/">'));
   assert.ok(main.includes('<meta property="og:image" content="'+image+'">'));
   assert.ok(main.includes('<meta property="og:image:secure_url" content="'+image+'">'));
@@ -60,14 +60,14 @@ test('social previews expose the canonical Kaz AI logo without JavaScript',()=>{
   assert.ok(preview.includes('<meta property="og:image" content="'+image+'">'));
 });
 test('the WhatsApp social image is a compact valid PNG with readable image data',()=>{
-  const image=readFileSync('public/kaz-ai-share.png');
+  const image=readFileSync('public/kaz-ai-logo-20261116.png');
   assert.ok(image.byteLength<300_000);
   assert.equal(image.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
   assert.equal(image.subarray(12,16).toString(),'IHDR');
   assert.equal(image.readUInt32BE(16),1200);
   assert.equal(image.readUInt32BE(20),630);
-  assert.equal(image[24],8);
-  assert.equal(image[25],3);
+  assert.equal(image[24],1,'PNG is crisp one-bit original logo mask');
+  assert.equal(image[25],0,'grayscale white logo on black background');
   let pos=8,idat=[];
   while(pos<image.length){
     const len=image.readUInt32BE(pos),tag=image.subarray(pos+4,pos+8).toString();
@@ -76,8 +76,9 @@ test('the WhatsApp social image is a compact valid PNG with readable image data'
     if(tag==='IEND')break;
   }
   const pixels=inflateSync(Buffer.concat(idat));
-  assert.equal(pixels.length,630*1201);
-  assert.equal(pixels[0],2);
+  assert.equal(pixels.length,630*151,'1-bit scanlines for 1200px logo preview');
+  assert.equal(pixels[0],0,'PNG scanline filter is valid');
+  assert.equal(pixels[1],0,'top-left corner is black');
 });
 
 test('preview is noindex and not a duplicate public search result',()=>{

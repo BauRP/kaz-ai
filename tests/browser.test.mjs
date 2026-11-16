@@ -338,7 +338,7 @@ test('formatted Kaz AI answers safely render headings, lists, tables, code, form
         '',
         '[Опасная ссылка](javascript:alert(1))',
         '<img src=x onerror="window.__xss=true">'
-      ].join('\\n');
+      ].join('\n');
       const root=window.KazFormat.render(samples);
       document.querySelector('#chatMessages').append(root);
       return {
@@ -388,10 +388,10 @@ test('rigorous proof review appears as a readable section across all reasoning l
         window.__proofEfforts.push(payload.effort);
         const enc=new TextEncoder();
         const body=new ReadableStream({start(c){
-          c.enqueue(enc.encode('data: '+JSON.stringify({response:'## Ответ\\n\\n**7 забегов.**'})+'\\n\\n'));
-          c.enqueue(enc.encode('event: progress\\ndata: '+JSON.stringify({message:'Проверяю строгость…'})+'\\n\\n'));
-          c.enqueue(enc.encode('event: review\\ndata: '+JSON.stringify({text:'Замечания: нижняя граница недостаточно доказана.'})+'\\n\\n'));
-          c.enqueue(enc.encode('event: done\\ndata: {}\\n\\n'));
+          c.enqueue(enc.encode('data: '+JSON.stringify({response:'## Ответ\n\n**7 забегов.**'})+'\n\n'));
+          c.enqueue(enc.encode('event: progress\ndata: '+JSON.stringify({message:'Проверяю строгость…'})+'\n\n'));
+          c.enqueue(enc.encode('event: review\ndata: '+JSON.stringify({text:'Замечания: нижняя граница недостаточно доказана.'})+'\n\n'));
+          c.enqueue(enc.encode('event: done\ndata: {}\n\n'));
           c.close();
         }});
         return Promise.resolve(new Response(body,{status:200,headers:{'content-type':'text/event-stream'}}));

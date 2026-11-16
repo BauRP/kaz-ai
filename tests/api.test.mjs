@@ -122,6 +122,7 @@ test('SSE cancellation stops upstream output without completing a stale response
 test('proof requests are corrected BEFORE display at low, medium and high levels',async()=>{
   for(const effort of ['low','medium','high']){
     const calls=[];
+    let reviews=0;
     const bad='## Ответ\n\n7 забегов, строго доказано. После пяти забегов нельзя исключить ни одной лошади.';
     const fixed='## Ответ\n\n7 забегов. После первых пяти забегов исключены четвёртая и пятая лошади из каждой группы.';
     const {env}=envWithAI(async(_model,params)=>{
@@ -133,7 +134,7 @@ test('proof requests are corrected BEFORE display at low, medium and high levels
         c.close();
       }});
       if(params.input[0].content.includes("рецензент")){
-        const valid=calls.filter(x=>!x.stream&&x.input[0].content.includes("рецензент")).length===2;
+        const valid=++reviews===2;
         const report={verdict:valid?'pass':'revise',checks:{assumptions:true,eliminations:valid,lower_bound:valid},
           issues:valid?[]:['После пяти забегов можно исключить по две лошади из каждой группы; отсутствует общий аргумент нижней границы.']};
         return {output_text:JSON.stringify(report)};
@@ -178,7 +179,7 @@ test('non-stream proof mode follows the same independent review safeguard',async
   const res=await worker.fetch(post({messages:[{role:'user',content:'Докажи строго минимальность'}],effort:'medium'}),env);
   assert.equal(res.status,200);
   assert.match((await res.json()).text,/Строгое доказательство пока не подтверждено/);
-  assert.equal(calls.length,3);
+  assert.equal(calls.length,4);
 });
 
 

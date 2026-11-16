@@ -77,6 +77,7 @@ test('safely bundled session features are present without persistent storage',()
   assert.match(session,/!c\.temporary/);
 });
 test('GPT-OSS route keeps the owner key server-side while accepting public requests',()=>{
+  const session=readFileSync('public/session.js','utf8');
   const worker=readFileSync('src/index.js','utf8');
   const config=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
   assert.equal(config.main,'./src/index.js');

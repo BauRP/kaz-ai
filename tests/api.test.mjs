@@ -651,3 +651,27 @@ test('short valid coding corrections are not discarded and still get a final rev
   assert.equal((await response.json()).text,fixed);
   assert.equal(calls.length,3);
 });
+
+test('AI stream read failure after content is reported as provider interruption, not user offline',async()=>{
+  let reads=0;
+  const {env}=envWithAI(async()=>new ReadableStream({
+    pull(controller){
+      if(reads++===0)controller.enqueue(new TextEncoder().encode('data: {"response":"Часть ответа"}\n\n'));
+      else controller.error(new Error("Upstream model stream interrupted"));
+    }
+  }));
+  const result=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+  const text=await result.text();
+  assert.match(text,/Часть ответа/);
+  assert.match(text,/event: error/);
+  assert.match(text,/"code":"AI_RESPONSE_INTERRUPTED"/);
+  assert.match(text,/Сервис ИИ прервал/);
+  assert.doesNotMatch(text,/интернет отключ|Проверьте подключение/);
+});
+test('model failure before first byte is a provider error, not a claimed internet outage',async()=>{
+  const {env}=envWithAI(async()=>{throw new Error("Workers AI temporarily unavailable")});
+  const result=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+  const text=await result.text();
+  assert.match(text,/"code":"AI_UNAVAILABLE"/);
+  assert.match(text,/Не удалось связаться с сервисом ИИ/);
+});

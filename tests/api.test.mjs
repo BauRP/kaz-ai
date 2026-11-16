@@ -119,69 +119,113 @@ test('SSE cancellation stops upstream output without completing a stale response
 });
 
 
-test('proof requests are corrected BEFORE display at low, medium and high levels',async()=>{
+test('proof errors are corrected and independently rechecked at all three reasoning levels',async()=>{
   for(const effort of ['low','medium','high']){
     const calls=[];
-    let reviews=0;
-    const bad='## Ответ\n\n7 забегов, строго доказано. После пяти забегов нельзя исключить ни одной лошади.';
-    const fixed='## Ответ\n\n7 забегов. После первых пяти забегов исключены четвёртая и пятая лошади из каждой группы.';
+    const draft='## Ответ\n\n7 забегов строго минимальны. После пяти групп нельзя исключить ни одну лошадь. 22*3=66, а 6*10=60, значит невозможны шесть забегов.';
+    const corrected='## Ответ\n\nДля нахождения трёх самых быстрых достаточно семи забегов. Уже после пяти групповых забегов исключаются две последние лошади каждой группы. Универсальная нижняя граница не вытекает из ошибочного подсчёта прямых сравнений.';
     const {env}=envWithAI(async(_model,params)=>{
       calls.push(params);
       if(params.stream)return new ReadableStream({start(c){
-        const data='data: '+JSON.stringify({response:bad})+'\n\n';
-        c.enqueue(new TextEncoder().encode(data.slice(0,23)));
-        c.enqueue(new TextEncoder().encode(data.slice(23)));
+        const data='data: '+JSON.stringify({response:draft})+'\n\n';
+        c.enqueue(new TextEncoder().encode(data.slice(0,21)));
+        c.enqueue(new TextEncoder().encode(data.slice(21)));
         c.close();
       }});
-      if(params.input[0].content.startsWith("Ты независимый строгий рецензент")){
-        const valid=++reviews===2;
-        const report={verdict:valid?'pass':'revise',checks:{assumptions:true,eliminations:valid,lower_bound:valid},
-          issues:valid?[]:['После пяти забегов можно исключить по две лошади из каждой группы; отсутствует общий аргумент нижней границы.']};
-        return {output_text:JSON.stringify(report)};
-      }
-      return {output_text:fixed};
+      const isFinal=params.input[0].content.startsWith('Ты независимый финальный');
+      return {output_text:JSON.stringify({
+        verdict:isFinal?'pass':'revise',
+        checks:{assumptions:true,eliminations:true,lower_bound:true},
+        issues:isFinal?[]:['После первых пяти групповых забегов уже есть десять исключённых, а транзитивность делает подсчёт 66 > 60 ошибочным.'],
+        corrected_answer:isFinal?'':corrected
+      })};
     });
-    const req={messages:[{role:'user',content:'Строго докажи минимум для 25 лошадей, как исключать после каждого забега?'}],effort};
-    const response=await worker.fetch(post(req,TOKEN,{Accept:'text/event-stream'}),env);
-    const output=await response.text();
-    assert.match(output,/event: progress/);
-    assert.match(output,/event: final/);
-    assert.match(output,/После первых пяти забегов исключены/);
-    assert.doesNotMatch(output,/нельзя исключить ни одной/);
-    assert.match(output,/event: done/);
-    assert.equal(calls.length,4,'draft, audit, correction, second audit');
+    const response=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи минимальность 7 забегов для 25 лошадей'}],effort},TOKEN,{Accept:'text/event-stream'}),env);
+    const out=await response.text();
+    assert.match(out,/event: progress/);
+    assert.match(out,/Независимо проверяю доказательство/);
+    assert.match(out,/Проверяю исправленное решение/);
+    assert.match(out,/event: final/);
+    assert.match(out,/после пяти групповых забегов исключаются/);
+    assert.doesNotMatch(out,/6\*10=60/);
+    assert.match(out,/event: done/);
+    assert.equal(calls.length,3,'draft, combined review-and-repair, independent final audit');
     assert.equal(calls[0].reasoning_effort,effort);
-    assert.ok(calls.slice(1).every(x=>x.reasoning.effort===effort));
+    assert.equal(calls[1].reasoning.effort,effort);
+    assert.equal(calls[2].reasoning.effort,effort);
+    assert.match(calls[1].input[0].content,/транзитивн/);
+    assert.match(calls[2].input[0].content,/число прямых сравнений/);
   }
 });
-test('unverified proof never leaks an incorrect draft',async()=>{
+test('correct draft requires only one independent review without losing validation',async()=>{
   for(const effort of ['low','medium','high']){
-    let count=0;
-    const {env}=envWithAI(async()=>{
-      if(++count===1)return new ReadableStream({start(c){
-        c.enqueue(new TextEncoder().encode('data: {"response":"Неверное и недоказанное утверждение"}\n\n'));c.close();
+    const {env,calls}=envWithAI(async(_model,params)=>{
+      if(params.stream)return new ReadableStream({start(c){
+        c.enqueue(new TextEncoder().encode('data: {"response":"Корректное математическое решение"}\n\n'));c.close();
+      }});
+      return {output_text:JSON.stringify({
+        verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''
+      })};
+    });
+    const response=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи результат'}],effort},TOKEN,{Accept:'text/event-stream'}),env);
+    const out=await response.text();
+    assert.match(out,/Корректное математическое решение/);
+    assert.match(out,/event: final/);
+    assert.equal(calls.length,2,'draft + independent proof audit');
+  }
+});
+test('failed audit does not emit unverified proof as a final answer',async()=>{
+  for(const effort of ['low','medium','high']){
+    const {env,calls}=envWithAI(async(_model,params)=>{
+      if(params.stream)return new ReadableStream({start(c){
+        c.enqueue(new TextEncoder().encode('data: {"response":"Недоказанное утверждение"}\n\n'));c.close();
       }});
       throw new Error('review unavailable');
     });
     const response=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи минимальность'}],effort},TOKEN,{Accept:'text/event-stream'}),env);
-    const output=await response.text();
-    assert.match(output,/event: final/);
-    assert.match(output,/Строгое доказательство пока не подтверждено/);
-    assert.doesNotMatch(output,/Неверное и недоказанное утверждение/);
-    assert.match(output,/event: done/);
+    const out=await response.text();
+    assert.match(out,/event: final/);
+    assert.match(out,/Строгое доказательство пока не подтверждено/);
+    assert.doesNotMatch(out,/Недоказанное утверждение/);
+    assert.equal(calls.length,2);
   }
 });
-test('non-stream proof mode follows the same independent review safeguard',async()=>{
+test('correction rejected by final audit is withheld from user',async()=>{
   const {env,calls}=envWithAI(async(_model,params)=>{
-    if(calls.length===1)return {output_text:'Необоснованное доказательство'};
-    return {output_text:'not JSON'};
+    if(params.stream)return new ReadableStream({start(c){
+      c.enqueue(new TextEncoder().encode('data: {"response":"Ошибочный ответ"}\n\n'));c.close();
+    }});
+    const isFinal=params.input[0].content.startsWith('Ты независимый финальный');
+    return {output_text:JSON.stringify({
+      verdict:'revise',checks:{assumptions:true,eliminations:false,lower_bound:false},
+      issues:['Нет универсального доказательства для всех возможных стратегий'],
+      corrected_answer:isFinal?'':'## Исправленное решение\n\nОстаётся нерешённое противоречие в доказательстве нижней границы.'
+    })};
   });
-  const res=await worker.fetch(post({messages:[{role:'user',content:'Докажи строго минимальность'}],effort:'medium'}),env);
-  assert.equal(res.status,200);
-  assert.match((await res.json()).text,/Строгое доказательство пока не подтверждено/);
-  assert.equal(calls.length,4);
+  const response=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи минимальность'}],effort:'high'},TOKEN,{Accept:'text/event-stream'}),env);
+  const out=await response.text();
+  assert.match(out,/Строгое доказательство пока не подтверждено/);
+  assert.doesNotMatch(out,/Остаётся нерешённое противоречие/);
+  assert.equal(calls.length,3);
 });
-
+test('JSON path also uses audit plus conditional final review at selected effort',async()=>{
+  const {env,calls}=envWithAI(async(_model,params)=>{
+    if(calls.length===1)return {output_text:'Начальное решение без проверки'};
+    if(calls.length===2)return {output_text:JSON.stringify({
+      verdict:'revise',checks:{assumptions:true,eliminations:true,lower_bound:true},
+      issues:['Допущение было неверным'],
+      corrected_answer:'## Исправленный ответ\n\nБолее шестидесяти символов корректного обоснования, без неверного допущения и недоказанной уверенности.'
+    })};
+    return {output_text:JSON.stringify({
+      verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''
+    })};
+  });
+  const response=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи результат'}],effort:'low'}),env);
+  assert.equal(response.status,200);
+  assert.match((await response.json()).text,/Исправленный ответ/);
+  assert.equal(calls.length,3);
+  assert.ok(calls.slice(1).every(([,opts])=>opts.reasoning.effort==='low'));
+});
 
 test('ordinary questions do not spend tokens on unnecessary proof verification',async()=>{
   const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){

@@ -1177,7 +1177,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         body.push(part.split(end)[0]);root.append(math(body.join(" "),true));continue;
       }
       const h=head(line);
-      if(h){const title=node("h"+Math.min(4,h[1].length+1),"answer-heading");inline(title,h[2]);root.append(title);i++;continue}
+      if(h){const title=node("h"+Math.min(4,h[1].length),"answer-heading");inline(title,h[2]);root.append(title);i++;continue}
       if(rule(line)){root.append(node("hr","answer-divider"));i++;continue}
       if(/^\s*>/.test(line)){
         const group=[];while(i<ls.length&&/^\s*>/.test(ls[i]))group.push(ls[i++].replace(/^\s*>\s?/,""));

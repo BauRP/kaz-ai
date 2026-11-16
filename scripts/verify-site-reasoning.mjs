@@ -5,6 +5,20 @@ export const SITE='https://kaz-ai.tengrize.workers.dev';
 export const LEVELS=['low','medium','high'];
 const QUESTION='Назови количество вершин квадрата 2 на 2. Ответь одним числом.';
 
+function hasModelText(sseBody){
+  for(const frame of sseBody.replace(/\r\n/g,'\n').split('\n\n')){
+    for(const line of frame.split('\n')){
+      if(!line.startsWith('data:'))continue;
+      try{
+        const payload=JSON.parse(line.slice(5).trim());
+        if(typeof payload?.response==='string'&&payload.response.trim())return true;
+        if(typeof payload?.choices?.[0]?.delta?.content==='string'&&payload.choices[0].delta.content.trim())return true;
+        if(payload?.type==='response.output_text.delta'&&typeof payload?.delta==='string'&&payload.delta.trim())return true;
+      }catch{}
+    }
+  }
+  return false;
+}
 export async function verifySite({url=SITE,fetchFn=fetch,write=console.log}={}){
   // Do not allow arbitrary hosts or moving secrets to another origin.
   if(url!==SITE)throw Error('Unexpected site origin');
@@ -28,11 +42,12 @@ export async function verifySite({url=SITE,fetchFn=fetch,write=console.log}={}){
     const requestId=response.headers.get('x-kaz-ai-request-id');
     const done=/^event: done$/m.test(body);
     const failure=/^event: error$/m.test(body);
+    const receivedText=hasModelText(body);
     const sample={
       effort,elapsedMs,status:response.status,
       effortHeaderMatches:returnedEffort===effort,
       requestIdPresent:/^[a-f0-9]{12}$/.test(requestId||''),
-      completed:response.ok&&done&&!failure
+      completed:response.ok&&done&&!failure&&receivedText
     };
     samples.push(sample);
     write('Chat test '+samples.length+'/3 '+effort+': HTTP '+sample.status+', '+elapsedMs+'ms, effort header '+(sample.effortHeaderMatches?'matches':'MISSING/MISMATCH')+', SSE '+(sample.completed?'completed':'NOT CONFIRMED'));

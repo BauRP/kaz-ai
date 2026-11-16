@@ -450,6 +450,50 @@
       && !/raw\.githack\.com|github\.io|htmlpreview\.github\.io|github\.com|raw\.githubusercontent\.com/.test(hostname)
       && !location.pathname.endsWith("/preview.html");
   };
+
+  // Handle native Cloudflare Workers AI Server-Sent Events (SSE).
+  async function readAIStream(response,onText){
+    const reader=response.body?.getReader();
+    if(!reader)throw new Error("STREAM_UNAVAILABLE");
+    let buffer="",output="",finished=false;
+    const decoder=new TextDecoder("utf-8");
+    try{
+      while(true){
+        const {value,done}=await reader.read();
+        if(done){buffer+=decoder.decode();break}
+        buffer+=decoder.decode(value,{stream:true});
+        if(buffer.length>1_000_000)throw new Error("STREAM_INVALID");
+        buffer=buffer.replace(/\r\n/g,"\n");
+        let boundary;
+        while((boundary=buffer.indexOf("\n\n"))>=0){
+          const frame=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);
+          const lines=frame.split("\n");
+          const event=lines.find(line=>line.startsWith("event:"))?.slice(6).trim()||"message";
+          const data=lines.filter(line=>line.startsWith("data:")).map(line=>line.slice(5).trimStart()).join("\n");
+          if(event==="done"||data==="[DONE]"){finished=true;continue}
+          if(!data)continue;
+          let packet;try{packet=JSON.parse(data)}catch{continue}
+          if(event==="error"||packet?.error){
+            const error=new Error(packet.message||packet?.error?.message||"Ошибка ответа");
+            error.code=packet.code||"AI_UNAVAILABLE";
+            throw error;
+          }
+          const delta=typeof packet?.response==="string"?packet.response:
+            typeof packet?.choices?.[0]?.delta?.content==="string"?packet.choices[0].delta.content:
+            packet?.type==="response.output_text.delta"&&typeof packet.delta==="string"?packet.delta:"";
+          if(delta){
+            output+=delta;
+            if(output.length>500000)throw new Error("STREAM_TOO_LONG");
+            onText(output);
+          }
+        }
+      }
+      if(!finished)throw new Error("STREAM_INTERRUPTED");
+      if(!output.trim())throw new Error("EMPTY_RESPONSE");
+      return output;
+    }finally{try{reader.releaseLock()}catch{}}
+  }
+
   async function runAI(chat,replaceId=null){
     // Never submit an old conversation when the user is now in another chat.
     if(!threads.includes(chat)||current!==chat.id)return;
@@ -460,11 +504,8 @@
     if(abort){notify("Завершите предыдущий запрос.");return}
     const previousFocus=document.activeElement;
     const controller=new AbortController();abort=controller;pending=chat.id;pendingReplaceId=replaceId;retryAnswerId=null;
-    // Some browsers/transports ignore AbortSignal until the connection finishes.
-    // Finish the UI state at the deadline rather than waiting for fetch to reject.
-    const timeout=setTimeout(()=>{
-      if(abort===controller)stopActiveRequest("timeout");
-    },45000);
+    // Do not stop complex inference after an arbitrary 45 seconds.
+    // The user retains the explicit Stop button.
     const stop=$("#sessionStop");stop.hidden=false;$("#sendButton").disabled=true;
     showStatus("Анализирую запрос…");
     // Retry hides its own button; focus the visible Stop control, not a hidden element.
@@ -488,16 +529,36 @@
     while(history.length>1&&history[0].role!=="user")history.shift();
     if(!history.length||history.at(-1).role!=="user"){
       showStatus("Запрос слишком большой. Сократите последнее сообщение.",false,true);
-      clearTimeout(timeout);abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput();
+      abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput();
       return;
     }
+    let streamingBubble=null;
     try{
       const response=await fetch("/api/chat",{
-        method:"POST",headers:{"content-type":"application/json"},
+        method:"POST",headers:{"content-type":"application/json","accept":"text/event-stream"},
         credentials:"same-origin",signal:controller.signal,
         body:JSON.stringify({messages:history,effort:state.reason,instructions:personalInstructions})
       });
-      let data=null;try{data=await response.json()}catch{}
+      let data=null;
+      if(response.ok&&/text\/event-stream/i.test(response.headers.get("content-type")||"")){
+        streamingBubble=make("div","message message-assistant");
+        streamingBubble.append(make("div","message-label","Kaz AI"));
+        const answerSpan=make("span","");
+        streamingBubble.append(answerSpan);
+        $("#chatMessages").append(streamingBubble);
+        let lastPaint=0;
+        const streamed=await readAIStream(response,value=>{
+          if(abort!==controller||controller.signal.aborted||current!==chat.id)return;
+          if(Date.now()-lastPaint<100)return;
+          lastPaint=Date.now();
+          answerSpan.textContent=value;
+          showStatus("ИИ отвечает…");
+        });
+        answerSpan.textContent=streamed;
+        data={text:streamed};
+      }else{
+        try{data=await response.json()}catch{}
+      }
       // An outdated answer cannot change the status of a different chat.
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat)||current!==chat.id)return;
       if(!response.ok){
@@ -539,22 +600,25 @@
     }catch(e){
       if(abort!==controller)return;
       if(controller.signal.aborted){
-        const timedOut=controller.signal.reason==="timeout";
-        const manual=controller.signal.reason==="manual";
         const canRetry=replaceId
           ? chat.messages.at(-1)?.id===replaceId
           : chat.messages.at(-1)?.role==="user";
-        if(timedOut||manual){
+        if(controller.signal.reason==="manual"){
           retryAnswerId=replaceId;
-          showStatus(timedOut?"ИИ не ответил за 45 секунд. Попробуйте повторить запрос.":"Генерация ответа остановлена.",false,Boolean(canRetry));
+          showStatus("Генерация ответа остановлена.",false,Boolean(canRetry));
         }
         // Navigation and deletion must not display stale status messages.
       }else{
         retryAnswerId=replaceId;
-        showStatus("Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.",false,true);
+        const quota=e?.code==="AI_QUOTA_EXHAUSTED";
+        const message=quota?"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."
+          :e?.code==="AI_RATE_LIMITED"?"Слишком много запросов за короткое время. Попробуйте позднее."
+          :e?.code==="STREAM_INTERRUPTED"?"Соединение оборвалось до конца ответа. Попробуйте повторить запрос."
+          :"Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.";
+        showStatus(message,quota,true);
       }
     }finally{
-      clearTimeout(timeout);
+      streamingBubble?.remove();
       if(abort===controller){abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput()}
     }
   }
@@ -572,13 +636,10 @@
     controller.abort(reason);
     $("#sessionStop").hidden=true;
     retryAnswerId=replaceId;
-    const message=reason==="timeout"
-      ?"ИИ не ответил за 45 секунд. Попробуйте повторить запрос."
-      :"Генерация ответа остановлена.";
+    const message="Генерация ответа остановлена.";
     showStatus(message,false,canRetry);
     resizeInput();
-    // Automatic timeout must not steal focus when the user is reading History
-    // or editing another field. Manual stop is an explicit keyboard action.
+    // Only an explicit manual Stop action changes focus.
     if(reason==="manual"){
       if(canRetry&&!$("#sessionRetry").hidden)$("#sessionRetry").focus();
       else $("#messageInput").focus();

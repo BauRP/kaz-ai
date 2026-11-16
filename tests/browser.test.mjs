@@ -2346,7 +2346,7 @@ test('compound emoji remain whole in first-message titles and exported TXT filen
   }finally{await browser.close()}
 });
 
-test('AI timeout unlocks Retry even if a stalled fetch ignores AbortSignal, and rejects late answer',async()=>{
+test('manual Stop unlocks Retry for a stalled long request and rejects late answer',async()=>{
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
@@ -2356,11 +2356,6 @@ test('AI timeout unlocks Retry even if a stalled fetch ignores AbortSignal, and 
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
     let calls=0;
-    await page.addInitScript(()=>{
-      const baseSetTimeout=window.setTimeout.bind(window);
-      window.setTimeout=(callback,delay,...args)=>
-        baseSetTimeout(callback,delay===45000?600:delay,...args);
-    });
     await page.route('https://kaz-ai.test/**',async route=>{
       if(new URL(route.request().url()).pathname==='/api/chat'){
         const index=++calls;
@@ -2378,9 +2373,12 @@ test('AI timeout unlocks Retry even if a stalled fetch ignores AbortSignal, and 
     await page.locator('#messageInput').fill('Ответ должен завершиться по времени');
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
-    await page.waitForFunction(()=>document.querySelector('#sessionRetry')?.hidden===false,{timeout:5000});
+    await page.waitForTimeout(800);
+    assert.equal(await page.locator('#sessionStop').isVisible(),true);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),false);
+    await page.locator('#sessionStop').click();
+    await page.locator('#sessionRetry').waitFor({state:'visible'});
     assert.equal(await page.locator('#sessionStop').isVisible(),false);
-    assert.ok((await page.locator('#statusBanner').innerText()).includes('45 секунд'));
     assert.equal(await page.locator('#sendButton').isDisabled(),true);
     await page.locator('#sessionRetry').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Свежий ответ'));
@@ -2394,7 +2392,7 @@ test('AI timeout unlocks Retry even if a stalled fetch ignores AbortSignal, and 
   }finally{release?.();await browser.close()}
 });
 
-test('timed-out AI status stays hidden in History and restores Retry when returning to chat',async()=>{
+test('long request remains pending across History navigation and is cancellable on return',async()=>{
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
@@ -2403,10 +2401,6 @@ test('timed-out AI status stays hidden in History and restores Retry when return
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
-    await page.addInitScript(()=>{
-      const native=window.setTimeout.bind(window);
-      window.setTimeout=(callback,ms,...args)=>native(callback,ms===45000?700:ms,...args);
-    });
     let calls=0;
     await page.route('https://kaz-ai.test/**',async route=>{
       if(new URL(route.request().url()).pathname==='/api/chat'){
@@ -2421,11 +2415,13 @@ test('timed-out AI status stays hidden in History and restores Retry when return
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
     await page.locator('.sidebar [data-screen="history"]').click();
-    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true,{timeout:5000});
+    await page.waitForTimeout(800);
     assert.equal(await page.locator('#sessionRetry').isVisible(),false);
     await page.locator('#historyList [data-session="open-chat"]').click();
+    assert.equal(await page.locator('#sessionStop').isVisible(),true);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),false);
+    await page.locator('#sessionStop').click();
     assert.equal(await page.locator('#sessionRetry').isVisible(),true);
-    assert.ok((await page.locator('#statusBanner').innerText()).includes('45 секунд'));
     assert.equal(calls,1);
     assert.deepEqual(errors,[]);
   }finally{release?.();await browser.close()}

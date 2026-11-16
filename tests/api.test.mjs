@@ -704,3 +704,31 @@ test('provider error frame during rigorous reasoning aborts and yields an identi
     assert.equal(calls.length,1,'Never start an audit for a broken draft');
   }
 });
+
+test('review provider failure is logged by stage without logging private prompt text',async()=>{
+  const secretMarker='PRIVATE_CONTENT_TEST_ONLY_123abc';
+  const lines=[];
+  const originalError=console.error;
+  console.error=(...args)=>lines.push(args.map(String).join(' '));
+  try{
+    const {env,calls}=envWithAI(async(_name,params)=>{
+      if(params.stream)return new ReadableStream({start(c){
+        c.enqueue(new TextEncoder().encode('data: {"response":"Предварительное математическое решение"}\n\n'));
+        c.close();
+      }});
+      throw new Error('review model went offline');
+    });
+    const response=await worker.fetch(post({
+      messages:[{role:'user',content:'Строго докажи '+secretMarker}],effort:'medium'
+    },TOKEN,{Accept:'text/event-stream'}),env);
+    const body=await response.text();
+    assert.match(body,/Строгое доказательство пока не подтверждено/);
+    assert.equal(calls.length,2);
+  }finally{console.error=originalError}
+  const logs=lines.join('\n');
+  assert.match(logs,/"event":"audit_provider_failure"/);
+  assert.match(logs,/"phase":"proof_primary_review"/);
+  assert.match(logs,/"incidentId":"[a-f0-9]{12}"/);
+  assert.doesNotMatch(logs,/PRIVATE_CONTENT_TEST_ONLY_123abc/);
+  assert.doesNotMatch(logs,/review model went offline/);
+});

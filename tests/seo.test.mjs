@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {inflateSync} from 'node:zlib';
 import worker from '../src/index.js';
 const routes=['about','capabilities','questions','privacy','kk','en','ai-chat','ai-images'];
 const file=name=>readFileSync('public/'+name,'utf8');
@@ -45,6 +46,40 @@ test('site exposes crawlable links to static information pages',()=>{
   assert.match(main,/id="messageInput"/,'Chat retained');
   assert.match(main,/data-action="toggle-reason"/,'Reasoning control retained');
 });
+
+test('social previews expose the canonical Kaz AI logo without JavaScript',()=>{
+  const origin='https://kaz-ai.tengrize.workers.dev',image=origin+'/kaz-ai-share.png';
+  assert.ok(main.includes('<meta property="og:url" content="'+origin+'/">'));
+  assert.ok(main.includes('<meta property="og:image" content="'+image+'">'));
+  assert.ok(main.includes('<meta property="og:image:secure_url" content="'+image+'">'));
+  assert.ok(main.includes('<meta property="og:image:type" content="image/png">'));
+  assert.ok(main.includes('<meta property="og:image:width" content="1200">'));
+  assert.ok(main.includes('<meta property="og:image:height" content="630">'));
+  assert.ok(main.includes('<meta name="twitter:card" content="summary_large_image">'));
+  assert.ok(main.includes('<meta name="twitter:image" content="'+image+'">'));
+  assert.ok(preview.includes('<meta property="og:image" content="'+image+'">'));
+});
+test('the WhatsApp social image is a compact valid PNG with readable image data',()=>{
+  const image=readFileSync('public/kaz-ai-share.png');
+  assert.ok(image.byteLength<300_000);
+  assert.equal(image.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+  assert.equal(image.subarray(12,16).toString(),'IHDR');
+  assert.equal(image.readUInt32BE(16),1200);
+  assert.equal(image.readUInt32BE(20),630);
+  assert.equal(image[24],8);
+  assert.equal(image[25],3);
+  let pos=8,idat=[];
+  while(pos<image.length){
+    const len=image.readUInt32BE(pos),tag=image.subarray(pos+4,pos+8).toString();
+    if(tag==='IDAT')idat.push(image.subarray(pos+8,pos+8+len));
+    pos+=12+len;
+    if(tag==='IEND')break;
+  }
+  const pixels=inflateSync(Buffer.concat(idat));
+  assert.equal(pixels.length,630*1201);
+  assert.equal(pixels[0],2);
+});
+
 test('preview is noindex and not a duplicate public search result',()=>{
   assert.match(preview,/<meta name="robots" content="noindex,follow">/);
   assert.doesNotMatch(main,/<meta name="robots" content="noindex/);

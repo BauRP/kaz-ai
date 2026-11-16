@@ -675,3 +675,32 @@ test('model failure before first byte is a provider error, not a claimed interne
   assert.match(text,/"code":"AI_UNAVAILABLE"/);
   assert.match(text,/Не удалось связаться с сервисом ИИ/);
 });
+
+test('failed streaming requests carry safe incident ID for matching Cloudflare logs',async()=>{
+  const request={messages:[{role:'user',content:'PRIVATE-CHAT-CONTENT-MUST-NOT-LEAK'}],effort:'high'};
+  const {env}=envWithAI(async()=>{throw new Error("Mock provider temporarily unavailable")});
+  const res=await worker.fetch(post(request,TOKEN,{Accept:'text/event-stream'}),env);
+  const body=await res.text();
+  const match=body.match(/"incidentId":"([a-f0-9]{12})"/);
+  assert.ok(match,'A random incident ID must be present on server errors');
+  assert.equal(res.headers.get('x-kaz-ai-request-id'),match[1]);
+  assert.match(body,/"code":"AI_UNAVAILABLE"/);
+  assert.doesNotMatch(body,/PRIVATE-CHAT-CONTENT-MUST-NOT-LEAK/);
+});
+test('provider error frame during rigorous reasoning aborts and yields an identifiable error',async()=>{
+  for(const effort of ['low','medium','high']){
+    const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){
+      c.enqueue(new TextEncoder().encode('data: {"response":"Начало решения"}\n\n'));
+      c.enqueue(new TextEncoder().encode('data: {"error":{"message":"provider problem"}}\n\n'));
+      c.close();
+    }}));
+    const res=await worker.fetch(post({
+      messages:[{role:'user',content:'Строго докажи математическое тождество'}],effort
+    },TOKEN,{Accept:'text/event-stream'}),env);
+    const body=await res.text();
+    assert.match(body,/"code":"AI_RESPONSE_INTERRUPTED"/);
+    assert.match(body,/"incidentId":"[a-f0-9]{12}"/);
+    assert.doesNotMatch(body,/event: final/);
+    assert.equal(calls.length,1,'Never start an audit for a broken draft');
+  }
+});

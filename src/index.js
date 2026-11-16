@@ -490,7 +490,8 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
     "cache-control":"no-cache, no-store, no-transform",
     "x-content-type-options":"nosniff",
     "x-accel-buffering":"no",
-    "x-kaz-ai-request-id":incidentId
+    "x-kaz-ai-request-id":incidentId,
+    "x-kaz-ai-reasoning-effort":effort
   }});
 }
 

@@ -80,17 +80,19 @@ test('long GPT-OSS answers use SSE without waiting for a full JSON response',asy
   assert.equal(calls[0][1].stream,true);
   assert.deepEqual(calls[0][1].messages.map(m=>m.role),['system','user']);
   assert.equal(calls[0][1].reasoning_effort,'medium');
-  assert.equal(calls[0][1].max_tokens,8192);
+  assert.equal(calls[0][1].max_tokens,12288);
 });
 test('reasoning levels map to native Cloudflare SSE options without changing JSON callers',async()=>{
   const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: [DONE]\\n\\n'.replaceAll('\\n','\n')));c.close()}}));
-  for(const effort of ['low','high']){
+  for(const effort of ['low','medium','high']){
     const response=await worker.fetch(post({...good,effort},TOKEN,{Accept:'text/event-stream'}),env);
     assert.equal(response.status,200);
     await response.text();
   }
-  assert.deepEqual(calls.map(x=>x[1].max_tokens),[4096,12288]);
-  assert.deepEqual(calls.map(x=>x[1].reasoning_effort),['low','high']);
+  assert.deepEqual(calls.map(x=>x[1].max_tokens),[12288,12288,12288],
+    'All levels must allow equally long outputs');
+  assert.deepEqual(calls.map(x=>x[1].reasoning_effort),['low','medium','high'],
+    'The selected reasoning effort must still reach the model');
 });
 test('SSE inference errors are delivered as typed events and streams close cleanly',async()=>{
   const {env}=envWithAI(async()=>{throw new Error('Quota exceeded: 429')});

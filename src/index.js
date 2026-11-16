@@ -81,10 +81,13 @@ function classifyAILimit(error){
 // existing JSON path for older clients, but use native SSE for long answers.
 function streamedAIResponse(env,messages,effort){
   const encoder=new TextEncoder();
+  // All reasoning levels get the same generous output allowance. The chosen
+  // effort changes how the model reasons, not how much answer it may produce.
+  // 12,288 is the previously tested high-level budget, now shared by all.
   const opts={
     messages,
     reasoning_effort:effort,
-    max_tokens:effort==="high"?12288:effort==="medium"?8192:4096,
+    max_tokens:12288,
     stream:true
   };
   let upstreamReader=null,heartbeat=null,closed=false;

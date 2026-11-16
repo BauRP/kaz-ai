@@ -247,6 +247,65 @@ test('real browser: failed GPT answer retry preserves original reply until new r
   }finally{await browser.close()}
 });
 
+test('all three reasoning levels stream long answers without any client deadline',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1250,height:800}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>route.fulfill({status:200,contentType:'text/html',body:html}));
+    await page.addInitScript(()=>{
+      const originalFetch=window.fetch.bind(window);
+      const originalTimer=window.setTimeout.bind(window);
+      let fake45Seconds=0;
+      window.setTimeout=(cb,ms,...args)=>{
+        if(ms===45000){fake45Seconds++;return originalTimer(cb,600,...args)}
+        return originalTimer(cb,ms,...args);
+      };
+      window.__legacy45SecondTimers=()=>fake45Seconds;
+      window.__efforts=[];
+      window.fetch=(url,options)=>{
+        if(url!=="/api/chat")return originalFetch(url,options);
+        const json=JSON.parse(options.body);
+        window.__efforts.push(json.effort);
+        const encoder=new TextEncoder();
+        const body=new ReadableStream({
+          start(controller){
+            controller.enqueue(encoder.encode(": connected\n\n"));
+            originalTimer(()=>{
+              try{
+                controller.enqueue(encoder.encode('data: {"response":"Развёрнутый ответ: '+json.effort+'"}\n\n'));
+                controller.enqueue(encoder.encode("event: done\ndata: {}\n\n"));
+                controller.close();
+              }catch{}
+            },850);
+          }
+        });
+        return Promise.resolve(new Response(body,{status:200,headers:{"content-type":"text/event-stream"}}));
+      };
+    });
+    await page.goto('https://kaz-ai.test/');
+    for(const effort of ['low','medium','high']){
+      await page.evaluate(level=>{
+        window.state.reason=level;
+      },effort);
+      await page.locator('#messageInput').fill('Реши сложную задачу на уровне '+effort);
+      await page.locator('#sendButton').click();
+      await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+      await page.waitForTimeout(650);
+      assert.equal(await page.locator('#sessionRetry').isVisible(),false,'No timeout-based Retry at '+effort);
+      assert.equal(await page.locator('#sessionStop').isVisible(),true,'Still generating at '+effort);
+      await page.waitForFunction(level=>
+        [...document.querySelectorAll('.message-assistant')].some(x=>x.textContent.includes('Развёрнутый ответ: '+level)),effort,{timeout:6000});
+      await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
+    }
+    assert.deepEqual(await page.evaluate(()=>window.__efforts),['low','medium','high']);
+    assert.equal(await page.evaluate(()=>window.__legacy45SecondTimers()),0);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
 test('GPT-OSS streaming renders partial complex answers before completion and stores final response',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});

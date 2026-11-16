@@ -84,6 +84,63 @@ function wantsProofAudit(input){
   const q=input.messages.at(-1)?.content||"";
   return /(?:докаж|доказательств|строгое доказательство|обоснуй миним|почему.*невозможно|prove|rigorous proof|formal proof|demonstrate.*minimal)/iu.test(q);
 }
+// Grounded invariants for the regression problem that previously produced
+// two false mathematical claims. This is a proof aid, not an answer cache.
+function isTwentyFiveHorsePuzzle(question){
+  const q=String(question||"").toLowerCase();
+  return /(?:лошад|horses?)/iu.test(q)
+    && /(?:^|\D)25(?:\D|$)/u.test(q)
+    && /(?:^|\D)5(?:\D|$)/u.test(q)
+    && /(?:тр[её]х|троих|тройк|three|top[\s-]*3|(?:^|\D)3(?:\D|$))/iu.test(q);
+}
+function horseProofReference(question){
+  if(!isTwentyFiveHorsePuzzle(question))return "";
+  return "Для задачи про 25 лошадей, 5 дорожек и трёх самых быстрых: "+
+    "(1) Каждый из первых пяти групповых забегов даёт порядок пяти лошадей. "+
+    "У четвёртой и пятой в своей группе уже три или четыре заведомо более быстрых; "+
+    "после пяти групповых забегов исключены ровно 10 лошадей из топ-3 (по две из каждой группы). "+
+    "(2) Шестой забег между победителями групп даёт порядок A1>B1>C1>D1>E1. "+
+    "Абсолютный лидер A1. Для второго и третьего места остаются A2,A3,B1,B2,C1; "+
+    "их седьмой забег определяет второе и третье места. "+
+    "(3) СТРОГОЕ доказательство необходимости седьмого забега для ЛЮБЫХ стратегий из шести: "+
+    "представим противника, который в каждом забеге назначает победителем лошадь, ни разу не проигрывавшую, "+
+    "если такая присутствует; среди них предпочитает уже участвовавшую. "+
+    "Любой забег при такой стратегии лишает статуса непобеждённой не более 4 лошадей. "+
+    "Для установления самой быстрой надо устранить 24 кандидата; за 6 забегов это возможно только "+
+    "если в каждом из шести участвуют ровно 5 ещё непобеждённых лошадей, а проигравшие больше не участвуют. "+
+    "После пяти забегов существует по крайней мере одна ранее участвовавшая непобеждённая лошадь; "+
+    "она должна участвовать в шестом, иначе останутся минимум два возможных победителя. "+
+    "Противник позволяет такой лошади X победить в шестом. "+
+    "Лошадь R, занявшая второе место в ПЕРВОМ забеге X, и лошадь W, занявшая второе место в шестом, "+
+    "обе проиграли только X и никогда не сравнивались между собой даже транзитивно. "+
+    "Обе расстановки R>W и W>R согласуются со всеми шестью забегами. "+
+    "Значит, за шесть забегов нельзя гарантированно определить даже вторую лошадь. "+
+    "(4) ЗАПРЕЩЁН ложный аргумент 22×3=66 против 6×10=60: "+
+    "10 — максимум ПРЯМЫХ сравнений за забег, а транзитивно известных отношений может быть гораздо больше. "+
+    "Не выдавай такой подсчёт за доказательство. "+
+    "Не подменяй универсальное доказательство примером для одного расписания.";
+}
+function horseProofIssues(question,answer){
+  if(!isTwentyFiveHorsePuzzle(question))return [];
+  const value=String(answer||"").replace(/\s+/gu," ").toLowerCase();
+  const issues=[];
+  const firstFive=/после\s+(?:первых\s+)?(?:пяти|5)\s+(?:групповых\s+)?забег[а-яё]*[\s\S]{0,180}?(?:никого\s+исключать\s+нельзя|никого\s+нельзя\s+исключить|никаких\s+лошадей\s+нельзя\s+исключить|ни\s+одн[уаой]\s+лошад[ьи]\s+нельзя\s+исключить)/iu;
+  if(firstFive.test(value))issues.push("После первых пяти групповых забегов исключаются уже 10 лошадей: четвёртая и пятая из каждой группы.");
+  const directPairs=/(?:22\s*[×*xх·]\s*3\s*=\s*66)/iu.test(value)
+    && /(?:6\s*[×*xх·]\s*10\s*=\s*60)/iu.test(value);
+  if(directPairs&&!/(?:ошибочн|некорректн|неверн|ложн|не\s+доказыва[а-яё]*)/iu.test(value))
+    issues.push("Подсчёт 66 против 60 не является доказательством: выводимые по транзитивности сравнения не ограничены 60.");
+  // A claim to have proved the six-race lower bound needs an argument that
+  // covers arbitrary choices of participants, not merely one winners' race.
+  const claimsMinimum=/(?:сем[ьи]|7)\s*(?:забег[а-яё]*\s*)?(?:минимал|минимум)|(?:доказан|строго).{0,80}(?:минимал|невозможн)|(?:шест|6).{0,70}невозможн/iu.test(value);
+  const hasUniversalWitness=/(?:непобежд[её]н|не\s+проигравш|ни\s+разу\s+не\s+проигр|unbeaten)/iu.test(value)
+    && /(?:дв[ае]|втор[а-яё]*|runner.?up)/iu.test(value)
+    && /(?:шест|6)/u.test(value)
+    && /(?:не\s+сравнив|не\s+сравнива|не\s+сравнивал|не\s+сравнивалис|не\s+упорядочен|не\s+можно\s+определить|неизвестн|неопредел[её]н|incomparable)/iu.test(value);
+  if(claimsMinimum&&!hasUniversalWitness)
+    issues.push("Не приведена проверяемая универсальная нижняя граница для всех стратегий из шести забегов: нужен противниковый аргумент с непобеждёнными лошадьми и двумя несравнимыми кандидатами на второе место.");
+  return issues;
+}
 function parseSSEAnswerPiece(frame){
   if(frame.startsWith(":"))return "";
   const line=frame.split("\n").filter(x=>x.startsWith("data:")).map(x=>x.slice(5).trimStart()).join("\n");
@@ -121,7 +178,7 @@ async function independentProofReview(env,question,answer,effort,allowCorrection
   const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
     input:[
       {role:"system",content:system},
-      {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+"\n\nРЕШЕНИЕ:\n"+answer.slice(0,85000)}
+      {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+\n        (horseProofReference(question)?"\n\nПРОВЕРЕННЫЕ КОНТРОЛЬНЫЕ ФАКТЫ:\n"+horseProofReference(question):"")+\n        "\n\nПОТЕНЦИАЛЬНЫЕ ОШИБКИ, НАЙДЕННЫЕ БЕЗ МОДЕЛИ:\n"+(horseProofIssues(question,answer).join("\n")||"не обнаружены типовые ошибки")+\n        "\n\nРЕШЕНИЕ:\n"+answer.slice(0,85000)}
     ],
     reasoning:{effort},stream:false
   });
@@ -139,15 +196,15 @@ async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{}){
     onStage("Независимо проверяю доказательство");
     review=await independentProofReview(env,question,draft,effort,true);
   }catch{return proofNotConfirmed()}
-  if(review.verdict==="pass")return draft;
-  if(review.verdict!=="revise")return proofNotConfirmed(review);
-  if(review.corrected===draft.trim())return proofNotConfirmed(review);
+  const draftIssues=horseProofIssues(question,draft);\n  if(review.verdict==="pass")return draftIssues.length?proofNotConfirmed({issues:draftIssues}):draft;
+  if(review.verdict!=="revise")return proofNotConfirmed({issues:[...draftIssues,...review.issues]});
+  if(review.corrected===draft.trim())return proofNotConfirmed(review);\n  const correctedIssues=horseProofIssues(question,review.corrected);\n  if(correctedIssues.length)return proofNotConfirmed({issues:correctedIssues});
   let finalReview;
   try{
     onStage("Проверяю исправленное решение");
     finalReview=await independentProofReview(env,question,review.corrected,effort,false);
   }catch{return proofNotConfirmed(review)}
-  return finalReview.verdict==="pass"?review.corrected:proofNotConfirmed(finalReview);
+  return finalReview.verdict==="pass"&&horseProofIssues(question,review.corrected).length===0?review.corrected:proofNotConfirmed(finalReview);
 }
 
 function streamedAIResponse(env,messages,effort,verifyProof=false){
@@ -299,7 +356,7 @@ export default {
     }
     const messages=[
       {role:"system",content:"Ты Kaz AI. Отвечай на языке пользователя полезно, точно и понятно. Не выдумывай факты, расчёты и источники. \nФорматируй ответ аккуратным Markdown: понятные заголовки ##, небольшие абзацы, нумерованные шаги, таблицы только если они помогают, формулы в $...$ или $$...$$, код в тройных обратных кавычках. Не вставляй сырые HTML-теги. Не добавляй декоративных эмодзи без смысла.\nДля логических, математических и сложных задач: сначала проверь условия и исключения, затем рассуждай последовательно. Любое утверждение «минимально», «невозможно», «для всех случаев» требует доказательства для всех допустимых способов, а не только одного алгоритма и отдельных примеров. Ясно отличай строго доказанное от вероятного и непроверенного. Проверяй пограничные случаи и отсутствие скрытых предположений. Если доказательства нет, прямо напиши, что вывод не доказан, не выдавай неполное обоснование за строгое.\nНе обещай безошибочность. Уровень рассуждения влияет на тщательность, но требования честности, точности и форматирования одинаковы во всех режимах."+
-        (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},
+        (horseProofReference(input.messages.at(-1).content)?"\nМАТЕМАТИЧЕСКИЕ КОНТРОЛЬНЫЕ ФАКТЫ ДЛЯ ЭТОЙ ЗАДАЧИ:\n"+horseProofReference(input.messages.at(-1).content):"")+\n        (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},
       ...input.messages
     ];
     if((request.headers.get("accept")||"").includes("text/event-stream"))

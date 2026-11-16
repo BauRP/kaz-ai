@@ -593,3 +593,42 @@ test('ordinary greetings and arithmetic still use one inference call',async()=>{
     assert.equal(calls.length,1);
   }
 });
+
+test('Raft split-brain claim cannot pass a falsely positive model review',async()=>{
+  const question='Raft в распределённом мессенджере с network partition и FIFO';
+  const bad='Raft: каждый кластер считает себя кворумом, обе ветки коммитят независимо.';
+  const {env,calls}=envWithAI(async(_name,params)=>{
+    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.close()}});
+    return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},issues:[],corrected_answer:''})};
+  });
+  const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort:'medium'},TOKEN,{Accept:'text/event-stream'}),env);
+  const output=await response.text();
+  assert.match(output,/Техническая корректность ответа не подтверждена/);
+  assert.match(output,/два непересекающихся/);
+  assert.doesNotMatch(output,/каждый кластер считает себя кворумом/);
+  assert.equal(calls.length,2);
+});
+test('RGA sorting by ID is rejected even with nonbreaking hyphen',async()=>{
+  const question='Разработай CRDT RGA для мессенджера с FIFO';
+  const bad='Merge‑RGA: вставляет сообщения в порядке их MessageID, поэтому гарантирует правильный чат.';
+  const {env}=envWithAI(async(_name,params)=>{
+    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.close()}});
+    return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},issues:[],corrected_answer:''})};
+  });
+  const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort:'high'},TOKEN,{Accept:'text/event-stream'}),env);
+  const output=await response.text();
+  assert.match(output,/Техническая корректность ответа не подтверждена/);
+  assert.match(output,/предшественникам/);
+});
+test('CRDT final order with post-delivery reorder is rejected',async()=>{
+  const question='Нужен CRDT чат с строгим FIFO и единым порядком при сетевых сбоях';
+  const bad='CRDT гарантирует строгий глобальный порядок сообщений. После partition запускается re-order уже доставленных сообщений.';
+  const {env}=envWithAI(async(_name,params)=>{
+    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.close()}});
+    return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},issues:[],corrected_answer:''})};
+  });
+  const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort:'low'},TOKEN,{Accept:'text/event-stream'}),env);
+  const output=await response.text();
+  assert.match(output,/Техническая корректность ответа не подтверждена/);
+  assert.match(output,/неизменяемым глобальным порядком/);
+});

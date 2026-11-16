@@ -485,7 +485,7 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
 .sidebar-header .brand-logo{display:block;width:28px;height:28px;flex:none;object-fit:contain;transform:translateY(-3px)}
 
 /* Safely formatted assistant responses. User text and stored chat data stay unchanged. */
-.message-assistant .rich-answer{display:block;width:100%;max-width:100%;min-width:0;overflow-wrap:anywhere;line-height:1.7;color:var(--text)}
+.message-assistant .rich-answer{display:block;width:100%;max-width:100%;min-width:0;overflow-wrap:anywhere;white-space:normal;line-height:1.7;color:var(--text)}
 .rich-answer>*:first-child{margin-top:0!important}.rich-answer>*:last-child{margin-bottom:0!important}
 .rich-answer .answer-paragraph{margin:.65em 0 1em;white-space:normal}
 .rich-answer .answer-heading{font-weight:750;letter-spacing:-.015em;line-height:1.35;margin:1.45em 0 .65em;color:var(--text);overflow-wrap:anywhere}

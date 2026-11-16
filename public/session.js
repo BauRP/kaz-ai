@@ -556,7 +556,7 @@
       if(response.ok&&/text\/event-stream/i.test(response.headers.get("content-type")||"")){
         streamingBubble=make("div","message message-assistant");
         streamingBubble.append(make("div","message-label","Kaz AI"));
-        const answerSpan=make("span","");
+        const answerSpan=make("div","session-stream-answer");
         streamingBubble.append(answerSpan);
         $("#chatMessages").append(streamingBubble);
         let lastPaint=0;

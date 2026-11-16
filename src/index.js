@@ -347,7 +347,7 @@ async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{}){
   return finalReview.verdict==="pass"&&horseProofIssues(question,review.corrected).length===0?review.corrected:proofNotConfirmed(finalReview);
 }
 
-function streamedAIResponse(env,messages,effort,auditMode=null){
+function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newIncidentId()){
   const verifyProof=Boolean(auditMode);
   const encoder=new TextEncoder();
   // All reasoning levels get the same generous output allowance. The chosen
@@ -360,10 +360,12 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
     stream:true
   };
   let upstreamReader=null,heartbeat=null,closed=false;
-  let collected="",sseTail="",upstreamBytesSeen=false;
+  let collected="",sseTail="",upstreamBytesSeen=false,receivedBytes=0,receivedChunks=0;
+  let phase="model_connect";
   let activeStage=verifyProof?"Готовлю решение":"ИИ отвечает";
   const startedAt=Date.now();
   const decode=new TextDecoder();
+  const diagnostic=event=>logAIEvent("info",event,{incidentId,phase,elapsedMs:Date.now()-startedAt,effort,auditMode:auditMode||"none",receivedBytes,receivedChunks});
   const responseBody=new ReadableStream({
     start(controller){
       const write=value=>{
@@ -379,6 +381,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
       };
       // Headers and the first heartbeat are sent before the potentially slow
       // inference call, so intermediaries do not wait for the complete answer.
+      diagnostic("start");
       write(": connected\n\n");
       if(verifyProof)write("event: progress\ndata: "+JSON.stringify({message:"Готовлю решение и проверяю все этапы…"})+"\n\n");
       // Heartbeats keep an otherwise silent response active during long
@@ -396,6 +399,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
       void (async()=>{
         try{
           const upstream=await env.AI.run("@cf/openai/gpt-oss-120b",opts);
+          phase="model_read";diagnostic("model_connected");
           if(closed){await upstream?.cancel?.().catch(()=>{});return}
           if(!upstream||typeof upstream.getReader!=="function")
             throw new Error("Workers AI did not provide an SSE stream");
@@ -405,6 +409,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
             if(done)break;
             if(value?.byteLength){
               upstreamBytesSeen=true;
+              receivedBytes+=value.byteLength;receivedChunks++;
               if(!verifyProof)write(value);
               if(verifyProof){
                 sseTail+=decode.decode(value,{stream:true}).replace(/\r\n/g,"\n");
@@ -423,8 +428,10 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
           // Regular chats still stream each chunk immediately.
           if(!closed&&verifyProof){
             if(!collected.trim())throw new Error("Empty proof answer");
+            phase=auditMode==="engineering"?"engineering_review":"proof_review";diagnostic("model_completed");
             const stage=message=>{
               activeStage=message;
+              phase=auditMode==="engineering"?"engineering_review":"proof_review";
               write("event: progress\ndata: "+JSON.stringify({message:message+"…"})+"\n\n");
             };
             const question=messages.at(-1)?.content||"";
@@ -432,12 +439,23 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
               ?await verifyEngineering(env,question,collected,effort,stage)
               :await verifyAndImproveProof(env,question,collected,effort,stage);
             if(!closed)write("event: final\ndata: "+JSON.stringify({text:finalAnswer})+"\n\n");
+            phase="final_answer";diagnostic("audit_completed");
           }
 
 
-          if(!closed)write("event: done\ndata: {}\n\n");
+          if(!closed){
+            phase="completed";diagnostic("completed");
+            write("event: done\ndata: {}\n\n");
+          }
         }catch(error){
           if(!closed){
+            const faultPhase=phase;
+            const safe=safeFault(error);
+            logAIEvent("error","inference_failed",{
+              incidentId,phase:faultPhase,elapsedMs:Date.now()-startedAt,
+              effort,auditMode:auditMode||"none",receivedBytes,receivedChunks,
+              modelBytesSeen:upstreamBytesSeen,...safe
+            });
             const kind=classifyAILimit(error);
             const code=kind==="daily"?"AI_QUOTA_EXHAUSTED":kind==="rate"?"AI_RATE_LIMITED":upstreamBytesSeen?"AI_RESPONSE_INTERRUPTED":"AI_UNAVAILABLE";
             const message=kind==="daily"
@@ -445,7 +463,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
               :kind==="rate"
                 ?"Слишком много запросов за короткое время. Попробуйте позднее."
                 :upstreamBytesSeen?"Сервис ИИ прервал обработку ответа. Попробуйте повторить запрос.":"Не удалось связаться с сервисом ИИ. Попробуйте позже.";
-            write("event: error\ndata: "+JSON.stringify({code,message})+"\n\n");
+            write("event: error\ndata: "+JSON.stringify({code,message,incidentId})+"\n\n");
           }
         }finally{
           // Stop timers and release model transport when processing ends.
@@ -465,7 +483,8 @@ function streamedAIResponse(env,messages,effort,auditMode=null){
     "content-type":"text/event-stream; charset=utf-8",
     "cache-control":"no-cache, no-store, no-transform",
     "x-content-type-options":"nosniff",
-    "x-accel-buffering":"no"
+    "x-accel-buffering":"no",
+    "x-kaz-ai-request-id":incidentId
   }});
 }
 

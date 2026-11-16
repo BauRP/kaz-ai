@@ -288,7 +288,7 @@ test('all three reasoning levels stream long answers without any client deadline
     await page.goto('https://kaz-ai.test/');
     for(const effort of ['low','medium','high']){
       await page.evaluate(level=>{
-        window.state.reason=level;
+        state.reason=level;
       },effort);
       await page.locator('#messageInput').fill('Реши сложную задачу на уровне '+effort);
       await page.locator('#sendButton').click();

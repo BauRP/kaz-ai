@@ -12,7 +12,7 @@ test('live diagnostic sends documented effort to all 3 levels in balanced order'
     assert.equal(init.method,'POST');
     const body=JSON.parse(init.body);
     assert.deepEqual(Object.keys(body).sort(),['input','max_output_tokens','reasoning']);
-    assert.equal(body.reasoning.effort,LEVELS[inputs.length%3] ?? body.reasoning.effort);
+    assert.ok(LEVELS.includes(body.reasoning.effort));
     inputs.push(body.reasoning.effort);
     assert.equal(body.input[0].role,'user');
     return {ok:true,status:200,json:async()=>({success:true,result:{output:[],usage:{

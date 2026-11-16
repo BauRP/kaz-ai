@@ -477,6 +477,15 @@
           if(event==="done"||data==="[DONE]"){finished=true;continue}
           if(!data)continue;
           let packet;try{packet=JSON.parse(data)}catch{continue}
+          if(event==="progress"){
+            onText(output,packet?.message||"Проверяю доказательство…");
+            continue;
+          }
+          if(event==="review"){
+            const review=typeof packet?.text==="string"?packet.text.slice(0,4500):"";
+            if(review){output+="\n\n---\n\n### Независимая проверка доказательства\n\n"+review;onText(output)}
+            continue;
+          }
           if(event==="error"||packet?.error){
             const error=new Error(packet.message||packet?.error?.message||"Ошибка ответа");
             error.code=packet.code||"AI_UNAVAILABLE";
@@ -551,14 +560,17 @@
         streamingBubble.append(answerSpan);
         $("#chatMessages").append(streamingBubble);
         let lastPaint=0;
-        const streamed=await readAIStream(response,value=>{
+        const streamed=await readAIStream(response,(value,status)=>{
           if(abort!==controller||controller.signal.aborted||current!==chat.id)return;
-          if(Date.now()-lastPaint<100)return;
+          if(Date.now()-lastPaint<100&&!status)return;
           lastPaint=Date.now();
-          answerSpan.textContent=value;
-          showStatus("ИИ отвечает…");
+          if(value&&window.KazFormat?.render){
+            answerSpan.replaceChildren(window.KazFormat.render(value));
+          }else answerSpan.textContent=value;
+          showStatus(status||"ИИ отвечает…");
         });
-        answerSpan.textContent=streamed;
+        if(window.KazFormat?.render)answerSpan.replaceChildren(window.KazFormat.render(streamed));
+        else answerSpan.textContent=streamed;
         data={text:streamed};
       }else{
         try{data=await response.json()}catch{}

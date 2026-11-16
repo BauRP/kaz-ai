@@ -79,7 +79,37 @@ function classifyAILimit(error){
 // Cloudflare GPT-OSS supports native SSE streaming with {messages, stream:true}.
 // Its separate Responses API does not currently support streaming. Keep the
 // existing JSON path for older clients, but use native SSE for long answers.
-function streamedAIResponse(env,messages,effort){
+
+function wantsProofAudit(input){
+  const q=input.messages.at(-1)?.content||"";
+  return /(?:докаж|доказательств|строгое доказательство|обоснуй миним|почему.*невозможно|prove|rigorous proof|formal proof|demonstrate.*minimal)/iu.test(q);
+}
+function parseSSEAnswerPiece(frame){
+  if(frame.startsWith(":"))return "";
+  const line=frame.split("\n").filter(x=>x.startsWith("data:")).map(x=>x.slice(5).trimStart()).join("\n");
+  if(!line||line==="[DONE]")return "";
+  try{
+    const data=JSON.parse(line);
+    return typeof data?.response==="string"?data.response:
+      typeof data?.choices?.[0]?.delta?.content==="string"?data.choices[0].delta.content:
+      data?.type==="response.output_text.delta"&&typeof data.delta==="string"?data.delta:"";
+  }catch{return ""}
+}
+async function independentProofReview(env,question,answer,effort){
+  // Only user-requested rigorous proofs receive an additional model call.
+  // This is a fallible second opinion, not a formal theorem prover.
+  const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
+    input:[
+      {role:"system",content:"Ты независимый математический рецензент Kaz AI. Проверь приведённое решение на логические пробелы и противоречия, особенно утверждения о невозможности и минимальности. НЕ считай отдельные примеры доказательством невозможности всех альтернатив. Не повторяй всё решение. Если есть ошибка, напиши 'Замечания:' и конкретные места с объяснением. Если существенных ошибок не нашёл, напиши 'Существенных ошибок не обнаружено', но не утверждай, что математическая корректность гарантирована. Если недостаточно информации, напиши 'Строгость не подтверждена'. Кратко, по-русски."},
+      {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+"\n\nРЕШЕНИЕ ДЛЯ ПРОВЕРКИ:\n"+answer.slice(0,18000)}
+    ],
+    reasoning:{effort},
+    stream:false
+  });
+  return answerText(result).trim().slice(0,4500);
+}
+
+function streamedAIResponse(env,messages,effort,verifyProof=false){
   const encoder=new TextEncoder();
   // All reasoning levels get the same generous output allowance. The chosen
   // effort changes how the model reasons, not how much answer it may produce.
@@ -91,6 +121,8 @@ function streamedAIResponse(env,messages,effort){
     stream:true
   };
   let upstreamReader=null,heartbeat=null,closed=false;
+  let collected="",sseTail="";
+  const decode=new TextDecoder();
   const responseBody=new ReadableStream({
     start(controller){
       const write=value=>{
@@ -118,7 +150,31 @@ function streamedAIResponse(env,messages,effort){
           while(!closed){
             const {done,value}=await upstreamReader.read();
             if(done)break;
-            if(value?.byteLength)write(value);
+            if(value?.byteLength){
+              write(value);
+              if(verifyProof&&collected.length<18000){
+                sseTail+=decode.decode(value,{stream:true}).replace(/\r\n/g,"\n");
+                if(sseTail.length>200000)sseTail=sseTail.slice(-10000);
+                let idx;
+                while((idx=sseTail.indexOf("\n\n"))!==-1){
+                  const frame=sseTail.slice(0,idx);
+                  sseTail=sseTail.slice(idx+2);
+                  collected+=parseSSEAnswerPiece(frame);
+                }
+              }
+            }
+          }
+          // Model answer is already visible. Only an explicit request for
+          // rigorous proof triggers a second, independently generated review.
+          if(!closed&&verifyProof&&collected.trim()){
+            write("event: progress\ndata: "+JSON.stringify({message:"Проверяю строгость доказательства…" })+"\n\n");
+            try{
+              const question=messages.at(-1)?.content||"";
+              const reviewed=await independentProofReview(env,question,collected,effort);
+              if(!closed&&reviewed)write("event: review\ndata: "+JSON.stringify({text:reviewed})+"\n\n");
+            }catch{
+              if(!closed)write("event: review\ndata: "+JSON.stringify({text:"Дополнительная проверка временно недоступна. Строгость доказательства не подтверждена."})+"\n\n");
+            }
           }
           if(!closed)write("event: done\ndata: {}\n\n");
         }catch(error){
@@ -201,12 +257,12 @@ export default {
       return codeError("AI_UNAVAILABLE","Защита запросов временно недоступна.",503);
     }
     const messages=[
-      {role:"system",content:"Ты Kaz AI. Отвечай полезно, точно и понятно. Не выдумывай источники. Если ответа не знаешь, так и скажи."+
+      {role:"system",content:"Ты Kaz AI. Отвечай на языке пользователя полезно, точно и понятно. Не выдумывай факты, расчёты и источники. \nФорматируй ответ аккуратным Markdown: понятные заголовки ##, небольшие абзацы, нумерованные шаги, таблицы только если они помогают, формулы в $...$ или $$...$$, код в тройных обратных кавычках. Не вставляй сырые HTML-теги. Не добавляй декоративных эмодзи без смысла.\nДля логических, математических и сложных задач: сначала проверь условия и исключения, затем рассуждай последовательно. Любое утверждение «минимально», «невозможно», «для всех случаев» требует доказательства для всех допустимых способов, а не только одного алгоритма и отдельных примеров. Ясно отличай строго доказанное от вероятного и непроверенного. Проверяй пограничные случаи и отсутствие скрытых предположений. Если доказательства нет, прямо напиши, что вывод не доказан, не выдавай неполное обоснование за строгое.\nНе обещай безошибочность. Уровень рассуждения влияет на тщательность, но требования честности, точности и форматирования одинаковы во всех режимах."+
         (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},
       ...input.messages
     ];
     if((request.headers.get("accept")||"").includes("text/event-stream"))
-      return streamedAIResponse(env,messages,input.effort);
+      return streamedAIResponse(env,messages,input.effort,wantsProofAudit(input));
     try{
       // Cloudflare's GPT-OSS Workers binding supports Responses API input
       // with reasoning.effort. The older reasoning_effort field is not part of

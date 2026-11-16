@@ -118,6 +118,57 @@ test('SSE cancellation stops upstream output without completing a stale response
   assert.equal(cancelled,true,'Aborting a chat must cancel its model stream');
 });
 
+
+test('proof verifier is invoked on all three reasoning levels and distinguishes uncertain claims',async()=>{
+  for(const effort of ['low','medium','high']){
+    const calls=[];
+    const {env}=envWithAI(async(model,params)=>{
+      calls.push(params);
+      if(params.stream)return new ReadableStream({start(controller){
+        const data='data: '+JSON.stringify({response:'Ответ: 7. Этот алгоритм требует 7 забегов. Строгая минимальность пока не доказана.'})+'\n\n';
+        controller.enqueue(new TextEncoder().encode(data));
+        controller.close();
+      }});
+      return {output:[{type:'message',content:[{type:'output_text',text:'Строгость не подтверждена: нижняя граница для всех алгоритмов не доказана.'}]}]};
+    });
+    const body={messages:[{role:'user',content:'Строго докажи, почему 6 забегов невозможно'}],effort};
+    const response=await worker.fetch(post(body,TOKEN,{Accept:'text/event-stream'}),env);
+    assert.equal(response.status,200);
+    const output=await response.text();
+    assert.match(output,/event: review/);
+    assert.match(output,/Строгость не подтверждена/);
+    assert.match(output,/event: done/);
+    assert.equal(calls.length,2);
+    assert.equal(calls[0].reasoning_effort,effort);
+    assert.equal(calls[1].reasoning.effort,effort);
+    assert.equal(calls[0].stream,true);
+    assert.equal(calls[1].stream,false);
+  }
+});
+test('ordinary questions do not spend tokens on unnecessary proof verification',async()=>{
+  const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){
+    c.enqueue(new TextEncoder().encode('data: {"response":"Привет!"}\n\n'));c.close();
+  }}));
+  const response=await worker.fetch(post({...good,messages:[{role:'user',content:'Привет'}]},TOKEN,{Accept:'text/event-stream'}),env);
+  assert.equal(response.status,200);
+  assert.doesNotMatch(await response.text(),/event: review/);
+  assert.equal(calls.length,1);
+});
+test('failed proof verifier preserves the primary answer and marks review unconfirmed',async()=>{
+  let count=0;
+  const {env}=envWithAI(async()=>{
+    if(++count===1)return new ReadableStream({start(c){
+      c.enqueue(new TextEncoder().encode('data: {"response":"Основной ответ"}\n\n'));c.close();
+    }});
+    throw new Error('review temporarily unavailable');
+  });
+  const response=await worker.fetch(post({messages:[{role:'user',content:'Докажи минимальность решения'}],effort:'low'},TOKEN,{Accept:'text/event-stream'}),env);
+  const output=await response.text();
+  assert.match(output,/Основной ответ/);
+  assert.match(output,/Строгость доказательства не подтверждена/);
+  assert.match(output,/event: done/);
+});
+
 test('validated requests reach GPT-OSS 120B with selected reasoning effort',async()=>{
   const {env,calls}=envWithAI();
   for(const effort of ['low','medium','high']){

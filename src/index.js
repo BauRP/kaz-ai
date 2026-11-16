@@ -75,6 +75,80 @@ function classifyAILimit(error){
   if(status===429)return "rate";
   return null;
 }
+
+// Cloudflare GPT-OSS supports native SSE streaming with {messages, stream:true}.
+// Its separate Responses API does not currently support streaming. Keep the
+// existing JSON path for older clients, but use native SSE for long answers.
+function streamedAIResponse(env,messages,effort){
+  const encoder=new TextEncoder();
+  const opts={
+    messages,
+    reasoning_effort:effort,
+    max_tokens:effort==="high"?12288:effort==="medium"?8192:4096,
+    stream:true
+  };
+  let upstreamReader=null,heartbeat=null,closed=false;
+  const responseBody=new ReadableStream({
+    start(controller){
+      const write=value=>{
+        if(closed)return;
+        try{controller.enqueue(value instanceof Uint8Array?value:encoder.encode(value))}
+        catch{closed=true;clearInterval(heartbeat)}
+      };
+      const finish=()=>{
+        if(closed)return;
+        closed=true;
+        clearInterval(heartbeat);
+        try{controller.close()}catch{}
+      };
+      // Headers and the first heartbeat are sent before the potentially slow
+      // inference call, so intermediaries do not wait for the complete answer.
+      write(": connected\n\n");
+      heartbeat=setInterval(()=>write(": keepalive\n\n"),15000);
+      void (async()=>{
+        try{
+          const upstream=await env.AI.run("@cf/openai/gpt-oss-120b",opts);
+          if(closed){await upstream?.cancel?.().catch(()=>{});return}
+          if(!upstream||typeof upstream.getReader!=="function")
+            throw new Error("Workers AI did not provide an SSE stream");
+          upstreamReader=upstream.getReader();
+          while(!closed){
+            const {done,value}=await upstreamReader.read();
+            if(done)break;
+            if(value?.byteLength)write(value);
+          }
+          if(!closed)write("event: done\ndata: {}\n\n");
+        }catch(error){
+          if(!closed){
+            const kind=classifyAILimit(error);
+            const code=kind==="daily"?"AI_QUOTA_EXHAUSTED":kind==="rate"?"AI_RATE_LIMITED":"AI_UNAVAILABLE";
+            const message=kind==="daily"
+              ?"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."
+              :kind==="rate"
+                ?"Слишком много запросов за короткое время. Попробуйте позднее."
+                :"Не удалось получить ответ ИИ. Попробуйте позже.";
+            write("event: error\ndata: "+JSON.stringify({code,message})+"\n\n");
+          }
+        }finally{
+          if(upstreamReader){try{upstreamReader.releaseLock()}catch{}}
+          finish();
+        }
+      })();
+    },
+    cancel(){
+      closed=true;
+      clearInterval(heartbeat);
+      if(upstreamReader)void upstreamReader.cancel("client disconnected").catch(()=>{});
+    }
+  });
+  return new Response(responseBody,{headers:{
+    "content-type":"text/event-stream; charset=utf-8",
+    "cache-control":"no-cache, no-store, no-transform",
+    "x-content-type-options":"nosniff",
+    "x-accel-buffering":"no"
+  }});
+}
+
 export default {
   async fetch(request,env){
     const url=new URL(request.url);
@@ -128,6 +202,8 @@ export default {
         (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},
       ...input.messages
     ];
+    if((request.headers.get("accept")||"").includes("text/event-stream"))
+      return streamedAIResponse(env,messages,input.effort);
     try{
       // Cloudflare's GPT-OSS Workers binding supports Responses API input
       // with reasoning.effort. The older reasoning_effort field is not part of

@@ -58,6 +58,64 @@ test('Cloudflare limiters block public abuse before model inference',async()=>{
   assert.equal((await worker.fetch(post(good),{...env,CHAT_IP_LIMITER:undefined})).status,503);
   assert.equal(calls.length,0);
 });
+
+test('long GPT-OSS answers use SSE without waiting for a full JSON response',async()=>{
+  const emitted='data: {"response":"Первый фрагмент"}\\n\\n'.replaceAll('\\n','\n')+
+    'data: {"response":" второй фрагмент"}\\n\\n'.replaceAll('\\n','\n')+
+    'data: [DONE]\\n\\n'.replaceAll('\\n','\n');
+  const input=new TextEncoder().encode(emitted);
+  const {env,calls}=envWithAI(async()=>new ReadableStream({
+    start(c){c.enqueue(input.slice(0,21));c.enqueue(input.slice(21));c.close()}
+  }));
+  const response=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+  assert.equal(response.status,200);
+  assert.match(response.headers.get('content-type'),/text\/event-stream/);
+  assert.match(response.headers.get('cache-control'),/no-transform/);
+  const body=await response.text();
+  assert.match(body,/connected/);
+  assert.ok(body.includes(emitted),'Raw model stream must pass through unchanged');
+  assert.match(body,/event: done/);
+  assert.equal(calls.length,1);
+  assert.equal(calls[0][0],'@cf/openai/gpt-oss-120b');
+  assert.equal(calls[0][1].stream,true);
+  assert.deepEqual(calls[0][1].messages.map(m=>m.role),['system','user']);
+  assert.equal(calls[0][1].reasoning_effort,'medium');
+  assert.equal(calls[0][1].max_tokens,8192);
+});
+test('reasoning levels map to native Cloudflare SSE options without changing JSON callers',async()=>{
+  const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: [DONE]\\n\\n'.replaceAll('\\n','\n')));c.close()}}));
+  for(const effort of ['low','high']){
+    const response=await worker.fetch(post({...good,effort},TOKEN,{Accept:'text/event-stream'}),env);
+    assert.equal(response.status,200);
+    await response.text();
+  }
+  assert.deepEqual(calls.map(x=>x[1].max_tokens),[4096,12288]);
+  assert.deepEqual(calls.map(x=>x[1].reasoning_effort),['low','high']);
+});
+test('SSE inference errors are delivered as typed events and streams close cleanly',async()=>{
+  const {env}=envWithAI(async()=>{throw new Error('Quota exceeded: 429')});
+  const response=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+  assert.equal(response.status,200,'headers already streamed before provider inference');
+  const text=await response.text();
+  assert.match(text,/event: error/);
+  assert.match(text,/"code":"AI_QUOTA_EXHAUSTED"/);
+  assert.match(text,/Дневной лимит/);
+});
+test('SSE cancellation stops upstream output without completing a stale response',async()=>{
+  let cancelled=false;
+  const {env}=envWithAI(async()=>new ReadableStream({
+    start(c){c.enqueue(new TextEncoder().encode('data: {"response":"часть"}\\n\\n'.replaceAll('\\n','\n')))},
+    cancel(){cancelled=true}
+  }));
+  const response=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+  const reader=response.body.getReader();
+  const first=await reader.read();
+  assert.equal(first.done,false);
+  await reader.cancel();
+  await new Promise(resolve=>setTimeout(resolve,0));
+  assert.equal(cancelled,true,'Aborting a chat must cancel its model stream');
+});
+
 test('validated requests reach GPT-OSS 120B with selected reasoning effort',async()=>{
   const {env,calls}=envWithAI();
   for(const effort of ['low','medium','high']){

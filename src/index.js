@@ -309,7 +309,8 @@ async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{}){
   return finalReview.verdict==="pass"&&horseProofIssues(question,review.corrected).length===0?review.corrected:proofNotConfirmed(finalReview);
 }
 
-function streamedAIResponse(env,messages,effort,verifyProof=false){
+function streamedAIResponse(env,messages,effort,auditMode=null){
+  const verifyProof=Boolean(auditMode);
   const encoder=new TextEncoder();
   // All reasoning levels get the same generous output allowance. The chosen
   // effort changes how the model reasons, not how much answer it may produce.
@@ -371,7 +372,10 @@ function streamedAIResponse(env,messages,effort,verifyProof=false){
           if(!closed&&verifyProof){
             if(!collected.trim())throw new Error("Empty proof answer");
             const stage=message=>write("event: progress\ndata: "+JSON.stringify({message:message+"…"})+"\n\n");
-            const finalAnswer=await verifyAndImproveProof(env,messages.at(-1)?.content||"",collected,effort,stage);
+            const question=messages.at(-1)?.content||"";
+            const finalAnswer=auditMode==="engineering"
+              ?await verifyEngineering(env,question,collected,effort,stage)
+              :await verifyAndImproveProof(env,question,collected,effort,stage);
             if(!closed)write("event: final\ndata: "+JSON.stringify({text:finalAnswer})+"\n\n");
           }
 
@@ -459,11 +463,13 @@ export default {
     const messages=[
       {role:"system",content:"Ты Kaz AI. Отвечай на языке пользователя полезно, точно и понятно. Не выдумывай факты, расчёты и источники. \nФорматируй ответ аккуратным Markdown: понятные заголовки ##, небольшие абзацы, нумерованные шаги, таблицы только если они помогают, формулы в $...$ или $$...$$, код в тройных обратных кавычках. Не вставляй сырые HTML-теги. Не добавляй декоративных эмодзи без смысла.\nДля логических, математических и сложных задач: сначала проверь условия и исключения, затем рассуждай последовательно. Любое утверждение «минимально», «невозможно», «для всех случаев» требует доказательства для всех допустимых способов, а не только одного алгоритма и отдельных примеров. Ясно отличай строго доказанное от вероятного и непроверенного. Проверяй пограничные случаи и отсутствие скрытых предположений. Если доказательства нет, прямо напиши, что вывод не доказан, не выдавай неполное обоснование за строгое.\nНе обещай безошибочность. Уровень рассуждения влияет на тщательность, но требования честности, точности и форматирования одинаковы во всех режимах."+
         (horseProofReference(input.messages.at(-1).content)?"\nМАТЕМАТИЧЕСКИЕ КОНТРОЛЬНЫЕ ФАКТЫ ДЛЯ ЭТОЙ ЗАДАЧИ:\n"+horseProofReference(input.messages.at(-1).content):"")+
+        (wantsEngineeringAudit(input)?"\nПРОВЕРКА ПРОГРАММИРОВАНИЯ И АРХИТЕКТУРЫ:\n"+engineeringGuide(input.messages.at(-1).content):"")+
         (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},
       ...input.messages
     ];
+    const mode=auditKind(input);
     if((request.headers.get("accept")||"").includes("text/event-stream"))
-      return streamedAIResponse(env,messages,input.effort,wantsProofAudit(input));
+      return streamedAIResponse(env,messages,input.effort,mode);
     try{
       // Cloudflare's GPT-OSS Workers binding supports Responses API input
       // with reasoning.effort. The older reasoning_effort field is not part of
@@ -475,7 +481,9 @@ export default {
       });
       const text=answerText(result);
       if(!text.trim())return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
-      const finalText=wantsProofAudit(input)?await verifyAndImproveProof(env,input.messages.at(-1).content,text,input.effort):text;
+      const finalText=mode==="engineering"
+        ?await verifyEngineering(env,input.messages.at(-1).content,text,input.effort)
+        :mode==="proof"?await verifyAndImproveProof(env,input.messages.at(-1).content,text,input.effort):text;
       return json({text:finalText,model:"gpt-oss-120b",effort:input.effort});
     }catch(e){
       const kind=classifyAILimit(e);

@@ -200,7 +200,7 @@ function parseEngineeringReview(raw){
     const issues=Array.isArray(value.issues)?value.issues.filter(x=>typeof x==="string"&&x.trim()).slice(0,8).map(x=>x.slice(0,400)):[];
     const corrected=typeof value.corrected_answer==="string"?value.corrected_answer.trim():"";
     if(value.verdict==="pass"&&ok&&issues.length===0)return {verdict:"pass",issues,corrected:""};
-    if(value.verdict==="revise"&&issues.length&&corrected.length>=80)return {verdict:"revise",issues,corrected};
+    if(value.verdict==="revise"&&issues.length&&corrected.length>=20)return {verdict:"revise",issues,corrected};
     return {verdict:"uncertain",issues:issues.length?issues:["Неполный технический отчёт."],corrected:""};
   }catch{return {verdict:"uncertain",issues:["Техническая проверка вернула неправильный формат."],corrected:""}}
 }

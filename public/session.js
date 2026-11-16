@@ -496,6 +496,8 @@
           if(event==="error"||packet?.error){
             const error=new Error(packet.message||packet?.error?.message||"Ошибка ответа");
             error.code=packet.code||"AI_UNAVAILABLE";
+            if(typeof packet.incidentId==="string"&&/^[a-f0-9]{12}$/.test(packet.incidentId))
+              error.incidentId=packet.incidentId;
             throw error;
           }
           const delta=typeof packet?.response==="string"?packet.response:
@@ -659,7 +661,9 @@
             "⚠️ Ответ прервался. Текст выше неполный и не сохранён. Нажмите «Повторить запрос».");
           streamingBubble.append(warning);
         }
-        showStatus(message,quota,true);
+        const incident=typeof e?.incidentId==="string"&&/^[a-f0-9]{12}$/.test(e.incidentId)
+          ?" Код ошибки: "+e.incidentId:"";
+        showStatus(message+incident,quota,true);
       }
     }finally{
       if(!keepIncomplete)streamingBubble?.remove();

@@ -9,6 +9,24 @@ const json=(data,status=200)=>new Response(JSON.stringify(data),{
 });
 const codeError=(code,message,status)=>json({code,message},status);
 const MAX_CHAT_BYTES=50000;
+// A random, short incident ID links the user's error banner to Workers Logs.
+// Never log user messages, generated answers, prompts, secrets, or IP addresses.
+const DIAGNOSTIC_BUILD="stream-diagnostics-20261117";
+const newIncidentId=()=>crypto.randomUUID().replaceAll("-","").slice(0,12);
+function safeFault(error){
+  const rawStatus=Number(error?.status??error?.statusCode??error?.response?.status);
+  const status=Number.isInteger(rawStatus)&&rawStatus>=100&&rawStatus<=599?rawStatus:null;
+  const name=typeof error?.name==="string"&&/^[A-Za-z]{1,40}$/.test(error.name)?error.name:"Unknown";
+  const code=typeof error?.code==="string"&&/^[A-Z0-9_]{2,45}$/.test(error.code)?error.code:null;
+  return {name,code,status};
+}
+function logAIEvent(level,event,fields){
+  // Only pass fixed metadata assembled by this Worker. No request/answer text.
+  const record={service:"kaz-ai",build:DIAGNOSTIC_BUILD,event,...fields};
+  if(level==="error")console.error("[kaz-ai-diagnostics]",JSON.stringify(record));
+  else console.info("[kaz-ai-diagnostics]",JSON.stringify(record));
+}
+
 // The content-length header is optional and cannot be trusted to enforce the
 // limit. Read in bounded chunks, cancelling oversized streams immediately.
 async function readLimitedBody(request){
@@ -217,10 +235,20 @@ function parseSSEAnswerPiece(frame){
   if(!line||line==="[DONE]")return "";
   try{
     const data=JSON.parse(line);
+    // Cloudflare may deliver an error inside a syntactically valid SSE frame.
+    // Never silently treat a failed generation as a completed proof.
+    if(data?.error){
+      const fault=new Error("Upstream model returned SSE error");
+      fault.code="AI_MODEL_STREAM_ERROR";
+      throw fault;
+    }
     return typeof data?.response==="string"?data.response:
       typeof data?.choices?.[0]?.delta?.content==="string"?data.choices[0].delta.content:
       data?.type==="response.output_text.delta"&&typeof data.delta==="string"?data.delta:"";
-  }catch{return ""}
+  }catch(error){
+    if(error?.code==="AI_MODEL_STREAM_ERROR")throw error;
+    return "";
+  }
 }
 function parseProofReview(raw){
   // Accept only a structured, explicit report; never silently count an unclear answer as verified.

@@ -508,7 +508,7 @@
           }
         }
       }
-      if(!finished)throw new Error("STREAM_INTERRUPTED");
+      if(!finished){const error=new Error("STREAM_INTERRUPTED");error.code="STREAM_INTERRUPTED";throw error;}
       if(!output.trim())throw new Error("EMPTY_RESPONSE");
       return output;
     }finally{try{reader.releaseLock()}catch{}}

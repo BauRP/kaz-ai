@@ -1,0 +1,39 @@
+name: Verify real GPT-OSS reasoning levels (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      repeats:
+        description: "Requests per level (1-3; each request uses Workers AI quota)"
+        type: choice
+        required: true
+        default: "2"
+        options:
+          - "1"
+          - "2"
+          - "3"
+permissions:
+  contents: read
+jobs:
+  live-reasoning-verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+      - name: Validate required Cloudflare secrets are configured
+        env:
+          ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$ACCOUNT_ID" ] || [ -z "$API_TOKEN" ]; then
+            echo "::error::Add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in GitHub Actions secrets before running this optional test."
+            exit 1
+          fi
+      - name: Execute direct real-model comparison and publish private-metadata-only summary
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          REPEATS: ${{ inputs.repeats }}
+        run: node scripts/verify-cloudflare-reasoning.mjs

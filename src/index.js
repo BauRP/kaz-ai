@@ -300,12 +300,12 @@ async function independentEngineeringReview(env,question,answer,effort,repair=fa
   });
   return parseEngineeringReview(answerText(result));
 }
-async function verifyEngineering(env,question,draft,effort,onStage=()=>{}){
+async function verifyEngineering(env,question,draft,effort,onStage=()=>{},onFault=()=>{}){
   let first;
   try{
     onStage("Проверяю техническую корректность");
     first=await independentEngineeringReview(env,question,draft,effort,true);
-  }catch{return engineeringNotConfirmed()}
+  }catch(error){onFault("engineering_primary_review",error);return engineeringNotConfirmed()}
   const known=engineeringIssues(question,draft);
   if(first.verdict==="pass")return known.length?engineeringNotConfirmed({issues:known}):draft;
   if(first.verdict!=="revise")return engineeringNotConfirmed({issues:[...known,...first.issues]});
@@ -316,7 +316,7 @@ async function verifyEngineering(env,question,draft,effort,onStage=()=>{}){
   try{
     onStage("Перепроверяю исправленную архитектуру и код");
     second=await independentEngineeringReview(env,question,first.corrected,effort,false);
-  }catch{return engineeringNotConfirmed(first)}
+  }catch(error){onFault("engineering_final_review",error);return engineeringNotConfirmed(first)}
   return second.verdict==="pass"&&!engineeringIssues(question,first.corrected).length
     ?first.corrected:engineeringNotConfirmed(second);
 }
@@ -327,12 +327,12 @@ function proofNotConfirmed(review){
     (details?"\n\n**Что требует проверки:**\n\n"+details:"\n\nДополнительная проверка сейчас недоступна.")+
     "\n\nЭто ограничение проверки ИИ, а не доказательство неправильности самого ответа.";
 }
-async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{}){
+async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{},onFault=()=>{}){
   let review;
   try{
     onStage("Независимо проверяю доказательство");
     review=await independentProofReview(env,question,draft,effort,true);
-  }catch{return proofNotConfirmed()}
+  }catch(error){onFault("proof_primary_review",error);return proofNotConfirmed()}
   const draftIssues=horseProofIssues(question,draft);
   if(review.verdict==="pass")return draftIssues.length?proofNotConfirmed({issues:draftIssues}):draft;
   if(review.verdict!=="revise")return proofNotConfirmed({issues:[...draftIssues,...review.issues]});
@@ -343,7 +343,7 @@ async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{}){
   try{
     onStage("Проверяю исправленное решение");
     finalReview=await independentProofReview(env,question,review.corrected,effort,false);
-  }catch{return proofNotConfirmed(review)}
+  }catch(error){onFault("proof_final_review",error);return proofNotConfirmed(review)}
   return finalReview.verdict==="pass"&&horseProofIssues(question,review.corrected).length===0?review.corrected:proofNotConfirmed(finalReview);
 }
 
@@ -435,9 +435,13 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
               write("event: progress\ndata: "+JSON.stringify({message:message+"…"})+"\n\n");
             };
             const question=messages.at(-1)?.content||"";
+            const auditFault=(auditPhase,error)=>logAIEvent("error","audit_provider_failure",{
+              incidentId,phase:auditPhase,elapsedMs:Date.now()-startedAt,
+              effort,auditMode,receivedBytes,receivedChunks,...safeFault(error)
+            });
             const finalAnswer=auditMode==="engineering"
-              ?await verifyEngineering(env,question,collected,effort,stage)
-              :await verifyAndImproveProof(env,question,collected,effort,stage);
+              ?await verifyEngineering(env,question,collected,effort,stage,auditFault)
+              :await verifyAndImproveProof(env,question,collected,effort,stage,auditFault);
             if(!closed)write("event: final\ndata: "+JSON.stringify({text:finalAnswer})+"\n\n");
             phase="final_answer";diagnostic("audit_completed");
           }

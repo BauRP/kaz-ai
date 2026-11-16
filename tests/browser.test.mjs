@@ -3454,3 +3454,26 @@ test('provider SSE outage is not falsely blamed on user internet connectivity',a
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),1);
   }finally{await browser.close()}
 });
+
+test('server incident ID is visible on interrupted long request for Cloudflare diagnosis',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),
+    headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1150,height:760}});
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',async(route)=>{
+      if(new URL(route.request().url()).pathname!=='/api/chat')
+        return route.fulfill({status:200,contentType:'text/html',body:html});
+      const body='event: error\ndata: {"code":"AI_RESPONSE_INTERRUPTED","message":"Provider failed","incidentId":"a1b2c3d4e5f6"}\n\n';
+      return route.fulfill({status:200,contentType:'text/event-stream',body});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Проверь длинное математическое доказательство');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionRetry').waitFor({state:'visible'});
+    assert.match(await page.locator('#statusBanner').innerText(),/Код ошибки: a1b2c3d4e5f6/);
+    assert.match(await page.locator('#statusBanner').innerText(),/Сервис ИИ прервал/);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),1);
+  }finally{await browser.close()}
+});

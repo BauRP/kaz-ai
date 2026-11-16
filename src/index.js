@@ -412,7 +412,9 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
               receivedBytes+=value.byteLength;receivedChunks++;
               if(!verifyProof)write(value);
               if(verifyProof){
-                sseTail+=decode.decode(value,{stream:true}).replace(/\r\n/g,"\n");
+                // Normalize AFTER joining chunks: CR and LF can arrive in different packets.
+                sseTail+=decode.decode(value,{stream:true});
+                sseTail=sseTail.replace(/\r\n/g,"\n");
                 if(sseTail.length>200000)sseTail=sseTail.slice(-10000);
                 let idx;
                 while((idx=sseTail.indexOf("\n\n"))!==-1){

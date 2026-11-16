@@ -176,9 +176,19 @@ function engineeringIssues(question,answer){
     &&/(?:оба|каждый)\s+(?:кластера?|dc|дата[\s-]*центра?).{0,100}(?:кворум|majority)/iu.test(a)
     &&!/не\s+могут|невозможн|нельзя/iu.test(a))
     issues.push("Один Raft-кластер не может одновременно иметь два непересекающихся подтверждающих большинства.");
-  if(/\bRGA\b/iu.test(a)&&/(?:merge[\s-]*rga|слияни[а-яё]*\s*rga).{0,120}(?:по|by)\s+MessageID/iu.test(a)
+  if(/\bRGA\b/iu.test(a)&&/(?:merge[\s\p{Pd}]*rga|слияни[а-яё]*\s*rga).{0,160}(?:по|by|в\s+порядке)\s+(?:их\s+)?MessageID/iu.test(a)
      &&!/не\s+является\s+rga|некорректн|ошибочн/iu.test(a))
     issues.push("Слияние RGA использует привязку к предшественникам, а не одну сортировку MessageID.");
+  // Claims that require a globally agreed order cannot hold with independent
+  // final delivery in isolated partitions and later message reordering.
+  if(/\bCRDT\b/iu.test(a)&&/(?:строг[а-яё]*\s+(?:fifo|глобальн[а-яё]*\s+поряд)|strict\s+(?:fifo|order))/iu.test(a)
+     &&/(?:re[\s-]?order|пере[\s-]?упорядоч|перестав[а-яё]*)/iu.test(a)
+     &&!/(?:не\s+гарантир|не\s+обеспечива|только\s+после\s+слияни|предварительн[а-яё]*\s+отображ|временн[а-яё]*\s+сообщени)/iu.test(a))
+    issues.push("CRDT-перестановка после доставки несовместима с неизменяемым глобальным порядком, если сообщения были объявлены окончательно доставленными.");
+  if(/\bRaft\b/iu.test(a)
+     &&/(?:закоммич[а-яё]*|committed|подтвержд[её]нн[а-яё]*).{0,160}(?:пересортир|по\s+HLC|merge[\s-]*log|слива[а-яё]*\s+журнал)/iu.test(a)
+     &&!/не\s+(?:пересортир|изменя|слива)|нельзя\s+(?:пересортир|изменя|слива)/iu.test(a))
+    issues.push("Подтверждённые записи Raft нельзя после commit сливать или пересортировывать по HLC.");
   return issues;
 }
 function parseEngineeringReview(raw){

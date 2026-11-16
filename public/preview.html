@@ -1356,6 +1356,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     return count+" "+suffix;
   };
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,pendingReplaceId=null,personalInstructions="",retryAnswerId=null;
+  let incompleteBubble=null; // Only transient UI; an interrupted draft never enters chat history.
   let statusRetryable=false;
   const nextId=()=>String(++serial);
   const uiText=value=>window.KazI18n?.translate?.(value)||value;
@@ -1847,6 +1848,8 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       return;
     }
     if(abort){notify("Завершите предыдущий запрос.");return}
+    // A manual retry or a new request replaces the old temporary preview.
+    incompleteBubble?.remove();incompleteBubble=null;
     const previousFocus=document.activeElement;
     const controller=new AbortController();abort=controller;pending=chat.id;pendingReplaceId=replaceId;retryAnswerId=null;
     // Do not stop complex inference after an arbitrary 45 seconds.
@@ -1877,7 +1880,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput();
       return;
     }
-    let streamingBubble=null;
+    let streamingBubble=null,streamedPartial="",keepIncomplete=false;
     try{
       const response=await fetch("/api/chat",{
         method:"POST",headers:{"content-type":"application/json","accept":"text/event-stream"},
@@ -1894,6 +1897,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         let lastPaint=0;
         const streamed=await readAIStream(response,(value,status)=>{
           if(abort!==controller||controller.signal.aborted||current!==chat.id)return;
+          if(value)streamedPartial=value;
           // Avoid parsing huge Markdown replies every 100 ms; long answers
           // update less often, keeping scrolling and Stop responsive.
           const minInterval=Math.min(1200,120+Math.floor(value.length/40));
@@ -1962,14 +1966,29 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       }else{
         retryAnswerId=replaceId;
         const quota=e?.code==="AI_QUOTA_EXHAUSTED";
+        const offline=typeof navigator!=="undefined"&&navigator.onLine===false;
         const message=quota?"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."
           :e?.code==="AI_RATE_LIMITED"?"Слишком много запросов за короткое время. Попробуйте позднее."
-          :e?.code==="STREAM_INTERRUPTED"?"Соединение оборвалось до конца ответа. Попробуйте повторить запрос."
-          :"Не удалось получить ответ ИИ. Проверьте подключение или повторите позже.";
+          :e?.code==="AI_RESPONSE_INTERRUPTED"?"Сервис ИИ прервал обработку ответа. Можно повторить запрос."
+          :e?.code==="AI_UNAVAILABLE"?"Сервис ИИ временно недоступен. Это не обязательно проблема вашего интернета."
+          :e?.code==="STREAM_INTERRUPTED"?"Передача ответа прервалась. Проверьте соединение с сайтом и повторите запрос."
+          :e instanceof TypeError&&offline?"Ваше устройство сейчас не подключено к сети. Проверьте подключение."
+          :e instanceof TypeError?"Не удалось связаться с сайтом. Интернет на других сайтах может работать."
+          :"Не удалось завершить ответ ИИ. Попробуйте повторить запрос.";
+        // Keep genuinely received user-visible output on screen as a temporary,
+        // explicitly incomplete preview. Do not commit an unfinished or unaudited
+        // answer into conversation history; manual Retry starts a fresh request.
+        if(streamingBubble&&streamedPartial.trim()&&current===chat.id){
+          keepIncomplete=true;
+          incompleteBubble=streamingBubble;
+          const warning=make("div","session-stream-interrupted",
+            "⚠️ Ответ прервался. Текст выше неполный и не сохранён. Нажмите «Повторить запрос».");
+          streamingBubble.append(warning);
+        }
         showStatus(message,quota,true);
       }
     }finally{
-      streamingBubble?.remove();
+      if(!keepIncomplete)streamingBubble?.remove();
       if(abort===controller){abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput()}
     }
   }

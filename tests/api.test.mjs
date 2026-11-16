@@ -431,3 +431,76 @@ test('model answers retain meaningful leading and trailing whitespace',async()=>
   assert.equal(blank.status,502);
   assert.equal((await blank.json()).code,'AI_EMPTY');
 });
+
+test('25-horse regression: never accept false early-elimination claim on any effort',async()=>{
+  const question='У меня 25 лошадей, максимум 5 в забеге. Нужно найти трёх самых быстрых. Докажи строго минимум забегов.';
+  for(const effort of ['low','medium','high']){
+    const falseProof='## Доказательство\n\nПосле первых пяти забегов между группами сравнений нет, поэтому никого исключать нельзя. Далее 7 забегов минимальны.';
+    const {env,calls}=envWithAI(async(_model,opts)=>{
+      if(opts.stream)return new ReadableStream({start(c){
+        c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:falseProof})+'\n\n'));
+        c.close();
+      }});
+      return {output_text:JSON.stringify({verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''})};
+    });
+    const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort},TOKEN,{Accept:'text/event-stream'}),env);
+    const text=await response.text();
+    assert.match(text,/Строгое доказательство пока не подтверждено/);
+    assert.match(text,/четвёртая и пятая/);
+    assert.doesNotMatch(text,/никого исключать нельзя/);
+    assert.equal(calls.length,2);
+    assert.equal(calls[0][1].reasoning_effort,effort);
+    assert.equal(calls[1][1].reasoning.effort,effort);
+    assert.match(calls[0][1].messages[0].content,/10 лошадей/);
+  }
+});
+test('25-horse regression: 66 vs 60 direct comparison proof is invalid even if reviewer says pass',async()=>{
+  const question='25 лошадей, 5 дорожек, найти трех лучших. Строго докажи, почему нельзя за 6 забегов.';
+  for(const effort of ['low','medium','high']){
+    const falseProof='Семь забегов минимальны. Всего 22 × 3 = 66 известных сравнений обязательно нужны. За 6 забегов максимум 6 × 10 = 60 сравнений. Поэтому 7 минимально.';
+    const {env,calls}=envWithAI(async(_model,opts)=>{
+      if(opts.stream)return new ReadableStream({start(c){
+        c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:falseProof})+'\n\n'));
+        c.close();
+      }});
+      return {output_text:JSON.stringify({verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''})};
+    });
+    const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort},TOKEN,{Accept:'text/event-stream'}),env);
+    const text=await response.text();
+    assert.match(text,/Строгое доказательство пока не подтверждено/);
+    assert.match(text,/транзитивности/);
+    assert.doesNotMatch(text,/66 известных сравнений/);
+    assert.equal(calls.length,2);
+    assert.match(calls[1][1].input[1].content,/66 против 60/);
+  }
+});
+test('25-horse regression: valid universal adversary proof can pass without extra model calls',async()=>{
+  const question='25 лошадей, 5 дорожек, найти трёх быстрых: строго докажи минимальное число забегов.';
+  const strongProof='## Ответ: семь забегов. После первых пяти забегов исключаются 10 лошадей, по две последние в каждой группе. '+
+   'Далее сравниваем победителей и получаем A1>B1>C1>D1>E1. Остаются A2,A3,B1,B2,C1; седьмой забег определяет вторую и третью. '+
+   'Нижняя граница: противник выбирает исходы так, что победитель из непобеждённых всегда остаётся непобеждённым. '+
+   'За шесть забегов необходимо исключить 24 непобеждённых кандидата на первое место, значит каждое испытание содержит пять ещё непобеждённых лошадей и устраняет четыре. '+
+   'В шестом забеге победитель самого первого соревнования X соревнуется с другими непобеждёнными и побеждает. '+
+   'Второе место первого забега R и второе место шестого W не сравнивались; их относительная скорость неизвестна. '+
+   'Поэтому обе перестановки R>W и W>R допустимы, вторую лошадь за шесть забегов нельзя определить.';
+  const {env,calls}=envWithAI(async(_model,opts)=>{
+    if(opts.stream)return new ReadableStream({start(c){
+      c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:strongProof})+'\n\n'));
+      c.close();
+    }});
+    return {output_text:JSON.stringify({verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''})};
+  });
+  const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort:'high'},TOKEN,{Accept:'text/event-stream'}),env);
+  const text=await response.text();
+  assert.match(text,/Нижняя граница/);
+  assert.match(text,/event: final/);
+  assert.doesNotMatch(text,/Строгое доказательство пока не подтверждено/);
+  assert.equal(calls.length,2);
+});
+test('horses regression does not change unrelated mathematical questions',async()=>{
+  const {env,calls}=envWithAI();
+  const response=await worker.fetch(post({messages:[{role:'user',content:'Докажи, что сумма двух чётных чисел чётна'}],effort:'low'}),env);
+  assert.equal(response.status,200);
+  assert.equal(calls.length,2,'ordinary proof receives normal independent review');
+  assert.doesNotMatch(JSON.stringify(calls),/25 лошадей/);
+});

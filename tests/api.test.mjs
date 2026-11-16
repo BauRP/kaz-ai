@@ -732,3 +732,26 @@ test('review provider failure is logged by stage without logging private prompt 
   assert.doesNotMatch(logs,/PRIVATE_CONTENT_TEST_ONLY_123abc/);
   assert.doesNotMatch(logs,/review model went offline/);
 });
+
+test('split CRLF framing from Workers AI still produces a complete proof answer',async()=>{
+  const {env,calls}=envWithAI(async(_name,params)=>{
+    if(params.stream)return new ReadableStream({start(c){
+      const enc=new TextEncoder();
+      c.enqueue(enc.encode('data: {"response":"Корректное доказательство"}\r'));
+      c.enqueue(enc.encode('\n\r'));
+      c.enqueue(enc.encode('\n'));
+      c.close();
+    }});
+    return {output_text:JSON.stringify({
+      verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''
+    })};
+  });
+  const res=await worker.fetch(post({
+    messages:[{role:'user',content:'Строго докажи, что один плюс один равен двум'}],effort:'high'
+  },TOKEN,{Accept:'text/event-stream'}),env);
+  const out=await res.text();
+  assert.match(out,/event: final/);
+  assert.match(out,/Корректное доказательство/);
+  assert.doesNotMatch(out,/event: error/);
+  assert.equal(calls.length,2);
+});

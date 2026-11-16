@@ -3186,9 +3186,77 @@ test('new chat title stops after 55 complete graphemes even for a long input',as
     const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
     assert.equal(snapshot.threads.length,1);
     assert.equal(snapshot.threads[0].title,'А'.repeat(54)+family);
-    assert.equal(snapshot.threads[0].messages[0].content,initial);
+    assert.equal(snapshot.threads[0].messages,1,'session snapshot reports the message count without exposing private message text');
+    assert.equal(await page.locator('#chatMessages .message-user > span').textContent(),initial);
     await page.locator('.sidebar [data-screen="history"]').click();
     assert.equal(await page.locator('#historyList .session-chat-label').textContent(),'А'.repeat(54)+family);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+
+test('invisible-only chat rename is rejected without changing saved messages',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('#messageInput').fill('Важный разговор');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="rename-chat"]').click();
+    for(const invisible of ['\u200d','\u200c','\ufe0f']){
+      await page.locator('#sessionBody input').fill(invisible);
+      await page.locator('#sessionBody [data-session="dialog-save"]').click();
+      assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+      assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].title)),'Важный разговор');
+    }
+    await page.locator('#sessionBody input').fill('Рабочий чат');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].title)),'Рабочий чат');
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('invisible-only first message gets a visible chat title, without modifying content',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    const original='\u200d\u2061\u200c';
+    await page.locator('#messageInput').fill(original);
+    await page.locator('#sendButton').click();
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads.length,1);
+    assert.equal(snapshot.threads[0].title,'Новый чат');
+    assert.equal(snapshot.threads[0].messages,1);
+    assert.equal(await page.locator('#chatMessages .message-user > span').textContent(),original);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('invisible-only project names are rejected while joined emoji names remain valid',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('\u200d\u200c');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().projects)).length,0);
+    const emoji='👩🏽‍💻';
+    await page.locator('#sessionBody input').fill(emoji);
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().projects))[0].name,emoji);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });

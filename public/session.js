@@ -74,6 +74,10 @@
   const baseShowScreen=showScreen;
   const baseShowFeature=showFeature;
   const baseToggleTheme=toggleTheme;
+  // A name containing only default-ignorable Unicode controls looks empty.
+  // Validate its visible portion, but keep the original user text unchanged.
+  const hasVisibleName=value=>Boolean(value.normalize("NFKC")
+    .replace(/\p{Default_Ignorable_Code_Point}/gu,"").trim());
   // Count whole visible symbols including emoji sequences in older browsers.
   const shortText=(value,max)=>{
     // Stop scanning the input after the title limit, rather than collecting
@@ -197,7 +201,8 @@
   function newThread(firstMessage){
     const temporary=Boolean($("#sessionTemporary")?.checked);
     // Never cut a surrogate pair in half when the first message contains emoji.
-    const title=shortText(firstMessage.trimStart(),55)||"Новый чат";
+    const candidate=shortText(firstMessage.trimStart(),55);
+    const title=hasVisibleName(candidate)?candidate:"Новый чат";
     const chat={id:nextId(),title,
       messages:[],pinned:false,projectId:null,temporary};
     touchChat(chat);threads.unshift(chat);displayThread(chat);
@@ -635,7 +640,7 @@
       field.value=value;field.setAttribute("aria-label",label);
       body.append(field);
       const save=button("Сохранить","dialog-save",null,"session-primary");
-      save.addEventListener("click",()=>{const next=field.value.trim();if(!next){notify("Введите название.");return}if(onSave(next)===false)return;closeDialog()});
+      save.addEventListener("click",()=>{const next=field.value.trim();if(!hasVisibleName(next)){notify("Введите название.");field.focus();return}if(onSave(next)===false)return;closeDialog()});
       // IME confirmation must not save a half-composed Kazakh or other name.
       field.addEventListener("keydown",e=>{
         if(e.key==="Enter"&&!e.isComposing&&e.keyCode!==229){

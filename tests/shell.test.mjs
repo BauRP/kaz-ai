@@ -73,16 +73,18 @@ test('safely bundled session features are present without persistent storage',()
   assert.match(session,/function renderSessionProjects\(/);
   assert.match(session,/function renderSessionHistory\(/);
   assert.match(session,/function showCalculator\(/);
-  assert.match(session,/function configureAccess\(/);
+  assert.doesNotMatch(session,/function configureAccess\(/);
   assert.match(session,/!c\.temporary/);
 });
-test('GPT-OSS route is server-side and requires private access key',()=>{
+test('GPT-OSS route keeps the owner key server-side while accepting public requests',()=>{
   const worker=readFileSync('src/index.js','utf8');
   const config=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
   assert.equal(config.main,'./src/index.js');
   assert.equal(config.ai.binding,'AI');
+  assert.deepEqual(config.ratelimits.map(x=>x.name),['CHAT_IP_LIMITER','CHAT_GLOBAL_LIMITER']);
   assert.deepEqual(config.assets.run_worker_first,['/api/*','/robots.txt','/sitemap.xml']);
   assert.match(worker,/env\.KAZ_AI_ACCESS_KEY/);
+  assert.doesNotMatch(session,/Bearer |ai-access|Настроить ключ/);
   assert.match(worker,/@cf\/openai\/gpt-oss-120b/);
   assert.doesNotMatch(html,/KAZ_AI_ACCESS_KEY|CLOUDFLARE_API_TOKEN/);
   assert.doesNotMatch(readFileSync('public/preview.html','utf8'),/CLOUDFLARE_API_TOKEN/);

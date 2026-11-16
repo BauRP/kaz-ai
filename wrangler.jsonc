@@ -17,7 +17,28 @@
     "binding": "AI"
   },
   "ratelimits": [
-    { "name":"CHAT_IP_LIMITER", "namespace_id":"1201201", "simple":{"limit":6,"period":60} },
-    { "name":"CHAT_GLOBAL_LIMITER", "namespace_id":"1201202", "simple":{"limit":30,"period":60} }
-  ]
+    {
+      "name": "CHAT_IP_LIMITER",
+      "namespace_id": "1201201",
+      "simple": {
+        "limit": 6,
+        "period": 60
+      }
+    },
+    {
+      "name": "CHAT_GLOBAL_LIMITER",
+      "namespace_id": "1201202",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "invocation_logs": false
+    }
+  }
 }

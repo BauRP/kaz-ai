@@ -632,3 +632,22 @@ test('CRDT final order with post-delivery reorder is rejected',async()=>{
   assert.match(output,/Техническая корректность ответа не подтверждена/);
   assert.match(output,/неизменяемым глобальным порядком/);
 });
+
+test('short valid coding corrections are not discarded and still get a final review',async()=>{
+  const fixed='function add(a,b) { return a + b; }';
+  const {env,calls}=envWithAI(async(_name,params)=>{
+    if(calls.length===1)return {output_text:'function add(a,b) { return a - b; }'};
+    if(calls.length===2)return {output_text:JSON.stringify({
+      verdict:'revise',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},
+      issues:['Subtraction does not implement addition'],corrected_answer:fixed
+    })};
+    return {output_text:JSON.stringify({
+      verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},
+      issues:[],corrected_answer:''
+    })};
+  });
+  const response=await worker.fetch(post({messages:[{role:'user',content:'Напиши функцию JavaScript для сложения двух чисел'}],effort:'medium'}),env);
+  assert.equal(response.status,200);
+  assert.equal((await response.json()).text,fixed);
+  assert.equal(calls.length,3);
+});

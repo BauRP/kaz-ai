@@ -1,4 +1,4 @@
-/* Kaz AI private-text beta Worker. Requires AI binding + secret; never opens to anonymous use. */
+/* Public Kaz AI text Worker: secret stays on Cloudflare; rate-limit model requests. */
 const json=(data,status=200)=>new Response(JSON.stringify(data),{
   status,
   headers:{
@@ -32,14 +32,6 @@ async function readLimitedBody(request){
   }finally{
     reader.releaseLock();
   }
-}
-async function equalSecret(a,b){
-  if(typeof a!=="string"||typeof b!=="string"||b.length<24||a.length>1000)return false;
-  const encoder=new TextEncoder();
-  const [ha,hb]=await Promise.all([crypto.subtle.digest("SHA-256",encoder.encode(a)),crypto.subtle.digest("SHA-256",encoder.encode(b))]);
-  const aa=new Uint8Array(ha),bb=new Uint8Array(hb);
-  let result=0;for(let i=0;i<aa.length;i++)result|=aa[i]^bb[i];
-  return result===0;
 }
 function answerText(result){
   if(typeof result?.output_text==="string"&&result.output_text.trim())return result.output_text;
@@ -105,9 +97,10 @@ export default {
     if(typeof env.KAZ_AI_ACCESS_KEY!=="string"||env.KAZ_AI_ACCESS_KEY.length<24
        ||env.KAZ_AI_ACCESS_KEY.length>1000||!env.AI)
       return codeError("ACCESS_REQUIRED","Серверный ИИ ещё не настроен.",503);
-    const auth=request.headers.get("authorization")||"";
-    const permitted=await equalSecret(auth.startsWith("Bearer ")?auth.slice(7):"",env.KAZ_AI_ACCESS_KEY);
-    if(!permitted)return codeError("ACCESS_REQUIRED","Неверный ключ доступа к тестовому ИИ.",401);
+    // Visitors never receive or enter KAZ_AI_ACCESS_KEY. It remains a
+    // server-only enable switch; Cloudflare controls public AI consumption.
+    if(typeof env.CHAT_IP_LIMITER?.limit!=="function"||typeof env.CHAT_GLOBAL_LIMITER?.limit!=="function")
+      return codeError("ACCESS_REQUIRED","Серверный ИИ ещё не настроен.",503);
     if(!/^application\/json(?:;|$)/i.test(request.headers.get("content-type")||""))
       return codeError("INVALID_REQUEST","Требуется JSON.",415);
     const length=Number(request.headers.get("content-length")||0);
@@ -119,6 +112,17 @@ export default {
     let payload;try{payload=JSON.parse(body.raw)}catch{return codeError("INVALID_REQUEST","Некорректный JSON.",400)}
     const input=validatedInput(payload);
     if(!input)return codeError("INVALID_REQUEST","Неподдерживаемый запрос.",400);
+    // Per-visitor and per-PoP limits. These Cloudflare counters are approximate,
+    // while Workers AI's daily free-tier quota remains the final hard cap.
+    const visitor=request.headers.get("cf-connecting-ip")||"unknown";
+    try{
+      const individual=await env.CHAT_IP_LIMITER.limit({key:"ip:"+visitor});
+      if(!individual.success)return codeError("AI_RATE_LIMITED","Слишком много запросов за короткое время.",429);
+      const shared=await env.CHAT_GLOBAL_LIMITER.limit({key:"public-chat"});
+      if(!shared.success)return codeError("AI_RATE_LIMITED","Слишком много запросов за короткое время.",429);
+    }catch{
+      return codeError("AI_UNAVAILABLE","Защита запросов временно недоступна.",503);
+    }
     const messages=[
       {role:"system",content:"Ты Kaz AI. Отвечай полезно, точно и понятно. Не выдумывай источники. Если ответа не знаешь, так и скажи."+
         (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},

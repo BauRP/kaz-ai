@@ -11,6 +11,8 @@ function envWithAI(impl=async () => ({
     calls,
     env:{
       KAZ_AI_ACCESS_KEY:TOKEN,
+      CHAT_IP_LIMITER:{limit:async()=>({success:true})},
+      CHAT_GLOBAL_LIMITER:{limit:async()=>({success:true})},
       ASSETS:{fetch:async()=>new Response('HTML asset',{status:200})},
       AI:{run:async (...args)=>{calls.push(args);return impl(...args)}}
     }
@@ -19,7 +21,7 @@ function envWithAI(impl=async () => ({
 function post(body,token=TOKEN,headers={}){
   return new Request('https://private.example/api/chat',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,Origin:'https://private.example',...headers},
+    headers:{'Content-Type':'application/json',Origin:'https://private.example',...headers},
     body:typeof body==='string'?body:JSON.stringify(body)
   });
 }
@@ -37,12 +39,23 @@ test('API fails closed when secret or Workers AI binding is missing',async()=>{
   assert.equal(b.status,503);
   assert.equal(calls.length,0);
 });
-test('unauthorized, wrong origin, oversized, wrong content type requests never call AI',async()=>{
+test('public chat accepts visitors without keys, but blocks invalid requests',async()=>{
   const {env,calls}=envWithAI();
-  assert.equal((await worker.fetch(post(good,'wrong-key'),env)).status,401);
+  assert.equal((await worker.fetch(post(good,'wrong-key'),env)).status,200);
   assert.equal((await worker.fetch(post(good,TOKEN,{Origin:'https://attacker.example'}),env)).status,403);
   assert.equal((await worker.fetch(post(good,TOKEN,{'Content-Type':'text/plain'}),env)).status,415);
   assert.equal((await worker.fetch(post('a'.repeat(51000)),env)).status,413);
+  assert.equal(calls.length,1);
+});
+test('Cloudflare limiters block public abuse before model inference',async()=>{
+  const {env,calls}=envWithAI();
+  const ip=await worker.fetch(post(good),{...env,CHAT_IP_LIMITER:{limit:async()=>({success:false})}});
+  assert.equal(ip.status,429);
+  assert.equal((await ip.json()).code,'AI_RATE_LIMITED');
+  const shared=await worker.fetch(post(good),{...env,CHAT_GLOBAL_LIMITER:{limit:async()=>({success:false})}});
+  assert.equal(shared.status,429);
+  assert.equal((await shared.json()).code,'AI_RATE_LIMITED');
+  assert.equal((await worker.fetch(post(good),{...env,CHAT_IP_LIMITER:undefined})).status,503);
   assert.equal(calls.length,0);
 });
 test('validated requests reach GPT-OSS 120B with selected reasoning effort',async()=>{

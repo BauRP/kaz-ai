@@ -755,3 +755,20 @@ test('split CRLF framing from Workers AI still produces a complete proof answer'
   assert.doesNotMatch(out,/event: error/);
   assert.equal(calls.length,2);
 });
+
+test('production chat emits diagnostic effort header corresponding to requested level',async()=>{
+  for(const effort of ['low','medium','high']){
+    const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){
+      c.enqueue(new TextEncoder().encode('data: {"response":"OK"}\n\n'));
+      c.close();
+    }}));
+    const response=await worker.fetch(post({...good,effort},TOKEN,{Accept:'text/event-stream'}),env);
+    assert.equal(response.status,200);
+    assert.equal(response.headers.get('x-kaz-ai-reasoning-effort'),effort);
+    assert.match(response.headers.get('x-kaz-ai-request-id'),/^[a-f0-9]{12}$/);
+    const output=await response.text();
+    assert.match(output,/event: done/);
+    assert.equal(calls.length,1);
+    assert.equal(calls[0][1].reasoning_effort,effort);
+  }
+});

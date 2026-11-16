@@ -141,6 +141,28 @@ function horseProofIssues(question,answer){
     issues.push("Не приведена проверяемая универсальная нижняя граница для всех стратегий из шести забегов: нужен противниковый аргумент с непобеждёнными лошадьми и двумя несравнимыми кандидатами на второе место.");
   return issues;
 }
+function wantsEngineeringAudit(input){
+  const q=input.messages.at(-1)?.content||"";
+  const architecture=/(?:raft|crdt|rga|hlc|fifo|consensus|консенсус|vector[\s-]*clock|векторн[а-яё]*\s+час|репликаци|архитектур|распредел[её]нн[а-яё]*\s+(?:систем|мессенджер)|согласованност|отказоустойчив|network[\s-]*partition|race[\s-]*condition)/iu.test(q);
+  const coding=/(?:код|программирован|исходник|реализуй|напиши\s+функцию|найди\s+баг|исправь\s+ошибку|\b(?:python|javascript|typescript|golang|rust|sql|c\+\+|java)\b)/iu.test(q);
+  return architecture||coding;
+}
+function auditKind(input){
+  const question=input.messages.at(-1)?.content||"";
+  if(isTwentyFiveHorsePuzzle(question)&&wantsProofAudit(input))return "proof";
+  if(wantsEngineeringAudit(input))return "engineering";
+  return wantsProofAudit(input)?"proof":null;
+}
+function distributedEngineeringTask(question){
+  const q=String(question||"");
+  return /(?:raft|crdt|rga|hlc|fifo|репликаци|согласованност|распредел[её]нн|vector[\s-]*clock)/iu.test(q)
+    && /(?:сообщени|мессенджер|чат|message|messeng|chat|raft|crdt)/iu.test(q);
+}
+function engineeringGuide(question){
+  const general="Для программирования: сверь решение с каждым требованием. Проверь алгоритмы, код, числовые разряды, гонки, сохранность состояния, ошибки, повторы запросов и пограничные случаи. Никаких неподтверждённых гарантий или выдуманных измерений. Если требования несовместимы, объясни компромисс.";
+  if(!distributedEngineeringTask(question))return general;
+  return general+" Для распределённого чата: различай FIFO одного отправителя, причинный и глобальный неизменяемый порядок; Raft имеет пересекающиеся кворумы и НЕ сливает или сортирует подтверждённые записи по HLC; HLC не заменяет консенсус; векторные часы сравниваются по ВСЕМ компонентам; RGA использует связи с предшественниками, не просто сортировку по MessageID; CRDT после асинхронного слияния не обеспечивает строгую немедленную доставку во время network partition. Проверяй idempotency, sender sequence, повтор после сбоя и гарантии ACK. Для 64-бит HLC, 16-бит SiteID и 32-бит Seq поля требуют 112 бит, сдвиги HLC на 48, SiteID на 32. Сдвиги HLC на 32 и SiteID на 16 создают наложение битов. Не обещай ни 100% доступность, ни конкретные задержки без измерений.";
+}
 function parseSSEAnswerPiece(frame){
   if(frame.startsWith(":"))return "";
   const line=frame.split("\n").filter(x=>x.startsWith("data:")).map(x=>x.slice(5).trimStart()).join("\n");

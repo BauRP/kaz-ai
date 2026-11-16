@@ -163,6 +163,44 @@ function engineeringGuide(question){
   if(!distributedEngineeringTask(question))return general;
   return general+" Для распределённого чата: различай FIFO одного отправителя, причинный и глобальный неизменяемый порядок; Raft имеет пересекающиеся кворумы и НЕ сливает или сортирует подтверждённые записи по HLC; HLC не заменяет консенсус; векторные часы сравниваются по ВСЕМ компонентам; RGA использует связи с предшественниками, не просто сортировку по MessageID; CRDT после асинхронного слияния не обеспечивает строгую немедленную доставку во время network partition. Проверяй idempotency, sender sequence, повтор после сбоя и гарантии ACK. Для 64-бит HLC, 16-бит SiteID и 32-бит Seq поля требуют 112 бит, сдвиги HLC на 48, SiteID на 32. Сдвиги HLC на 32 и SiteID на 16 создают наложение битов. Не обещай ни 100% доступность, ни конкретные задержки без измерений.";
 }
+// Deterministic checks complement the fallible model reviewer.
+function engineeringIssues(question,answer){
+  if(!distributedEngineeringTask(question))return [];
+  const s=String(answer||"");
+  const a=s.replace(/\s+/gu," ");
+  const issues=[];
+  const brokenBits=/\bMessageID\s*=\s*\(\s*HLC(?:_timestamp)?\s*<<\s*32\s*\)\s*\|\s*\(\s*SiteID\s*<<\s*16\s*\)\s*\|\s*SeqPerSite/iu;
+  if(brokenBits.test(a)&&!/неверн|ошибочн|некорректн|invalid|incorrect/iu.test(a))
+    issues.push("Перекрытие полей MessageID: 32-битный SeqPerSite пересекается с SiteID << 16. Для 64+16+32 бит нужны смещения 48 и 32.");
+  if(/\bRaft\b/iu.test(a)
+    &&/(?:оба|каждый)\s+(?:кластера?|dc|дата[\s-]*центра?).{0,100}(?:кворум|majority)/iu.test(a)
+    &&!/не\s+могут|невозможн|нельзя/iu.test(a))
+    issues.push("Один Raft-кластер не может одновременно иметь два непересекающихся подтверждающих большинства.");
+  if(/\bRGA\b/iu.test(a)&&/(?:merge[\s-]*rga|слияни[а-яё]*\s*rga).{0,120}(?:по|by)\s+MessageID/iu.test(a)
+     &&!/не\s+является\s+rga|некорректн|ошибочн/iu.test(a))
+    issues.push("Слияние RGA использует привязку к предшественникам, а не одну сортировку MessageID.");
+  return issues;
+}
+function parseEngineeringReview(raw){
+  try{
+    const value=JSON.parse(raw.slice(raw.indexOf("{"),raw.lastIndexOf("}")+1));
+    if(!["pass","revise","uncertain"].includes(value?.verdict))throw Error("invalid verdict");
+    const checks=value.checks||{};
+    const ok=["requirements","ordering","partitions","code","claims"].every(k=>checks[k]===true);
+    const issues=Array.isArray(value.issues)?value.issues.filter(x=>typeof x==="string"&&x.trim()).slice(0,8).map(x=>x.slice(0,400)):[];
+    const corrected=typeof value.corrected_answer==="string"?value.corrected_answer.trim():"";
+    if(value.verdict==="pass"&&ok&&issues.length===0)return {verdict:"pass",issues,corrected:""};
+    if(value.verdict==="revise"&&issues.length&&corrected.length>=80)return {verdict:"revise",issues,corrected};
+    return {verdict:"uncertain",issues:issues.length?issues:["Неполный технический отчёт."],corrected:""};
+  }catch{return {verdict:"uncertain",issues:["Техническая проверка вернула неправильный формат."],corrected:""}}
+}
+function engineeringNotConfirmed(review){
+  const notes=(review?.issues||[]).slice(0,5).map((x,i)=>(i+1)+". "+x).join("\n");
+  return "## Техническая корректность ответа не подтверждена\n\nНезависимая проверка обнаружила ошибки или не смогла подтвердить все требования. "+
+    "Непроверенное решение не выдаётся за готовое к внедрению."+
+    (notes?"\n\n**Что требует исправления:**\n\n"+notes:"");
+}
+
 function parseSSEAnswerPiece(frame){
   if(frame.startsWith(":"))return "";
   const line=frame.split("\n").filter(x=>x.startsWith("data:")).map(x=>x.slice(5).trimStart()).join("\n");

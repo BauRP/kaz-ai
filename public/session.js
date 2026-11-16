@@ -372,6 +372,10 @@
       const bubble=bubbles[i];if(!bubble)return;
       message.id||=nextId();
       if(message.role==="assistant"){
+        const plain=bubble.querySelector(":scope > span");
+        if(plain&&window.KazFormat?.render){
+          plain.replaceWith(window.KazFormat.render(message.content));
+        }
         const actions=make("div","session-message-actions");
         const up=button("👍","rate-up",message.id),down=button("👎","rate-down",message.id);
         if(message.rating==="up")up.classList.add("selected");

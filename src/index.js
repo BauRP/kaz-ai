@@ -178,7 +178,10 @@ async function independentProofReview(env,question,answer,effort,allowCorrection
   const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
     input:[
       {role:"system",content:system},
-      {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+\n        (horseProofReference(question)?"\n\nПРОВЕРЕННЫЕ КОНТРОЛЬНЫЕ ФАКТЫ:\n"+horseProofReference(question):"")+\n        "\n\nПОТЕНЦИАЛЬНЫЕ ОШИБКИ, НАЙДЕННЫЕ БЕЗ МОДЕЛИ:\n"+(horseProofIssues(question,answer).join("\n")||"не обнаружены типовые ошибки")+\n        "\n\nРЕШЕНИЕ:\n"+answer.slice(0,85000)}
+      {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+
+        (horseProofReference(question)?"\n\nПРОВЕРЕННЫЕ КОНТРОЛЬНЫЕ ФАКТЫ:\n"+horseProofReference(question):"")+
+        "\n\nПОТЕНЦИАЛЬНЫЕ ОШИБКИ, НАЙДЕННЫЕ БЕЗ МОДЕЛИ:\n"+(horseProofIssues(question,answer).join("\n")||"не обнаружены типовые ошибки")+
+        "\n\nРЕШЕНИЕ:\n"+answer.slice(0,85000)}
     ],
     reasoning:{effort},stream:false
   });
@@ -196,9 +199,11 @@ async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{}){
     onStage("Независимо проверяю доказательство");
     review=await independentProofReview(env,question,draft,effort,true);
   }catch{return proofNotConfirmed()}
-  const draftIssues=horseProofIssues(question,draft);\n  if(review.verdict==="pass")return draftIssues.length?proofNotConfirmed({issues:draftIssues}):draft;
+  const draftIssues=horseProofIssues(question,draft);
+  if(review.verdict==="pass")return draftIssues.length?proofNotConfirmed({issues:draftIssues}):draft;
   if(review.verdict!=="revise")return proofNotConfirmed({issues:[...draftIssues,...review.issues]});
-  if(review.corrected===draft.trim())return proofNotConfirmed(review);\n  const correctedIssues=horseProofIssues(question,review.corrected);\n  if(correctedIssues.length)return proofNotConfirmed({issues:correctedIssues});
+  if(review.corrected===draft.trim())return proofNotConfirmed(review );
+  const correctedIssues=horseProofIssues(question,review.corrected);\n  if(correctedIssues.length)return proofNotConfirmed({issues:correctedIssues});
   let finalReview;
   try{
     onStage("Проверяю исправленное решение");
@@ -356,7 +361,8 @@ export default {
     }
     const messages=[
       {role:"system",content:"Ты Kaz AI. Отвечай на языке пользователя полезно, точно и понятно. Не выдумывай факты, расчёты и источники. \nФорматируй ответ аккуратным Markdown: понятные заголовки ##, небольшие абзацы, нумерованные шаги, таблицы только если они помогают, формулы в $...$ или $$...$$, код в тройных обратных кавычках. Не вставляй сырые HTML-теги. Не добавляй декоративных эмодзи без смысла.\nДля логических, математических и сложных задач: сначала проверь условия и исключения, затем рассуждай последовательно. Любое утверждение «минимально», «невозможно», «для всех случаев» требует доказательства для всех допустимых способов, а не только одного алгоритма и отдельных примеров. Ясно отличай строго доказанное от вероятного и непроверенного. Проверяй пограничные случаи и отсутствие скрытых предположений. Если доказательства нет, прямо напиши, что вывод не доказан, не выдавай неполное обоснование за строгое.\nНе обещай безошибочность. Уровень рассуждения влияет на тщательность, но требования честности, точности и форматирования одинаковы во всех режимах."+
-        (horseProofReference(input.messages.at(-1).content)?"\nМАТЕМАТИЧЕСКИЕ КОНТРОЛЬНЫЕ ФАКТЫ ДЛЯ ЭТОЙ ЗАДАЧИ:\n"+horseProofReference(input.messages.at(-1).content):"")+\n        (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},
+        (horseProofReference(input.messages.at(-1).content)?"\nМАТЕМАТИЧЕСКИЕ КОНТРОЛЬНЫЕ ФАКТЫ ДЛЯ ЭТОЙ ЗАДАЧИ:\n"+horseProofReference(input.messages.at(-1).content):"")+
+        (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},
       ...input.messages
     ];
     if((request.headers.get("accept")||"").includes("text/event-stream"))

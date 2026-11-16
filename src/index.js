@@ -247,6 +247,42 @@ async function independentProofReview(env,question,answer,effort,allowCorrection
   });
   return parseProofReview(answerText(result));
 }
+async function independentEngineeringReview(env,question,answer,effort,repair=false){
+  const instructions=repair
+    ?"Проведи независимый технический аудит и при необходимости исправь весь ответ. Проверь КАЖДОЕ требование пользователя, соответствие заявленных свойств протоколам и реальному коду, согласованность, порядок, отказы, ошибки параллельного выполнения, переполнение чисел, повторную доставку, сохранность и реалистичность измерений. Для распределённых систем: два большинства одного Raft-кластера не могут быть непересекающимися; committed log нельзя пересортировывать по HLC; HLC не заменяет консенсус; RGA не равен сортировке ID; vector clock сравнивают по компонентам; eventual ordering при CRDT не равно строгой неизменной доставке; учти FIFO по отправителю и недоступные регионы. Битовые поля (64-bit HLC, 16-bit SiteID, 32-bit Seq) требуют 112 бит и непересекающихся сдвигов 48 и 32, если packed. Не утверждай '100% uptime', exact-once, отсутствие потерь и RTT без доказательств. Если требование физически несовместимо с другим, укажи компромисс, не выдавай его за исполнение. Верни ТОЛЬКО JSON: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"requirements\":true,\"ordering\":true,\"partitions\":true,\"code\":true,\"claims\":true},\"issues\":[],\"corrected_answer\":\"\"}. При отсутствии ошибок pass, все checks=true и issues=[]. При ошибках revise, перечисли проблемы и предоставь ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ ответ в corrected_answer. Если нельзя исправить надёжно, uncertain без ложных гарантий."
+    :"Повторно независимо проверь уже исправленный технический ответ. Особое внимание: не перепутаны FIFO и глобальный порядок; при partition не обещана одновременно локальная финальная доставка и строгая линейная согласованность; Raft quorums/committed log верны; RGA/HLC/VC верны; packed ID не перекрывается; sender-seq и retries учтены; точные задержки не придуманы; требования пользователя соблюдены; код и алгоритмы непротиворечивы. Если что-то важное недоказано или ошибочно, ответ не может получить pass. Верни ТОЛЬКО JSON: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"requirements\":true,\"ordering\":true,\"partitions\":true,\"code\":true,\"claims\":true},\"issues\":[],\"corrected_answer\":\"\"}. При pass все checks=true и issues=[]. Исправленный ответ не создавай в этой повторной проверке.";
+  const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
+    input:[
+      {role:"system",content:instructions},
+      {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+"\n\nПРАВИЛА:\n"+engineeringGuide(question)+
+        "\n\nПРОБЛЕМЫ, ОПРЕДЕЛЁННЫЕ ПРОГРАММОЙ:\n"+(engineeringIssues(question,answer).join("\n")||"нет очевидных совпадений")+
+        "\n\nОТВЕТ:\n"+answer.slice(0,75000)}
+    ],
+    reasoning:{effort},stream:false
+  });
+  return parseEngineeringReview(answerText(result));
+}
+async function verifyEngineering(env,question,draft,effort,onStage=()=>{}){
+  let first;
+  try{
+    onStage("Проверяю техническую корректность");
+    first=await independentEngineeringReview(env,question,draft,effort,true);
+  }catch{return engineeringNotConfirmed()}
+  const known=engineeringIssues(question,draft);
+  if(first.verdict==="pass")return known.length?engineeringNotConfirmed({issues:known}):draft;
+  if(first.verdict!=="revise")return engineeringNotConfirmed({issues:[...known,...first.issues]});
+  if(first.corrected===draft.trim())return engineeringNotConfirmed(first);
+  const remaining=engineeringIssues(question,first.corrected);
+  if(remaining.length)return engineeringNotConfirmed({issues:remaining});
+  let second;
+  try{
+    onStage("Перепроверяю исправленную архитектуру и код");
+    second=await independentEngineeringReview(env,question,first.corrected,effort,false);
+  }catch{return engineeringNotConfirmed(first)}
+  return second.verdict==="pass"&&!engineeringIssues(question,first.corrected).length
+    ?first.corrected:engineeringNotConfirmed(second);
+}
+
 function proofNotConfirmed(review){
   const details=(review?.issues||[]).slice(0,5).map((issue,i)=>(i+1)+". "+issue).join("\n");
   return "## Строгое доказательство пока не подтверждено\n\nЯ не могу надёжно подтвердить все шаги решения. Не буду выдавать непроверенный черновик за доказанный результат."+

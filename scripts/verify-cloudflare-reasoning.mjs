@@ -19,6 +19,16 @@ export function parseUsage(body){
     reasoningTokens:finiteCount(details.reasoning_tokens??usage.reasoning_tokens)
   };
 }
+export function median(values){
+  if(!Array.isArray(values)||values.length===0)throw Error('Median needs at least one value');
+  const sorted=[...values].sort((a,b)=>a-b);
+  const mid=Math.floor(sorted.length/2);
+  return sorted.length%2?sorted[mid]:(sorted[mid-1]+sorted[mid])/2;
+}
+export function mean(values){
+  if(!Array.isArray(values)||values.length===0)throw Error('Mean needs at least one value');
+  return values.reduce((sum,x)=>sum+x,0)/values.length;
+}
 export async function runLiveVerification({
   accountId,token,repeats=2,fetchFn=fetch,write=console.log
 }){
@@ -54,24 +64,25 @@ export async function runLiveVerification({
       }
       const usage=parseUsage(data);
       samples.push({effort,elapsedMs:elapsed,...usage});
-      write('Test '+samples.length+' / '+(3*repeats)+': '+effort+' — HTTP '+response.status+', '+elapsed+' ms; reasoning tokens: '+(usage.reasoningTokens??'not reported'));
+      write('Test '+samples.length+' / '+(3*repeats)+': '+effort+' — HTTP '+response.status+', '+elapsed+' ms; output tokens: '+(usage.outputTokens??'not reported')+'; reasoning tokens: '+(usage.reasoningTokens??'not reported'));
     }
   }
   const lines=['## GPT-OSS 120B: live reasoning-effort verification','',
     'Cloudflare Workers AI, direct documented Responses API; '+repeats+' request(s) per level. No user text or model answer stored.','',
-    '| Level | Calls | Median latency | Reasoning tokens |','|---|---:|---:|---|'];
+    '| Level | Calls | Each latency | Mean latency | Median latency | Output tokens | Reasoning tokens |','|---|---:|---|---:|---:|---|---|'];
   for(const effort of LEVELS){
     const arr=samples.filter(s=>s.effort===effort);
-    const sorted=arr.map(s=>s.elapsedMs).sort((a,b)=>a-b);
-    const median=sorted[Math.floor(sorted.length/2)];
+    const times=arr.map(s=>s.elapsedMs);
     const r=arr.map(s=>s.reasoningTokens);
-    lines.push('| '+effort+' | '+arr.length+' | '+median+' ms | '+(r.every(x=>x!==null)?r.join(', '):'not reported')+' |');
+    const out=arr.map(s=>s.outputTokens);
+    lines.push('| '+effort+' | '+arr.length+' | '+times.join(', ')+' ms | '+Math.round(mean(times))+' ms | '+median(times)+' ms | '+(out.every(x=>x!==null)?out.join(', '):'not reported')+' | '+(r.every(x=>x!==null)?r.join(', '):'not reported')+' |');
   }
   const withTokens=samples.filter(x=>x.reasoningTokens!==null);
   lines.push('','**What is confirmed:** the official low/medium/high request parameters were sent and Cloudflare returned successful HTTP results.');
   lines.push(withTokens.length===samples.length
     ?'**Additional evidence:** provider reported reasoning-token counts. Different counts can indicate distinct effort behavior but cannot by themselves prove the internal model settings.'
     :'**Limitation:** provider did not report reasoning-token counts on every request. The model\'s internal effort cannot be independently confirmed from these API replies.');
+  lines.push('**Important:** inference latency is influenced by server load, queuing and generated text length. HIGH is not expected to always run longer than MEDIUM. With only '+repeats+' repeats per level, timing differences alone are inconclusive.');
   lines.push('**Important:** this tests the model through the documented Responses API. Kaz AI website uses streaming Chat Completions for live text; its provider behavior needs separate validation.','');
   return lines.join('\n');
 }

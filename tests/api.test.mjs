@@ -133,7 +133,7 @@ test('proof requests are corrected BEFORE display at low, medium and high levels
         c.enqueue(new TextEncoder().encode(data.slice(23)));
         c.close();
       }});
-      if(params.input[0].content.includes("рецензент")){
+      if(params.input[0].content.startsWith("Ты независимый строгий рецензент")){
         const valid=++reviews===2;
         const report={verdict:valid?'pass':'revise',checks:{assumptions:true,eliminations:valid,lower_bound:valid},
           issues:valid?[]:['После пяти забегов можно исключить по две лошади из каждой группы; отсутствует общий аргумент нижней границы.']};

@@ -96,23 +96,32 @@ function parseSSEAnswerPiece(frame){
   }catch{return ""}
 }
 function parseProofReview(raw){
-  // Do not treat unstructured reviewer prose as a successful verification.
+  // Accept only a structured, explicit report; never silently count an unclear answer as verified.
   try{
     const first=raw.indexOf("{"),last=raw.lastIndexOf("}");
-    const value=JSON.parse(raw.slice(first,last+1));
-    if(!value||!["pass","revise","uncertain"].includes(value.verdict))throw new Error("Invalid verdict");
-    const checks=value.checks||{};
-    const checked=checks.assumptions===true&&checks.eliminations===true&&checks.lower_bound===true;
-    const issues=Array.isArray(value.issues)?value.issues.filter(x=>typeof x==="string").slice(0,8).map(x=>x.slice(0,400)):[];
-    return {verdict:value.verdict==="pass"&&checked&&issues.length===0?"pass":"revise",issues};
-  }catch{return {verdict:"uncertain",issues:["Проверяющий ИИ не предоставил полноценный проверяемый отчёт."]}}
+    const data=JSON.parse(raw.slice(first,last+1));
+    if(!data||!["pass","revise","uncertain"].includes(data.verdict))throw new Error("Invalid verdict");
+    const checks=data.checks||{};
+    const verified=checks.assumptions===true&&checks.eliminations===true&&checks.lower_bound===true;
+    const issues=Array.isArray(data.issues)
+      ?data.issues.filter(x=>typeof x==="string"&&x.trim()).slice(0,8).map(x=>x.slice(0,400)):[];
+    const corrected=typeof data.corrected_answer==="string"?data.corrected_answer.trim():"";
+    if(data.verdict==="pass"&&verified&&issues.length===0)return {verdict:"pass",issues:[],corrected:""};
+    if(data.verdict==="revise"&&issues.length>0&&corrected.length>=60)
+      return {verdict:"revise",issues,corrected};
+    return {verdict:"uncertain",issues,corrected:""};
+  }catch{return {verdict:"uncertain",issues:["Независимая проверка не вернула проверяемое заключение."],corrected:""}}
 }
-async function independentProofReview(env,question,answer,effort){
-  // Every selected reasoning level is audited. Model agreement is not a mathematical proof.
+async function independentProofReview(env,question,answer,effort,allowCorrection=false){
+  // Keep the same user-selected reasoning level in every request.
+  // Combine review and repair, but retain an independent final audit on a correction.
+  const system=allowCorrection
+    ?"Ты независимый математический рецензент-редактор Kaz AI. Проверь КАЖДЫЙ логический шаг, ранние исключения, транзитивность, крайние случаи и корректность конструкции. Если доказывается минимальность, необходимо доказать нижнюю границу ДЛЯ ВСЕХ допустимых алгоритмов, не для одной стратегии. ВАЖНО: различай сравнения, непосредственно полученные в испытаниях, и отношения, выведенные транзитивно. Предел числа прямых сравнений НЕ ограничивает число отношений, которые могут стать известны через транзитивность; не используй ошибочные подсчёты пар как доказательство невозможности. Например, участник, проигравший троим уже в одном групповом забеге, исключается из топ-3 сразу. Если есть ошибка, напиши verdict=revise, укажи её в issues, затем создай ПОЛНЫЙ исправленный ответ в corrected_answer. Перед выдачей сам проверь исправленную версию, но не заявляй о доказанной минимальности без универсального доказательства. Если исправить нельзя, честно оставь соответствующее утверждение недоказанным. Если ошибок нет, verdict=pass. Верни ТОЛЬКО JSON без Markdown: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"assumptions\":true|false,\"eliminations\":true|false,\"lower_bound\":true|false},\"issues\":[\"конкретные ошибки\"],\"corrected_answer\":\"полный исправленный ответ при revise\"}. При pass все checks=true и issues=[]; не пересказывай решение."
+    :"Ты независимый финальный математический рецензент Kaz AI. Рассматривай представленный ответ как новый, независимо проверяй каждый шаг, исключения, транзитивность, крайние случаи, отсутствие противоречий и полноту доказательства минимальности ДЛЯ ВСЕХ допустимых алгоритмов. Особенно важно: число прямых сравнений не является пределом числа известных транзитивно выводимых отношений. Если ответ доказывает универсальное утверждение только на примерах или ошибочно считает пары, НЕ подтверждай его. Верни ТОЛЬКО JSON: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"assumptions\":true|false,\"eliminations\":true|false,\"lower_bound\":true|false},\"issues\":[\"конкретные ошибки\"],\"corrected_answer\":\"\"}. При pass все checks=true и issues=[]. При сомнении ставь uncertain; corrected_answer всегда пустой. Не выдумывай успешную проверку.";
   const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
     input:[
-      {role:"system",content:"Ты независимый строгий рецензент Kaz AI. Проверь КАЖДОЕ утверждение, все этапы исключения кандидатов, транзитивность, пограничные случаи, противоречия, корректность построенного алгоритма. Если заявлена минимальность или невозможность, убедись, что нижняя граница доказана ДЛЯ ЛЮБОЙ допустимой стратегии, а не только для описанной схемы. В частности, если кто-то после группового забега проиграл уже трём участникам, его можно исключить из топ-3 до любых межгрупповых забегов. НЕ позволяй тексту объявлять доказательство завершённым, а затем признавать его неполным. Верни только JSON без Markdown: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"assumptions\":true|false,\"eliminations\":true|false,\"lower_bound\":true|false},\"issues\":[\"конкретная ошибка и место\"]}. lower_bound=true ставь, только если необходимые универсальные утверждения действительно обоснованы; когда пользователь не требует минимальности, отмечай true после проверки полноты относящихся к задаче утверждений. При сомнениях ставь revise или uncertain, не pass. Не скрывай ошибки ради согласия с автором."},
-      {role:"user",content:"ВОПРОС:\n"+question.slice(0,4000)+"\n\nЧЕРНОВИК:\n"+answer.slice(0,85000)}
+      {role:"system",content:system},
+      {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+"\n\nРЕШЕНИЕ:\n"+answer.slice(0,85000)}
     ],
     reasoning:{effort},stream:false
   });
@@ -124,28 +133,21 @@ function proofNotConfirmed(review){
     (details?"\n\n**Что требует проверки:**\n\n"+details:"\n\nДополнительная проверка сейчас недоступна.")+
     "\n\nЭто ограничение проверки ИИ, а не доказательство неправильности самого ответа.";
 }
-async function verifyAndImproveProof(env,question,draft,effort){
+async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{}){
   let review;
-  try{review=await independentProofReview(env,question,draft,effort)}
-  catch{return proofNotConfirmed()}
-  if(review.verdict==="pass")return draft;
-  // Repair rather than appending a contradictory review below the old answer.
-  let revised;
   try{
-    const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
-      input:[
-        {role:"system",content:"Ты Kaz AI, математический редактор. Перепиши решение полностью и исправь КАЖДОЕ конкретное замечание рецензента. Проверь каждый этап исключений и правильность всех универсальных утверждений. Особое внимание доказательству оптимальности: пример для одной стратегии не доказывает невозможности других стратегий. Не добавляй взаимоисключающих выводов. Если не можешь строго доказать минимальность, скажи прямо, что нижняя граница не доказана, и не утверждай, что предъявленное решение минимально. Выведи только итоговый исправленный ответ, без разделов 'черновик' или 'рецензия'."},
-        {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+"\n\nИСХОДНЫЙ ОТВЕТ:\n"+draft.slice(0,60000)+"\n\nЗАМЕЧАНИЯ:\n"+(review.issues.join("\n")||"Проверь полное универсальное доказательство, допущения и исключения.")}
-      ],
-      reasoning:{effort},stream:false
-    });
-    revised=answerText(result);
+    onStage("Независимо проверяю доказательство");
+    review=await independentProofReview(env,question,draft,effort,true);
+  }catch{return proofNotConfirmed()}
+  if(review.verdict==="pass")return draft;
+  if(review.verdict!=="revise")return proofNotConfirmed(review);
+  if(review.corrected===draft.trim())return proofNotConfirmed(review);
+  let finalReview;
+  try{
+    onStage("Проверяю исправленное решение");
+    finalReview=await independentProofReview(env,question,review.corrected,effort,false);
   }catch{return proofNotConfirmed(review)}
-  if(!revised.trim()||revised.trim()===draft.trim())return proofNotConfirmed(review);
-  let lastReview;
-  try{lastReview=await independentProofReview(env,question,revised,effort)}
-  catch{return proofNotConfirmed(review)}
-  return lastReview.verdict==="pass"?revised:proofNotConfirmed(lastReview);
+  return finalReview.verdict==="pass"?review.corrected:proofNotConfirmed(finalReview);
 }
 
 function streamedAIResponse(env,messages,effort,verifyProof=false){
@@ -209,8 +211,8 @@ function streamedAIResponse(env,messages,effort,verifyProof=false){
           // Regular chats still stream each chunk immediately.
           if(!closed&&verifyProof){
             if(!collected.trim())throw new Error("Empty proof answer");
-            write("event: progress\ndata: "+JSON.stringify({message:"Перепроверяю доказательство и исправляю ошибки…"})+"\n\n");
-            const finalAnswer=await verifyAndImproveProof(env,messages.at(-1)?.content||"",collected,effort);
+            const stage=message=>write("event: progress\ndata: "+JSON.stringify({message:message+"…"})+"\n\n");
+            const finalAnswer=await verifyAndImproveProof(env,messages.at(-1)?.content||"",collected,effort,stage);
             if(!closed)write("event: final\ndata: "+JSON.stringify({text:finalAnswer})+"\n\n");
           }
 

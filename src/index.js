@@ -203,7 +203,8 @@ async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{}){
   if(review.verdict==="pass")return draftIssues.length?proofNotConfirmed({issues:draftIssues}):draft;
   if(review.verdict!=="revise")return proofNotConfirmed({issues:[...draftIssues,...review.issues]});
   if(review.corrected===draft.trim())return proofNotConfirmed(review );
-  const correctedIssues=horseProofIssues(question,review.corrected);\n  if(correctedIssues.length)return proofNotConfirmed({issues:correctedIssues});
+  const correctedIssues=horseProofIssues(question,review.corrected);
+  if(correctedIssues.length)return proofNotConfirmed({issues:correctedIssues});
   let finalReview;
   try{
     onStage("Проверяю исправленное решение");

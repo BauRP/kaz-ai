@@ -504,3 +504,92 @@ test('horses regression does not change unrelated mathematical questions',async(
   assert.equal(calls.length,2,'ordinary proof receives normal independent review');
   assert.doesNotMatch(JSON.stringify(calls),/25 лошадей/);
 });
+
+test('distributed engineering draft is corrected and independently checked at low medium high',async()=>{
+  const question='Спроектируй распределённый мессенджер c Raft, CRDT и HLC, FIFO, сетевыми сбоями, напиши код.';
+  const oldAnswer='Raft гарантирует быстрый отклик и уникальный MessageID без проблем.';
+  const improved='## Архитектура\n\nRaft обеспечивает единый журнал только при кворуме. При разрыве сети локальные предварительные сообщения нельзя считать окончательно доставленными. FIFO отправителя требует отдельный последовательный номер и дедупликацию. CRDT с отложенным слиянием не обеспечивает строгий немедленный неизменяемый порядок.';
+  for(const effort of ['low','medium','high']){
+    const {env,calls}=envWithAI(async(_name,opts)=>{
+      if(opts.stream)return new ReadableStream({start(c){
+        c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:oldAnswer})+'\n\n'));c.close();
+      }});
+      const isFinal=opts.input[0].content.includes('Повторно независимо');
+      return {output_text:JSON.stringify({
+        verdict:isFinal?'pass':'revise',
+        checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},
+        issues:isFinal?[]:['Неверно заявлены гарантии при partition'],
+        corrected_answer:isFinal?'':improved
+      })};
+    });
+    const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort},TOKEN,{Accept:'text/event-stream'}),env);
+    const out=await response.text();
+    assert.match(out,/event: final/);
+    assert.match(out,/не обеспечивает строгий/);
+    assert.doesNotMatch(out,/уникальный MessageID без проблем/);
+    assert.equal(calls.length,3);
+    assert.equal(calls[0][1].reasoning_effort,effort);
+    assert.ok(calls.slice(1).every(([,params])=>params.reasoning.effort===effort));
+    assert.match(calls[0][1].messages[0].content,/FIFO одного отправителя/);
+    assert.match(calls[1][1].input[0].content,/Raft/);
+    assert.match(calls[1][1].input[0].content,/RGA/);
+    assert.match(calls[1][1].input[0].content,/exact/);
+  }
+});
+test('correct technical design needs only one independent review across levels',async()=>{
+  for(const effort of ['low','medium','high']){
+    const {env,calls}=envWithAI(async(_name,params)=>{
+      if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: {"response":"Корректная схема с явно указанными ограничениями"}\n\n'));c.close()}});
+      return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},issues:[],corrected_answer:''})};
+    });
+    const response=await worker.fetch(post({messages:[{role:'user',content:'Предложи архитектуру распределённой системы'}],effort},TOKEN,{Accept:'text/event-stream'}),env);
+    const body=await response.text();
+    assert.match(body,/Корректная схема/);
+    assert.equal(calls.length,2);
+  }
+});
+test('wrong ID packing cannot pass even when the technical reviewer mistakenly approves it',async()=>{
+  const question='Спроектируй Raft/CRDT мессенджер с FIFO и кодом формирования идентификатора.';
+  const bad='MessageID = (HLC_timestamp << 32) | (SiteID << 16) | SeqPerSite';
+  for(const effort of ['low','medium','high']){
+    const {env,calls}=envWithAI(async(_name,params)=>{
+      if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.close()}});
+      return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},issues:[],corrected_answer:''})};
+    });
+    const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort},TOKEN,{Accept:'text/event-stream'}),env);
+    const body=await response.text();
+    assert.match(body,/Техническая корректность ответа не подтверждена/);
+    assert.match(body,/перекрыти|Перекрыти/);
+    assert.doesNotMatch(body,/MessageID =/);
+    assert.equal(calls.length,2);
+  }
+});
+test('incomplete or failed programming review is not falsely marked verified',async()=>{
+  const {env}=envWithAI(async(_name,params)=>{
+    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: {"response":"Опасный непротестированный код"}\n\n'));c.close()}});
+    return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true},issues:[],corrected_answer:''})};
+  });
+  const response=await worker.fetch(post({messages:[{role:'user',content:'Напиши функцию на Python'}],effort:'medium'},TOKEN,{Accept:'text/event-stream'}),env);
+  const body=await response.text();
+  assert.match(body,/Техническая корректность ответа не подтверждена/);
+  assert.doesNotMatch(body,/непротестированный код/);
+});
+test('nonstream engineering route receives the same final technical review',async()=>{
+  const {env,calls}=envWithAI(async(_name,params)=>{
+    if(calls.length===1)return {output_text:'Raft clusters merge by sorting HLC'};
+    return {output_text:JSON.stringify({verdict:'uncertain',checks:{requirements:false,ordering:false,partitions:false,code:false,claims:false},issues:['Raft does not merge committed logs by HLC'],corrected_answer:''})};
+  });
+  const response=await worker.fetch(post({messages:[{role:'user',content:'Объясни Raft при разделении сети'}],effort:'high'}),env);
+  assert.equal(response.status,200);
+  assert.match((await response.json()).text,/Техническая корректность ответа не подтверждена/);
+  assert.equal(calls.length,2);
+  assert.equal(calls[1][1].reasoning.effort,'high');
+});
+test('ordinary greetings and arithmetic still use one inference call',async()=>{
+  for(const content of ['Привет!','Сколько будет 2+2?']){
+    const {env,calls}=envWithAI();
+    const response=await worker.fetch(post({messages:[{role:'user',content}],effort:'low'}),env);
+    assert.equal(response.status,200);
+    assert.equal(calls.length,1);
+  }
+});

@@ -306,6 +306,113 @@ test('all three reasoning levels stream long answers without any client deadline
   }finally{await browser.close()}
 });
 
+
+test('formatted Kaz AI answers safely render headings, lists, tables, code, formulas and links',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1150,height:850}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(appUrl);
+    const result=await page.evaluate(()=>{
+      const samples=[
+        '## Решение задачи',
+        '',
+        '**Ответ: 7 забегов**',
+        '',
+        '1. Разделить лошадей',
+        '2. Проверить победителей',
+        '',
+        '| Группа | Победитель |',
+        '|---|---|',
+        '| A | A₁ |',
+        '| B | B₁ |',
+        '',
+        'Формула $x^2 + y_1$ и \\(a \\leq b\\).',
+        '',
+        '~~~js',
+        'const number = 7;',
+        '~~~',
+        '',
+        '[Проверенная ссылка](https://example.org/)',
+        '',
+        '[Опасная ссылка](javascript:alert(1))',
+        '<img src=x onerror="window.__xss=true">'
+      ].join('\\n');
+      const root=window.KazFormat.render(samples);
+      document.querySelector('#chatMessages').append(root);
+      return {
+        title:root.querySelector('h2')?.textContent,
+        strong:root.querySelector('strong')?.textContent,
+        list:root.querySelectorAll('ol li').length,
+        rows:root.querySelectorAll('table tr').length,
+        code:root.querySelector('pre code')?.textContent,
+        math:[...root.querySelectorAll('.answer-math')].map(el=>el.textContent),
+        links:[...root.querySelectorAll('a')].map(a=>a.href),
+        images:root.querySelectorAll('img').length,
+        markup:root.textContent.includes('<img src=x onerror='),
+        copy:root.querySelector('.answer-code-copy')?.textContent,
+        xss:window.__xss===true
+      };
+    });
+    assert.equal(result.title,'Решение задачи');
+    assert.equal(result.strong,'Ответ: 7 забегов');
+    assert.equal(result.list,2);
+    assert.equal(result.rows,3);
+    assert.equal(result.code,'const number = 7;');
+    assert.ok(result.math.some(x=>x.includes('²')));
+    assert.ok(result.math.some(x=>x.includes('≤')));
+    assert.deepEqual(result.links,['https://example.org/']);
+    assert.equal(result.images,0);
+    assert.equal(result.markup,true);
+    assert.equal(result.copy,'Копировать код');
+    assert.equal(result.xss,false);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('rigorous proof review appears as a readable section across all reasoning levels',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1200,height:840}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>route.fulfill({status:200,contentType:'text/html',body:html}));
+    await page.addInitScript(()=>{
+      const original=window.fetch.bind(window);
+      window.__proofEfforts=[];
+      window.fetch=(url,options)=>{
+        if(url!=='/api/chat')return original(url,options);
+        const payload=JSON.parse(options.body);
+        window.__proofEfforts.push(payload.effort);
+        const enc=new TextEncoder();
+        const body=new ReadableStream({start(c){
+          c.enqueue(enc.encode('data: '+JSON.stringify({response:'## Ответ\\n\\n**7 забегов.**'})+'\\n\\n'));
+          c.enqueue(enc.encode('event: progress\\ndata: '+JSON.stringify({message:'Проверяю строгость…'})+'\\n\\n'));
+          c.enqueue(enc.encode('event: review\\ndata: '+JSON.stringify({text:'Замечания: нижняя граница недостаточно доказана.'})+'\\n\\n'));
+          c.enqueue(enc.encode('event: done\\ndata: {}\\n\\n'));
+          c.close();
+        }});
+        return Promise.resolve(new Response(body,{status:200,headers:{'content-type':'text/event-stream'}}));
+      };
+    });
+    await page.goto('https://kaz-ai.test/');
+    for(const effort of ['low','medium','high']){
+      await page.evaluate(level=>{state.reason=level},effort);
+      await page.locator('#messageInput').fill('Строго докажи почему 6 забегов недостаточно');
+      await page.locator('#sendButton').click();
+      await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
+      const chat=page.locator('#chatMessages');
+      assert.ok((await chat.locator('.message-assistant').last().innerText()).includes('Замечания: нижняя граница недостаточно доказана.'));
+      assert.ok((await chat.locator('.message-assistant').last().innerText()).includes('7 забегов.'));
+      assert.ok((await chat.locator('.message-assistant').last().locator('h3').count())>=1);
+    }
+    assert.deepEqual(await page.evaluate(()=>window.__proofEfforts),['low','medium','high']);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
 test('GPT-OSS streaming renders partial complex answers before completion and stores final response',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});

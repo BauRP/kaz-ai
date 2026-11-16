@@ -692,20 +692,11 @@ test('language and font tools move keyboard focus from hidden cards onto visible
   });
 });
 
-test('private GPT access key submits on Enter but never during IME composition',async()=>{
+test('public chat has no access key in settings',async()=>{
   await withPage(async page=>{
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('[data-session="ai-access"]').click();
-    const field=page.locator('#sessionBody input[type="password"]');
-    await field.fill('123456789012345678901234');
-    await field.evaluate(input=>input.dispatchEvent(new KeyboardEvent('keydown',{
-      key:'Enter',bubbles:true,isComposing:true
-    })));
-    assert.equal(await page.locator('#sessionOverlay').isVisible(),true,'IME Enter must not submit');
-    await field.press('Enter');
-    assert.equal(await page.locator('#sessionOverlay').isVisible(),false,'Enter saves the key');
-    assert.equal(await page.locator('#sessionBody input[type="password"]').count(),0,'Password input removed');
-    assert.match(await page.locator('#toast').innerText(),/Ключ принят/);
+    assert.equal(await page.locator('[data-session="ai-access"]').count(),0);
+    assert.equal(await page.locator('input[type=password]').count(),0);
   });
 });
 
@@ -746,18 +737,13 @@ test('project dialog localizes commands without translating the project title',a
   });
 });
 
-test('GPT access dialog help is translated to English and Kazakh',async()=>{
+test('public chat key stays hidden in EN and KK',async()=>{
   await withPage(async page=>{
-    for(const [lang,title] of [
-      ['en','GPT-OSS 120B access'],['kk','GPT-OSS 120B-ке қол жеткізу']
-    ]){
+    for(const lang of ['en','kk']){
       await page.locator('#languageToggle').click();
       await page.locator('#languageMenu [data-language="'+lang+'"]').click();
       await page.locator('.sidebar [data-screen="settings"]').click();
-      await page.locator('[data-session="ai-access"]').click();
-      assert.equal(await page.locator('#sessionTitle').innerText(),title);
-      assert.equal(await page.locator('#sessionBody input[type="password"]').count(),1);
-      await page.locator('#sessionClose').click();
+      assert.equal(await page.locator('[data-session="ai-access"]').count(),0);
     }
   });
 });

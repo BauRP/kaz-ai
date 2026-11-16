@@ -217,7 +217,7 @@ test('real browser: failed GPT answer retry preserves original reply until new r
         calls++;
         const payload=route.request().postDataJSON();
         assert.ok(['low','medium','high'].includes(payload.effort));
-        assert.ok(route.request().headers().authorization.startsWith('Bearer '));
+        assert.equal(route.request().headers().authorization,undefined);
         if(calls===2)return route.fulfill({
           status:503,contentType:'application/json',
           body:JSON.stringify({code:'AI_UNAVAILABLE',message:'Тестовая ошибка ответа'})
@@ -232,9 +232,7 @@ test('real browser: failed GPT answer retry preserves original reply until new r
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Первая задача');
     await page.locator('#sendButton').click();
-    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
-    await page.locator('#sessionBody input').fill('test-secret-1234567890123456789');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Первый успешный ответ'));
     await page.locator('[data-session="retry-answer"]').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Тестовая ошибка ответа'));
@@ -646,7 +644,7 @@ test('recent chats reorder by activity while pinned chats remain at the top',asy
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
-test('closing access-key modal removes hidden password input; temporary draft is deleted only after clearing it',async()=>{
+test('public chat has no key dialog; temporary draft is deleted only after clearing it',async()=>{
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -654,9 +652,7 @@ test('closing access-key modal removes hidden password input; temporary draft is
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('[data-session="ai-access"]').click();
-    await page.locator('#sessionBody input[type=password]').fill('unsaved-test-private-key-value');
-    await page.locator('#sessionClose').click();
+    assert.equal(await page.locator('[data-session="ai-access"]').count(),0);
     assert.equal(await page.locator('#sessionBody input[type=password]').count(),0);
     await page.locator('#sessionTemporary').check();
     await page.locator('#messageInput').fill('Временное сообщение');
@@ -723,8 +719,6 @@ test('send stays disabled while a GPT request is pending, including when typing'
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Первый запрос');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('my-safe-private-test-token-123456789');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
     await page.locator('#messageInput').fill('Второй запрос, не отправлять пока');
     assert.equal(await page.locator('#sendButton').isDisabled(),true);
@@ -760,8 +754,6 @@ test('manually cancelled AI request offers retry and rejects late responses',asy
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Не дублировать вопрос');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('another-secure-test-secret-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
     await page.locator('#sessionStop').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('остановлена'));
@@ -797,8 +789,6 @@ test('real browser: failed answer regeneration can be retried without duplicatin
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Проверь повтор ответа');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('private-test-access-token-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Первый ответ'));
     await page.locator('[data-session="retry-answer"]').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Временная ошибка'));
@@ -834,8 +824,6 @@ test('real browser: a long assistant reply does not invalidate the next chat req
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Первый вопрос');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('private-test-access-token-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.length>4800);
     await page.locator('#messageInput').fill('Второй вопрос');
     await page.locator('#sendButton').click();
@@ -1005,8 +993,6 @@ test('rating a response changes only its buttons without destroying the displaye
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Оцени этот ответ');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('long-safe-browser-test-access-key-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Подробный ответ от модели'));
     const result=await page.evaluate(()=>{
       const message=document.querySelector('.message-assistant');
@@ -1048,7 +1034,7 @@ test('project selection opens with keyboard focus on the choice, not Save',async
   }finally{await browser.close()}
 });
 
-test('real browser: rejected AI key allows retry with a new key and no duplicate user message',async()=>{
+test('real browser: rate-limited response can be retried without duplicate user question',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -1059,23 +1045,19 @@ test('real browser: rejected AI key allows retry with a new key and no duplicate
     await page.route('https://kaz-ai.test/**',async route=>{
       if(new URL(route.request().url()).pathname==='/api/chat'){
         requests++;
-        if(requests===1)return route.fulfill({status:401,contentType:'application/json',body:JSON.stringify({code:'ACCESS_REQUIRED',message:'Bad key'})});
-        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Ответ после обновления ключа'})});
+        if(requests===1)return route.fulfill({status:429,contentType:'application/json',body:JSON.stringify({code:'AI_RATE_LIMITED',message:'Too many requests'})});
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Ответ после временного ограничения'})});
       }
       return route.fulfill({status:200,contentType:'text/html',body:html});
     });
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Вопрос, который нельзя дублировать');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('first-invalid-key-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Ключ доступа не принят'));
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Слишком много запросов'));
     await page.locator('#sessionRetry').waitFor({state:'visible'});
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
     await page.locator('#sessionRetry').click();
-    await page.locator('#sessionBody input[type=password]').fill('new-valid-test-key-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ после обновления ключа'));
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ после временного ограничения'));
     const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
     assert.equal(snapshot.threads.length,1);
     assert.equal(snapshot.threads[0].messages,2);
@@ -1200,31 +1182,28 @@ test('changing language does not translate user-written history search snippets 
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
-test('access dialog never sends a former conversation after programmatic navigation to new chat',async()=>{
-  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
-  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+test('public chat sends directly to GPT endpoint without visitor password',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
     const page=await browser.newPage({viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     let calls=0;
-    await page.route('https://kaz-ai.test/**',async route=>{
+    await page.route('https://kaz-ai.test/**',route=>{
       if(new URL(route.request().url()).pathname==='/api/chat'){
-        calls++;return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Old response'})});
+        calls++;
+        assert.equal(route.request().headers().authorization,undefined);
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Публичный ответ'})});
       }
       return route.fulfill({status:200,contentType:'text/html',body:html});
     });
     await page.goto('https://kaz-ai.test/');
-    await page.locator('#messageInput').fill('Original protected request');
+    await page.locator('#messageInput').fill('Вопрос без ключа');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionOverlay').waitFor({state:'visible'});
-    await page.evaluate(()=>newChat());
-    await page.locator('#sessionBody input[type=password]').fill('test-secret-1234567890123456789');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    await page.waitForTimeout(100);
-    assert.equal(calls,0);
-    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
-    assert.equal(await page.locator('.message-assistant').count(),0);
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Публичный ответ'));
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+    assert.equal(calls,1);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
@@ -1251,8 +1230,6 @@ test('failed AI request does not leak Retry into settings and restores it on ret
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Вопрос для повтора');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('my-test-access-secret-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
     await page.locator('.sidebar [data-screen="settings"]').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Временный отказ сервера'));
@@ -1409,8 +1386,6 @@ test('existing Retry answer tool recovers the latest unanswered question without
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Вопрос без ответа');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('reliable-test-key-1234567890123456789012');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Временный отказ'));
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
     await page.locator('.sidebar [data-screen="tools"]').click();
@@ -1613,8 +1588,6 @@ test('Rating entry from Tools focuses the latest AI rating rather than rating th
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Вопрос для оценки');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('safe-test-only-key-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Проверяемый ответ модели'));
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-13"]').click();
@@ -1724,8 +1697,6 @@ test('Stop response from Tools returns to visible chat and offers retry without 
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Отменить через инструменты');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('preview-safe-test-key-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-10"]').click();
@@ -1836,8 +1807,6 @@ test('chat pins and reply ratings have localized accessible names without changi
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Настройки проекта');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('preview-safe-test-key-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Надёжный ответ'));
     await page.locator('.sidebar [data-screen="history"]').click();
     assert.equal(await page.locator('#historyList .session-chat-name').getAttribute('aria-label'),'Открыть чат: Настройки проекта');
@@ -1963,8 +1932,6 @@ test('pending AI status reappears on returning to the same chat without duplicat
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Проверяем возврат к ответу');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('preview-safe-test-key-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
     await page.locator('.sidebar [data-screen="history"]').click();
     assert.equal(await page.locator('#statusBanner').isVisible(),false);
@@ -2028,8 +1995,6 @@ test('retrying an AI request moves keyboard focus from the hidden Retry button t
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Проверка безопасного повтора');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('preview-safe-test-key-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionRetry')?.hidden===false);
     await page.locator('#sessionRetry').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
@@ -2063,8 +2028,6 @@ test('AI pending and error messages remain localized when switching language mid
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Ошибка должна быть переведена');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('preview-safe-test-key-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
     await page.locator('#languageToggle').click();
     await page.locator('#languageMenu [data-language="en"]').click();
@@ -2122,8 +2085,6 @@ test('manual Stop immediately unlocks retry while the old request remains unreso
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Остановка без ожидания сети');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('safe-test-protected-key-123456789012345');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
     await page.locator('#sessionStop').click();
     assert.equal(await page.locator('#sessionStop').isVisible(),false);
@@ -2162,8 +2123,6 @@ test('stop and retry of regeneration keeps original reply until a real replaceme
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Проверить замену ответа');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('safe-test-protected-key-123456789012345');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Исходный ответ'));
     await page.locator('[data-session="retry-answer"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
@@ -2420,8 +2379,6 @@ test('AI timeout unlocks Retry even if a stalled fetch ignores AbortSignal, and 
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Ответ должен завершиться по времени');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('safe-private-key-for-testing-123456789');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
     await page.waitForFunction(()=>document.querySelector('#sessionRetry')?.hidden===false,{timeout:5000});
     assert.equal(await page.locator('#sessionStop').isVisible(),false);
@@ -2464,8 +2421,6 @@ test('timed-out AI status stays hidden in History and restores Retry when return
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Проверяем фоновый тайм-аут');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('safe-private-key-for-testing-123456789');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true,{timeout:5000});
@@ -2506,22 +2461,16 @@ test('static accessible control names switch RU EN KK and back without changing 
   }finally{await browser.close()}
 });
 
-test('AI access dialog validates the same 1,000-character maximum as the server',async()=>{
-  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
-  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+test('public chat has no secret-key setting',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
     const page=await browser.newPage({viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('[data-session="ai-access"]').click();
-    const field=page.locator('#sessionBody input[type=password]');
-    await field.fill('a'.repeat(1001));
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
-    assert.match(await page.locator('#toast').innerText(),/Максимум 1000/);
-    await page.locator('#sessionClose').click();
-    assert.equal(await page.locator('#sessionBody input[type=password]').count(),0);
+    assert.equal(await page.locator('[data-session="ai-access"]').count(),0);
+    assert.equal(await page.locator('input[type=password]').count(),0);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
@@ -2549,8 +2498,6 @@ test('browser keeps formatted replies and sends emoji-safe context to GPT',async
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Проверь код');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('local-private-test-key-123456789');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant > span')?.textContent.length>3950);
     assert.equal(await page.locator('.message-assistant > span').first().textContent(),original);
     await page.locator('#messageInput').fill('Следующий вопрос');
@@ -2567,40 +2514,33 @@ test('browser keeps formatted replies and sends emoji-safe context to GPT',async
 });
 
 
-test('dismissed private-key dialog keeps the original question retryable without duplicates',async()=>{
+test('public reply does not duplicate the original question',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
-    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
-    let requests=0;
+    let calls=0;
     await page.route('https://kaz-ai.test/**',route=>{
       if(new URL(route.request().url()).pathname==='/api/chat'){
-        requests++;
-        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Ответ на сохранённый вопрос'})});
+        calls++;
+        assert.equal(route.request().headers().authorization,undefined);
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Публичный ответ'})});
       }
       return route.fulfill({status:200,contentType:'text/html',body:html});
     });
     await page.goto('https://kaz-ai.test/');
-    await page.locator('#messageInput').fill('Мой исходный вопрос');
+    await page.locator('#messageInput').fill('Вопрос без ключа');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionClose').click();
-    assert.equal(await page.locator('#sessionBody input[type=password]').count(),0);
-    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
-    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads[0].messages,1);
-    await page.locator('#sessionRetry').click();
-    await page.locator('#sessionBody input[type=password]').fill('valid-private-test-key-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ на сохранённый вопрос'));
-    assert.equal((await page.locator('.message-user').count()),1);
-    assert.equal((await page.locator('.message-assistant').count()),1);
-    assert.equal(requests,1);
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Публичный ответ'));
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+    assert.equal(calls,1);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
 
-test('server setup failure keeps valid key for retry, unlike a rejected key',async()=>{
+test('public server setup failure remains retryable',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -2620,8 +2560,6 @@ test('server setup failure keeps valid key for retry, unlike a rejected key',asy
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Проверить сервер');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('valid-private-test-key-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Серверный ИИ ещё не настроен'));
     assert.equal(await page.locator('#sessionRetry').isVisible(),true);
     await page.locator('#sessionRetry').click();
@@ -2656,7 +2594,7 @@ test('export sanitizes invisible direction overrides in chat filename, preservin
   }finally{await browser.close()}
 });
 
-test('rejected key and server setup errors show correct English and Kazakh text',async()=>{
+test('public server setup errors show correct English and Kazakh text',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -2668,7 +2606,7 @@ test('rejected key and server setup errors show correct English and Kazakh text'
       if(new URL(route.request().url()).pathname==='/api/chat'){
         requests++;
         const serverNotReady=requests===1;
-        return route.fulfill({status:serverNotReady?503:401,contentType:'application/json',
+        return route.fulfill({status:503,contentType:'application/json',
           body:JSON.stringify({code:'ACCESS_REQUIRED',message:'Backend issue'})});
       }
       return route.fulfill({status:200,contentType:'text/html',body:html});
@@ -2678,15 +2616,13 @@ test('rejected key and server setup errors show correct English and Kazakh text'
     await page.locator('#languageMenu [data-language="en"]').click();
     await page.locator('#messageInput').fill('Verify locale');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('valid-private-test-key-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('AI is not configured on the server yet'));
     assert.equal(await page.locator('#sessionRetry').isVisible(),true);
     await page.locator('#languageToggle').click();
     await page.locator('#languageMenu [data-language="kk"]').click();
     assert.ok((await page.locator('#statusBanner').textContent()).includes('Серверде ЖИ әлі бапталмаған'));
     await page.locator('#sessionRetry').click();
-    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Қолжетімділік кілті қабылданбады'));
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Серверде ЖИ әлі бапталмаған'));
     assert.equal(requests,2);
     assert.equal(await page.locator('.message-user').count(),1);
     assert.deepEqual(errors,[]);
@@ -2713,8 +2649,6 @@ test('daily Cloudflare quota leaves original question retryable after reset with
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Важный вопрос без дублей');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('private-safe-test-access-key-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Дневной лимит'));
     assert.equal(await page.locator('#statusBanner').isVisible(),true);
     assert.equal(await page.locator('#sessionRetry').isVisible(),true);
@@ -2750,8 +2684,6 @@ test('daily quota during answer regeneration keeps original reply until manual R
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Мой вопрос для повторного ответа');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('private-safe-test-access-key-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Первоначальный ответ'));
     await page.locator('[data-session="retry-answer"]').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Дневной лимит'));

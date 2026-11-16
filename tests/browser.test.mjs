@@ -3395,3 +3395,62 @@ test('invisible-only project names are rejected while joined emoji names remain 
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('interrupted SSE keeps incomplete text visible and manual retry restores a single final answer',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...chromePath?{executablePath:chromePath}:{channel:'chrome'},
+    headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1200,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    let count=0;
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',async(route)=>{
+      if(new URL(route.request().url()).pathname!=='/api/chat')
+        return route.fulfill({status:200,contentType:'text/html',body:html});
+      count++;
+      const body=count===1
+        ?'data: {"response":"Начало длинного ответа"}\n\n'
+        :'data: {"response":"Полный ответ после повтора"}\n\nevent: done\ndata: {}\n\n';
+      return route.fulfill({status:200,contentType:'text/event-stream',body});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Длинная сложная задача');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionRetry').waitFor({state:'visible'});
+    assert.match(await page.locator('#chatMessages').innerText(),/Начало длинного ответа/);
+    assert.match(await page.locator('#chatMessages').innerText(),/Ответ прервался/);
+    assert.match(await page.locator('#statusBanner').innerText(),/Передача ответа прервалась/);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)).length,1,
+      'Incomplete answer must not enter conversation history');
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('Полный ответ после повтора'));
+    assert.equal(await page.locator('#chatMessages .message-assistant').count(),1);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)).length,2);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),false);
+    assert.equal(count,2,'Only user clicking Retry starts a second inference');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+test('provider SSE outage is not falsely blamed on user internet connectivity',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...chromePath?{executablePath:chromePath}:{channel:'chrome'},
+    headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1100,height:780}});
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',async(route)=>{
+      if(new URL(route.request().url()).pathname!=='/api/chat')
+        return route.fulfill({status:200,contentType:'text/html',body:html});
+      return route.fulfill({status:200,contentType:'text/event-stream',
+        body:'event: error\ndata: {"code":"AI_UNAVAILABLE","message":"Временная ошибка провайдера"}\n\n'});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Тест сбоя');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionRetry').waitFor({state:'visible'});
+    assert.match(await page.locator('#statusBanner').innerText(),/Сервис ИИ временно недоступен/);
+    assert.doesNotMatch(await page.locator('#statusBanner').innerText(),/Проверьте подключение/);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)).length,1);
+  }finally{await browser.close()}
+});

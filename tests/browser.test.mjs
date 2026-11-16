@@ -247,6 +247,49 @@ test('real browser: failed GPT answer retry preserves original reply until new r
   }finally{await browser.close()}
 });
 
+test('GPT-OSS streaming renders partial complex answers before completion and stores final response',async()=>{
+  const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1260,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>route.fulfill({status:200,contentType:'text/html',body:html}));
+    await page.addInitScript(()=>{
+      const original=window.fetch.bind(window);
+      window.fetch=(url,options)=>{
+        if(url!=="/api/chat")return original(url,options);
+        const encoder=new TextEncoder();
+        const body=new ReadableStream({
+          start(controller){
+            controller.enqueue(encoder.encode(": connected\n\n"));
+            controller.enqueue(encoder.encode('data: {"response":"Начало сложного"}\n\n'));
+            window.setTimeout(()=>{
+              try{
+                controller.enqueue(encoder.encode('data: {"response":" ответа после рассуждений"}\n\n'));
+                controller.enqueue(encoder.encode("event: done\ndata: {}\n\n"));
+                controller.close();
+              }catch{}
+            },700);
+          }
+        });
+        return Promise.resolve(new Response(body,{status:200,headers:{"content-type":"text/event-stream"}}));
+      };
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Объясни сложный математический вывод');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Начало сложного'));
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),1,'Partial reply must not be saved as complete');
+    assert.equal(await page.locator('#sessionStop').isVisible(),true);
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('ответа после рассуждений'));
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),2);
+    assert.equal(await page.locator('.message-assistant').count(),1);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
 test('real browser: retry a failed request without duplicating question; cancel stale reply on new chat',async()=>{
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({

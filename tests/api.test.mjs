@@ -119,32 +119,69 @@ test('SSE cancellation stops upstream output without completing a stale response
 });
 
 
-test('proof verifier is invoked on all three reasoning levels and distinguishes uncertain claims',async()=>{
+test('proof requests are corrected BEFORE display at low, medium and high levels',async()=>{
   for(const effort of ['low','medium','high']){
     const calls=[];
-    const {env}=envWithAI(async(model,params)=>{
+    const bad='## Ответ\n\n7 забегов, строго доказано. После пяти забегов нельзя исключить ни одной лошади.';
+    const fixed='## Ответ\n\n7 забегов. После первых пяти забегов исключены четвёртая и пятая лошади из каждой группы.';
+    const {env}=envWithAI(async(_model,params)=>{
       calls.push(params);
-      if(params.stream)return new ReadableStream({start(controller){
-        const data='data: '+JSON.stringify({response:'Ответ: 7. Этот алгоритм требует 7 забегов. Строгая минимальность пока не доказана.'})+'\n\n';
-        controller.enqueue(new TextEncoder().encode(data));
-        controller.close();
+      if(params.stream)return new ReadableStream({start(c){
+        const data='data: '+JSON.stringify({response:bad})+'\n\n';
+        c.enqueue(new TextEncoder().encode(data.slice(0,23)));
+        c.enqueue(new TextEncoder().encode(data.slice(23)));
+        c.close();
       }});
-      return {output:[{type:'message',content:[{type:'output_text',text:'Строгость не подтверждена: нижняя граница для всех алгоритмов не доказана.'}]}]};
+      if(params.input[0].content.includes("рецензент")){
+        const valid=calls.filter(x=>!x.stream&&x.input[0].content.includes("рецензент")).length===2;
+        const report={verdict:valid?'pass':'revise',checks:{assumptions:true,eliminations:valid,lower_bound:valid},
+          issues:valid?[]:['После пяти забегов можно исключить по две лошади из каждой группы; отсутствует общий аргумент нижней границы.']};
+        return {output_text:JSON.stringify(report)};
+      }
+      return {output_text:fixed};
     });
-    const body={messages:[{role:'user',content:'Строго докажи, почему 6 забегов невозможно'}],effort};
-    const response=await worker.fetch(post(body,TOKEN,{Accept:'text/event-stream'}),env);
-    assert.equal(response.status,200);
+    const req={messages:[{role:'user',content:'Строго докажи минимум для 25 лошадей, как исключать после каждого забега?'}],effort};
+    const response=await worker.fetch(post(req,TOKEN,{Accept:'text/event-stream'}),env);
     const output=await response.text();
-    assert.match(output,/event: review/);
-    assert.match(output,/Строгость не подтверждена/);
+    assert.match(output,/event: progress/);
+    assert.match(output,/event: final/);
+    assert.match(output,/После первых пяти забегов исключены/);
+    assert.doesNotMatch(output,/нельзя исключить ни одной/);
     assert.match(output,/event: done/);
-    assert.equal(calls.length,2);
+    assert.equal(calls.length,4,'draft, audit, correction, second audit');
     assert.equal(calls[0].reasoning_effort,effort);
-    assert.equal(calls[1].reasoning.effort,effort);
-    assert.equal(calls[0].stream,true);
-    assert.equal(calls[1].stream,false);
+    assert.ok(calls.slice(1).every(x=>x.reasoning.effort===effort));
   }
 });
+test('unverified proof never leaks an incorrect draft',async()=>{
+  for(const effort of ['low','medium','high']){
+    let count=0;
+    const {env}=envWithAI(async()=>{
+      if(++count===1)return new ReadableStream({start(c){
+        c.enqueue(new TextEncoder().encode('data: {"response":"Неверное и недоказанное утверждение"}\n\n'));c.close();
+      }});
+      throw new Error('review unavailable');
+    });
+    const response=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи минимальность'}],effort},TOKEN,{Accept:'text/event-stream'}),env);
+    const output=await response.text();
+    assert.match(output,/event: final/);
+    assert.match(output,/Строгое доказательство пока не подтверждено/);
+    assert.doesNotMatch(output,/Неверное и недоказанное утверждение/);
+    assert.match(output,/event: done/);
+  }
+});
+test('non-stream proof mode follows the same independent review safeguard',async()=>{
+  const {env,calls}=envWithAI(async(_model,params)=>{
+    if(calls.length===1)return {output_text:'Необоснованное доказательство'};
+    return {output_text:'not JSON'};
+  });
+  const res=await worker.fetch(post({messages:[{role:'user',content:'Докажи строго минимальность'}],effort:'medium'}),env);
+  assert.equal(res.status,200);
+  assert.match((await res.json()).text,/Строгое доказательство пока не подтверждено/);
+  assert.equal(calls.length,3);
+});
+
+
 test('ordinary questions do not spend tokens on unnecessary proof verification',async()=>{
   const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){
     c.enqueue(new TextEncoder().encode('data: {"response":"Привет!"}\n\n'));c.close();
@@ -154,20 +191,7 @@ test('ordinary questions do not spend tokens on unnecessary proof verification',
   assert.doesNotMatch(await response.text(),/event: review/);
   assert.equal(calls.length,1);
 });
-test('failed proof verifier preserves the primary answer and marks review unconfirmed',async()=>{
-  let count=0;
-  const {env}=envWithAI(async()=>{
-    if(++count===1)return new ReadableStream({start(c){
-      c.enqueue(new TextEncoder().encode('data: {"response":"Основной ответ"}\n\n'));c.close();
-    }});
-    throw new Error('review temporarily unavailable');
-  });
-  const response=await worker.fetch(post({messages:[{role:'user',content:'Докажи минимальность решения'}],effort:'low'},TOKEN,{Accept:'text/event-stream'}),env);
-  const output=await response.text();
-  assert.match(output,/Основной ответ/);
-  assert.match(output,/Строгость доказательства не подтверждена/);
-  assert.match(output,/event: done/);
-});
+
 
 test('validated requests reach GPT-OSS 120B with selected reasoning effort',async()=>{
   const {env,calls}=envWithAI();

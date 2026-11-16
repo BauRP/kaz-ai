@@ -1807,6 +1807,12 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
             onText(output,packet?.message||"Проверяю доказательство…");
             continue;
           }
+          if(event==="final"){
+            if(typeof packet?.text!=="string"||!packet.text.trim())throw new Error("EMPTY_RESPONSE");
+            output=packet.text;
+            onText(output);
+            continue;
+          }
           if(event==="review"){
             const review=typeof packet?.text==="string"?packet.text.slice(0,4500):"";
             if(review){output+="\n\n---\n\n### Независимая проверка доказательства\n\n"+review;onText(output)}

@@ -371,7 +371,7 @@ test('formatted Kaz AI answers safely render headings, lists, tables, code, form
   }finally{await browser.close()}
 });
 
-test('rigorous proof review appears as a readable section across all reasoning levels',async()=>{
+test('all three levels render ONLY the corrected final rigorous answer',async()=>{
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -388,9 +388,8 @@ test('rigorous proof review appears as a readable section across all reasoning l
         window.__proofEfforts.push(payload.effort);
         const enc=new TextEncoder();
         const body=new ReadableStream({start(c){
-          c.enqueue(enc.encode('data: '+JSON.stringify({response:'## Ответ\n\n**7 забегов.**'})+'\n\n'));
-          c.enqueue(enc.encode('event: progress\ndata: '+JSON.stringify({message:'Проверяю строгость…'})+'\n\n'));
-          c.enqueue(enc.encode('event: review\ndata: '+JSON.stringify({text:'Замечания: нижняя граница недостаточно доказана.'})+'\n\n'));
+          c.enqueue(enc.encode('event: progress\ndata: {"message":"Проверка доказательства…"}\n\n'));
+          c.enqueue(enc.encode('event: final\ndata: '+JSON.stringify({text:'## Исправленное решение\n\n**7 забегов.** После первых пяти можно исключить 10 лошадей.'})+'\n\n'));
           c.enqueue(enc.encode('event: done\ndata: {}\n\n'));
           c.close();
         }});
@@ -403,15 +402,16 @@ test('rigorous proof review appears as a readable section across all reasoning l
       await page.locator('#messageInput').fill('Строго докажи почему 6 забегов недостаточно');
       await page.locator('#sendButton').click();
       await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
-      const chat=page.locator('#chatMessages');
-      assert.ok((await chat.locator('.message-assistant').last().innerText()).includes('Замечания: нижняя граница недостаточно доказана.'));
-      assert.ok((await chat.locator('.message-assistant').last().innerText()).includes('7 забегов.'));
-      assert.ok((await chat.locator('.message-assistant').last().locator('h3').count())>=1);
+      const result=await page.locator('#chatMessages .message-assistant').last().innerText();
+      assert.match(result,/Исправленное решение/);
+      assert.match(result,/исключить 10 лошадей/);
+      assert.equal(result.includes('Замечания:'),false);
     }
     assert.deepEqual(await page.evaluate(()=>window.__proofEfforts),['low','medium','high']);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
 
 test('GPT-OSS streaming renders partial complex answers before completion and stores final response',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);

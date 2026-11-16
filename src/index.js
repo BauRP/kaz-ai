@@ -95,18 +95,57 @@ function parseSSEAnswerPiece(frame){
       data?.type==="response.output_text.delta"&&typeof data.delta==="string"?data.delta:"";
   }catch{return ""}
 }
+function parseProofReview(raw){
+  // Do not treat unstructured reviewer prose as a successful verification.
+  try{
+    const first=raw.indexOf("{"),last=raw.lastIndexOf("}");
+    const value=JSON.parse(raw.slice(first,last+1));
+    if(!value||!["pass","revise","uncertain"].includes(value.verdict))throw new Error("Invalid verdict");
+    const checks=value.checks||{};
+    const checked=checks.assumptions===true&&checks.eliminations===true&&checks.lower_bound===true;
+    const issues=Array.isArray(value.issues)?value.issues.filter(x=>typeof x==="string").slice(0,8).map(x=>x.slice(0,400)):[];
+    return {verdict:value.verdict==="pass"&&checked&&issues.length===0?"pass":"revise",issues};
+  }catch{return {verdict:"uncertain",issues:["Проверяющий ИИ не предоставил полноценный проверяемый отчёт."]}}
+}
 async function independentProofReview(env,question,answer,effort){
-  // Only user-requested rigorous proofs receive an additional model call.
-  // This is a fallible second opinion, not a formal theorem prover.
+  // Every selected reasoning level is audited. Model agreement is not a mathematical proof.
   const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
     input:[
-      {role:"system",content:"Ты независимый математический рецензент Kaz AI. Проверь приведённое решение на логические пробелы и противоречия, особенно утверждения о невозможности и минимальности. НЕ считай отдельные примеры доказательством невозможности всех альтернатив. Не повторяй всё решение. Если есть ошибка, напиши 'Замечания:' и конкретные места с объяснением. Если существенных ошибок не нашёл, напиши 'Существенных ошибок не обнаружено', но не утверждай, что математическая корректность гарантирована. Если недостаточно информации, напиши 'Строгость не подтверждена'. Кратко, по-русски."},
-      {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+"\n\nРЕШЕНИЕ ДЛЯ ПРОВЕРКИ:\n"+answer.slice(0,18000)}
+      {role:"system",content:"Ты независимый строгий рецензент Kaz AI. Проверь КАЖДОЕ утверждение, все этапы исключения кандидатов, транзитивность, пограничные случаи, противоречия, корректность построенного алгоритма. Если заявлена минимальность или невозможность, убедись, что нижняя граница доказана ДЛЯ ЛЮБОЙ допустимой стратегии, а не только для описанной схемы. В частности, если кто-то после группового забега проиграл уже трём участникам, его можно исключить из топ-3 до любых межгрупповых забегов. НЕ позволяй тексту объявлять доказательство завершённым, а затем признавать его неполным. Верни только JSON без Markdown: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"assumptions\":true|false,\"eliminations\":true|false,\"lower_bound\":true|false},\"issues\":[\"конкретная ошибка и место\"]}. lower_bound=true ставь, только если необходимые универсальные утверждения действительно обоснованы; когда пользователь не требует минимальности, отмечай true после проверки полноты относящихся к задаче утверждений. При сомнениях ставь revise или uncertain, не pass. Не скрывай ошибки ради согласия с автором."},
+      {role:"user",content:"ВОПРОС:\n"+question.slice(0,4000)+"\n\nЧЕРНОВИК:\n"+answer.slice(0,85000)}
     ],
-    reasoning:{effort},
-    stream:false
+    reasoning:{effort},stream:false
   });
-  return answerText(result).trim().slice(0,4500);
+  return parseProofReview(answerText(result));
+}
+function proofNotConfirmed(review){
+  const details=(review?.issues||[]).slice(0,5).map((issue,i)=>(i+1)+". "+issue).join("\n");
+  return "## Строгое доказательство пока не подтверждено\n\nЯ не могу надёжно подтвердить все шаги решения. Не буду выдавать непроверенный черновик за доказанный результат."+
+    (details?"\n\n**Что требует проверки:**\n\n"+details:"\n\nДополнительная проверка сейчас недоступна.")+
+    "\n\nЭто ограничение проверки ИИ, а не доказательство неправильности самого ответа.";
+}
+async function verifyAndImproveProof(env,question,draft,effort){
+  let review;
+  try{review=await independentProofReview(env,question,draft,effort)}
+  catch{return proofNotConfirmed()}
+  if(review.verdict==="pass")return draft;
+  // Repair rather than appending a contradictory review below the old answer.
+  let revised;
+  try{
+    const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
+      input:[
+        {role:"system",content:"Ты Kaz AI, математический редактор. Перепиши решение полностью и исправь КАЖДОЕ конкретное замечание рецензента. Проверь каждый этап исключений и правильность всех универсальных утверждений. Особое внимание доказательству оптимальности: пример для одной стратегии не доказывает невозможности других стратегий. Не добавляй взаимоисключающих выводов. Если не можешь строго доказать минимальность, скажи прямо, что нижняя граница не доказана, и не утверждай, что предъявленное решение минимально. Выведи только итоговый исправленный ответ, без разделов 'черновик' или 'рецензия'."},
+        {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+"\n\nИСХОДНЫЙ ОТВЕТ:\n"+draft.slice(0,60000)+"\n\nЗАМЕЧАНИЯ:\n"+(review.issues.join("\n")||"Проверь полное универсальное доказательство, допущения и исключения.")}
+      ],
+      reasoning:{effort},stream:false
+    });
+    revised=answerText(result);
+  }catch{return proofNotConfirmed(review)}
+  if(!revised.trim()||revised.trim()===draft.trim())return proofNotConfirmed(review);
+  let lastReview;
+  try{lastReview=await independentProofReview(env,question,revised,effort)}
+  catch{return proofNotConfirmed(review)}
+  return lastReview.verdict==="pass"?revised:proofNotConfirmed(lastReview);
 }
 
 function streamedAIResponse(env,messages,effort,verifyProof=false){
@@ -139,6 +178,7 @@ function streamedAIResponse(env,messages,effort,verifyProof=false){
       // Headers and the first heartbeat are sent before the potentially slow
       // inference call, so intermediaries do not wait for the complete answer.
       write(": connected\n\n");
+      if(verifyProof)write("event: progress\ndata: "+JSON.stringify({message:"Готовлю решение и проверяю все этапы…"})+"\n\n");
       heartbeat=setInterval(()=>write(": keepalive\n\n"),15000);
       void (async()=>{
         try{
@@ -151,8 +191,8 @@ function streamedAIResponse(env,messages,effort,verifyProof=false){
             const {done,value}=await upstreamReader.read();
             if(done)break;
             if(value?.byteLength){
-              write(value);
-              if(verifyProof&&collected.length<18000){
+              if(!verifyProof)write(value);
+              if(verifyProof){
                 sseTail+=decode.decode(value,{stream:true}).replace(/\r\n/g,"\n");
                 if(sseTail.length>200000)sseTail=sseTail.slice(-10000);
                 let idx;
@@ -160,22 +200,21 @@ function streamedAIResponse(env,messages,effort,verifyProof=false){
                   const frame=sseTail.slice(0,idx);
                   sseTail=sseTail.slice(idx+2);
                   collected+=parseSSEAnswerPiece(frame);
+                  if(collected.length>85000)throw new Error("Proof exceeds safe review length");
                 }
               }
             }
           }
-          // Model answer is already visible. Only an explicit request for
-          // rigorous proof triggers a second, independently generated review.
-          if(!closed&&verifyProof&&collected.trim()){
-            write("event: progress\ndata: "+JSON.stringify({message:"Проверяю строгость доказательства…" })+"\n\n");
-            try{
-              const question=messages.at(-1)?.content||"";
-              const reviewed=await independentProofReview(env,question,collected,effort);
-              if(!closed&&reviewed)write("event: review\ndata: "+JSON.stringify({text:reviewed})+"\n\n");
-            }catch{
-              if(!closed)write("event: review\ndata: "+JSON.stringify({text:"Дополнительная проверка временно недоступна. Строгость доказательства не подтверждена."})+"\n\n");
-            }
+          // Proof requests are kept private until draft, review and repair finish.
+          // Regular chats still stream each chunk immediately.
+          if(!closed&&verifyProof){
+            if(!collected.trim())throw new Error("Empty proof answer");
+            write("event: progress\ndata: "+JSON.stringify({message:"Перепроверяю доказательство и исправляю ошибки…"})+"\n\n");
+            const finalAnswer=await verifyAndImproveProof(env,messages.at(-1)?.content||"",collected,effort);
+            if(!closed)write("event: final\ndata: "+JSON.stringify({text:finalAnswer})+"\n\n");
           }
+
+
           if(!closed)write("event: done\ndata: {}\n\n");
         }catch(error){
           if(!closed){
@@ -274,7 +313,8 @@ export default {
       });
       const text=answerText(result);
       if(!text.trim())return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
-      return json({text,model:"gpt-oss-120b",effort:input.effort});
+      const finalText=wantsProofAudit(input)?await verifyAndImproveProof(env,input.messages.at(-1).content,text,input.effort):text;
+      return json({text:finalText,model:"gpt-oss-120b",effort:input.effort});
     }catch(e){
       const kind=classifyAILimit(e);
       if(kind==="daily")return codeError("AI_QUOTA_EXHAUSTED","Дневной лимит ИИ исчерпан. Попробуйте после его обновления.",429);

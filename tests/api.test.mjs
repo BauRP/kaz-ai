@@ -880,7 +880,7 @@ test('short reviewer rewrite cannot erase full proof and Python code',async()=>{
   assert.equal(calls.length,2);
 });
 test('long user prompt is preserved, not rejected at arbitrary 4000 characters',async()=>{
-  const prompt='Доказательство: '+('a'.repeat(12000));
+  const prompt='Большой текст пользовательского сообщения: '+('a'.repeat(12000));
   const {env,calls}=envWithAI();
   const response=await worker.fetch(post({messages:[{role:'user',content:prompt}],effort:'medium'}),env);
   assert.equal(response.status,200);

@@ -42,7 +42,7 @@ export async function runLiveVerification({
     for(const effort of trial%2?LEVELS.slice().reverse():LEVELS){
       const ctrl=new AbortController();
       const timeout=setTimeout(()=>ctrl.abort(),120000);
-      let response;
+      let response,data;
       const t0=performance.now();
       try{
         response=await fetchFn(url,{
@@ -55,9 +55,19 @@ export async function runLiveVerification({
           }),
           signal:ctrl.signal
         });
+        data=await response.json().catch(()=>({}));
       }finally{clearTimeout(timeout)}
+      // Latency includes reading the COMPLETE model response.
       const elapsed=Math.round(performance.now()-t0);
-      const data=await response.json().catch(()=>({}));
+      const result=data?.result??data;
+      const output=typeof result?.output_text==="string"?result.output_text:
+        typeof result?.response==="string"?result.response:
+        Array.isArray(result?.output)
+          ?result.output.flatMap(x=>x?.content||[]).filter(x=>x?.type==="output_text"||x?.type==="text").map(x=>x.text||"").join("")
+          :"";
+      if(response.ok&&data?.success!==false&&(!output.trim()||result?.status==="incomplete"||result?.incomplete_details)){
+        throw Error('Cloudflare returned no complete model text at effort '+effort);
+      }
       if(!response.ok||data?.success===false){
         const code=data?.errors?.[0]?.code??data?.error?.code??'unknown';
         throw Error('Cloudflare inference failed: HTTP '+response.status+'; code '+String(code).replace(/[^A-Za-z0-9_-]/g,'').slice(0,40));

@@ -831,3 +831,40 @@ test('preliminary AI reasoning preview is replaced by finished answer, without s
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('math formatter preserves prose after a same-line closed block formula',async()=>{
+  await withPage(async page=>{
+    const result=await page.evaluate(()=>{
+      const el=window.KazFormat.render('$$x=1$$ Это важное условие после формулы.');
+      return el.textContent;
+    });
+    assert.match(result,/x=1/);
+    assert.match(result,/Это важное условие после формулы/);
+  });
+});
+test('preview survives progress updates and a failed review, without claiming verification',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const {readFileSync}=await import('node:fs');
+    const html=readFileSync('public/preview.html','utf8');
+    const frames=[
+      ': connected',
+      'event: preview\ndata: '+JSON.stringify({text:'## Предварительный ответ\n\nСОХРАНИТЬ_ЭТОТ_ТЕКСТ'}),
+      'event: progress\ndata: '+JSON.stringify({message:'Идёт проверка решения'}),
+      'event: error\ndata: '+JSON.stringify({code:'AI_PROVIDER_TIMEOUT',message:'Проверка не завершилась',incidentId:'abcdef123456'})
+    ].join('\n\n')+'\n\n';
+    await page.route('https://kaz-ai.test/**',route=>new URL(route.request().url()).pathname==='/api/chat'
+      ?route.fulfill({status:200,contentType:'text/event-stream',body:frames})
+      :route.fulfill({status:200,contentType:'text/html',body:html}));
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Строго докажи результат');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('СОХРАНИТЬ_ЭТОТ_ТЕКСТ'));
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('Ответ прервался'));
+    const text=await page.locator('#chatMessages').innerText();
+    assert.match(text,/СОХРАНИТЬ_ЭТОТ_ТЕКСТ/);
+    assert.match(text,/неполный/i);
+  }finally{await browser.close()}
+});

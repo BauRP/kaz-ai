@@ -126,12 +126,7 @@ test('proof errors are corrected and independently rechecked at all three reason
     const corrected='## Ответ\n\nДля нахождения трёх самых быстрых достаточно семи забегов. Уже после пяти групповых забегов исключаются две последние лошади каждой группы. Универсальная нижняя граница не вытекает из ошибочного подсчёта прямых сравнений.';
     const {env}=envWithAI(async(_model,params)=>{
       calls.push(params);
-      if(params.stream)return new ReadableStream({start(c){
-        const data='data: '+JSON.stringify({response:draft})+'\n\n';
-        c.enqueue(new TextEncoder().encode(data.slice(0,21)));
-        c.enqueue(new TextEncoder().encode(data.slice(21)));
-        c.close();
-      }});
+      if(calls.length===1)return {output_text:draft};
       const isFinal=params.input[0].content.startsWith('Ты независимый финальный');
       return {output_text:JSON.stringify({
         verdict:isFinal?'pass':'revise',
@@ -150,7 +145,8 @@ test('proof errors are corrected and independently rechecked at all three reason
     assert.doesNotMatch(out,/6\*10=60/);
     assert.match(out,/event: done/);
     assert.equal(calls.length,3,'draft, combined review-and-repair, independent final audit');
-    assert.equal(calls[0].reasoning_effort,effort);
+    assert.equal(calls[0].reasoning.effort,effort);
+    assert.equal(calls[0].stream,false);
     assert.equal(calls[1].reasoning.effort,effort);
     assert.equal(calls[2].reasoning.effort,effort);
     assert.match(calls[1].input[0].content,/транзитивн/);
@@ -160,9 +156,7 @@ test('proof errors are corrected and independently rechecked at all three reason
 test('correct draft requires only one independent review without losing validation',async()=>{
   for(const effort of ['low','medium','high']){
     const {env,calls}=envWithAI(async(_model,params)=>{
-      if(params.stream)return new ReadableStream({start(c){
-        c.enqueue(new TextEncoder().encode('data: {"response":"Корректное математическое решение"}\n\n'));c.close();
-      }});
+      if(calls.length===1)return {output_text:'Корректное математическое решение'};
       return {output_text:JSON.stringify({
         verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''
       })};
@@ -177,9 +171,7 @@ test('correct draft requires only one independent review without losing validati
 test('failed audit does not emit unverified proof as a final answer',async()=>{
   for(const effort of ['low','medium','high']){
     const {env,calls}=envWithAI(async(_model,params)=>{
-      if(params.stream)return new ReadableStream({start(c){
-        c.enqueue(new TextEncoder().encode('data: {"response":"Недоказанное утверждение"}\n\n'));c.close();
-      }});
+      if(calls.length===1)return {output_text:'Недоказанное утверждение'};
       throw new Error('review unavailable');
     });
     const response=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи минимальность'}],effort},TOKEN,{Accept:'text/event-stream'}),env);
@@ -437,10 +429,7 @@ test('25-horse regression: never accept false early-elimination claim on any eff
   for(const effort of ['low','medium','high']){
     const falseProof='## Доказательство\n\nПосле первых пяти забегов между группами сравнений нет, поэтому никого исключать нельзя. Далее 7 забегов минимальны.';
     const {env,calls}=envWithAI(async(_model,opts)=>{
-      if(opts.stream)return new ReadableStream({start(c){
-        c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:falseProof})+'\n\n'));
-        c.close();
-      }});
+      if(calls.length===1)return {output_text:falseProof};
       return {output_text:JSON.stringify({verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''})};
     });
     const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort},TOKEN,{Accept:'text/event-stream'}),env);
@@ -449,9 +438,9 @@ test('25-horse regression: never accept false early-elimination claim on any eff
     assert.match(text,/четвёртая и пятая/);
     assert.doesNotMatch(text,/никого исключать нельзя/);
     assert.equal(calls.length,2);
-    assert.equal(calls[0][1].reasoning_effort,effort);
+    assert.equal(calls[0][1].reasoning.effort,effort);
     assert.equal(calls[1][1].reasoning.effort,effort);
-    assert.match(calls[0][1].messages[0].content,/10 лошадей/);
+    assert.match(calls[0][1].input[0].content,/10 лошадей/);
   }
 });
 test('25-horse regression: 66 vs 60 direct comparison proof is invalid even if reviewer says pass',async()=>{
@@ -459,10 +448,7 @@ test('25-horse regression: 66 vs 60 direct comparison proof is invalid even if r
   for(const effort of ['low','medium','high']){
     const falseProof='Семь забегов минимальны. Всего 22 × 3 = 66 известных сравнений обязательно нужны. За 6 забегов максимум 6 × 10 = 60 сравнений. Поэтому 7 минимально.';
     const {env,calls}=envWithAI(async(_model,opts)=>{
-      if(opts.stream)return new ReadableStream({start(c){
-        c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:falseProof})+'\n\n'));
-        c.close();
-      }});
+      if(calls.length===1)return {output_text:falseProof};
       return {output_text:JSON.stringify({verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''})};
     });
     const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort},TOKEN,{Accept:'text/event-stream'}),env);
@@ -484,10 +470,7 @@ test('25-horse regression: valid universal adversary proof can pass without extr
    'Второе место первого забега R и второе место шестого W не сравнивались; их относительная скорость неизвестна. '+
    'Поэтому обе перестановки R>W и W>R допустимы, вторую лошадь за шесть забегов нельзя определить.';
   const {env,calls}=envWithAI(async(_model,opts)=>{
-    if(opts.stream)return new ReadableStream({start(c){
-      c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:strongProof})+'\n\n'));
-      c.close();
-    }});
+    if(calls.length===1)return {output_text:strongProof};
     return {output_text:JSON.stringify({verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''})};
   });
   const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort:'high'},TOKEN,{Accept:'text/event-stream'}),env);
@@ -689,16 +672,12 @@ test('failed streaming requests carry safe incident ID for matching Cloudflare l
 });
 test('provider error frame during rigorous reasoning aborts and yields an identifiable error',async()=>{
   for(const effort of ['low','medium','high']){
-    const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){
-      c.enqueue(new TextEncoder().encode('data: {"response":"Начало решения"}\n\n'));
-      c.enqueue(new TextEncoder().encode('data: {"error":{"message":"provider problem"}}\n\n'));
-      c.close();
-    }}));
+    const {env,calls}=envWithAI(async()=>{const error=new Error("Cloudflare provider interrupted the draft");error.code="3008";throw error});
     const res=await worker.fetch(post({
       messages:[{role:'user',content:'Строго докажи математическое тождество'}],effort
     },TOKEN,{Accept:'text/event-stream'}),env);
     const body=await res.text();
-    assert.match(body,/"code":"AI_RESPONSE_INTERRUPTED"/);
+    assert.match(body,/"code":"AI_PROVIDER_ABORTED"/);
     assert.match(body,/"incidentId":"[a-f0-9]{12}"/);
     assert.doesNotMatch(body,/event: final/);
     assert.equal(calls.length,1,'Never start an audit for a broken draft');
@@ -712,10 +691,7 @@ test('review provider failure is logged by stage without logging private prompt 
   console.error=(...args)=>lines.push(args.map(String).join(' '));
   try{
     const {env,calls}=envWithAI(async(_name,params)=>{
-      if(params.stream)return new ReadableStream({start(c){
-        c.enqueue(new TextEncoder().encode('data: {"response":"Предварительное математическое решение"}\n\n'));
-        c.close();
-      }});
+      if(calls.length===1)return {output_text:'Предварительное математическое решение'};
       throw new Error('review model went offline');
     });
     const response=await worker.fetch(post({
@@ -733,15 +709,9 @@ test('review provider failure is logged by stage without logging private prompt 
   assert.doesNotMatch(logs,/review model went offline/);
 });
 
-test('split CRLF framing from Workers AI still produces a complete proof answer',async()=>{
+test('mathematical proof via Responses API produces a complete verified answer',async()=>{
   const {env,calls}=envWithAI(async(_name,params)=>{
-    if(params.stream)return new ReadableStream({start(c){
-      const enc=new TextEncoder();
-      c.enqueue(enc.encode('data: {"response":"Корректное доказательство"}\r'));
-      c.enqueue(enc.encode('\n\r'));
-      c.enqueue(enc.encode('\n'));
-      c.close();
-    }});
+    if(calls.length===1)return {output_text:'Корректное доказательство'};
     return {output_text:JSON.stringify({
       verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''
     })};

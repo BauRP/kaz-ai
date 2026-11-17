@@ -343,31 +343,35 @@ async function independentProofReview(env,question,answer,effort,allowCorrection
   const system=allowCorrection
     ?"Ты независимый математический рецензент-редактор Kaz AI. Проверь КАЖДЫЙ логический шаг, ранние исключения, транзитивность, крайние случаи и корректность конструкции. Если доказывается минимальность, необходимо доказать нижнюю границу ДЛЯ ВСЕХ допустимых алгоритмов, не для одной стратегии. ВАЖНО: различай сравнения, непосредственно полученные в испытаниях, и отношения, выведенные транзитивно. Предел числа прямых сравнений НЕ ограничивает число отношений, которые могут стать известны через транзитивность; не используй ошибочные подсчёты пар как доказательство невозможности. Например, участник, проигравший троим уже в одном групповом забеге, исключается из топ-3 сразу. Если есть ошибка, напиши verdict=revise, укажи её в issues, затем создай ПОЛНЫЙ исправленный ответ в corrected_answer. Перед выдачей сам проверь исправленную версию, но не заявляй о доказанной минимальности без универсального доказательства. Если исправить нельзя, честно оставь соответствующее утверждение недоказанным. Если ошибок нет, verdict=pass. Верни ТОЛЬКО JSON без Markdown: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"assumptions\":true|false,\"eliminations\":true|false,\"lower_bound\":true|false},\"issues\":[\"конкретные ошибки\"],\"corrected_answer\":\"полный исправленный ответ при revise\"}. При pass все checks=true и issues=[]; не пересказывай решение."
     :"Ты независимый финальный математический рецензент Kaz AI. Рассматривай представленный ответ как новый, независимо проверяй каждый шаг, исключения, транзитивность, крайние случаи, отсутствие противоречий и полноту доказательства минимальности ДЛЯ ВСЕХ допустимых алгоритмов. Особенно важно: число прямых сравнений не является пределом числа известных транзитивно выводимых отношений. Если ответ доказывает универсальное утверждение только на примерах или ошибочно считает пары, НЕ подтверждай его. Верни ТОЛЬКО JSON: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"assumptions\":true|false,\"eliminations\":true|false,\"lower_bound\":true|false},\"issues\":[\"конкретные ошибки\"],\"corrected_answer\":\"\"}. При pass все checks=true и issues=[]. При сомнении ставь uncertain; corrected_answer всегда пустой. Не выдумывай успешную проверку.";
-  const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
+  const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",{
     input:[
       {role:"system",content:system},
-      {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+
+      {role:"user",content:"ЗАДАЧА:\n"+question+
         (horseProofReference(question)?"\n\nПРОВЕРЕННЫЕ КОНТРОЛЬНЫЕ ФАКТЫ:\n"+horseProofReference(question):"")+
         "\n\nПОТЕНЦИАЛЬНЫЕ ОШИБКИ, НАЙДЕННЫЕ БЕЗ МОДЕЛИ:\n"+(horseProofIssues(question,answer).join("\n")||"не обнаружены типовые ошибки")+
-        "\n\nРЕШЕНИЕ:\n"+answer.slice(0,85000)}
+        "\n\nРЕШЕНИЕ:\n"+answer}
     ],
-    reasoning:{effort},stream:false
-  });
+    reasoning:{effort},stream:false,max_output_tokens:12288
+  }),REVIEW_DEADLINE_MS);
+  if(completionState(result)==="incomplete")
+    return {verdict:"uncertain",issues:["Дополнительная проверка не завершилась из-за ограничения ответа."],corrected:""};
   return parseProofReview(answerText(result));
 }
 async function independentEngineeringReview(env,question,answer,effort,repair=false){
   const instructions=repair
     ?"Проведи независимый технический аудит и при необходимости исправь весь ответ. Проверь КАЖДОЕ требование пользователя, соответствие заявленных свойств протоколам и реальному коду, согласованность, порядок, отказы, ошибки параллельного выполнения, переполнение чисел, повторную доставку, сохранность и реалистичность измерений. Для распределённых систем: два большинства одного Raft-кластера не могут быть непересекающимися; committed log нельзя пересортировывать по HLC; HLC не заменяет консенсус; RGA не равен сортировке ID; vector clock сравнивают по компонентам; eventual ordering при CRDT не равно строгой неизменной доставке; учти FIFO по отправителю и недоступные регионы. Битовые поля (64-bit HLC, 16-bit SiteID, 32-bit Seq) требуют 112 бит и непересекающихся сдвигов 48 и 32, если packed. Не утверждай '100% uptime', exact-once, отсутствие потерь и RTT без доказательств. Если требование физически несовместимо с другим, укажи компромисс, не выдавай его за исполнение. Верни ТОЛЬКО JSON: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"requirements\":true,\"ordering\":true,\"partitions\":true,\"code\":true,\"claims\":true},\"issues\":[],\"corrected_answer\":\"\"}. При отсутствии ошибок pass, все checks=true и issues=[]. При ошибках revise, перечисли проблемы и предоставь ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ ответ в corrected_answer. Если нельзя исправить надёжно, uncertain без ложных гарантий."
     :"Повторно независимо проверь уже исправленный технический ответ. Особое внимание: не перепутаны FIFO и глобальный порядок; при partition не обещана одновременно локальная финальная доставка и строгая линейная согласованность; Raft quorums/committed log верны; RGA/HLC/VC верны; packed ID не перекрывается; sender-seq и retries учтены; точные задержки не придуманы; требования пользователя соблюдены; код и алгоритмы непротиворечивы. Если что-то важное недоказано или ошибочно, ответ не может получить pass. Верни ТОЛЬКО JSON: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"requirements\":true,\"ordering\":true,\"partitions\":true,\"code\":true,\"claims\":true},\"issues\":[],\"corrected_answer\":\"\"}. При pass все checks=true и issues=[]. Исправленный ответ не создавай в этой повторной проверке.";
-  const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
+  const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",{
     input:[
       {role:"system",content:instructions},
-      {role:"user",content:"ЗАДАЧА:\n"+question.slice(0,4000)+"\n\nПРАВИЛА:\n"+engineeringGuide(question)+
+      {role:"user",content:"ЗАДАЧА:\n"+question+"\n\nПРАВИЛА:\n"+engineeringGuide(question)+
         "\n\nПРОБЛЕМЫ, ОПРЕДЕЛЁННЫЕ ПРОГРАММОЙ:\n"+(engineeringIssues(question,answer).join("\n")||"нет очевидных совпадений")+
-        "\n\nОТВЕТ:\n"+answer.slice(0,75000)}
+        "\n\nОТВЕТ:\n"+answer}
     ],
-    reasoning:{effort},stream:false
-  });
+    reasoning:{effort},stream:false,max_output_tokens:12288
+  }),REVIEW_DEADLINE_MS);
+  if(completionState(result)==="incomplete")
+    return {verdict:"uncertain",issues:["Дополнительная проверка не завершилась из-за ограничения ответа."],corrected:""};
   return parseEngineeringReview(answerText(result));
 }
 async function verifyEngineering(env,question,draft,effort,onStage=()=>{},onFault=()=>{}){

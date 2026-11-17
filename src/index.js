@@ -9,6 +9,28 @@ const json=(data,status=200)=>new Response(JSON.stringify(data),{
 });
 const codeError=(code,message,status)=>json({code,message},status);
 const MAX_CHAT_BYTES=50000;
+const MAX_REVIEW_CHARS=85000;
+const MAX_DISPLAY_CHARS=240000;
+const DRAFT_DEADLINE_MS=240000;
+const REVIEW_DEADLINE_MS=120000;
+async function withStageDeadline(task,ms){
+  let timer;
+  try{return await Promise.race([
+    Promise.resolve().then(task),
+    new Promise((_,reject)=>{
+      timer=setTimeout(()=>{const e=new Error("AI stage timed out");e.code="AI_STAGE_TIMEOUT";reject(e)},ms)
+    })
+  ])}finally{clearTimeout(timer)}
+}
+function completionState(result){
+  return result?.status==="incomplete"||result?.incomplete_details!=null||
+    ["length","max_tokens","max_output_tokens"].includes(result?.finish_reason)||
+    ["length","max_tokens","max_output_tokens"].includes(result?.choices?.[0]?.finish_reason)
+    ?"incomplete":"completed";
+}
+function markIncomplete(text){
+  return "## Ответ модели не завершён\n\nНиже сохранён полученный текст. Это неполное решение.\n\n"+text;
+}
 // A random, short incident ID links the user's error banner to Workers Logs.
 // Never log user messages, generated answers, prompts, secrets, or IP addresses.
 const DIAGNOSTIC_BUILD="stream-diagnostics-20261117";
@@ -41,6 +63,9 @@ function safeAIError(error,modelBytesSeen=false){
   if(error?.code==="AI_REVIEW_OUTPUT_LIMIT")return {code:"AI_REVIEW_OUTPUT_LIMIT",message:"Ответ модели превысил объём безопасной проверки."};
   if(error?.code==="AI_STREAM_FRAME_LIMIT")return {code:"AI_STREAM_FRAME_LIMIT",message:"Модель вернула повреждённый или слишком большой фрагмент данных."};
   if(error?.code==="AI_MODEL_EMPTY")return {code:"AI_MODEL_EMPTY",message:"Модель не вернула текст решения."};
+  if(error?.code==="AI_OUTPUT_INCOMPLETE")return {code:"AI_OUTPUT_INCOMPLETE",message:"Модель остановилась до окончания ответа."};
+  if(error?.code==="AI_STREAM_INVALID")return {code:"AI_STREAM_INVALID",message:"В потоке модели повреждены данные."};
+  if(error?.code==="AI_STAGE_TIMEOUT")return {code:"AI_STAGE_TIMEOUT",message:"Модель превысила время ожидания этапа."};
   const kind=classifyAILimit(error);
   if(kind==="daily")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."};
   if(kind==="rate")return {code:"AI_RATE_LIMITED",message:"Слишком много запросов за короткое время. Попробуйте позднее."};
@@ -98,7 +123,7 @@ function validatedInput(payload){
   if(payload.messages.length<1||payload.messages.length>16)return null;
   const messages=[];
   for(const m of payload.messages){
-    if(!m||!["user","assistant"].includes(m.role)||typeof m.content!=="string"||!m.content.trim()||m.content.length>4000)return null;
+    if(!m||!["user","assistant"].includes(m.role)||typeof m.content!=="string"||!m.content.trim()||m.content.length>20000)return null;
     // Preserve leading indentation and trailing newlines in code or documents.
     // The trim above is validation-only, not an edit to user content.
     messages.push({role:m.role,content:m.content});
@@ -291,7 +316,8 @@ function parseSSEAnswerPiece(frame){
       data?.type==="response.output_text.delta"&&typeof data.delta==="string"?data.delta:"";
   }catch(error){
     if(error?.code==="AI_MODEL_STREAM_ERROR"||providerCode(error))throw error;
-    return "";
+    const invalid=new Error("Invalid AI stream JSON");
+    invalid.code="AI_STREAM_INVALID";throw invalid;
   }
 }
 function parseProofReview(raw){

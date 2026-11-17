@@ -12,7 +12,9 @@ jobs:
   publish:
     # One-time automatic deployment of this approved fix, with manual recovery.
     # Future commits do not deploy automatically.
-    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Publish Kaz AI AI diagnostics #4'
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.event.head_commit.message, 'Publish Kaz AI AI diagnostics #4')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

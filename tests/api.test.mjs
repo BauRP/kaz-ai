@@ -149,7 +149,7 @@ test('proof errors are corrected and independently rechecked at all three reason
     assert.equal(calls[0].reasoning.effort,effort);
     assert.equal(calls[0].stream,false);
     assert.equal(calls[1].reasoning.effort,effort);
-    assert.match(calls[1].input[0].content,/транзитивн/);
+    assert.match(calls[1].input[0].content,/исходное задание/);
   }
 });
 test('correct draft requires only one independent review without losing validation',async()=>{
@@ -219,7 +219,7 @@ test('JSON path also uses audit plus conditional final review at selected effort
 
 test('ordinary questions do not spend tokens on unnecessary proof verification',async()=>{
   const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){
-    c.enqueue(new TextEncoder().encode('data: {"response":"Привет!"}\n\n'));c.close();
+    c.enqueue(new TextEncoder().encode('data: {"response":"Привет!"}\n\n'));c.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));c.close();
   }}));
   const response=await worker.fetch(post({...good,messages:[{role:'user',content:'Привет'}]},TOKEN,{Accept:'text/event-stream'}),env);
   assert.equal(response.status,200);
@@ -495,7 +495,7 @@ test('distributed engineering draft is corrected and independently checked at lo
   for(const effort of ['low','medium','high']){
     const {env,calls}=envWithAI(async(_name,opts)=>{
       if(opts.stream)return new ReadableStream({start(c){
-        c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:oldAnswer})+'\n\n'));c.close();
+        c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:oldAnswer})+'\n\n'));c.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));c.close();
       }});
       const isFinal=opts.input[0].content.includes('Повторно независимо');
       return {output_text:JSON.stringify({
@@ -523,7 +523,7 @@ test('distributed engineering draft is corrected and independently checked at lo
 test('correct technical design needs only one independent review across levels',async()=>{
   for(const effort of ['low','medium','high']){
     const {env,calls}=envWithAI(async(_name,params)=>{
-      if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: {"response":"Корректная схема с явно указанными ограничениями"}\n\n'));c.close()}});
+      if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: {"response":"Корректная схема с явно указанными ограничениями"}\n\n'));c.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));c.close()}});
       return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},issues:[],corrected_answer:''})};
     });
     const response=await worker.fetch(post({messages:[{role:'user',content:'Предложи архитектуру распределённой системы'}],effort},TOKEN,{Accept:'text/event-stream'}),env);
@@ -537,7 +537,7 @@ test('wrong ID packing cannot pass even when the technical reviewer mistakenly a
   const bad='MessageID = (HLC_timestamp << 32) | (SiteID << 16) | SeqPerSite';
   for(const effort of ['low','medium','high']){
     const {env,calls}=envWithAI(async(_name,params)=>{
-      if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.close()}});
+      if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));c.close()}});
       return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},issues:[],corrected_answer:''})};
     });
     const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort},TOKEN,{Accept:'text/event-stream'}),env);
@@ -550,7 +550,7 @@ test('wrong ID packing cannot pass even when the technical reviewer mistakenly a
 });
 test('incomplete or failed programming review is not falsely marked verified',async()=>{
   const {env}=envWithAI(async(_name,params)=>{
-    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: {"response":"Опасный непротестированный код"}\n\n'));c.close()}});
+    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: {"response":"Опасный непротестированный код"}\n\n'));c.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));c.close()}});
     return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true},issues:[],corrected_answer:''})};
   });
   const response=await worker.fetch(post({messages:[{role:'user',content:'Напиши функцию на Python'}],effort:'medium'},TOKEN,{Accept:'text/event-stream'}),env);
@@ -582,7 +582,7 @@ test('Raft split-brain claim cannot pass a falsely positive model review',async(
   const question='Raft в распределённом мессенджере с network partition и FIFO';
   const bad='Raft: каждый кластер считает себя кворумом, обе ветки коммитят независимо.';
   const {env,calls}=envWithAI(async(_name,params)=>{
-    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.close()}});
+    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));c.close()}});
     return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},issues:[],corrected_answer:''})};
   });
   const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort:'medium'},TOKEN,{Accept:'text/event-stream'}),env);
@@ -596,7 +596,7 @@ test('RGA sorting by ID is rejected even with nonbreaking hyphen',async()=>{
   const question='Разработай CRDT RGA для мессенджера с FIFO';
   const bad='Merge‑RGA: вставляет сообщения в порядке их MessageID, поэтому гарантирует правильный чат.';
   const {env}=envWithAI(async(_name,params)=>{
-    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.close()}});
+    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));c.close()}});
     return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},issues:[],corrected_answer:''})};
   });
   const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort:'high'},TOKEN,{Accept:'text/event-stream'}),env);
@@ -608,7 +608,7 @@ test('CRDT final order with post-delivery reorder is rejected',async()=>{
   const question='Нужен CRDT чат с строгим FIFO и единым порядком при сетевых сбоях';
   const bad='CRDT гарантирует строгий глобальный порядок сообщений. После partition запускается re-order уже доставленных сообщений.';
   const {env}=envWithAI(async(_name,params)=>{
-    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.close()}});
+    if(params.stream)return new ReadableStream({start(c){c.enqueue(new TextEncoder().encode('data: '+JSON.stringify({response:bad})+'\n\n'));c.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));c.close()}});
     return {output_text:JSON.stringify({verdict:'pass',checks:{requirements:true,ordering:true,partitions:true,code:true,claims:true},issues:[],corrected_answer:''})};
   });
   const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort:'low'},TOKEN,{Accept:'text/event-stream'}),env);
@@ -731,6 +731,7 @@ test('production chat emits diagnostic effort header corresponding to requested 
   for(const effort of ['low','medium','high']){
     const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){
       c.enqueue(new TextEncoder().encode('data: {"response":"OK"}\n\n'));
+      c.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
       c.close();
     }}));
     const response=await worker.fetch(post({...good,effort},TOKEN,{Accept:'text/event-stream'}),env);
@@ -797,7 +798,11 @@ test('empty and overlong math drafts report the actual internal failure, not gen
       messages:[{role:'user',content:'Вычисли коэффициенты многочлена остовных деревьев'}],effort:'medium'
     },TOKEN,{Accept:'text/event-stream'}),env);
     const body=await response.text();
-    assert.match(body,new RegExp('"code":"'+code+'"'));
+    if(code==="AI_REVIEW_OUTPUT_LIMIT"){
+      assert.match(body,/Предварительный ответ/);
+      assert.match(body,/Ответ больше объёма независимой проверки/);
+      assert.match(body,/event: final/);
+    }else assert.match(body,new RegExp('"code":"'+code+'"'));
     assert.equal(calls.length,1);
     assert.doesNotMatch(body,/event: final/);
   }

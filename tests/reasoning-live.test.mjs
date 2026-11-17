@@ -15,7 +15,7 @@ test('live diagnostic sends documented effort to all 3 levels in balanced order'
     assert.ok(LEVELS.includes(body.reasoning.effort));
     inputs.push(body.reasoning.effort);
     assert.equal(body.input[0].role,'user');
-    return {ok:true,status:200,json:async()=>({success:true,result:{output:[],usage:{
+    return {ok:true,status:200,json:async()=>({success:true,result:{output_text:'A complete model response.',output:[],usage:{
       input_tokens:100,output_tokens:120,output_tokens_details:{reasoning_tokens:40}
     }}})};
   };

@@ -256,11 +256,20 @@ function parseEngineeringReview(raw){
     return {verdict:"uncertain",issues:issues.length?issues:["Неполный технический отчёт."],corrected:""};
   }catch{return {verdict:"uncertain",issues:["Техническая проверка вернула неправильный формат."],corrected:""}}
 }
-function engineeringNotConfirmed(review){
+function unverifiedDraft(draft,issues=[],kind="proof"){
+  // Never hide already generated work merely because the optional review failed.
+  // Keep all text, but unmistakably mark the result as NOT verified.
+  const notes=[...new Set(issues.filter(x=>typeof x==="string"&&x.trim()))].slice(0,5);
+  const heading=kind==="engineering"?"Техническая корректность ответа не подтверждена":"Строгое доказательство пока не подтверждено";
+  const details=notes.length?"\n\n**Замечания к проверке:**\n"+notes.map((x,i)=>(i+1)+". "+x).join("\n"):"";
+  return "## "+heading+"\n\nЭто предварительный ответ модели, а не подтверждённое решение. Проверьте выводы и расчёты перед использованием."+
+    details+"\n\n## Предварительный ответ\n\n"+draft;
+}
+function engineeringNotConfirmed(review,draft=""){
+  if(draft.trim())return unverifiedDraft(draft,review?.issues||[],"engineering");
   const notes=(review?.issues||[]).slice(0,5).map((x,i)=>(i+1)+". "+x).join("\n");
-  return "## Техническая корректность ответа не подтверждена\n\nНезависимая проверка обнаружила ошибки или не смогла подтвердить все требования. "+
-    "Непроверенное решение не выдаётся за готовое к внедрению."+
-    (notes?"\n\n**Что требует исправления:**\n\n"+notes:"");
+  return "## Техническая корректность ответа не подтверждена\n\n"+
+    (notes?"**Что требует исправления:**\n\n"+notes:"Проверка недоступна.");
 }
 
 function parseSSEAnswerPiece(frame){
@@ -273,14 +282,15 @@ function parseSSEAnswerPiece(frame){
     // Never silently treat a failed generation as a completed proof.
     if(data?.error){
       const fault=new Error("Upstream model returned SSE error");
-      fault.code="AI_MODEL_STREAM_ERROR";
+      const numeric=providerCode(data.error);
+      fault.code=numeric||"AI_MODEL_STREAM_ERROR";
       throw fault;
     }
     return typeof data?.response==="string"?data.response:
       typeof data?.choices?.[0]?.delta?.content==="string"?data.choices[0].delta.content:
       data?.type==="response.output_text.delta"&&typeof data.delta==="string"?data.delta:"";
   }catch(error){
-    if(error?.code==="AI_MODEL_STREAM_ERROR")throw error;
+    if(error?.code==="AI_MODEL_STREAM_ERROR"||providerCode(error))throw error;
     return "";
   }
 }
@@ -335,50 +345,53 @@ async function independentEngineeringReview(env,question,answer,effort,repair=fa
   return parseEngineeringReview(answerText(result));
 }
 async function verifyEngineering(env,question,draft,effort,onStage=()=>{},onFault=()=>{}){
-  let first;
-  try{
-    onStage("Проверяю техническую корректность");
-    first=await independentEngineeringReview(env,question,draft,effort,true);
-  }catch(error){onFault("engineering_primary_review",error);return engineeringNotConfirmed()}
+  // A full answer plus ONE review is the maximum. Review/repair must not
+  // trigger a third inference and prevent the visitor from seeing the work.
   const known=engineeringIssues(question,draft);
-  if(first.verdict==="pass")return known.length?engineeringNotConfirmed({issues:known}):draft;
-  if(first.verdict!=="revise")return engineeringNotConfirmed({issues:[...known,...first.issues]});
-  if(first.corrected===draft.trim())return engineeringNotConfirmed(first);
-  const remaining=engineeringIssues(question,first.corrected);
-  if(remaining.length)return engineeringNotConfirmed({issues:remaining});
-  let second;
+  let result;
   try{
-    onStage("Перепроверяю исправленную архитектуру и код");
-    second=await independentEngineeringReview(env,question,first.corrected,effort,false);
-  }catch(error){onFault("engineering_final_review",error);return engineeringNotConfirmed(first)}
-  return second.verdict==="pass"&&!engineeringIssues(question,first.corrected).length
-    ?first.corrected:engineeringNotConfirmed(second);
+    onStage("Проверяю решение");
+    result=await independentEngineeringReview(env,question,draft,effort,true);
+  }catch(error){
+    onFault("engineering_primary_review",error);
+    return engineeringNotConfirmed({issues:known},draft);
+  }
+  if(result.verdict==="pass")
+    return known.length?engineeringNotConfirmed({issues:known},draft):draft;
+  if(result.verdict==="revise"&&result.corrected&&result.corrected!==draft.trim()){
+    const remaining=engineeringIssues(question,result.corrected);
+    if(!remaining.length)return "## Исправленный ответ (повторно не проверен)\n\n"+result.corrected;
+    return engineeringNotConfirmed({issues:[...known,...result.issues,...remaining]},result.corrected);
+  }
+  return engineeringNotConfirmed({issues:[...known,...result.issues]},draft);
 }
 
-function proofNotConfirmed(review){
+function proofNotConfirmed(review,draft=""){
+  if(draft.trim())return unverifiedDraft(draft,review?.issues||[],"proof");
   const details=(review?.issues||[]).slice(0,5).map((issue,i)=>(i+1)+". "+issue).join("\n");
-  return "## Строгое доказательство пока не подтверждено\n\nЯ не могу надёжно подтвердить все шаги решения. Не буду выдавать непроверенный черновик за доказанный результат."+
-    (details?"\n\n**Что требует проверки:**\n\n"+details:"\n\nДополнительная проверка сейчас недоступна.")+
-    "\n\nЭто ограничение проверки ИИ, а не доказательство неправильности самого ответа.";
+  return "## Строгое доказательство пока не подтверждено\n\n"+
+    (details?"**Что требует проверки:**\n\n"+details:"Проверка пока недоступна.");
 }
 async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{},onFault=()=>{}){
+  // One independent review at most. A failed review is NOT a reason to
+  // discard the user's entire mathematical derivation; display it with a warning.
+  const known=horseProofIssues(question,draft);
   let review;
   try{
-    onStage("Независимо проверяю доказательство");
+    onStage("Проверяю решение");
     review=await independentProofReview(env,question,draft,effort,true);
-  }catch(error){onFault("proof_primary_review",error);return proofNotConfirmed()}
-  const draftIssues=horseProofIssues(question,draft);
-  if(review.verdict==="pass")return draftIssues.length?proofNotConfirmed({issues:draftIssues}):draft;
-  if(review.verdict!=="revise")return proofNotConfirmed({issues:[...draftIssues,...review.issues]});
-  if(review.corrected===draft.trim())return proofNotConfirmed(review );
-  const correctedIssues=horseProofIssues(question,review.corrected);
-  if(correctedIssues.length)return proofNotConfirmed({issues:correctedIssues});
-  let finalReview;
-  try{
-    onStage("Проверяю исправленное решение");
-    finalReview=await independentProofReview(env,question,review.corrected,effort,false);
-  }catch(error){onFault("proof_final_review",error);return proofNotConfirmed(review)}
-  return finalReview.verdict==="pass"&&horseProofIssues(question,review.corrected).length===0?review.corrected:proofNotConfirmed(finalReview);
+  }catch(error){
+    onFault("proof_primary_review",error);
+    return proofNotConfirmed({issues:known},draft);
+  }
+  if(review.verdict==="pass")
+    return known.length?proofNotConfirmed({issues:known},draft):draft;
+  if(review.verdict==="revise"&&review.corrected&&review.corrected!==draft.trim()){
+    const remaining=horseProofIssues(question,review.corrected);
+    if(!remaining.length)return "## Исправленный ответ (повторно не проверен)\n\n"+review.corrected;
+    return proofNotConfirmed({issues:[...known,...review.issues,...remaining]},review.corrected);
+  }
+  return proofNotConfirmed({issues:[...known,...review.issues]},draft);
 }
 
 function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newIncidentId()){
@@ -496,6 +509,11 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
           if(!closed&&verifyProof){
             if(!collected.trim())throw new Error("Empty proof answer");
             phase=auditMode==="engineering"?"engineering_review":"proof_review";diagnostic("model_completed");
+            // Let the user read the draft while a SINGLE independent review runs.
+            // It is temporary and never saved as a verified chat response.
+            write("event: preview\ndata: "+JSON.stringify({
+              text:"## Предварительный ответ (проверка ещё идёт)\n\n"+collected
+            })+"\n\n");
             const stage=message=>{
               activeStage=message;
               phase=auditMode==="engineering"?"engineering_review":"proof_review";

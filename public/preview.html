@@ -1187,7 +1187,19 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         const start=trimmed.startsWith("$$")?"$$":"\\[",end=start==="$$"?"$$":"\\]",body=[];
         let part=trimmed.slice(start.length);i++;
         while(!part.includes(end)&&i<ls.length){body.push(part);part=ls[i++]}
-        body.push(part.split(end)[0]);root.append(math(body.join(" "),true));continue;
+        const closeAt=part.indexOf(end);
+        if(closeAt<0){
+          // A missing closing delimiter is text, not an excuse to swallow
+          // everything after the formula.
+          const paragraph=node("p","answer-paragraph");
+          inline(paragraph,start+[...body,part].join(" "));
+          root.append(paragraph);continue;
+        }
+        body.push(part.slice(0,closeAt));root.append(math(body.join(" "),true));
+        // Keep ALL text following a closed block formula on the same line.
+        const remainder=part.slice(closeAt+end.length);
+        if(remainder.trim())ls.splice(i,0,remainder);
+        continue;
       }
       const h=head(line);
       if(h){const title=node("h"+Math.min(4,h[1].length),"answer-heading");inline(title,h[2]);root.append(title);i++;continue}
@@ -1858,7 +1870,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   async function readAIStream(response,onText){
     const reader=response.body?.getReader();
     if(!reader)throw new Error("STREAM_UNAVAILABLE");
-    let buffer="",output="",finished=false;
+    let buffer="",output="",preview="",finished=false;
     const decoder=new TextDecoder("utf-8");
     try{
       while(true){
@@ -1873,22 +1885,28 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
           const lines=frame.split("\n");
           const event=lines.find(line=>line.startsWith("event:"))?.slice(6).trim()||"message";
           const data=lines.filter(line=>line.startsWith("data:")).map(line=>line.slice(5).trimStart()).join("\n");
-          if(event==="done"||data==="[DONE]"){finished=true;continue}
+          if(event==="done"){finished=true;continue}
+          if(data==="[DONE]")continue; // upstream completion is not the server's final acknowledgement
           if(!data)continue;
-          let packet;try{packet=JSON.parse(data)}catch{continue}
+          let packet;
+          try{packet=JSON.parse(data)}
+          catch{const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error}
           if(event==="progress"){
-            onText(output,packet?.message||"Проверяю доказательство…");
+            onText(preview||output,packet?.message||"Проверяю доказательство…");
             continue;
           }
           if(event==="preview"){
             // Preliminary model work remains visible while the optional audit
             // runs. The final event replaces this preview in the saved chat.
-            if(typeof packet?.text==="string"&&packet.text.trim())onText(packet.text,packet?.message||"Проверяю решение…");
+            if(typeof packet?.text==="string"&&packet.text.trim()){
+              preview=packet.text;
+              onText(preview,packet?.message||"Проверяю решение…");
+            }
             continue;
           }
           if(event==="final"){
             if(typeof packet?.text!=="string"||!packet.text.trim())throw new Error("EMPTY_RESPONSE");
-            output=packet.text;
+            output=packet.text;preview="";
             onText(output);
             continue;
           }
@@ -1914,6 +1932,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
           }
         }
       }
+      if(buffer.trim()){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error;}
       if(!finished){const error=new Error("STREAM_INTERRUPTED");error.code="STREAM_INTERRUPTED";throw error;}
       if(!output.trim())throw new Error("EMPTY_RESPONSE");
       return output;
@@ -1938,11 +1957,12 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     showStatus("Анализирую запрос…");
     // Retry hides its own button; focus the visible Stop control, not a hidden element.
     if(previousFocus?.id==="sessionRetry"||previousFocus?.closest("#view-tools"))stop.focus();
-    const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
-      // Do not split a Unicode surrogate pair when shortening AI context.
-      .map(m=>({role:m.role,content:m.role==="assistant"
-        ?m.content.slice(0,4000).replace(/[\uD800-\uDBFF]$/u,"")
-        :m.content}));
+    const entireHistory=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId);
+    const candidates=entireHistory.slice(-15).map(m=>({role:m.role,content:m.content}));
+    // Keep the original task when the conversation becomes long. Never cut
+    // assistant code or mathematical derivations at an arbitrary 4,000 chars.
+    if(entireHistory.length>15&&entireHistory[0]?.role==="user")
+      candidates.unshift({role:"user",content:entireHistory[0].content});
     // Preserve full recent messages, but do not exceed the server's 50 KB payload cap.
     // Account for JSON encoding, user instructions and non-ASCII characters.
     const encoder=new TextEncoder();
@@ -1951,7 +1971,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     for(let i=candidates.length-1;i>=0;i--){
       const item={role:candidates[i].role,content:candidates[i].content};
       const bytes=encoder.encode(JSON.stringify(item)).length+2;
-      if(bytes>budget)break;
+      if(bytes>budget)continue; // skip only complete older messages; never silently cut code
       history.unshift(item);budget-=bytes;
     }
     while(history.length>1&&history[0].role!=="user")history.shift();
@@ -2062,7 +2082,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
           :e?.code==="AI_REVIEW_OUTPUT_LIMIT"?"Решение слишком длинное для проверки. Попробуйте уточнить задание."
           :e?.code==="AI_STREAM_FRAME_LIMIT"?"Нейросеть вернула повреждённые данные. Попробуйте снова."
           :e?.code==="AI_UNAVAILABLE"?"Сервис ИИ временно недоступен. Это не обязательно проблема вашего интернета."
-          :e?.code==="STREAM_INTERRUPTED"?"Передача ответа прервалась. Проверьте соединение с сайтом и повторите запрос."
+          :e?.code==="STREAM_INTERRUPTED"?"Ответ от сервера оборвался до завершения. Попробуйте повторить запрос."
+          :e?.code==="STREAM_INVALID"?"Получены повреждённые данные ответа. Часть текста могла не дойти."
+          :e?.code==="AI_OUTPUT_INCOMPLETE"?"Нейросеть остановилась до завершения ответа. Сохранён неполный результат."
           :e instanceof TypeError&&offline?"Ваше устройство сейчас не подключено к сети. Проверьте подключение."
           :e instanceof TypeError?"Не удалось связаться с сайтом. Интернет на других сайтах может работать."
           :"Не удалось завершить ответ ИИ. Попробуйте повторить запрос.";

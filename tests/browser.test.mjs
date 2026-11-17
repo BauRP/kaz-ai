@@ -1036,7 +1036,7 @@ test('real browser: a long assistant reply does not invalidate the next chat req
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelectorAll('.message-assistant').length===2);
     assert.equal(bodies.length,2);
-    assert.ok(bodies[1].messages.some(m=>m.role==='assistant'&&m.content.length===4000));
+    assert.ok(bodies[1].messages.some(m=>m.role==='assistant'&&m.content.length>4800),'Complete assistant answer should be carried forward when within transport budget');
     assert.equal(bodies[1].messages.at(-1).content,'Второй вопрос');
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
@@ -2711,7 +2711,7 @@ test('browser keeps formatted replies and sends emoji-safe context to GPT',async
     await page.waitForFunction(()=>document.querySelectorAll('.message-assistant').length===2);
     assert.equal(requests.length,2);
     const previous=requests[1].messages.find(m=>m.role==='assistant').content;
-    assert.ok(previous.length<=4000);
+    assert.equal(previous,original,'Keep the full assistant code and Unicode characters when possible');
     assert.ok(!/[\uD800-\uDBFF]$/u.test(previous));
     assert.ok(!previous.includes('�'));
     assert.equal(requests[1].messages.at(-1).content,'Следующий вопрос');
@@ -3423,7 +3423,7 @@ test('interrupted SSE keeps incomplete text visible and manual retry restores a 
     await page.locator('#sessionRetry').waitFor({state:'visible'});
     assert.match(await page.locator('#chatMessages').innerText(),/Начало длинного ответа/);
     assert.match(await page.locator('#chatMessages').innerText(),/Ответ прервался/);
-    assert.match(await page.locator('#statusBanner').innerText(),/Передача ответа прервалась/);
+    assert.match(await page.locator('#statusBanner').innerText(),/Ответ от сервера оборвался/);
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),1,
       'Incomplete answer must not enter conversation history');
     await page.locator('#sessionRetry').click();

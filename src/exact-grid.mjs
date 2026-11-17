@@ -67,6 +67,8 @@ export function verifiedGridMathFacts(question){
   const dimensions=/\b5\s*[×xх*]\s*8\b/u.test(q);
   const fiveEdges=/(?:5|пятью|пяти|пять)\s+(?:(?:выделенн|отмеченн|горизонтальн)[а-яё]*\s+){0,3}(?:р[её]б(?:ер|ра|рами|рами)|ребрами)/iu.test(q);
   const cut=/(?:между|соединя[а-яё]*)[\s\S]{0,55}?(?:4[-\s]?(?:м|ым|го|й)?|четв[её]рт[а-яё]*)[\s\S]{0,25}?(?:и|с)[\s\S]{0,12}?(?:5[-\s]?(?:м|ым|го|й)?|пят[а-яё]*)[\s\S]{0,30}?(?:столбц|столбик)/iu.test(q);
+  // A 5x8 CELL grid has 6x9 vertices, so do not reuse the 5x8 VERTEX result.
+  if(/(?:5\s*[×xх*]\s*8\s*(?:клет|cell)|(?:клет[ко]|cells?)\s*5\s*[×xх*]\s*8)/iu.test(q))return "";
   if(!dimensions||!fiveEdges||!cut)return "";
   const {coefficients,total,countExactlyThree}=cached??=exactGridPolynomial();
   return "Проверено кодом на точных целых числах (Bareiss + интерполяция + отдельная точка x=6), для графа из 5×8 ВЕРШИН и пяти горизонтальных рёбер между столбцами 4 и 5: "+

@@ -747,3 +747,58 @@ test('public chat key stays hidden in EN and KK',async()=>{
     }
   });
 });
+
+test('sending a message in a long conversation keeps the chat scrollbar at the newest message',async()=>{
+  await withPage(async page=>{
+    for(let i=0;i<15;i++){
+      await page.locator('#messageInput').fill('Сообщение номер '+i+' '.repeat(10)+'Длинная переписка. '.repeat(9));
+      await page.locator('#sendButton').click();
+    }
+    await page.waitForFunction(()=>document.querySelector('#mainContent').scrollHeight>document.querySelector('#mainContent').clientHeight+300);
+    await page.locator('#mainContent').evaluate(el=>{el.scrollTop=0});
+    await page.locator('#messageInput').fill('Новое сообщение, которое должно остаться внизу');
+    await page.locator('#sendButton').click();
+    await page.waitForTimeout(100);
+    const info=await page.locator('#mainContent').evaluate(el=>({
+      top:el.scrollTop,bottom:el.scrollHeight-el.scrollTop-el.clientHeight
+    }));
+    assert.ok(info.top>100,'Long conversation must have an actual scrollable area');
+    assert.ok(info.bottom<=4,'Sending must scroll to the latest message, not to the top: '+JSON.stringify(info));
+    assert.equal(await page.locator('#chatMessages .message-user').last().locator('.session-user-text').textContent(),
+      'Новое сообщение, которое должно остаться внизу');
+  });
+});
+test('long user bubbles collapse to ten rendered lines and expand/collapse without losing text',async()=>{
+  await withPage(async page=>{
+    const prompt=Array.from({length:22},(_,i)=>'Строка '+(i+1)+': полное содержание сообщения').join('\n');
+    await page.locator('#messageInput').fill(prompt);
+    await page.locator('#sendButton').click();
+    const bubble=page.locator('#chatMessages .message-user').last();
+    const content=bubble.locator('.session-user-text');
+    const toggle=bubble.locator('.session-message-expand');
+    await toggle.waitFor({state:'visible'});
+    assert.equal(await toggle.getAttribute('aria-expanded'),'false');
+    const before=await content.evaluate(el=>({
+      shown:el.clientHeight,full:el.scrollHeight,line:parseFloat(getComputedStyle(el).lineHeight)
+    }));
+    assert.ok(before.full>before.shown+10);
+    assert.ok(before.shown<=before.line*10+3,
+      'Collapsed prompt must show at most about ten lines: '+JSON.stringify(before));
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'true');
+    assert.equal(await content.textContent(),prompt,'Expanding must preserve the entire exact prompt');
+    const expanded=await content.evaluate(el=>el.clientHeight);
+    assert.ok(expanded>before.shown);
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'false');
+    const collapsed=await content.evaluate(el=>el.clientHeight);
+    assert.ok(collapsed<expanded);
+    assert.equal(await content.textContent(),prompt,'Collapsing must not cut or modify the saved user text');
+    await page.locator('#messageInput').fill('Короткий текст');
+    await page.locator('#sendButton').click();
+    assert.equal(await page.locator('#chatMessages .message-user').last().locator('.session-message-expand').isVisible(),false);
+    await page.setViewportSize({width:390,height:800});
+    await page.waitForTimeout(100);
+    assert.equal(await page.locator('#chatMessages .message-user').first().locator('.session-message-expand').isVisible(),true);
+  });
+});

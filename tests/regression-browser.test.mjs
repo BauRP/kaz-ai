@@ -802,3 +802,32 @@ test('long user bubbles collapse to ten rendered lines and expand/collapse witho
     assert.equal(await page.locator('#chatMessages .message-user').first().locator('.session-message-expand').isVisible(),true);
   });
 });
+
+test('preliminary AI reasoning preview is replaced by finished answer, without saving the draft',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const {readFileSync}=await import('node:fs');
+    const html=readFileSync('public/preview.html','utf8');
+    const frames=[
+      ': connected',
+      'event: progress\ndata: '+JSON.stringify({message:'Проверяю решение'}),
+      'event: preview\ndata: '+JSON.stringify({text:'## Предварительный ответ\n\nНЕПРОВЕРЕННОЕ_РЕШЕНИЕ'}),
+      'event: final\ndata: '+JSON.stringify({text:'## Исправленный ответ (повторно не проверен)\n\nИСПРАВЛЕННАЯ_ВЕРСИЯ'}),
+      'event: done\ndata: {}'
+    ].join('\n\n')+'\n\n';
+    await page.route('https://kaz-ai.test/**',route=>new URL(route.request().url()).pathname==='/api/chat'
+      ?route.fulfill({status:200,contentType:'text/event-stream',body:frames,headers:{'Cache-Control':'no-store'}})
+      :route.fulfill({status:200,contentType:'text/html',body:html}));
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Строго докажи корректность математической формулы');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages .message-assistant')?.textContent.includes('ИСПРАВЛЕННАЯ_ВЕРСИЯ'));
+    const answer=await page.locator('#chatMessages .message-assistant').last().textContent();
+    assert.match(answer,/Исправленный ответ/);
+    assert.doesNotMatch(answer,/НЕПРОВЕРЕННОЕ_РЕШЕНИЕ/);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});

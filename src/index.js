@@ -376,6 +376,23 @@ async function independentEngineeringReview(env,question,answer,effort,repair=fa
     return {verdict:"uncertain",issues:["Дополнительная проверка не завершилась из-за ограничения ответа."],corrected:""};
   return parseEngineeringReview(answerText(result));
 }
+function correctionIssues(question,draft,corrected){
+  const issues=[];
+  // A reviewer sometimes returns two sentences instead of the full derivation.
+  // Such an answer is useful as criticism, but cannot replace the original work.
+  if(corrected.length<Math.max(20,Math.min(Math.round(draft.length*0.45),1600)))
+    issues.push("Исправление намного короче исходного решения и может не содержать всех шагов.");
+  const hasCode=/```(?:[A-Za-z0-9+#-]*)\n[\s\S]*?```/u.test(draft);
+  if(hasCode&&!/```/u.test(corrected))
+    issues.push("В исправлении потерялся программный код из исходного решения.");
+  if(/(?:python|пайтон|программн[а-яё]*\s+код)/iu.test(question)&&hasCode&&!/(?:```|\bdef\s+\w+)/u.test(corrected))
+    issues.push("Требуемый программный код отсутствует в исправленном ответе.");
+  if(/(?:полный\s+многочлен|коэффициент\s+при\s+x|polynomial)/iu.test(question)
+    &&/[xх]\s*\^?\s*[3-5]/iu.test(draft)
+    &&!/[xх]\s*\^?\s*[3-5]/iu.test(corrected))
+    issues.push("Из исправления исчезли требуемые коэффициенты многочлена.");
+  return issues;
+}
 async function verifyEngineering(env,question,draft,effort,onStage=()=>{},onFault=()=>{}){
   // A full answer plus ONE review is the maximum. Review/repair must not
   // trigger a third inference and prevent the visitor from seeing the work.
@@ -392,8 +409,10 @@ async function verifyEngineering(env,question,draft,effort,onStage=()=>{},onFaul
     return known.length?engineeringNotConfirmed({issues:known},draft):draft;
   if(result.verdict==="revise"&&result.corrected&&result.corrected!==draft.trim()){
     const remaining=engineeringIssues(question,result.corrected);
-    if(!remaining.length)return "## Исправленный ответ (повторно не проверен)\n\n"+result.corrected;
-    return engineeringNotConfirmed({issues:[...known,...result.issues,...remaining]},result.corrected);
+    const incomplete=correctionIssues(question,draft,result.corrected);
+    if(!remaining.length&&!incomplete.length)
+      return "## Исправленный ответ (повторно не проверен)\n\n"+result.corrected;
+    return engineeringNotConfirmed({issues:[...known,...result.issues,...remaining,...incomplete]},draft);
   }
   return engineeringNotConfirmed({issues:[...known,...result.issues]},draft);
 }
@@ -420,8 +439,10 @@ async function verifyAndImproveProof(env,question,draft,effort,onStage=()=>{},on
     return known.length?proofNotConfirmed({issues:known},draft):draft;
   if(review.verdict==="revise"&&review.corrected&&review.corrected!==draft.trim()){
     const remaining=horseProofIssues(question,review.corrected);
-    if(!remaining.length)return "## Исправленный ответ (повторно не проверен)\n\n"+review.corrected;
-    return proofNotConfirmed({issues:[...known,...review.issues,...remaining]},review.corrected);
+    const incomplete=correctionIssues(question,draft,review.corrected);
+    if(!remaining.length&&!incomplete.length)
+      return "## Исправленный ответ (повторно не проверен)\n\n"+review.corrected;
+    return proofNotConfirmed({issues:[...known,...review.issues,...remaining,...incomplete]},draft);
   }
   return proofNotConfirmed({issues:[...known,...review.issues]},draft);
 }

@@ -364,6 +364,38 @@
     }
     if(!saved.length)recent.append(make("div","sidebar-empty","Нет переписок"));
   }
+  // Keep long user prompts compact without changing their saved or submitted text.
+  // Measure the real rendered lines, not a character count (works on narrow screens).
+  const longPromptLabels={
+    ru:["Показать полностью","Свернуть"],
+    en:["Show more","Show less"],
+    kk:["Толық көрсету","Жасыру"]
+  };
+  const promptLabel=expanded=>(longPromptLabels[window.KazI18n?.language]||longPromptLabels.ru)[expanded?1:0];
+  function updateLongPromptButtons(){
+    if(state.screen!=="chat")return;
+    for(const bubble of document.querySelectorAll("#chatMessages .message-user")){
+      const text=bubble.querySelector(":scope > .session-user-text");
+      const toggle=bubble.querySelector(":scope > .session-message-expand");
+      if(!text||!toggle||toggle.getAttribute("aria-expanded")==="true")continue;
+      // scrollHeight is the uncropped text height. Hidden pages have no dimensions.
+      const long=text.scrollHeight>text.clientHeight+2;
+      toggle.hidden=!long;
+      toggle.querySelector("span").textContent=promptLabel(false);
+      toggle.setAttribute("aria-label",promptLabel(false));
+    }
+  }
+  const measureLongPrompts=()=>requestAnimationFrame(updateLongPromptButtons);
+  window.addEventListener("resize",measureLongPrompts);
+  function scrollChatToBottom(){
+    const area=$("#mainContent");
+    if(!area||state.screen!=="chat")return;
+    area.scrollTop=area.scrollHeight;
+    // Ensure screen visibility, bubble layout and expanding text are finalized.
+    requestAnimationFrame(()=>{
+      if(state.screen==="chat")area.scrollTop=area.scrollHeight;
+    });
+  }
   function renderSessionChat(){
     baseRenderChat();
     const chat=selected();
@@ -372,6 +404,32 @@
     chat.messages.forEach((message,i)=>{
       const bubble=bubbles[i];if(!bubble)return;
       message.id||=nextId();
+      if(message.role==="user"){
+        const plain=bubble.querySelector(":scope > span");
+        if(plain){
+          plain.classList.add("session-user-text","is-collapsed");
+          const toggle=make("button","session-message-expand");
+          toggle.type="button";
+          toggle.hidden=true;
+          toggle.setAttribute("aria-expanded","false");
+          toggle.setAttribute("aria-label",promptLabel(false));
+          toggle.append(make("span","",promptLabel(false)));
+          const arrow=document.createElementNS("http://www.w3.org/2000/svg","svg");
+          arrow.setAttribute("class","icon");
+          arrow.setAttribute("aria-hidden","true");
+          const use=document.createElementNS("http://www.w3.org/2000/svg","use");
+          use.setAttribute("href","#ic-chevron");
+          arrow.append(use);toggle.append(arrow);
+          toggle.addEventListener("click",()=>{
+            const expanded=toggle.getAttribute("aria-expanded")!=="true";
+            plain.classList.toggle("is-collapsed",!expanded);
+            toggle.setAttribute("aria-expanded",String(expanded));
+            toggle.setAttribute("aria-label",promptLabel(expanded));
+            toggle.querySelector("span").textContent=promptLabel(expanded);
+          });
+          bubble.append(toggle);
+        }
+      }
       if(message.role==="assistant"){
         const plain=bubble.querySelector(":scope > span");
         if(plain&&window.KazFormat?.render){
@@ -389,6 +447,7 @@
         bubble.append(actions);
       }
     });
+    measureLongPrompts();
   }
   function renderSessionProjects(){
     const target=$("#projectsWorkspace");if(!target)return;
@@ -570,6 +629,7 @@
         const answerSpan=make("div","session-stream-answer");
         streamingBubble.append(answerSpan);
         $("#chatMessages").append(streamingBubble);
+        scrollChatToBottom();
         let lastPaint=0;
         const streamed=await readAIStream(response,(value,status)=>{
           if(abort!==controller||controller.signal.aborted||current!==chat.id)return;
@@ -579,9 +639,12 @@
           const minInterval=Math.min(1200,120+Math.floor(value.length/40));
           if(!status&&Date.now()-lastPaint<minInterval)return;
           lastPaint=Date.now();
+          const area=$("#mainContent");
+          const following=area.scrollHeight-area.scrollTop-area.clientHeight<130;
           if(value&&window.KazFormat?.render){
             answerSpan.replaceChildren(window.KazFormat.render(value));
           }else answerSpan.textContent=value;
+          if(following)area.scrollTop=area.scrollHeight;
           showStatus(status||"ИИ отвечает…");
         });
         if(window.KazFormat?.render)answerSpan.replaceChildren(window.KazFormat.render(streamed));
@@ -700,7 +763,7 @@
     chat.messages.push({id:nextId(),role:"user",content:text});
     touchChat(chat);displayThread(chat);
     $("#messageInput").value="";drafts.delete(chat.id);welcomeDraft="";resizeInput();
-    renderChat();renderHistory();showScreen("chat");runAI(chat);
+    renderChat();renderHistory();showScreen("chat");scrollChatToBottom();runAI(chat);
   }
   function textDialog(title,label,value,onSave){
     openDialog(title,"",body=>{

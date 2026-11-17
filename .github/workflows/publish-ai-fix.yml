@@ -1,0 +1,47 @@
+name: Publish validated Kaz AI AI diagnostics
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/index.js
+      - .github/workflows/publish-ai-fix.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish:
+    # One-time automatic deployment of this approved fix, with manual recovery.
+    # Future commits do not deploy automatically.
+    if: github.event_name == 'workflow_dispatch' || github.event.head_commit.message == 'Publish Kaz AI AI diagnostics #4'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+      - name: Install the pinned tooling
+        run: npm install --ignore-scripts --package-lock=false --no-audit --no-fund
+      - name: Check source and unit tests
+        run: npm run lint && npm run preview:check && npm run test:unit
+      - name: Check real desktop/mobile browser behavior
+        run: npm run test:browser
+      - name: Check Cloudflare bundle and local HTTP
+        run: npx wrangler deploy --dry-run --outdir /tmp/kaz-ai-publish-check && npm run test:http
+      - name: Require restricted Cloudflare credentials
+        env:
+          ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$ACCOUNT_ID" ] || [ -z "$API_TOKEN" ]; then
+            echo "::error::Set CLOUDFLARE_ACCOUNT_ID and a Workers Edit-scoped CLOUDFLARE_API_TOKEN as GitHub Actions secrets."
+            exit 1
+          fi
+      - name: Publish to the existing kaz-ai Worker
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler deploy
+      - name: Verify published static site (does not use AI quota)
+        run: |
+          curl --fail --silent --show-error --retry 2 --max-time 20 'https://kaz-ai.tengrize.workers.dev/robots.txt' | grep -q 'Sitemap:'

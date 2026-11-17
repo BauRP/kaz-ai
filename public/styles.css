@@ -514,3 +514,16 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
 .rich-answer .answer-math-block{display:block;max-width:100%;overflow-x:auto;padding:.75em 1em;margin:1em 0;white-space:pre;text-align:center;border-radius:9px;background:rgba(54,167,216,.09);font-size:1.1em}
 .rich-answer.answer-plain-fallback{white-space:pre-wrap}
 @media(max-width:600px){.rich-answer .answer-table{min-width:285px}.rich-answer .answer-table th,.rich-answer .answer-table td{padding:.55em .6em}.rich-answer h2.answer-heading{font-size:1.16em}}
+
+/* Long user prompts: keep the original text intact while showing about ten lines.
+   Only the user's own bubbles are affected; the assistant's answers stay complete. */
+.message-user .session-user-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+.message-user .session-user-text.is-collapsed{max-height:16.5em;overflow:hidden}
+.message-user .session-message-expand{
+  display:inline-flex;align-items:center;justify-content:flex-end;gap:5px;
+  margin:7px 0 0;padding:4px 0 0;width:100%;border:0;background:transparent;
+  color:var(--accent);font-size:12px;font-weight:600;line-height:1.4;
+}
+.message-user .session-message-expand[hidden]{display:none!important}
+.message-user .session-message-expand .icon{width:15px;height:15px;transition:transform .15s}
+.message-user .session-message-expand[aria-expanded="true"] .icon{transform:rotate(180deg)}

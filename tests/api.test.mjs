@@ -804,6 +804,6 @@ test('empty and overlong math drafts report the actual internal failure, not gen
       assert.match(body,/event: final/);
     }else assert.match(body,new RegExp('"code":"'+code+'"'));
     assert.equal(calls.length,1);
-    assert.doesNotMatch(body,/event: final/);
+    if(code!=="AI_REVIEW_OUTPUT_LIMIT")assert.doesNotMatch(body,/event: final/);
   }
 });

@@ -116,7 +116,19 @@
         const start=trimmed.startsWith("$$")?"$$":"\\[",end=start==="$$"?"$$":"\\]",body=[];
         let part=trimmed.slice(start.length);i++;
         while(!part.includes(end)&&i<ls.length){body.push(part);part=ls[i++]}
-        body.push(part.split(end)[0]);root.append(math(body.join(" "),true));continue;
+        const closeAt=part.indexOf(end);
+        if(closeAt<0){
+          // A missing closing delimiter is text, not an excuse to swallow
+          // everything after the formula.
+          const paragraph=node("p","answer-paragraph");
+          inline(paragraph,start+[...body,part].join(" "));
+          root.append(paragraph);continue;
+        }
+        body.push(part.slice(0,closeAt));root.append(math(body.join(" "),true));
+        // Keep ALL text following a closed block formula on the same line.
+        const remainder=part.slice(closeAt+end.length);
+        if(remainder.trim())ls.splice(i,0,remainder);
+        continue;
       }
       const h=head(line);
       if(h){const title=node("h"+Math.min(4,h[1].length),"answer-heading");inline(title,h[2]);root.append(title);i++;continue}

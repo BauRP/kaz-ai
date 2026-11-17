@@ -1,3 +1,4 @@
+import {verifiedGridMathFacts} from './exact-grid.mjs';
 /* Public Kaz AI text Worker: secret stays on Cloudflare; rate-limit model requests. */
 const json=(data,status=200)=>new Response(JSON.stringify(data),{
   status,
@@ -351,7 +352,7 @@ async function independentProofReview(env,question,answer,effort,allowCorrection
       {role:"user",content:"ЗАДАЧА:\n"+question+
         (horseProofReference(question)?"\n\nПРОВЕРЕННЫЕ КОНТРОЛЬНЫЕ ФАКТЫ:\n"+horseProofReference(question):"")+
         "\n\nПОТЕНЦИАЛЬНЫЕ ОШИБКИ, НАЙДЕННЫЕ БЕЗ МОДЕЛИ:\n"+(horseProofIssues(question,answer).join("\n")||"не обнаружены типовые ошибки")+
-        "\n\nРЕШЕНИЕ:\n"+answer}
+        "\n\nДАННЫЕ ТОЧНЫХ РАСЧЁТОВ (ТОЛЬКО ЕСЛИ УСЛОВИЕ ОДНОЗНАЧНО):\n"+(verifiedGridMathFacts(question)||"нет специальных вычислений")+"\n\nРЕШЕНИЕ:\n"+answer}
     ],
     reasoning:{effort},stream:false,max_output_tokens:12288
   }),REVIEW_DEADLINE_MS);
@@ -717,6 +718,7 @@ export default {
     const messages=[
       {role:"system",content:"Ты Kaz AI. Отвечай на языке пользователя полезно, точно и понятно. Не выдумывай факты, расчёты и источники. \nФорматируй ответ аккуратным Markdown: понятные заголовки ##, небольшие абзацы, нумерованные шаги, таблицы только если они помогают, формулы в $...$ или $$...$$, код в тройных обратных кавычках. Не вставляй сырые HTML-теги. Не добавляй декоративных эмодзи без смысла.\nДля логических, математических и сложных задач: сначала проверь условия и исключения, затем рассуждай последовательно. Любое утверждение «минимально», «невозможно», «для всех случаев» требует доказательства для всех допустимых способов, а не только одного алгоритма и отдельных примеров. Ясно отличай строго доказанное от вероятного и непроверенного. Проверяй пограничные случаи и отсутствие скрытых предположений. Если доказательства нет, прямо напиши, что вывод не доказан, не выдавай неполное обоснование за строгое.\nНе обещай безошибочность. Уровень рассуждения влияет на тщательность, но требования честности, точности и форматирования одинаковы во всех режимах."+
         (horseProofReference(input.messages.at(-1).content)?"\nМАТЕМАТИЧЕСКИЕ КОНТРОЛЬНЫЕ ФАКТЫ ДЛЯ ЭТОЙ ЗАДАЧИ:\n"+horseProofReference(input.messages.at(-1).content):"")+
+        (verifiedGridMathFacts(input.messages.map(m=>m.content).join("\n"))?"\nНЕЗАВИСИМАЯ ПРОГРАММНАЯ ПРОВЕРКА МАТЕМАТИКИ:\n"+verifiedGridMathFacts(input.messages.map(m=>m.content).join("\n")):"")+
         (mode==="engineering"?"\nПРОВЕРКА ПРОГРАММИРОВАНИЯ И АРХИТЕКТУРЫ:\n"+engineeringGuide(input.messages.at(-1).content):"")+
         (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},
       ...input.messages

@@ -13,12 +13,39 @@ const MAX_CHAT_BYTES=50000;
 // Never log user messages, generated answers, prompts, secrets, or IP addresses.
 const DIAGNOSTIC_BUILD="stream-diagnostics-20261117";
 const newIncidentId=()=>crypto.randomUUID().replaceAll("-","").slice(0,12);
+function providerCode(error){
+  // Only documented numeric Cloudflare categories, never raw provider text.
+  const candidates=[error?.code,error?.error?.code,error?.cause?.code,
+    error?.message,error?.error?.message,error?.cause?.message];
+  for(const candidate of candidates){
+    if(typeof candidate!=="string"&&typeof candidate!=="number")continue;
+    const match=String(candidate).match(/\b(3006|3007|3008|3036|3040)\b/);
+    if(match)return match[1];
+  }
+  return null;
+}
 function safeFault(error){
   const rawStatus=Number(error?.status??error?.statusCode??error?.response?.status);
   const status=Number.isInteger(rawStatus)&&rawStatus>=100&&rawStatus<=599?rawStatus:null;
   const name=typeof error?.name==="string"&&/^[A-Za-z]{1,40}$/.test(error.name)?error.name:"Unknown";
   const code=typeof error?.code==="string"&&/^[A-Z0-9_]{2,45}$/.test(error.code)?error.code:null;
-  return {name,code,status};
+  return {name,code,status,providerCode:providerCode(error)};
+}
+function safeAIError(error,modelBytesSeen=false){
+  const provider=providerCode(error);
+  if(provider==="3036")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит Cloudflare Workers AI исчерпан."};
+  if(provider==="3040")return {code:"AI_CAPACITY_UNAVAILABLE",message:"Модель сейчас перегружена. Повторите запрос позже."};
+  if(provider==="3007")return {code:"AI_PROVIDER_TIMEOUT",message:"Cloudflare превысил время обработки запроса."};
+  if(provider==="3008")return {code:"AI_PROVIDER_ABORTED",message:"Cloudflare прервал обработку запроса."};
+  if(provider==="3006")return {code:"AI_PROVIDER_REQUEST_TOO_LARGE",message:"Запрос превышает допустимый размер Cloudflare."};
+  if(error?.code==="AI_REVIEW_OUTPUT_LIMIT")return {code:"AI_REVIEW_OUTPUT_LIMIT",message:"Ответ модели превысил объём безопасной проверки."};
+  if(error?.code==="AI_STREAM_FRAME_LIMIT")return {code:"AI_STREAM_FRAME_LIMIT",message:"Модель вернула повреждённый или слишком большой фрагмент данных."};
+  if(error?.code==="AI_MODEL_EMPTY")return {code:"AI_MODEL_EMPTY",message:"Модель не вернула текст решения."};
+  const kind=classifyAILimit(error);
+  if(kind==="daily")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."};
+  if(kind==="rate")return {code:"AI_RATE_LIMITED",message:"Слишком много запросов за короткое время. Попробуйте позднее."};
+  if(modelBytesSeen)return {code:"AI_RESPONSE_INTERRUPTED",message:"Сервис ИИ прервал обработку ответа. Попробуйте повторить запрос."};
+  return {code:"AI_UNAVAILABLE",message:"Не удалось связаться с сервисом ИИ. Попробуйте позже."};
 }
 function logAIEvent(level,event,fields){
   // Only pass fixed metadata assembled by this Worker. No request/answer text.
@@ -500,13 +527,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
               effort,auditMode:auditMode||"none",receivedBytes,receivedChunks,
               modelBytesSeen:upstreamBytesSeen,...safe
             });
-            const kind=classifyAILimit(error);
-            const code=kind==="daily"?"AI_QUOTA_EXHAUSTED":kind==="rate"?"AI_RATE_LIMITED":upstreamBytesSeen?"AI_RESPONSE_INTERRUPTED":"AI_UNAVAILABLE";
-            const message=kind==="daily"
-              ?"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."
-              :kind==="rate"
-                ?"Слишком много запросов за короткое время. Попробуйте позднее."
-                :upstreamBytesSeen?"Сервис ИИ прервал обработку ответа. Попробуйте повторить запрос.":"Не удалось связаться с сервисом ИИ. Попробуйте позже.";
+            const {code,message}=safeAIError(error,upstreamBytesSeen);
             write("event: error\ndata: "+JSON.stringify({code,message,incidentId})+"\n\n");
           }
         }finally{
@@ -607,10 +628,9 @@ export default {
         :mode==="proof"?await verifyAndImproveProof(env,input.messages.at(-1).content,text,input.effort):text;
       return json({text:finalText,model:"gpt-oss-120b",effort:input.effort});
     }catch(e){
-      const kind=classifyAILimit(e);
-      if(kind==="daily")return codeError("AI_QUOTA_EXHAUSTED","Дневной лимит ИИ исчерпан. Попробуйте после его обновления.",429);
-      if(kind==="rate")return codeError("AI_RATE_LIMITED","Слишком много запросов за короткое время. Попробуйте позднее.",429);
-      return codeError("AI_UNAVAILABLE","Не удалось получить ответ ИИ. Попробуйте позже.",503);
+      const {code,message}=safeAIError(e);
+      const status=code==="AI_QUOTA_EXHAUSTED"||code==="AI_RATE_LIMITED"||code==="AI_CAPACITY_UNAVAILABLE"?429:503;
+      return codeError(code,message,status);
     }
   }
 };

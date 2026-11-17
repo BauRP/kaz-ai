@@ -226,10 +226,17 @@ function isMathematicalQuestion(question){
 }
 function auditKind(input){
   const question=input.messages.at(-1)?.content||"";
-  if(isMathematicalQuestion(question))return "proof";
-  if(isTwentyFiveHorsePuzzle(question)&&wantsProofAudit(input))return "proof";
+  const previousUserText=input.messages.slice(0,-1)
+    .filter(m=>m.role==="user").map(m=>m.content).join("\n\n");
+  // Short follow-ups such as "теперь докажи и добавь Python" must not
+  // detach the request from the original mathematical task.
+  const followup=/(?:теперь|продолжи|добавь|докажи|перепроверь|исправь|уточни|повтори|проверь)/iu.test(question);
+  if(isMathematicalQuestion(question)||
+      (followup&&isMathematicalQuestion(previousUserText)))return "proof";
+  if(distributedEngineeringTask(question)&&wantsEngineeringAudit(input))return "engineering";
+  if(wantsProofAudit(input))return "proof";
   if(wantsEngineeringAudit(input))return "engineering";
-  return wantsProofAudit(input)?"proof":null;
+  return null;
 }
 function distributedEngineeringTask(question){
   const q=String(question||"");

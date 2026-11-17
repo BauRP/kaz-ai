@@ -36,14 +36,30 @@ function markIncomplete(text){
 // Never log user messages, generated answers, prompts, secrets, or IP addresses.
 const DIAGNOSTIC_BUILD="stream-diagnostics-20261117";
 const newIncidentId=()=>crypto.randomUUID().replaceAll("-","").slice(0,12);
+// Inspect only bounded, known error fields. Never serialize provider messages,
+// prompts, responses, addresses or secrets into diagnostics.
+function providerErrorFields(error){
+  const sources=[error,error?.error,error?.cause,error?.response,error?.response?.data,
+    error?.errors?.[0],error?.error?.errors?.[0],error?.details?.[0]];
+  const fields=[];
+  for(const source of sources){
+    if(typeof source==="string"||typeof source==="number"){
+      fields.push(source);
+    }else if(source&&typeof source==="object"){
+      for(const key of ["code","message","status","statusCode"]){
+        const value=source[key];
+        if(typeof value==="string"||typeof value==="number")fields.push(value);
+      }
+    }
+  }
+  return fields;
+}
 function providerCode(error){
-  // Only documented numeric Cloudflare categories, never raw provider text.
-  const candidates=[error?.code,error?.error?.code,error?.cause?.code,
-    error?.message,error?.error?.message,error?.cause?.message];
-  for(const candidate of candidates){
-    if(typeof candidate!=="string"&&typeof candidate!=="number")continue;
-    const match=String(candidate).match(/\b(3006|3007|3008|3036|3040)\b/);
-    if(match)return match[1];
+  // Cloudflare docs list 3036; real public reports also show 4006 for daily quota.
+  const known=/\b(3006|3007|3008|3036|4006|3040|3023|3041|3042|5007|5016|5018|5028|5035)\b/;
+  for(const field of providerErrorFields(error)){
+    const matched=String(field).match(known);
+    if(matched)return matched[1];
   }
   return null;
 }
@@ -52,15 +68,22 @@ function safeFault(error){
   const status=Number.isInteger(rawStatus)&&rawStatus>=100&&rawStatus<=599?rawStatus:null;
   const name=typeof error?.name==="string"&&/^[A-Za-z]{1,40}$/.test(error.name)?error.name:"Unknown";
   const code=typeof error?.code==="string"&&/^[A-Z0-9_]{2,45}$/.test(error.code)?error.code:null;
-  return {name,code,status,providerCode:providerCode(error)};
+  const numericProviderCode=providerCode(error);
+  const classification=classifyAILimit(error);
+  return {name,code,status,providerCode:numericProviderCode,
+    classifiedCode:safeAIError(error).code,
+    classificationBasis:numericProviderCode?"provider_code":classification==="daily"?"daily_quota_text":
+      classification==="rate"?"rate_limit_text":"unclassified"};
 }
 function safeAIError(error,modelBytesSeen=false){
   const provider=providerCode(error);
-  if(provider==="3036")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит Cloudflare Workers AI исчерпан."};
+  if(provider==="3036"||provider==="4006")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит ИИ: Cloudflare отклонил запрос, сообщив об исчерпании бесплатных Neurons. Если сегодня квота не израсходована, возможна ошибка учёта на стороне Cloudflare."};
   if(provider==="3040")return {code:"AI_CAPACITY_UNAVAILABLE",message:"Модель сейчас перегружена. Повторите запрос позже."};
   if(provider==="3007")return {code:"AI_PROVIDER_TIMEOUT",message:"Cloudflare превысил время обработки запроса."};
   if(provider==="3008")return {code:"AI_PROVIDER_ABORTED",message:"Cloudflare прервал обработку запроса."};
   if(provider==="3006")return {code:"AI_PROVIDER_REQUEST_TOO_LARGE",message:"Запрос превышает допустимый размер Cloudflare."};
+  if(["5018","5016","3041","3023","5035"].includes(provider))return {code:"AI_MODEL_ACCESS_DENIED",message:"Cloudflare не разрешает использовать выбранную модель в этом аккаунте."};
+  if(["5007","3042","5028"].includes(provider))return {code:"AI_MODEL_UNAVAILABLE",message:"Модель недоступна или её название изменилось у Cloudflare."};
   if(error?.code==="AI_REVIEW_OUTPUT_LIMIT")return {code:"AI_REVIEW_OUTPUT_LIMIT",message:"Ответ модели превысил объём безопасной проверки."};
   if(error?.code==="AI_STREAM_FRAME_LIMIT")return {code:"AI_STREAM_FRAME_LIMIT",message:"Модель вернула повреждённый или слишком большой фрагмент данных."};
   if(error?.code==="AI_MODEL_EMPTY")return {code:"AI_MODEL_EMPTY",message:"Модель не вернула текст решения."};
@@ -68,7 +91,7 @@ function safeAIError(error,modelBytesSeen=false){
   if(error?.code==="AI_STREAM_INVALID")return {code:"AI_STREAM_INVALID",message:"В потоке модели повреждены данные."};
   if(error?.code==="AI_STAGE_TIMEOUT")return {code:"AI_STAGE_TIMEOUT",message:"Модель превысила время ожидания этапа."};
   const kind=classifyAILimit(error);
-  if(kind==="daily")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."};
+  if(kind==="daily")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит ИИ: Cloudflare сообщил об исчерпании бесплатных Neurons. Если сегодняшний расход меньше 10 000, причина может быть в учёте квоты Cloudflare."};
   if(kind==="rate")return {code:"AI_RATE_LIMITED",message:"Слишком много запросов за короткое время. Попробуйте позднее."};
   if(modelBytesSeen)return {code:"AI_RESPONSE_INTERRUPTED",message:"Сервис ИИ прервал обработку ответа. Попробуйте повторить запрос."};
   return {code:"AI_UNAVAILABLE",message:"Не удалось связаться с сервисом ИИ. Попробуйте позже."};
@@ -135,15 +158,13 @@ function validatedInput(payload){
   return {messages,effort:payload.effort,instructions:(payload.instructions||"").trim()};
 }
 function classifyAILimit(error){
-  // Cloudflare may reject with an Error, a nested cause, or a structured HTTP status.
-  // A plain 429 means temporary throttling; never call that a daily quota exhaustion.
-  const details=[error?.message,error?.error?.message,error?.cause?.message,
-    typeof error?.error==="string"?error.error:"",typeof error==="string"?error:""];
-  const msg=details.filter(x=>typeof x==="string").join(" ").toLowerCase();
-  if(/daily|neurons|quota exceeded|quota exhausted|billing limit|budget exceeded|exceeded your account limit/.test(msg))return "daily";
-  if(/\b429\b|rate limit|too many requests|throttl/.test(msg))return "rate";
-  const status=Number(error?.status??error?.statusCode??error?.response?.status);
-  if(status===429)return "rate";
+  // The previous single-word 'neurons' and 'daily' heuristics incorrectly
+  // labeled unrelated provider failures as exhausted quota.
+  const message=providerErrorFields(error).filter(value=>typeof value==="string").join(" ").toLowerCase();
+  if(/\b(?:daily|per.day)\b.{0,90}\b(?:quota|allocation|neurons?|limit)\b|\b(?:quota|allocation|neurons?)\b.{0,90}\b(?:daily|per.day)\b|\b(?:quota exhausted|quota exceeded|used up your (?:daily )?free allocation)\b/.test(message))return "daily";
+  if(/\b(?:429|rate limit|too many requests|throttl\w*)\b/.test(message))return "rate";
+  const rawStatus=Number(error?.status??error?.statusCode??error?.response?.status);
+  if(rawStatus===429)return "rate";
   return null;
 }
 

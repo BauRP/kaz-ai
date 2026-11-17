@@ -438,6 +438,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
   };
   let upstreamReader=null,heartbeat=null,closed=false;
   let collected="",sseTail="",upstreamBytesSeen=false,receivedBytes=0,receivedChunks=0;
+  let modelCompleted=false,modelIncomplete=false;
   let phase="model_connect";
   let activeStage=verifyProof?"Готовлю решение":"ИИ отвечает";
   const startedAt=Date.now();
@@ -508,31 +509,67 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
             while(!closed){
               const {done,value}=await upstreamReader.read();
               if(done)break;
-              if(value?.byteLength){
-                upstreamBytesSeen=true;
-                receivedBytes+=value.byteLength;receivedChunks++;
-                if(!verifyProof)write(value);
-                if(verifyProof){
-                  sseTail+=decode.decode(value,{stream:true});
-                  sseTail=sseTail.replace(/\r\n/g,"\n");
-                  if(sseTail.length>200000){
-                    const error=new Error("An upstream event exceeded safe frame size");
-                    error.code="AI_STREAM_FRAME_LIMIT";
-                    throw error;
-                  }
-                  let idx;
-                  while((idx=sseTail.indexOf("\n\n"))!==-1){
-                    const frame=sseTail.slice(0,idx);
-                    sseTail=sseTail.slice(idx+2);
-                    collected+=parseSSEAnswerPiece(frame);
-                    if(collected.length>MAX_DISPLAY_CHARS){
-                      const error=new Error("Draft exceeds independent review capacity");
-                      error.code="AI_REVIEW_OUTPUT_LIMIT";
-                      throw error;
-                    }
-                  }
-                }
+              if(!value?.byteLength)continue;
+              upstreamBytesSeen=true;
+              receivedBytes+=value.byteLength;receivedChunks++;
+              sseTail+=decode.decode(value,{stream:true});
+              sseTail=sseTail.replace(/\r\n/g,"\n");
+              if(sseTail.length>200000){
+                const error=new Error("Upstream SSE frame exceeds safe size");
+                error.code="AI_STREAM_FRAME_LIMIT";throw error;
               }
+              let idx;
+              while((idx=sseTail.indexOf("\n\n"))!==-1){
+                const frame=sseTail.slice(0,idx);
+                sseTail=sseTail.slice(idx+2);
+                if(!frame.trim())continue;
+                const data=frame.split("\n").filter(line=>line.startsWith("data:")).map(line=>line.slice(5).trimStart()).join("\n");
+                if(!data){
+                  if(!verifyProof)write(frame+"\n\n");
+                  continue; // SSE comment / heartbeat
+                }
+                if(data==="[DONE]"){
+                  modelCompleted=true;
+                  if(!verifyProof)write(frame+"\n\n");
+                  continue;
+                }
+                let packet;
+                try{packet=JSON.parse(data)}catch{
+                  const error=new Error("Corrupted upstream SSE JSON");
+                  error.code="AI_STREAM_INVALID";throw error;
+                }
+                if(packet?.error){
+                  const error=new Error("Cloudflare SSE model error");
+                  error.code=providerCode(packet.error)||"AI_MODEL_STREAM_ERROR";
+                  throw error;
+                }
+                if(completionState(packet)==="incomplete"||packet?.type==="response.incomplete")
+                  modelIncomplete=true;
+                if(packet?.type==="response.completed"||packet?.choices?.some?.(x=>x?.finish_reason==="stop"))
+                  modelCompleted=true;
+                const piece=parseSSEAnswerPiece(frame);
+                if(piece)collected+=piece;
+                if(collected.length>MAX_DISPLAY_CHARS){
+                  const error=new Error("Model output exceeds display limit");
+                  error.code="AI_REVIEW_OUTPUT_LIMIT";throw error;
+                }
+                if(!verifyProof)write(frame+"\n\n");
+              }
+            }
+            sseTail+=decode.decode();
+            if(sseTail.trim()){
+              const error=new Error("Truncated SSE frame at connection close");
+              error.code="AI_STREAM_INVALID";throw error;
+            }
+            if(modelIncomplete||!modelCompleted){
+              phase="model_incomplete";
+              diagnostic("model_incomplete");
+              const partial=collected.trim()
+                ?markIncomplete(collected)
+                :"## Ответ модели не завершён\n\nCloudflare закрыл поток без подтверждения завершения.";
+              write("event: final\ndata: "+JSON.stringify({text:partial})+"\n\n");
+              write("event: done\ndata: {}\n\n");
+              return;
             }
           }
           // Proof requests are kept private until draft, review and repair finish.

@@ -312,6 +312,60 @@ test('structured unrelated provider errors are not mistaken for quota failures',
   assert.equal((await response.json()).code,'AI_UNAVAILABLE');
 });
 
+
+test('known Cloudflare daily-limit codes 3036 and 4006 remain precise in both API modes',async()=>{
+  for(const providerCode of [3036,4006]){
+    const {env}=envWithAI(async()=>{const e=new Error('AiError: you have used up your daily free allocation of 10,000 neurons');e.code=providerCode;throw e});
+    const response=await worker.fetch(post(good),env);
+    assert.equal(response.status,429);
+    assert.equal((await response.json()).code,'AI_QUOTA_EXHAUSTED');
+    const streamed=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+    const body=await streamed.text();
+    assert.match(body,/"code":"AI_QUOTA_EXHAUSTED"/);
+    assert.match(body,/"incidentId":"[a-f0-9]{12}"/);
+  }
+});
+test('ordinary Cloudflare AiError does not claim quota exhaustion without quota evidence',async()=>{
+  const {env}=envWithAI(async()=>{const e=new Error('AiError: failed to connect to model');e.name='AiError';throw e});
+  const response=await worker.fetch(post(good),env);
+  assert.equal(response.status,503);
+  assert.equal((await response.json()).code,'AI_UNAVAILABLE');
+  const stream=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+  assert.match(await stream.text(),/"code":"AI_UNAVAILABLE"/);
+});
+test('generic error text mentioning neurons does not falsely exhaust the daily quota',async()=>{
+  for(const message of ['Neurons analytics is unavailable','Daily status endpoint error','A quota report is unavailable']){
+    const {env}=envWithAI(async()=>{throw new Error(message)});
+    const response=await worker.fetch(post(good),env);
+    assert.equal(response.status,503);
+    assert.equal((await response.json()).code,'AI_UNAVAILABLE');
+  }
+});
+test('provider fault logs show only safe classification fields and no private error message',async()=>{
+  const secret='PRIVATE_PROVIDER_DETAILS_NOT_FOR_LOGS';
+  const records=[];
+  const original=console.error;
+  console.error=(...args)=>records.push(args.map(String).join(' '));
+  try{
+    const {env}=envWithAI(async()=>{const e=new Error('AiError: '+secret+' daily free allocation quota exceeded');e.name='AiError';throw e});
+    const response=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+    const body=await response.text();
+    assert.match(body,/"code":"AI_QUOTA_EXHAUSTED"/);
+  }finally{console.error=original}
+  const logged=records.join('\\n');
+  assert.match(logged,/"classifiedCode":"AI_QUOTA_EXHAUSTED"/);
+  assert.match(logged,/"classificationBasis":"daily_quota_text"/);
+  assert.doesNotMatch(logged,/PRIVATE_PROVIDER_DETAILS_NOT_FOR_LOGS/);
+});
+test('account and model restrictions are distinguishable from daily free quota exhaustion',async()=>{
+  for(const [providerCode,expected] of [[5035,'AI_MODEL_ACCESS_DENIED'],[5018,'AI_MODEL_ACCESS_DENIED'],[5007,'AI_MODEL_UNAVAILABLE'],[5028,'AI_MODEL_UNAVAILABLE']]){
+    const {env}=envWithAI(async()=>{const e=new Error('Provider error '+providerCode);e.code=providerCode;throw e});
+    const response=await worker.fetch(post(good),env);
+    assert.equal(response.status,503);
+    assert.equal((await response.json()).code,expected);
+  }
+});
+
 test('a chunked request without Content-Length stops at the 50 KB stream limit',async()=>{
   const {env,calls}=envWithAI();
   let cancelled=false;

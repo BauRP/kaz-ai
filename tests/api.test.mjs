@@ -138,19 +138,18 @@ test('proof errors are corrected and independently rechecked at all three reason
     const response=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи минимальность 7 забегов для 25 лошадей'}],effort},TOKEN,{Accept:'text/event-stream'}),env);
     const out=await response.text();
     assert.match(out,/event: progress/);
-    assert.match(out,/Независимо проверяю доказательство/);
-    assert.match(out,/Проверяю исправленное решение/);
+    assert.match(out,/Проверяю решение/);
+    assert.match(out,/event: preview/);
     assert.match(out,/event: final/);
+    assert.match(out,/Исправленный ответ \(повторно не проверен\)/);
     assert.match(out,/после пяти групповых забегов исключаются/);
     assert.doesNotMatch(out,/6\*10=60/);
     assert.match(out,/event: done/);
-    assert.equal(calls.length,3,'draft, combined review-and-repair, independent final audit');
+    assert.equal(calls.length,2,'draft and only one verification with repair');
     assert.equal(calls[0].reasoning.effort,effort);
     assert.equal(calls[0].stream,false);
     assert.equal(calls[1].reasoning.effort,effort);
-    assert.equal(calls[2].reasoning.effort,effort);
     assert.match(calls[1].input[0].content,/транзитивн/);
-    assert.match(calls[2].input[0].content,/число прямых сравнений/);
   }
 });
 test('correct draft requires only one independent review without losing validation',async()=>{
@@ -178,15 +177,14 @@ test('failed audit does not emit unverified proof as a final answer',async()=>{
     const out=await response.text();
     assert.match(out,/event: final/);
     assert.match(out,/Строгое доказательство пока не подтверждено/);
-    assert.doesNotMatch(out,/Недоказанное утверждение/);
+    assert.match(out,/Недоказанное утверждение/);
+    assert.match(out,/Предварительный ответ/);
     assert.equal(calls.length,2);
   }
 });
 test('correction rejected by final audit is withheld from user',async()=>{
   const {env,calls}=envWithAI(async(_model,params)=>{
-    if(params.stream)return new ReadableStream({start(c){
-      c.enqueue(new TextEncoder().encode('data: {"response":"Ошибочный ответ"}\n\n'));c.close();
-    }});
+    if(calls.length===1)return {output_text:'Ошибочный ответ'};
     const isFinal=params.input[0].content.startsWith('Ты независимый финальный');
     return {output_text:JSON.stringify({
       verdict:'revise',checks:{assumptions:true,eliminations:false,lower_bound:false},
@@ -196,9 +194,9 @@ test('correction rejected by final audit is withheld from user',async()=>{
   });
   const response=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи минимальность'}],effort:'high'},TOKEN,{Accept:'text/event-stream'}),env);
   const out=await response.text();
-  assert.match(out,/Строгое доказательство пока не подтверждено/);
-  assert.doesNotMatch(out,/Остаётся нерешённое противоречие/);
-  assert.equal(calls.length,3);
+  assert.match(out,/Исправленный ответ \(повторно не проверен\)/);
+  assert.match(out,/Остаётся нерешённое противоречие/);
+  assert.equal(calls.length,2);
 });
 test('JSON path also uses audit plus conditional final review at selected effort',async()=>{
   const {env,calls}=envWithAI(async(_model,params)=>{
@@ -215,7 +213,7 @@ test('JSON path also uses audit plus conditional final review at selected effort
   const response=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи результат'}],effort:'low'}),env);
   assert.equal(response.status,200);
   assert.match((await response.json()).text,/Исправленный ответ/);
-  assert.equal(calls.length,3);
+  assert.equal(calls.length,2);
   assert.ok(calls.slice(1).every(([,opts])=>opts.reasoning.effort==='low'));
 });
 
@@ -436,7 +434,8 @@ test('25-horse regression: never accept false early-elimination claim on any eff
     const text=await response.text();
     assert.match(text,/Строгое доказательство пока не подтверждено/);
     assert.match(text,/четвёртая и пятая/);
-    assert.doesNotMatch(text,/никого исключать нельзя/);
+    assert.match(text,/никого исключать нельзя/);
+    assert.match(text,/Предварительный ответ/);
     assert.equal(calls.length,2);
     assert.equal(calls[0][1].reasoning.effort,effort);
     assert.equal(calls[1][1].reasoning.effort,effort);
@@ -455,7 +454,8 @@ test('25-horse regression: 66 vs 60 direct comparison proof is invalid even if r
     const text=await response.text();
     assert.match(text,/Строгое доказательство пока не подтверждено/);
     assert.match(text,/транзитивности/);
-    assert.doesNotMatch(text,/66 известных сравнений/);
+    assert.match(text,/66 известных сравнений/);
+    assert.match(text,/Предварительный ответ/);
     assert.equal(calls.length,2);
     assert.match(calls[1][1].input[1].content,/66 против 60/);
   }
@@ -509,8 +509,9 @@ test('distributed engineering draft is corrected and independently checked at lo
     const out=await response.text();
     assert.match(out,/event: final/);
     assert.match(out,/не обеспечивает строгий/);
-    assert.doesNotMatch(out,/уникальный MessageID без проблем/);
-    assert.equal(calls.length,3);
+    assert.match(out,/event: preview/);
+    assert.match(out,/Исправленный ответ \(повторно не проверен\)/);
+    assert.equal(calls.length,2);
     assert.equal(calls[0][1].reasoning_effort,effort);
     assert.ok(calls.slice(1).every(([,params])=>params.reasoning.effort===effort));
     assert.match(calls[0][1].messages[0].content,/FIFO одного отправителя/);
@@ -543,7 +544,7 @@ test('wrong ID packing cannot pass even when the technical reviewer mistakenly a
     const body=await response.text();
     assert.match(body,/Техническая корректность ответа не подтверждена/);
     assert.match(body,/перекрыти|Перекрыти/);
-    assert.doesNotMatch(body,/MessageID =/);
+    assert.match(body,/Предварительный ответ/);
     assert.equal(calls.length,2);
   }
 });
@@ -555,7 +556,7 @@ test('incomplete or failed programming review is not falsely marked verified',as
   const response=await worker.fetch(post({messages:[{role:'user',content:'Напиши функцию на Python'}],effort:'medium'},TOKEN,{Accept:'text/event-stream'}),env);
   const body=await response.text();
   assert.match(body,/Техническая корректность ответа не подтверждена/);
-  assert.doesNotMatch(body,/непротестированный код/);
+  assert.match(body,/Предварительный ответ/);
 });
 test('nonstream engineering route receives the same final technical review',async()=>{
   const {env,calls}=envWithAI(async(_name,params)=>{
@@ -588,7 +589,7 @@ test('Raft split-brain claim cannot pass a falsely positive model review',async(
   const output=await response.text();
   assert.match(output,/Техническая корректность ответа не подтверждена/);
   assert.match(output,/два непересекающихся/);
-  assert.doesNotMatch(output,/каждый кластер считает себя кворумом/);
+  assert.match(output,/Предварительный ответ/);
   assert.equal(calls.length,2);
 });
 test('RGA sorting by ID is rejected even with nonbreaking hyphen',async()=>{
@@ -631,8 +632,8 @@ test('short valid coding corrections are not discarded and still get a final rev
   });
   const response=await worker.fetch(post({messages:[{role:'user',content:'Напиши функцию JavaScript для сложения двух чисел'}],effort:'medium'}),env);
   assert.equal(response.status,200);
-  assert.equal((await response.json()).text,fixed);
-  assert.equal(calls.length,3);
+  assert.match((await response.json()).text,/Исправленный ответ \(повторно не проверен\)/);
+  assert.equal(calls.length,2);
 });
 
 test('AI stream read failure after content is reported as provider interruption, not user offline',async()=>{

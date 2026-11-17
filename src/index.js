@@ -165,8 +165,15 @@ function wantsEngineeringAudit(input){
   const coding=/(?:код|программирован|исходник|реализуй|напиши\s+функцию|найди\s+баг|исправь\s+ошибку|\b(?:python|javascript|typescript|golang|rust|sql|c\+\+|java)\b)/iu.test(q);
   return architecture||coding;
 }
+function isMathematicalQuestion(question){
+  // A math question mentioning source code, numeric verification or
+  // "согласованность результата" is still mathematics, not a system design.
+  const q=String(question||"");
+  return /(?:остовн|матриц[а-яё\s-]{0,24}лаплас|кирхгоф|комбинаторик|многочлен|коэффициент|определител|реш[её]тк[аиуы]|взвешенн[а-яё\s-]{0,18}матриц|интерполяц|spanning[ -]?trees?|laplacian|kirchhoff|determinant|polynomial|coefficient|combinatori|graph[ -]?grid)/iu.test(q);
+}
 function auditKind(input){
   const question=input.messages.at(-1)?.content||"";
+  if(isMathematicalQuestion(question))return "proof";
   if(isTwentyFiveHorsePuzzle(question)&&wantsProofAudit(input))return "proof";
   if(wantsEngineeringAudit(input))return "engineering";
   return wantsProofAudit(input)?"proof":null;
@@ -398,30 +405,61 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
       },15000);
       void (async()=>{
         try{
-          const upstream=await env.AI.run("@cf/openai/gpt-oss-120b",opts);
-          phase="model_read";diagnostic("model_connected");
-          if(closed){await upstream?.cancel?.().catch(()=>{});return}
-          if(!upstream||typeof upstream.getReader!=="function")
-            throw new Error("Workers AI did not provide an SSE stream");
-          upstreamReader=upstream.getReader();
-          while(!closed){
-            const {done,value}=await upstreamReader.read();
-            if(done)break;
-            if(value?.byteLength){
-              upstreamBytesSeen=true;
-              receivedBytes+=value.byteLength;receivedChunks++;
-              if(!verifyProof)write(value);
-              if(verifyProof){
-                // Normalize AFTER joining chunks: CR and LF can arrive in different packets.
-                sseTail+=decode.decode(value,{stream:true});
-                sseTail=sseTail.replace(/\r\n/g,"\n");
-                if(sseTail.length>200000)sseTail=sseTail.slice(-10000);
-                let idx;
-                while((idx=sseTail.indexOf("\n\n"))!==-1){
-                  const frame=sseTail.slice(0,idx);
-                  sseTail=sseTail.slice(idx+2);
-                  collected+=parseSSEAnswerPiece(frame);
-                  if(collected.length>85000)throw new Error("Proof exceeds safe review length");
+          if(auditMode==="proof"){
+            // The documented GPT-OSS Responses format accepts reasoning.effort,
+            // but is non-streaming. The user already sees progress rather than
+            // the unverified draft during mathematical verification.
+            const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
+              input:messages,reasoning:{effort},stream:false,max_output_tokens:12288
+            });
+            phase="model_read";diagnostic("model_connected");
+            if(closed)return;
+            collected=answerText(result);
+            if(!collected.trim()){
+              const error=new Error("Mathematical draft returned no text");
+              error.code="AI_MODEL_EMPTY";
+              throw error;
+            }
+            upstreamBytesSeen=true;
+            receivedBytes=encoder.encode(collected).byteLength;receivedChunks=1;
+            if(collected.length>85000){
+              const error=new Error("Mathematical draft exceeds independent review capacity");
+              error.code="AI_REVIEW_OUTPUT_LIMIT";
+              throw error;
+            }
+          }else{
+            const upstream=await env.AI.run("@cf/openai/gpt-oss-120b",opts);
+            phase="model_read";diagnostic("model_connected");
+            if(closed){await upstream?.cancel?.().catch(()=>{});return}
+            if(!upstream||typeof upstream.getReader!=="function")
+              throw new Error("Workers AI did not provide an SSE stream");
+            upstreamReader=upstream.getReader();
+            while(!closed){
+              const {done,value}=await upstreamReader.read();
+              if(done)break;
+              if(value?.byteLength){
+                upstreamBytesSeen=true;
+                receivedBytes+=value.byteLength;receivedChunks++;
+                if(!verifyProof)write(value);
+                if(verifyProof){
+                  sseTail+=decode.decode(value,{stream:true});
+                  sseTail=sseTail.replace(/\r\n/g,"\n");
+                  if(sseTail.length>200000){
+                    const error=new Error("An upstream event exceeded safe frame size");
+                    error.code="AI_STREAM_FRAME_LIMIT";
+                    throw error;
+                  }
+                  let idx;
+                  while((idx=sseTail.indexOf("\n\n"))!==-1){
+                    const frame=sseTail.slice(0,idx);
+                    sseTail=sseTail.slice(idx+2);
+                    collected+=parseSSEAnswerPiece(frame);
+                    if(collected.length>85000){
+                      const error=new Error("Draft exceeds independent review capacity");
+                      error.code="AI_REVIEW_OUTPUT_LIMIT";
+                      throw error;
+                    }
+                  }
                 }
               }
             }
@@ -543,14 +581,14 @@ export default {
     }catch{
       return codeError("AI_UNAVAILABLE","Защита запросов временно недоступна.",503);
     }
+    const mode=auditKind(input);
     const messages=[
       {role:"system",content:"Ты Kaz AI. Отвечай на языке пользователя полезно, точно и понятно. Не выдумывай факты, расчёты и источники. \nФорматируй ответ аккуратным Markdown: понятные заголовки ##, небольшие абзацы, нумерованные шаги, таблицы только если они помогают, формулы в $...$ или $$...$$, код в тройных обратных кавычках. Не вставляй сырые HTML-теги. Не добавляй декоративных эмодзи без смысла.\nДля логических, математических и сложных задач: сначала проверь условия и исключения, затем рассуждай последовательно. Любое утверждение «минимально», «невозможно», «для всех случаев» требует доказательства для всех допустимых способов, а не только одного алгоритма и отдельных примеров. Ясно отличай строго доказанное от вероятного и непроверенного. Проверяй пограничные случаи и отсутствие скрытых предположений. Если доказательства нет, прямо напиши, что вывод не доказан, не выдавай неполное обоснование за строгое.\nНе обещай безошибочность. Уровень рассуждения влияет на тщательность, но требования честности, точности и форматирования одинаковы во всех режимах."+
         (horseProofReference(input.messages.at(-1).content)?"\nМАТЕМАТИЧЕСКИЕ КОНТРОЛЬНЫЕ ФАКТЫ ДЛЯ ЭТОЙ ЗАДАЧИ:\n"+horseProofReference(input.messages.at(-1).content):"")+
-        (wantsEngineeringAudit(input)?"\nПРОВЕРКА ПРОГРАММИРОВАНИЯ И АРХИТЕКТУРЫ:\n"+engineeringGuide(input.messages.at(-1).content):"")+
+        (mode==="engineering"?"\nПРОВЕРКА ПРОГРАММИРОВАНИЯ И АРХИТЕКТУРЫ:\n"+engineeringGuide(input.messages.at(-1).content):"")+
         (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},
       ...input.messages
     ];
-    const mode=auditKind(input);
     if((request.headers.get("accept")||"").includes("text/event-stream"))
       return streamedAIResponse(env,messages,input.effort,mode);
     try{

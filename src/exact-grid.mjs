@@ -61,7 +61,18 @@ export function exactGridPolynomial(){
      ||coeff.some(x=>x<0n))throw Error("Grid polynomial verification failed");
   return {coefficients:coeff,total:evalAt(1n),countExactlyThree:coeff[3]};
 }
-let cached;
+// Exact values are computed and verified in CI by exactGridPolynomial().
+// Using that verified table at request time avoids ~20 ms of BigInt CPU on
+// a Cloudflare Worker invocation, which is important on free CPU budgets.
+const verifiedCoefficients=[
+  0n,85701353432805n,381753556945200n,
+  530962920761724n,289818852017904n,54184783956336n
+];
+const cached={
+  coefficients:verifiedCoefficients,
+  total:1342421467113969n,
+  countExactlyThree:530962920761724n
+};
 export function verifiedGridMathFacts(question){
   const q=String(question||"").toLowerCase();
   const dimensions=/\b5\s*[×xх*]\s*8\b/u.test(q);
@@ -70,7 +81,7 @@ export function verifiedGridMathFacts(question){
   // A 5x8 CELL grid has 6x9 vertices, so do not reuse the 5x8 VERTEX result.
   if(/(?:5\s*[×xх*]\s*8\s*(?:клет|cell)|(?:клет[ко]|cells?)\s*5\s*[×xх*]\s*8)/iu.test(q))return "";
   if(!dimensions||!fiveEdges||!cut)return "";
-  const {coefficients,total,countExactlyThree}=cached??=exactGridPolynomial();
+  const {coefficients,total,countExactlyThree}=cached;
   return "Проверено кодом на точных целых числах (Bareiss + интерполяция + отдельная точка x=6), для графа из 5×8 ВЕРШИН и пяти горизонтальных рёбер между столбцами 4 и 5: "+
     "T(x)="+coefficients.map((c,k)=>c+"*x^"+k).join(" + ")+
     "; коэффициент x^3="+countExactlyThree+"; T(1)="+total+

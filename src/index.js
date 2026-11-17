@@ -56,7 +56,7 @@ function providerErrorFields(error){
 }
 function providerCode(error){
   // Numeric codes come from Cloudflare's public Workers AI errors reference.
-  const known=/\\b(3006|3007|3008|3036|3040|3023|3041|3042|5007|5016|5018|5028|5035)\\b/;
+  const known=/\b(3006|3007|3008|3036|4006|3040|3023|3041|3042|5007|5016|5018|5028|5035)\b/;
   for(const field of providerErrorFields(error)){
     const matched=String(field).match(known);
     if(matched)return matched[1];
@@ -77,7 +77,7 @@ function safeFault(error){
 }
 function safeAIError(error,modelBytesSeen=false){
   const provider=providerCode(error);
-  if(provider==="3036")return {code:"AI_QUOTA_EXHAUSTED",message:"Cloudflare отклонил запрос из-за ограничения бесплатных вычислений ИИ. Если сегодня в панели есть свободные Neurons, проверьте также последние 24 часа."};
+  if(provider==="3036"||provider==="4006")return {code:"AI_QUOTA_EXHAUSTED",message:"Cloudflare отклонил запрос из-за ограничения бесплатных вычислений ИИ. Если сегодня в панели есть свободные Neurons, проверьте также последние 24 часа."};
   if(provider==="3040")return {code:"AI_CAPACITY_UNAVAILABLE",message:"Модель сейчас перегружена. Повторите запрос позже."};
   if(provider==="3007")return {code:"AI_PROVIDER_TIMEOUT",message:"Cloudflare превысил время обработки запроса."};
   if(provider==="3008")return {code:"AI_PROVIDER_ABORTED",message:"Cloudflare прервал обработку запроса."};
@@ -161,8 +161,8 @@ function classifyAILimit(error){
   // The previous single-word 'neurons' and 'daily' heuristics incorrectly
   // labeled unrelated provider failures as exhausted quota.
   const message=providerErrorFields(error).filter(value=>typeof value==="string").join(" ").toLowerCase();
-  if(/\\b(?:daily|per.day)\\b.{0,90}\\b(?:quota|allocation|neurons?|limit)\\b|\\b(?:quota|allocation|neurons?)\\b.{0,90}\\b(?:daily|per.day)\\b|\\b(?:quota exhausted|quota exceeded|used up your (?:daily )?free allocation)\\b/.test(message))return "daily";
-  if(/\\b(?:429|rate limit|too many requests|throttl\\w*)\\b/.test(message))return "rate";
+  if(/\b(?:daily|per.day)\b.{0,90}\b(?:quota|allocation|neurons?|limit)\b|\b(?:quota|allocation|neurons?)\b.{0,90}\b(?:daily|per.day)\b|\b(?:quota exhausted|quota exceeded|used up your (?:daily )?free allocation)\b/.test(message))return "daily";
+  if(/\b(?:429|rate limit|too many requests|throttl\w*)\b/.test(message))return "rate";
   const rawStatus=Number(error?.status??error?.statusCode??error?.response?.status);
   if(rawStatus===429)return "rate";
   return null;

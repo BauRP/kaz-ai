@@ -1643,6 +1643,9 @@ test('returning from About restores the previous reading position in the same ch
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Длинная переписка '+('Содержание для проверки позиции. '.repeat(90)));
     await page.locator('#sendButton').click();
+    // Long user prompts now intentionally begin collapsed. Expand one first:
+    // this test checks reading-position restoration, not the compact view.
+    await page.locator('#chatMessages .message-user .session-message-expand').click();
     const before=await page.evaluate(()=>{
       const main=document.querySelector('#mainContent');
       const maximum=main.scrollHeight-main.clientHeight;

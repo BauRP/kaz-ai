@@ -807,3 +807,83 @@ test('empty and overlong math drafts report the actual internal failure, not gen
     if(code!=="AI_REVIEW_OUTPUT_LIMIT")assert.doesNotMatch(body,/event: final/);
   }
 });
+
+test('premature native SSE close never becomes a falsely completed response',async()=>{
+  const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){
+    c.enqueue(new TextEncoder().encode('data: {"response":"Часть готового текста"}\n\n'));c.close();
+  }}));
+  const response=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+  const body=await response.text();
+  assert.match(body,/Ответ модели не завершён/);
+  assert.match(body,/Часть готового текста/);
+  assert.match(body,/event: final/);
+  assert.equal(calls.length,1);
+});
+test('corrupted upstream SSE event is reported, never treated as a full model answer',async()=>{
+  const {env}=envWithAI(async()=>new ReadableStream({start(c){
+    c.enqueue(new TextEncoder().encode('data: {"response":"начало"}\n\n'));
+    c.enqueue(new TextEncoder().encode('data: THIS_IS_NOT_VALID_JSON\n\n'));
+    c.close();
+  }}));
+  const body=await (await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env)).text();
+  assert.match(body,/"code":"AI_STREAM_INVALID"/);
+  assert.match(body,/event: error/);
+  assert.doesNotMatch(body,/event: done/);
+});
+test('Cloudflare incomplete mathematics is marked partial and does not start review',async()=>{
+  const {env,calls}=envWithAI(async()=>({
+    status:'incomplete',incomplete_details:{reason:'max_output_tokens'},
+    output_text:'## Недописанное доказательство\n\nНачало вычислений'
+  }));
+  const body=await (await worker.fetch(post({
+    messages:[{role:'user',content:'Вычисли коэффициенты многочлена и докажи результат'}],effort:'high'
+  },TOKEN,{Accept:'text/event-stream'}),env)).text();
+  assert.match(body,/Ответ модели не завершён/);
+  assert.match(body,/Недописанное доказательство/);
+  assert.equal(calls.length,1);
+});
+test('independent review sees original requirements from earlier messages',async()=>{
+  const {env,calls}=envWithAI(async()=>{
+    if(calls.length===1)return {output_text:'## Ответ\n\nНужно проверить исходные выделенные рёбра.'};
+    return {output_text:JSON.stringify({
+      verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},issues:[],corrected_answer:''
+    })};
+  });
+  const response=await worker.fetch(post({messages:[
+    {role:'user',content:'Остовные деревья: пять рёбер между 4-м и 5-м столбцами. Важное первоначальное условие.'},
+    {role:'assistant',content:'Готовится решение по условию.'},
+    {role:'user',content:'Теперь докажи строго и добавь Python-код.'}
+  ],effort:'medium'},TOKEN,{Accept:'text/event-stream'}),env);
+  const body=await response.text();
+  assert.match(body,/event: final/);
+  assert.equal(calls.length,2);
+  assert.match(calls[1][1].input[1].content,/Важное первоначальное условие/);
+  assert.match(calls[1][1].input[1].content,/Теперь докажи/);
+});
+test('short reviewer rewrite cannot erase full proof and Python code',async()=>{
+  const fence=String.fromCharCode(96).repeat(3);
+  const draft='## Полное решение\n\n'+('Доказательство и вычисления. '.repeat(170))+
+    '\n\n'+fence+'python\nprint("important code preserved")\n'+fence;
+  const {env,calls}=envWithAI(async()=>{
+    if(calls.length===1)return {output_text:draft};
+    return {output_text:JSON.stringify({
+      verdict:'revise',checks:{assumptions:true,eliminations:true,lower_bound:true},
+      issues:['Исправить ошибку'],corrected_answer:'Слишком короткая правка. '.repeat(5)
+    })};
+  });
+  const body=await (await worker.fetch(post({
+    messages:[{role:'user',content:'Докажи формулу и напиши Python код'}],effort:'medium'
+  },TOKEN,{Accept:'text/event-stream'}),env)).text();
+  assert.match(body,/Предварительный ответ/);
+  assert.match(body,/important code preserved/);
+  assert.match(body,/Исправление намного короче|потерялся программный код/);
+  assert.equal(calls.length,2);
+});
+test('long user prompt is preserved, not rejected at arbitrary 4000 characters',async()=>{
+  const prompt='Доказательство: '+('a'.repeat(12000));
+  const {env,calls}=envWithAI();
+  const response=await worker.fetch(post({messages:[{role:'user',content:prompt}],effort:'medium'}),env);
+  assert.equal(response.status,200);
+  assert.equal(calls.length,1);
+  assert.equal(calls[0][1].input.at(-1).content,prompt);
+});

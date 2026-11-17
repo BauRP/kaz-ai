@@ -91,7 +91,7 @@ function safeAIError(error,modelBytesSeen=false){
   if(error?.code==="AI_STREAM_INVALID")return {code:"AI_STREAM_INVALID",message:"В потоке модели повреждены данные."};
   if(error?.code==="AI_STAGE_TIMEOUT")return {code:"AI_STAGE_TIMEOUT",message:"Модель превысила время ожидания этапа."};
   const kind=classifyAILimit(error);
-  if(kind==="daily")return {code:"AI_QUOTA_EXHAUSTED",message:"Cloudflare сообщил об исчерпании бесплатных вычислений ИИ. Проверьте расход Neurons за последние 24 часа; сообщение не означает, что счётчик «сегодня» обязательно равен 10 000."};
+  if(kind==="daily")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит ИИ: Cloudflare сообщил об исчерпании бесплатных вычислений. Проверьте расход Neurons за последние 24 часа; счётчик «сегодня» может отличаться."};
   if(kind==="rate")return {code:"AI_RATE_LIMITED",message:"Слишком много запросов за короткое время. Попробуйте позднее."};
   if(modelBytesSeen)return {code:"AI_RESPONSE_INTERRUPTED",message:"Сервис ИИ прервал обработку ответа. Попробуйте повторить запрос."};
   return {code:"AI_UNAVAILABLE",message:"Не удалось связаться с сервисом ИИ. Попробуйте позже."};

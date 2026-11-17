@@ -742,3 +742,62 @@ test('production chat emits diagnostic effort header corresponding to requested 
     assert.equal(calls[0][1].reasoning_effort,effort);
   }
 });
+
+test('grid spanning-tree math with Python and consistency remains proof, never engineering',async()=>{
+  const question='Для решётки 5×8 найди число остовных деревьев ровно с тремя из пяти выделенных рёбер. Построй взвешенную матрицу Лапласа, используй теорему Кирхгофа, полный многочлен и Python код для проверки согласованности при x=1. Докажи математически.';
+  for(const effort of ['low','medium','high']){
+    const {env,calls}=envWithAI(async(_name,opts)=>{
+      if(calls.length===1)return {output_text:'## Вывод\n\nТочное проверяемое решение с формулой и программной проверкой.'};
+      return {output_text:JSON.stringify({
+        verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},
+        issues:[],corrected_answer:''
+      })};
+    });
+    const response=await worker.fetch(post({
+      messages:[{role:'user',content:question}],effort
+    },TOKEN,{Accept:'text/event-stream'}),env);
+    const body=await response.text();
+    assert.match(body,/event: final/);
+    assert.match(body,/Точное проверяемое решение/);
+    assert.equal(calls.length,2);
+    assert.equal(calls[0][1].stream,false);
+    assert.equal(calls[0][1].reasoning.effort,effort);
+    assert.equal(calls[0][1].max_output_tokens,12288);
+    assert.doesNotMatch(calls[0][1].input[0].content,/ПРОВЕРКА ПРОГРАММИРОВАНИЯ И АРХИТЕКТУРЫ/);
+    assert.match(calls[1][1].input[0].content,/математическ/);
+  }
+});
+test('documented Workers AI numeric failures are differentiated without revealing raw provider error text',async()=>{
+  const codes=[
+    [3036,'AI_QUOTA_EXHAUSTED'],
+    [3040,'AI_CAPACITY_UNAVAILABLE'],
+    [3007,'AI_PROVIDER_TIMEOUT'],
+    [3008,'AI_PROVIDER_ABORTED'],
+    [3006,'AI_PROVIDER_REQUEST_TOO_LARGE']
+  ];
+  for(const [provider,expected] of codes){
+    const {env}=envWithAI(async()=>{const e=new Error('PRIVATE_PROVIDER_ERROR_MESSAGE '+provider);e.code=provider;throw e});
+    const response=await worker.fetch(post({
+      messages:[{role:'user',content:'Строго докажи результат'}],effort:'high'
+    },TOKEN,{Accept:'text/event-stream'}),env);
+    const body=await response.text();
+    assert.match(body,new RegExp('"code":"'+expected+'"'));
+    assert.match(body,/"incidentId":"[a-f0-9]{12}"/);
+    assert.doesNotMatch(body,/PRIVATE_PROVIDER_ERROR_MESSAGE/);
+  }
+});
+test('empty and overlong math drafts report the actual internal failure, not generic interruption',async()=>{
+  for(const [draft,code] of [
+    ['', 'AI_MODEL_EMPTY'],
+    ['x'.repeat(85001),'AI_REVIEW_OUTPUT_LIMIT']
+  ]){
+    const {env,calls}=envWithAI(async()=>({output_text:draft}));
+    const response=await worker.fetch(post({
+      messages:[{role:'user',content:'Вычисли коэффициенты многочлена остовных деревьев'}],effort:'medium'
+    },TOKEN,{Accept:'text/event-stream'}),env);
+    const body=await response.text();
+    assert.match(body,new RegExp('"code":"'+code+'"'));
+    assert.equal(calls.length,1);
+    assert.doesNotMatch(body,/event: final/);
+  }
+});

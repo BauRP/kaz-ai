@@ -143,7 +143,7 @@ test('proof errors are corrected and independently rechecked at all three reason
     assert.match(out,/event: final/);
     assert.match(out,/Исправленный ответ \(повторно не проверен\)/);
     assert.match(out,/после пяти групповых забегов исключаются/);
-    assert.doesNotMatch(out.split("event: final\\ndata: ")[1]||"",/6\\*10=60/);
+    assert.doesNotMatch(out.slice(out.indexOf("event: final")),/6\*10=60/);
     assert.match(out,/event: done/);
     assert.equal(calls.length,2,'draft and only one verification with repair');
     assert.equal(calls[0].reasoning.effort,effort);

@@ -65,7 +65,7 @@ let cached;
 export function verifiedGridMathFacts(question){
   const q=String(question||"").toLowerCase();
   const dimensions=/\b5\s*[×xх*]\s*8\b/u.test(q);
-  const fiveEdges=/(?:5|пят[ьиь]|пять)\s+(?:(?:выделенн|отмеченн|горизонтальн)[а-яё]*\s+){0,3}(?:р[её]бер|ребра|р[её]бра)/iu.test(q);
+  const fiveEdges=/(?:5|пятью|пяти|пять)\s+(?:(?:выделенн|отмеченн|горизонтальн)[а-яё]*\s+){0,3}(?:р[её]б(?:ер|ра|рами|рами)|ребрами)/iu.test(q);
   const cut=/(?:между|соединя[а-яё]*)[\s\S]{0,55}?(?:4[-\s]?(?:м|ым|го|й)?|четв[её]рт[а-яё]*)[\s\S]{0,25}?(?:и|с)[\s\S]{0,12}?(?:5[-\s]?(?:м|ым|го|й)?|пят[а-яё]*)[\s\S]{0,30}?(?:столбц|столбик)/iu.test(q);
   if(!dimensions||!fiveEdges||!cut)return "";
   const {coefficients,total,countExactlyThree}=cached??=exactGridPolynomial();

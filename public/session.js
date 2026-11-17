@@ -519,7 +519,7 @@
   async function readAIStream(response,onText){
     const reader=response.body?.getReader();
     if(!reader)throw new Error("STREAM_UNAVAILABLE");
-    let buffer="",output="",finished=false;
+    let buffer="",output="",preview="",finished=false;
     const decoder=new TextDecoder("utf-8");
     try{
       while(true){
@@ -534,22 +534,28 @@
           const lines=frame.split("\n");
           const event=lines.find(line=>line.startsWith("event:"))?.slice(6).trim()||"message";
           const data=lines.filter(line=>line.startsWith("data:")).map(line=>line.slice(5).trimStart()).join("\n");
-          if(event==="done"||data==="[DONE]"){finished=true;continue}
+          if(event==="done"){finished=true;continue}
+          if(data==="[DONE]")continue; // upstream completion is not the server's final acknowledgement
           if(!data)continue;
-          let packet;try{packet=JSON.parse(data)}catch{continue}
+          let packet;
+          try{packet=JSON.parse(data)}
+          catch{const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error}
           if(event==="progress"){
-            onText(output,packet?.message||"Проверяю доказательство…");
+            onText(preview||output,packet?.message||"Проверяю доказательство…");
             continue;
           }
           if(event==="preview"){
             // Preliminary model work remains visible while the optional audit
             // runs. The final event replaces this preview in the saved chat.
-            if(typeof packet?.text==="string"&&packet.text.trim())onText(packet.text,packet?.message||"Проверяю решение…");
+            if(typeof packet?.text==="string"&&packet.text.trim()){
+              preview=packet.text;
+              onText(preview,packet?.message||"Проверяю решение…");
+            }
             continue;
           }
           if(event==="final"){
             if(typeof packet?.text!=="string"||!packet.text.trim())throw new Error("EMPTY_RESPONSE");
-            output=packet.text;
+            output=packet.text;preview="";
             onText(output);
             continue;
           }
@@ -575,6 +581,7 @@
           }
         }
       }
+      if(buffer.trim()){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error;}
       if(!finished){const error=new Error("STREAM_INTERRUPTED");error.code="STREAM_INTERRUPTED";throw error;}
       if(!output.trim())throw new Error("EMPTY_RESPONSE");
       return output;
@@ -723,7 +730,9 @@
           :e?.code==="AI_REVIEW_OUTPUT_LIMIT"?"Решение слишком длинное для проверки. Попробуйте уточнить задание."
           :e?.code==="AI_STREAM_FRAME_LIMIT"?"Нейросеть вернула повреждённые данные. Попробуйте снова."
           :e?.code==="AI_UNAVAILABLE"?"Сервис ИИ временно недоступен. Это не обязательно проблема вашего интернета."
-          :e?.code==="STREAM_INTERRUPTED"?"Передача ответа прервалась. Проверьте соединение с сайтом и повторите запрос."
+          :e?.code==="STREAM_INTERRUPTED"?"Ответ от сервера оборвался до завершения. Попробуйте повторить запрос."
+          :e?.code==="STREAM_INVALID"?"Получены повреждённые данные ответа. Часть текста могла не дойти."
+          :e?.code==="AI_OUTPUT_INCOMPLETE"?"Нейросеть остановилась до завершения ответа. Сохранён неполный результат."
           :e instanceof TypeError&&offline?"Ваше устройство сейчас не подключено к сети. Проверьте подключение."
           :e instanceof TypeError?"Не удалось связаться с сайтом. Интернет на других сайтах может работать."
           :"Не удалось завершить ответ ИИ. Попробуйте повторить запрос.";

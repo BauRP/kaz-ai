@@ -55,7 +55,7 @@ function providerErrorFields(error){
   return fields;
 }
 function providerCode(error){
-  // Numeric codes come from Cloudflare's public Workers AI errors reference.
+  // Cloudflare docs list 3036; real public reports also show 4006 for daily quota.
   const known=/\b(3006|3007|3008|3036|4006|3040|3023|3041|3042|5007|5016|5018|5028|5035)\b/;
   for(const field of providerErrorFields(error)){
     const matched=String(field).match(known);
@@ -77,7 +77,7 @@ function safeFault(error){
 }
 function safeAIError(error,modelBytesSeen=false){
   const provider=providerCode(error);
-  if(provider==="3036"||provider==="4006")return {code:"AI_QUOTA_EXHAUSTED",message:"Cloudflare отклонил запрос из-за ограничения бесплатных вычислений ИИ. Если сегодня в панели есть свободные Neurons, проверьте также последние 24 часа."};
+  if(provider==="3036"||provider==="4006")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит ИИ: Cloudflare отклонил запрос, сообщив об исчерпании бесплатных Neurons. Если сегодня квота не израсходована, возможна ошибка учёта на стороне Cloudflare."};
   if(provider==="3040")return {code:"AI_CAPACITY_UNAVAILABLE",message:"Модель сейчас перегружена. Повторите запрос позже."};
   if(provider==="3007")return {code:"AI_PROVIDER_TIMEOUT",message:"Cloudflare превысил время обработки запроса."};
   if(provider==="3008")return {code:"AI_PROVIDER_ABORTED",message:"Cloudflare прервал обработку запроса."};
@@ -91,7 +91,7 @@ function safeAIError(error,modelBytesSeen=false){
   if(error?.code==="AI_STREAM_INVALID")return {code:"AI_STREAM_INVALID",message:"В потоке модели повреждены данные."};
   if(error?.code==="AI_STAGE_TIMEOUT")return {code:"AI_STAGE_TIMEOUT",message:"Модель превысила время ожидания этапа."};
   const kind=classifyAILimit(error);
-  if(kind==="daily")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит ИИ: Cloudflare сообщил об исчерпании бесплатных вычислений. Проверьте расход Neurons за последние 24 часа; счётчик «сегодня» может отличаться."};
+  if(kind==="daily")return {code:"AI_QUOTA_EXHAUSTED",message:"Дневной лимит ИИ: Cloudflare сообщил об исчерпании бесплатных Neurons. Если сегодняшний расход меньше 10 000, причина может быть в учёте квоты Cloudflare."};
   if(kind==="rate")return {code:"AI_RATE_LIMITED",message:"Слишком много запросов за короткое время. Попробуйте позднее."};
   if(modelBytesSeen)return {code:"AI_RESPONSE_INTERRUPTED",message:"Сервис ИИ прервал обработку ответа. Попробуйте повторить запрос."};
   return {code:"AI_UNAVAILABLE",message:"Не удалось связаться с сервисом ИИ. Попробуйте позже."};

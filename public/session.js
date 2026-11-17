@@ -541,6 +541,12 @@
             onText(output,packet?.message||"Проверяю доказательство…");
             continue;
           }
+          if(event==="preview"){
+            // Preliminary model work remains visible while the optional audit
+            // runs. The final event replaces this preview in the saved chat.
+            if(typeof packet?.text==="string"&&packet.text.trim())onText(packet.text,packet?.message||"Проверяю решение…");
+            continue;
+          }
           if(event==="final"){
             if(typeof packet?.text!=="string"||!packet.text.trim())throw new Error("EMPTY_RESPONSE");
             output=packet.text;
@@ -709,6 +715,13 @@
         const message=quota?"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."
           :e?.code==="AI_RATE_LIMITED"?"Слишком много запросов за короткое время. Попробуйте позднее."
           :e?.code==="AI_RESPONSE_INTERRUPTED"?"Сервис ИИ прервал обработку ответа. Можно повторить запрос."
+          :e?.code==="AI_PROVIDER_TIMEOUT"?"Cloudflare превысил время обработки ответа. Можно повторить запрос."
+          :e?.code==="AI_PROVIDER_ABORTED"?"Cloudflare прервал запрос. Можно повторить его позже."
+          :e?.code==="AI_CAPACITY_UNAVAILABLE"?"Cloudflare сейчас перегружен. Попробуйте позже."
+          :e?.code==="AI_PROVIDER_REQUEST_TOO_LARGE"?"Cloudflare отклонил слишком большой запрос."
+          :e?.code==="AI_MODEL_EMPTY"?"Нейросеть не вернула текст решения."
+          :e?.code==="AI_REVIEW_OUTPUT_LIMIT"?"Решение слишком длинное для проверки. Попробуйте уточнить задание."
+          :e?.code==="AI_STREAM_FRAME_LIMIT"?"Нейросеть вернула повреждённые данные. Попробуйте снова."
           :e?.code==="AI_UNAVAILABLE"?"Сервис ИИ временно недоступен. Это не обязательно проблема вашего интернета."
           :e?.code==="STREAM_INTERRUPTED"?"Передача ответа прервалась. Проверьте соединение с сайтом и повторите запрос."
           :e instanceof TypeError&&offline?"Ваше устройство сейчас не подключено к сети. Проверьте подключение."

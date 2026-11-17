@@ -606,11 +606,12 @@
     showStatus("Анализирую запрос…");
     // Retry hides its own button; focus the visible Stop control, not a hidden element.
     if(previousFocus?.id==="sessionRetry"||previousFocus?.closest("#view-tools"))stop.focus();
-    const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
-      // Do not split a Unicode surrogate pair when shortening AI context.
-      .map(m=>({role:m.role,content:m.role==="assistant"
-        ?m.content.slice(0,4000).replace(/[\uD800-\uDBFF]$/u,"")
-        :m.content}));
+    const entireHistory=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId);
+    const candidates=entireHistory.slice(-15).map(m=>({role:m.role,content:m.content}));
+    // Keep the original task when the conversation becomes long. Never cut
+    // assistant code or mathematical derivations at an arbitrary 4,000 chars.
+    if(entireHistory.length>15&&entireHistory[0]?.role==="user")
+      candidates.unshift({role:"user",content:entireHistory[0].content});
     // Preserve full recent messages, but do not exceed the server's 50 KB payload cap.
     // Account for JSON encoding, user instructions and non-ASCII characters.
     const encoder=new TextEncoder();
@@ -619,7 +620,7 @@
     for(let i=candidates.length-1;i>=0;i--){
       const item={role:candidates[i].role,content:candidates[i].content};
       const bytes=encoder.encode(JSON.stringify(item)).length+2;
-      if(bytes>budget)break;
+      if(bytes>budget)continue; // skip only complete older messages; never silently cut code
       history.unshift(item);budget-=bytes;
     }
     while(history.length>1&&history[0].role!=="user")history.shift();

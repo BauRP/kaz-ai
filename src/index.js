@@ -479,9 +479,9 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
             // The documented GPT-OSS Responses format accepts reasoning.effort,
             // but is non-streaming. The user already sees progress rather than
             // the unverified draft during mathematical verification.
-            const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
+            const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",{
               input:messages,reasoning:{effort},stream:false,max_output_tokens:12288
-            });
+            }),DRAFT_DEADLINE_MS);
             phase="model_read";diagnostic("model_connected");
             if(closed)return;
             collected=answerText(result);
@@ -492,10 +492,11 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
             }
             upstreamBytesSeen=true;
             receivedBytes=encoder.encode(collected).byteLength;receivedChunks=1;
-            if(collected.length>85000){
-              const error=new Error("Mathematical draft exceeds independent review capacity");
-              error.code="AI_REVIEW_OUTPUT_LIMIT";
-              throw error;
+            if(completionState(result)==="incomplete"){
+              write("event: final\ndata: "+JSON.stringify({text:markIncomplete(collected)})+"\n\n");
+              write("event: done\ndata: {}\n\n");
+              phase="incomplete";diagnostic("model_incomplete");
+              return;
             }
           }else{
             const upstream=await env.AI.run("@cf/openai/gpt-oss-120b",opts);
@@ -524,7 +525,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
                     const frame=sseTail.slice(0,idx);
                     sseTail=sseTail.slice(idx+2);
                     collected+=parseSSEAnswerPiece(frame);
-                    if(collected.length>85000){
+                    if(collected.length>MAX_DISPLAY_CHARS){
                       const error=new Error("Draft exceeds independent review capacity");
                       error.code="AI_REVIEW_OUTPUT_LIMIT";
                       throw error;
@@ -549,14 +550,16 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
               phase=auditMode==="engineering"?"engineering_review":"proof_review";
               write("event: progress\ndata: "+JSON.stringify({message:message+"…"})+"\n\n");
             };
-            const question=messages.at(-1)?.content||"";
+            const question=messages.slice(1).map(m=>(m.role==="user"?"Пользователь: ":"Ранее ответил ИИ: ")+m.content).join("\n\n");
             const auditFault=(auditPhase,error)=>logAIEvent("error","audit_provider_failure",{
               incidentId,phase:auditPhase,elapsedMs:Date.now()-startedAt,
               effort,auditMode,receivedBytes,receivedChunks,...safeFault(error)
             });
-            const finalAnswer=auditMode==="engineering"
-              ?await verifyEngineering(env,question,collected,effort,stage,auditFault)
-              :await verifyAndImproveProof(env,question,collected,effort,stage,auditFault);
+            const finalAnswer=collected.length>MAX_REVIEW_CHARS
+              ?unverifiedDraft(collected,["Ответ больше объёма независимой проверки; он сохранён полностью."],auditMode)
+              :auditMode==="engineering"
+                ?await verifyEngineering(env,question,collected,effort,stage,auditFault)
+                :await verifyAndImproveProof(env,question,collected,effort,stage,auditFault);
             if(!closed)write("event: final\ndata: "+JSON.stringify({text:finalAnswer})+"\n\n");
             phase="final_answer";diagnostic("audit_completed");
           }
@@ -664,16 +667,21 @@ export default {
       // Cloudflare's GPT-OSS Workers binding supports Responses API input
       // with reasoning.effort. The older reasoning_effort field is not part of
       // its published input schema and may silently leave the level unchanged.
-      const result=await env.AI.run("@cf/openai/gpt-oss-120b",{
+      const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",{
         input:messages,
         reasoning:{effort:input.effort},
-        stream:false
-      });
+        stream:false,max_output_tokens:12288
+      }),DRAFT_DEADLINE_MS);
       const text=answerText(result);
       if(!text.trim())return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
-      const finalText=mode==="engineering"
-        ?await verifyEngineering(env,input.messages.at(-1).content,text,input.effort)
-        :mode==="proof"?await verifyAndImproveProof(env,input.messages.at(-1).content,text,input.effort):text;
+      const fullQuestion=input.messages.map(m=>(m.role==="user"?"Пользователь: ":"Ранее ответил ИИ: ")+m.content).join("\n\n");
+      const finalText=completionState(result)==="incomplete"
+        ?markIncomplete(text)
+        :text.length>MAX_REVIEW_CHARS&&mode
+          ?unverifiedDraft(text,["Ответ превышает размер независимой проверки; сохранён полностью."],mode)
+          :mode==="engineering"
+            ?await verifyEngineering(env,fullQuestion,text,input.effort)
+            :mode==="proof"?await verifyAndImproveProof(env,fullQuestion,text,input.effort):text;
       return json({text:finalText,model:"gpt-oss-120b",effort:input.effort});
     }catch(e){
       const {code,message}=safeAIError(e);

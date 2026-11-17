@@ -12,6 +12,7 @@ function hasModelText(sseBody){
       try{
         const payload=JSON.parse(line.slice(5).trim());
         if(typeof payload?.response==='string'&&payload.response.trim())return true;
+        if(typeof payload?.text==='string'&&payload.text.trim())return true;
         if(typeof payload?.choices?.[0]?.delta?.content==='string'&&payload.choices[0].delta.content.trim())return true;
         if(payload?.type==='response.output_text.delta'&&typeof payload?.delta==='string'&&payload.delta.trim())return true;
       }catch{}
@@ -43,11 +44,12 @@ export async function verifySite({url=SITE,fetchFn=fetch,write=console.log}={}){
     const done=/^event: done$/m.test(body);
     const failure=/^event: error$/m.test(body);
     const receivedText=hasModelText(body);
+    const incomplete=/Ответ модели не завершён|AI_OUTPUT_INCOMPLETE|STREAM_INTERRUPTED|AI_STREAM_INVALID/.test(body);
     const sample={
       effort,elapsedMs,status:response.status,
       effortHeaderMatches:returnedEffort===effort,
       requestIdPresent:/^[a-f0-9]{12}$/.test(requestId||''),
-      completed:response.ok&&done&&!failure&&receivedText
+      completed:response.ok&&done&&!failure&&!incomplete&&receivedText
     };
     samples.push(sample);
     write('Chat test '+samples.length+'/3 '+effort+': HTTP '+sample.status+', '+elapsedMs+'ms, effort header '+(sample.effortHeaderMatches?'matches':'MISSING/MISMATCH')+', SSE '+(sample.completed?'completed':'NOT CONFIRMED'));
@@ -64,8 +66,12 @@ export async function verifySite({url=SITE,fetchFn=fetch,write=console.log}={}){
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
   try{
-    const {report}=await verifySite();
+    const {report,samples}=await verifySite();
     console.log('\n'+report);
     if(process.env.GITHUB_STEP_SUMMARY)await appendFile(process.env.GITHUB_STEP_SUMMARY,report+'\n');
+    if(!samples.every(x=>x.completed&&x.effortHeaderMatches&&x.requestIdPresent)){
+      console.error('Live website reasoning verification FAILED: one or more replies were incomplete.');
+      process.exitCode=1;
+    }
   }catch(err){console.error('Site diagnostic failed:',err?.name==='AbortError'?'one call timed out':err?.message);process.exitCode=1}
 }

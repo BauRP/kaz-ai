@@ -597,7 +597,7 @@
   }
   // A small family surprise; never consumes the AI quota or changes real limits.
   const isMotherName=value=>/^(муханова айслу|муханова айсулу)$/u.test(
-    value.normalize("NFKC").trim().replace(/\\s+/gu," ").toLocaleLowerCase("ru"));
+    value.normalize("NFKC").trim().replace(/\s+/gu," ").toLocaleLowerCase("ru"));
   const motherGreeting="Здравствуйте, мама-создатель. ❤️\n\nДля вас все ограничения платных систем выключены.";
   function sendMessage(){
     const text=composeText();if(!text.trim()||abort)return;

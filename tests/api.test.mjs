@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import worker from '../src/index.js';
 
-const TOKEN='safe-example-token-only-for-automated-tests-1234';
 function envWithAI(impl=async () => ({
   output:[{type:'message',content:[{type:'output_text',text:'Ответ модели'}]}]
 })){
@@ -10,16 +9,17 @@ function envWithAI(impl=async () => ({
   return {
     calls,
     env:{
-      KAZ_AI_ACCESS_KEY:TOKEN,
+      IP_RATE_LIMITER:{limit:async ({key})=>{if(!key)throw new Error('missing visitor key');return {success:true}}},
+      SHARED_RATE_LIMITER:{limit:async ({key})=>{if(key!=='kaz-ai-public-chat')throw new Error('invalid shared key');return {success:true}}},
       ASSETS:{fetch:async()=>new Response('HTML asset',{status:200})},
       AI:{run:async (...args)=>{calls.push(args);return impl(...args)}}
     }
   };
 }
-function post(body,token=TOKEN,headers={}){
+function post(body,headers={}){
   return new Request('https://private.example/api/chat',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,Origin:'https://private.example',...headers},
+    headers:{'Content-Type':'application/json',Origin:'https://private.example',...headers},
     body:typeof body==='string'?body:JSON.stringify(body)
   });
 }
@@ -29,19 +29,21 @@ test('worker serves other routes as static assets',async()=>{
   const result=await worker.fetch(new Request('https://private.example/index.html'),env);
   assert.equal(await result.text(),'HTML asset');
 });
-test('API fails closed when secret or Workers AI binding is missing',async()=>{
+test('public API needs no visitor key, but fails closed without AI or server rate protections',async()=>{
   const {env,calls}=envWithAI();
-  const a=await worker.fetch(post(good),{...env,KAZ_AI_ACCESS_KEY:undefined});
-  assert.equal(a.status,503);
-  const b=await worker.fetch(post(good),{...env,AI:undefined});
-  assert.equal(b.status,503);
-  assert.equal(calls.length,0);
+  const open=await worker.fetch(post(good),env);
+  assert.equal(open.status,200);
+  for(const broken of [{AI:undefined},{IP_RATE_LIMITER:undefined},{SHARED_RATE_LIMITER:undefined}]){
+    const response=await worker.fetch(post(good),{...env,...broken});
+    assert.equal(response.status,503);
+    assert.equal((await response.json()).code,'AI_UNAVAILABLE');
+  }
+  assert.equal(calls.length,1);
 });
-test('unauthorized, wrong origin, oversized, wrong content type requests never call AI',async()=>{
+test('wrong origin, oversized, wrong content type requests never call AI',async()=>{
   const {env,calls}=envWithAI();
-  assert.equal((await worker.fetch(post(good,'wrong-key'),env)).status,401);
-  assert.equal((await worker.fetch(post(good,TOKEN,{Origin:'https://attacker.example'}),env)).status,403);
-  assert.equal((await worker.fetch(post(good,TOKEN,{'Content-Type':'text/plain'}),env)).status,415);
+  assert.equal((await worker.fetch(post(good,{Origin:'https://attacker.example'}),env)).status,403);
+  assert.equal((await worker.fetch(post(good,{'Content-Type':'text/plain'}),env)).status,415);
   assert.equal((await worker.fetch(post('a'.repeat(51000)),env)).status,413);
   assert.equal(calls.length,0);
 });
@@ -141,7 +143,7 @@ test('a chunked request without Content-Length stops at the 50 KB stream limit',
   });
   const request=new Request('https://private.example/api/chat',{
     method:'POST',duplex:'half',body:stream,
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN,Origin:'https://private.example'}
+    headers:{'Content-Type':'application/json',Origin:'https://private.example'}
   });
   assert.equal(request.headers.get('content-length'),null);
   const response=await worker.fetch(request,env);
@@ -164,7 +166,7 @@ test('a JSON request split inside a Cyrillic UTF-8 character is accepted',async(
   });
   const request=new Request('https://private.example/api/chat',{
     method:'POST',duplex:'half',body,
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN,Origin:'https://private.example'}
+    headers:{'Content-Type':'application/json',Origin:'https://private.example'}
   });
   const response=await worker.fetch(request,env);
   assert.equal(response.status,200);
@@ -177,7 +179,7 @@ test('invalid UTF-8 request is rejected before AI without a 500 response',async(
   const request=new Request('https://private.example/api/chat',{
     method:'POST',
     body:new Uint8Array([0x7b,0x22,0xc3,0x28,0x22,0x7d]),
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+TOKEN,Origin:'https://private.example'}
+    headers:{'Content-Type':'application/json',Origin:'https://private.example'}
   });
   const response=await worker.fetch(request,env);
   assert.equal(response.status,400);
@@ -185,12 +187,17 @@ test('invalid UTF-8 request is rejected before AI without a 500 response',async(
   assert.equal(calls.length,0);
 });
 
-test('misconfigured short or oversized server secrets fail closed before running AI',async()=>{
+test('public API rejects requests when either limiter denies or fails',async()=>{
   const {env,calls}=envWithAI();
-  for(const secret of ['short','x'.repeat(1001),42]){
-    const response=await worker.fetch(post(good),{...env,KAZ_AI_ACCESS_KEY:secret});
-    assert.equal(response.status,503);
-    assert.equal((await response.json()).code,'ACCESS_REQUIRED');
+  for(const binding of ['IP_RATE_LIMITER','SHARED_RATE_LIMITER']){
+    const denied={...env,[binding]:{limit:async()=>({success:false})}};
+    const response=await worker.fetch(post(good),denied);
+    assert.equal(response.status,429);
+    assert.equal((await response.json()).code,'AI_RATE_LIMITED');
+    const unavailable={...env,[binding]:{limit:async()=>{throw new Error('limit backend down')}}};
+    const blocked=await worker.fetch(post(good),unavailable);
+    assert.equal(blocked.status,503);
+    assert.equal((await blocked.json()).code,'AI_UNAVAILABLE');
   }
   assert.equal(calls.length,0);
 });
@@ -265,4 +272,15 @@ test('text-bearing failed or still-running responses are not presented as comple
     assert.equal(body.text,'Partial output');
     assert.equal(body.incomplete,true);
   }
+});
+
+test('public chat rate guard uses Cloudflare visitor address and one shared budget',async()=>{
+  const {env,calls}=envWithAI();
+  const seen=[];
+  env.IP_RATE_LIMITER={limit:async a=>{seen.push(['visitor',a.key]);return {success:true}}};
+  env.SHARED_RATE_LIMITER={limit:async a=>{seen.push(['shared',a.key]);return {success:true}}};
+  const reply=await worker.fetch(post(good,{'CF-Connecting-IP':'192.0.2.15'}),env);
+  assert.equal(reply.status,200);
+  assert.deepEqual(seen,[['visitor','192.0.2.15'],['shared','kaz-ai-public-chat']]);
+  assert.equal(calls.length,1);
 });

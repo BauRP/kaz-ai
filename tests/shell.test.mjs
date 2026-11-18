@@ -73,16 +73,20 @@ test('safely bundled session features are present without persistent storage',()
   assert.match(session,/function renderSessionProjects\(/);
   assert.match(session,/function renderSessionHistory\(/);
   assert.match(session,/function showCalculator\(/);
-  assert.match(session,/function configureAccess\(/);
+  assert.match(session,/const isMotherName=/);
+  assert.doesNotMatch(session,/function configureAccess\(/);
   assert.match(session,/!c\.temporary/);
 });
-test('GPT-OSS route is server-side and requires private access key',()=>{
+test('GPT-OSS route is server-side and limits public traffic without visitor keys',()=>{
   const worker=readFileSync('src/index.js','utf8');
   const config=JSON.parse(readFileSync('wrangler.jsonc','utf8'));
   assert.equal(config.main,'./src/index.js');
   assert.equal(config.ai.binding,'AI');
   assert.deepEqual(config.assets.run_worker_first,['/api/*','/robots.txt','/sitemap.xml']);
-  assert.match(worker,/env\.KAZ_AI_ACCESS_KEY/);
+  assert.match(worker,/env\.IP_RATE_LIMITER/);
+  assert.match(worker,/env\.SHARED_RATE_LIMITER/);
+  assert.doesNotMatch(worker,/KAZ_AI_ACCESS_KEY/);
+  assert.equal(config.ratelimits.length,2);
   assert.match(worker,/@cf\/openai\/gpt-oss-120b/);
   assert.doesNotMatch(html,/KAZ_AI_ACCESS_KEY|CLOUDFLARE_API_TOKEN/);
   assert.doesNotMatch(readFileSync('public/preview.html','utf8'),/CLOUDFLARE_API_TOKEN/);
@@ -197,4 +201,13 @@ test('long assistant context keeps beginning and end without raising message lim
   for(const label of ['Язык перевода','Текст для перевода','Задача по программированию','Описание документа']){
     assert.ok(i18n.includes('"'+label+'":'),'Missing text tool translation '+label);
   }
+});
+
+test('mother greeting supports both spellings without generating an AI request',()=>{
+  const session=readFileSync('public/session.js','utf8');
+  assert.match(session,/муханова айслу\|муханова айсулу/);
+  assert.match(session,/Здравствуйте, мама-создатель/);
+  assert.match(session,/Для вас все ограничения платных систем выключены/);
+  assert.match(session,/if\(familyGreeting\)showStatus\(""\)/);
+  assert.doesNotMatch(session,/aiAccessKey|configureAccess|authorization.*Bearer/);
 });

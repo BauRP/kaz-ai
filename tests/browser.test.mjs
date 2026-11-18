@@ -3226,3 +3226,32 @@ test('invisible-only project names are rejected while joined emoji names remain 
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
+
+test('mother surprise makes zero AI requests and the next normal question uses public GPT',async()=>{
+  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const html=readFileSync('public/preview.html','utf8');
+    let modelCalls=0;
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        modelCalls++;
+        assert.equal(route.request().headers().authorization,undefined);
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Обычный ответ GPT-OSS'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Муханова Айсулу');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('мама-создатель'));
+    assert.equal(modelCalls,0);
+    assert.equal(await page.locator('#chatMessages [data-session="retry-answer"]').count(),0);
+    await page.locator('#messageInput').fill('Расскажи о Казахстане');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelectorAll('.message-assistant').length===2);
+    assert.equal(modelCalls,1);
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+  }finally{await browser.close()}
+});

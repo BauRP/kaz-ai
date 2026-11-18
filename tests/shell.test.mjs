@@ -206,7 +206,7 @@ test('long assistant context keeps beginning and end without raising message lim
 test('mother greeting supports both spellings without generating an AI request',()=>{
   const session=readFileSync('public/session.js','utf8');
   assert.match(session,/муханова айслу\|муханова айсулу/);
-  assert.match(session,/Здравствуйте, мама-создатель/);
+  assert.match(session,/Здравствуйте, мама создателя/);
   assert.match(session,/Для вас все ограничения платных систем выключены/);
   assert.match(session,/if\(familyGreeting\)showStatus\(""\)/);
   assert.doesNotMatch(session,/aiAccessKey|configureAccess|authorization.*Bearer/);

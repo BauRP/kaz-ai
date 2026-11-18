@@ -1728,7 +1728,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   // A small family surprise; never consumes the AI quota or changes real limits.
   const isMotherName=value=>/^(муханова айслу|муханова айсулу)$/u.test(
     value.normalize("NFKC").trim().replace(/\s+/gu," ").toLocaleLowerCase("ru"));
-  const motherGreeting="Здравствуйте, мама-создатель. ❤️\n\nДля вас все ограничения платных систем выключены.";
+  const motherGreeting="Здравствуйте, мама создателя. ❤️\n\nДля вас все ограничения платных систем выключены.";
   function sendMessage(){
     const text=composeText();if(!text.trim()||abort)return;
     if(text.length>4000){notify("Сообщение длиннее 4000 символов. Сократите его перед отправкой.");return}

@@ -3245,7 +3245,7 @@ test('mother surprise makes zero AI requests and the next normal question uses p
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Муханова Айсулу');
     await page.locator('#sendButton').click();
-    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('мама-создатель'));
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('мама создателя'));
     assert.equal(modelCalls,0);
     assert.equal(await page.locator('#chatMessages [data-session="retry-answer"]').count(),0);
     await page.locator('#messageInput').fill('Расскажи о Казахстане');

@@ -701,7 +701,7 @@ test('both spellings of the mother name trigger the exact offline greeting witho
       assert.equal(await page.locator('.message-user').count(),1);
       assert.equal(await page.locator('.message-assistant').count(),1);
       const greeting=await page.locator('.message-assistant').innerText();
-      assert.ok(greeting.includes('Здравствуйте, мама-создатель.'),greeting);
+      assert.ok(greeting.includes('Здравствуйте, мама создателя.'),greeting);
       assert.ok(greeting.includes('Для вас все ограничения платных систем выключены.'),greeting);
     });
   }

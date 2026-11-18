@@ -306,8 +306,8 @@
     }
     if(!shown.length){
       const empty=make("div","empty-card");
-      empty.append(make("h2","",value?"Совпадений не найдено":"Пока нет чатов"),
-        make("p","",value?"Попробуйте другое слово. Недавние чаты слева остаются доступны.":"История доступна, пока открыта эта вкладка. После обновления страницы разговоры исчезнут."));
+      empty.append(make("h2","",uiText(value?"Совпадений не найдено":"Пока нет чатов")),
+        make("p","",uiText(value?"Попробуйте другое слово. Недавние чаты слева остаются доступны.":"История доступна, пока открыта эта вкладка. После обновления страницы разговоры исчезнут.")));
       list.append(empty);
     }
     function highlighted(target,text,range=value?findTextMatch(text,query):null){
@@ -404,7 +404,7 @@
     target.append(top);
     if(!projects.length){
       const empty=make("div","empty-card");
-      empty.append(make("h2","","Пока нет проектов"),make("p","","Создайте папку, чтобы сгруппировать переписки текущего сеанса."));
+      empty.append(make("h2","",uiText("Пока нет проектов")),make("p","","Создайте папку, чтобы сгруппировать переписки текущего сеанса."));
       target.append(empty);
     }
     for(const project of projects){
@@ -413,7 +413,7 @@
       const chats=grouped.get(project.id).sort(newestFirst);
       header.append(make("h2","",project.name),make("small","",projectCountLabel(chats.length)));
       card.append(header);
-      if(!chats.length)card.append(make("p","session-help","Пока нет чатов в этом проекте."));
+      if(!chats.length)card.append(make("p","session-help",uiText("Пока нет чатов в этом проекте.")));
       for(const c of chats){
         const row=make("div","session-project-chat-row");
         const open=button("↳ "+c.title,"open-chat",c.id,"session-project-chat");
@@ -435,7 +435,7 @@
     ungrouped.sort(newestFirst);
     if(ungrouped.length){
       const box=make("section","session-project-card");
-      box.append(make("h2","","Без проекта"));
+      box.append(make("h2","",uiText("Без проекта")));
       for(const c of ungrouped){
         const open=button("↳ "+c.title,"open-chat",c.id,"session-project-chat");
         open.setAttribute("aria-label",uiText("Открыть чат")+": "+c.title);
@@ -576,7 +576,13 @@
         if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text});
       }
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
-      showStatus("");
+      // Keep partial output visible. Retry is manual, so it cannot consume
+      // additional Cloudflare quota without a user click.
+      const last=chat.messages.at(-1);
+      if(data.incomplete===true&&last?.role==="assistant"){
+        retryAnswerId=last.id;
+        showStatus(uiText("Ответ ИИ получен не полностью. Можно повторить последний ответ."),false,true);
+      }else showStatus("");
     }catch(e){
       if(abort!==controller)return;
       if(controller.signal.aborted){

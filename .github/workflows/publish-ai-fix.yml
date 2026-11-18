@@ -10,11 +10,11 @@ permissions:
   contents: read
 jobs:
   publish:
-    # One-time automatic deployment of this approved fix, with manual recovery.
+    # One-time automatic deployment of the explicitly requested family greeting, with manual recovery.
     # Future commits do not deploy automatically.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      startsWith(github.event.head_commit.message, 'Publish Kaz AI AI diagnostics #4')
+      startsWith(github.event.head_commit.message, 'Publish Kaz AI family greeting #1')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

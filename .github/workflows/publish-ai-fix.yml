@@ -14,7 +14,7 @@ jobs:
     # Future commits do not deploy automatically.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      startsWith(github.event.head_commit.message, 'Publish Kaz AI site improvements #2')
+      startsWith(github.event.head_commit.message, 'Publish Kaz AI long context and search #3')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

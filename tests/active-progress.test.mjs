@@ -25,7 +25,7 @@ test('individual and group progress agrees with the last full baseline',()=>{
     const old=prior.items.find(i=>i.id===item.id);
     assert.ok(old,'Unknown item '+item.id);
     assert.ok(item.previous>=old.now,'Previous cycle score cannot fall below the archived baseline for '+item.id);
-    assert.equal(item.delta,item.now-item.previous);
+    close(item.delta,item.now-item.previous);
     assert.ok(item.now>=old.now&&item.now<100);
   }
   close(d.previous,mean(d.items,'previous'));

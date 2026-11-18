@@ -443,7 +443,8 @@
         down.setAttribute("aria-label",uiText("Отрицательная оценка ответа"));
         up.setAttribute("aria-pressed",String(message.rating==="up"));
         down.setAttribute("aria-pressed",String(message.rating==="down"));
-        actions.append(up,down,button("Повторить ответ","retry-answer",message.id));
+        actions.append(up,down);
+        if(!message.localGreeting)actions.append(button("Повторить ответ","retry-answer",message.id));
         bubble.append(actions);
       }
     });
@@ -606,7 +607,7 @@
     showStatus("Анализирую запрос…");
     // Retry hides its own button; focus the visible Stop control, not a hidden element.
     if(previousFocus?.id==="sessionRetry"||previousFocus?.closest("#view-tools"))stop.focus();
-    const entireHistory=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId);
+    const entireHistory=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&!m.localGreeting&&m.id!==replaceId);
     const candidates=entireHistory.slice(-15).map(m=>({role:m.role,content:m.content}));
     // Keep the original task when the conversation becomes long. Never cut
     // assistant code or mathematical derivations at an arbitrary 4,000 chars.
@@ -779,14 +780,22 @@
       else $("#messageInput").focus();
     }
   }
+  // This fixed family surprise never calls a model or changes real account limits.
+  const isMotherName=value=>/^(муханова айслу|муханова айсулу)$/u.test(
+    value.normalize("NFKC").trim().replace(/\s+/gu," ").toLocaleLowerCase("ru"));
+  const motherGreeting="Здравствуйте, мама создателя. ❤️\n\nДля вас все ограничения платных систем выключены.";
   function sendMessage(){
     const text=composeText();if(!text.trim()||abort)return;
     if(text.length>4000){notify("Сообщение длиннее 4000 символов. Сократите его перед отправкой.");return}
     const chat=(state.screen==="welcome"?newThread(text):selected()||newThread(text));
+    const familyGreeting=isMotherName(text);
     chat.messages.push({id:nextId(),role:"user",content:text});
+    if(familyGreeting)chat.messages.push({id:nextId(),role:"assistant",content:motherGreeting,localGreeting:true});
     touchChat(chat);displayThread(chat);
     $("#messageInput").value="";drafts.delete(chat.id);welcomeDraft="";resizeInput();
-    renderChat();renderHistory();showScreen("chat");scrollChatToBottom();runAI(chat);
+    renderChat();renderHistory();showScreen("chat");scrollChatToBottom();
+    if(familyGreeting)showStatus("");
+    else runAI(chat);
   }
   function textDialog(title,label,value,onSave){
     openDialog(title,"",body=>{
@@ -988,6 +997,7 @@
       if(index<0)return;
       const m=c.messages[index];
       if(action==="retry-answer"){
+        if(m.localGreeting)return;
         if(abort){notify("Дождитесь завершения предыдущего запроса.");return}
         if(m.role!=="assistant"||index!==c.messages.length-1){notify("Повторить можно только последний ответ.");return}
         if(c.messages[index-1]?.role==="user")runAI(c,m.id);

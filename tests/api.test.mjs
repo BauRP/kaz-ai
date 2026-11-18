@@ -941,3 +941,25 @@ test('long user prompt is preserved, not rejected at arbitrary 4000 characters',
   assert.equal(calls.length,1);
   assert.equal(calls[0][1].input.at(-1).content,prompt);
 });
+
+test('family greeting recognizes both spellings before invoking the model or cloud limiters',async()=>{
+  for(const name of ['Муханова Айслу','Муханова Айсулу','  МУХАНОВА  АЙСУЛУ  ']){
+    const {env,calls}=envWithAI();
+    const payload={...good,messages:[{role:'user',content:name}]};
+    const result=await worker.fetch(post(payload),{...env,AI:undefined,KAZ_AI_ACCESS_KEY:undefined,
+      CHAT_IP_LIMITER:undefined,CHAT_GLOBAL_LIMITER:undefined});
+    assert.equal(result.status,200);
+    assert.deepEqual(await result.json(),{text:'Здравствуйте, мама создателя. ❤️\n\nДля вас все ограничения платных систем выключены.',
+      model:'local-greeting',effort:good.effort,incomplete:false});
+    assert.equal(calls.length,0);
+  }
+});
+test('other names and phrases do not consume the special greeting path',async()=>{
+  const {env,calls}=envWithAI();
+  for(const name of ['Муханова Айсулу!', 'Кто такая Муханова Айсулу?', 'Муханова Айсылу']){
+    const response=await worker.fetch(post({...good,messages:[{role:'user',content:name}]}),env);
+    assert.equal(response.status,200);
+    assert.equal((await response.json()).text,'Ответ модели');
+  }
+  assert.equal(calls.length,3);
+});

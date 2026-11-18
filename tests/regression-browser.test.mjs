@@ -868,3 +868,18 @@ test('preview survives progress updates and a failed review, without claiming ve
     assert.match(text,/неполный/i);
   }finally{await browser.close()}
 });
+
+test('mother surprise appears locally for both spellings without asking for credentials',async()=>{
+  for(const name of ['Муханова Айслу','Муханова Айсулу']){
+    await withPage(async page=>{
+      await page.locator('#messageInput').fill(name);
+      await page.locator('#sendButton').click();
+      const reply=page.locator('#chatMessages .message-assistant');
+      assert.equal(await reply.count(),1);
+      assert.ok((await reply.innerText()).includes('Здравствуйте, мама создателя. ❤️'));
+      assert.ok((await reply.innerText()).includes('Для вас все ограничения платных систем выключены.'));
+      assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+      assert.equal(await page.locator('#chatMessages [data-session="retry-answer"]').count(),0);
+    });
+  }
+});

@@ -142,6 +142,11 @@ function answerText(result){
   if(typeof result?.choices?.[0]?.message?.content==="string")return result.choices[0].message.content;
   return "";
 }
+function isMotherName(value){
+  return /^(муханова айслу|муханова айсулу)$/u.test(
+    value.normalize("NFKC").trim().replace(/\s+/gu," ").toLocaleLowerCase("ru"));
+}
+const MOTHER_GREETING="Здравствуйте, мама создателя. ❤️\n\nДля вас все ограничения платных систем выключены.";
 function validatedInput(payload){
   if(!payload||typeof payload!=="object"||!Array.isArray(payload.messages))return null;
   if(payload.messages.length<1||payload.messages.length>16)return null;
@@ -713,13 +718,6 @@ export default {
     if(request.method!=="POST")return codeError("METHOD_NOT_ALLOWED","Используйте POST.",405);
     const origin=request.headers.get("origin");
     if(origin&&origin!==url.origin)return codeError("ORIGIN_MISMATCH","Недопустимый источник запроса.",403);
-    if(typeof env.KAZ_AI_ACCESS_KEY!=="string"||env.KAZ_AI_ACCESS_KEY.length<24
-       ||env.KAZ_AI_ACCESS_KEY.length>1000||!env.AI)
-      return codeError("ACCESS_REQUIRED","Серверный ИИ ещё не настроен.",503);
-    // Visitors never receive or enter KAZ_AI_ACCESS_KEY. It remains a
-    // server-only enable switch; Cloudflare controls public AI consumption.
-    if(typeof env.CHAT_IP_LIMITER?.limit!=="function"||typeof env.CHAT_GLOBAL_LIMITER?.limit!=="function")
-      return codeError("ACCESS_REQUIRED","Серверный ИИ ещё не настроен.",503);
     if(!/^application\/json(?:;|$)/i.test(request.headers.get("content-type")||""))
       return codeError("INVALID_REQUEST","Требуется JSON.",415);
     const length=Number(request.headers.get("content-length")||0);
@@ -731,6 +729,16 @@ export default {
     let payload;try{payload=JSON.parse(body.raw)}catch{return codeError("INVALID_REQUEST","Некорректный JSON.",400)}
     const input=validatedInput(payload);
     if(!input)return codeError("INVALID_REQUEST","Неподдерживаемый запрос.",400);
+    // Family greeting is local: never call GPT-OSS, charge quota or run rate limits.
+    if(isMotherName(input.messages.at(-1).content))
+      return json({text:MOTHER_GREETING,model:"local-greeting",effort:input.effort,incomplete:false});
+    if(typeof env.KAZ_AI_ACCESS_KEY!=="string"||env.KAZ_AI_ACCESS_KEY.length<24
+       ||env.KAZ_AI_ACCESS_KEY.length>1000||!env.AI)
+      return codeError("ACCESS_REQUIRED","Серверный ИИ ещё не настроен.",503);
+    // Visitors never receive or enter KAZ_AI_ACCESS_KEY. It remains a
+    // server-only enable switch; Cloudflare controls public AI consumption.
+    if(typeof env.CHAT_IP_LIMITER?.limit!=="function"||typeof env.CHAT_GLOBAL_LIMITER?.limit!=="function")
+      return codeError("ACCESS_REQUIRED","Серверный ИИ ещё не настроен.",503);
     // Per-visitor and per-PoP limits. These Cloudflare counters are approximate,
     // while Workers AI's daily free-tier quota remains the final hard cap.
     const visitor=request.headers.get("cf-connecting-ip")||"unknown";

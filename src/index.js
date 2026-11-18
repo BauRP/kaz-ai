@@ -135,7 +135,12 @@ export default {
       });
       const text=answerText(result);
       if(!text.trim())return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
-      return json({text,model:"gpt-oss-120b",effort:input.effort});
+      // Preserve partial text while distinguishing it from a finished response.
+      const incomplete=result?.status==="incomplete"
+        || result?.incomplete_details!=null
+        || result?.choices?.[0]?.finish_reason==="length"
+        || (Array.isArray(result?.output)&&result.output.some(item=>item?.status==="incomplete"));
+      return json({text,model:"gpt-oss-120b",effort:input.effort,incomplete});
     }catch(e){
       const kind=classifyAILimit(e);
       if(kind==="daily")return codeError("AI_QUOTA_EXHAUSTED","Дневной лимит ИИ исчерпан. Попробуйте после его обновления.",429);

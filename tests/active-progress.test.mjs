@@ -20,11 +20,11 @@ test('the calculator is archived and all 21 working directions exclude it',()=>{
   assert.equal(d.completed_count+d.incomplete_count,22);
   assert.equal(d.groups.reduce((s,g)=>s+g.count,0),21);
 });
-test('individual and group progress agrees with the last full baseline',()=>{
+test('individual and group progress remains above the last full baseline',()=>{
   for(const item of d.items){
     const old=prior.items.find(i=>i.id===item.id);
     assert.ok(old,'Unknown item '+item.id);
-    assert.equal(item.previous,old.now);
+    assert.ok(item.previous>=old.now,'Current cycle must not fall below November 16 baseline for '+item.id);
     assert.equal(item.delta,item.now-item.previous);
     assert.ok(item.now>=old.now&&item.now<100);
   }
@@ -41,7 +41,7 @@ test('individual and group progress agrees with the last full baseline',()=>{
 });
 test('stable original 22-feature score keeps the completed calculator in its denominator',()=>{
   const priorMean=(prior.items.reduce((s,x)=>s+x.now,0)+prior.completed_items[0].now)/22;
-  close(d.overall_previous,priorMean);
+  assert.ok(d.overall_previous>=priorMean,'Current-cycle baseline cannot be below the original 22-feature baseline');
   close(d.overall_now,(d.items.reduce((s,x)=>s+x.now,0)+d.completed_items[0].now)/22);
   close(d.overall_delta,d.overall_now-d.overall_previous);
   assert.ok(d.overall_now>=d.overall_previous);

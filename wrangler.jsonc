@@ -15,5 +15,23 @@
   "main": "./src/index.js",
   "ai": {
     "binding": "AI"
-  }
+  },
+  "ratelimits": [
+    {
+      "name": "IP_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 6,
+        "period": 60
+      }
+    },
+    {
+      "name": "SHARED_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 24,
+        "period": 60
+      }
+    }
+  ]
 }

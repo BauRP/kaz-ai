@@ -29,7 +29,7 @@
     const suffix=last===1&&lastTwo!==11?"чат":last>=2&&last<=4&&(lastTwo<12||lastTwo>14)?"чата":"чатов";
     return count+" "+suffix;
   };
-  let current=null,serial=0,modalReturn=null,abort=null,pending=null,pendingReplaceId=null,personalInstructions="",aiAccessKey="",retryAnswerId=null;
+  let current=null,serial=0,modalReturn=null,abort=null,pending=null,pendingReplaceId=null,personalInstructions="",retryAnswerId=null;
   let statusRetryable=false;
   const nextId=()=>String(++serial);
   const uiText=value=>window.KazI18n?.translate?.(value)||value;
@@ -450,31 +450,6 @@
       && !/raw\.githack\.com|github\.io|htmlpreview\.github\.io|github\.com|raw\.githubusercontent\.com/.test(hostname)
       && !location.pathname.endsWith("/preview.html");
   };
-  function configureAccess(afterSave){
-    openDialog("Доступ к GPT-OSS 120B",
-      "Защитный ключ задаётся владельцем в Cloudflare. Он действует только в этой открытой вкладке и не сохраняется на устройстве.",body=>{
-      const field=make("input","session-input");field.type="password";field.autocomplete="off";
-      field.placeholder="Ключ доступа";field.setAttribute("aria-label","Ключ доступа");
-      body.append(field);
-      const save=button("Подключить","dialog-save",null,"session-primary");
-      // Password inputs outside a form do not submit on Enter. Support
-      // keyboard confirmation, without saving an unfinished IME composition.
-      field.addEventListener("keydown",event=>{
-        if(event.key==="Enter"&&!event.isComposing&&event.keyCode!==229){
-          event.preventDefault();save.click();
-        }
-      });
-      save.addEventListener("click",()=>{
-        const key=field.value.trim();
-        if(key.length<24){notify("Введите ключ не короче 24 символов.");return}
-        if(key.length>1000){notify("Ключ доступа слишком длинный. Максимум 1000 символов.");return}
-        aiAccessKey=key;field.value="";closeDialog();
-        notify("Ключ принят для текущей вкладки. Проверка происходит при запросе.");
-        if(typeof afterSave==="function")afterSave();
-      });
-      body.append(save);
-    });
-  }
   // Keep the beginning and conclusion of long AI replies in later context.
   function compactAssistantContext(value){
     if(value.length<=4000)return value;
@@ -493,15 +468,6 @@
       showStatus("Предпросмотр: настоящий GPT-OSS 120B ещё не подключён. Сообщения никуда не отправляются.");
       return;
     }
-    if(!aiAccessKey){
-      // Keep the submitted question retryable if the user closes the key dialog.
-      const mayRetry=replaceId
-        ? chat.messages.at(-1)?.id===replaceId
-        : chat.messages.at(-1)?.role==="user";
-      retryAnswerId=replaceId;
-      showStatus("Для подключения ИИ укажи приватный ключ доступа.",false,Boolean(mayRetry));
-      configureAccess(()=>runAI(chat,replaceId));return;
-    }
     if(abort){notify("Завершите предыдущий запрос.");return}
     const previousFocus=document.activeElement;
     const controller=new AbortController();abort=controller;pending=chat.id;pendingReplaceId=replaceId;retryAnswerId=null;
@@ -514,7 +480,7 @@
     showStatus("Анализирую запрос…");
     // Retry hides its own button; focus the visible Stop control, not a hidden element.
     if(previousFocus?.id==="sessionRetry"||previousFocus?.closest("#view-tools"))stop.focus();
-    const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
+    const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&!m.localGreeting&&m.id!==replaceId).slice(-16)
       // Do not split a Unicode surrogate pair when shortening AI context.
       .map(m=>({role:m.role,content:m.role==="assistant"
         ?compactAssistantContext(m.content)
@@ -538,7 +504,7 @@
     }
     try{
       const response=await fetch("/api/chat",{
-        method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+aiAccessKey},
+        method:"POST",headers:{"content-type":"application/json"},
         credentials:"same-origin",signal:controller.signal,
         body:JSON.stringify({messages:history,effort:state.reason,instructions:personalInstructions})
       });
@@ -558,18 +524,6 @@
         else if(data?.code==="AI_RATE_LIMITED"){
           retryAnswerId=replaceId;
           showStatus("Слишком много запросов за короткое время. Попробуйте позднее.",false,true);
-        }else if(data?.code==="ACCESS_REQUIRED"){
-          // An invalid key should not force the user to send the same question twice.
-          // Server setup errors (503) do not imply that the submitted key is wrong.
-          const serverNotReady=response.status===503;
-          if(!serverNotReady)aiAccessKey="";
-          retryAnswerId=replaceId;
-          const mayRetry=replaceId
-            ? chat.messages.at(-1)?.id===replaceId
-            : chat.messages.at(-1)?.role==="user";
-          showStatus(serverNotReady
-            ?"Серверный ИИ ещё не настроен. Повторите запрос после настройки сервера."
-            :"Ключ доступа не принят. Введите новый ключ и повторите запрос.",false,Boolean(mayRetry));
         }
         else{
           retryAnswerId=replaceId;
@@ -641,14 +595,22 @@
       else $("#messageInput").focus();
     }
   }
+  // A small family surprise; never consumes the AI quota or changes real limits.
+  const isMotherName=value=>/^(муханова айслу|муханова айсулу)$/u.test(
+    value.normalize("NFKC").trim().replace(/\\s+/gu," ").toLocaleLowerCase("ru"));
+  const motherGreeting="Здравствуйте, мама-создатель. ❤️\n\nДля вас все ограничения платных систем выключены.";
   function sendMessage(){
     const text=composeText();if(!text.trim()||abort)return;
     if(text.length>4000){notify("Сообщение длиннее 4000 символов. Сократите его перед отправкой.");return}
     const chat=(state.screen==="welcome"?newThread(text):selected()||newThread(text));
-    chat.messages.push({id:nextId(),role:"user",content:text});
+    const familyGreeting=isMotherName(text);
+    chat.messages.push({id:nextId(),role:"user",content:text,...(familyGreeting?{localGreeting:true}:{})});
+    if(familyGreeting)chat.messages.push({id:nextId(),role:"assistant",content:motherGreeting,localGreeting:true});
     touchChat(chat);displayThread(chat);
     $("#messageInput").value="";drafts.delete(chat.id);welcomeDraft="";resizeInput();
-    renderChat();renderHistory();showScreen("chat");runAI(chat);
+    renderChat();renderHistory();showScreen("chat");
+    if(familyGreeting)showStatus("");
+    else runAI(chat);
   }
   function textDialog(title,label,value,onSave){
     openDialog(title,"",body=>{
@@ -912,7 +874,6 @@
       download("Kaz-AI-history.txt",parts,"text/plain;charset=utf-8");
       notify("История текущей вкладки скачана. Временные чаты не включены.");return;
     }
-    if(action==="ai-access"){configureAccess();return}
     if(action==="instructions"){
       openDialog("Личные инструкции","Правила действуют только в этой вкладке. Они передаются модели вместе с вашим запросом при подключённом ИИ.",body=>{
         const area=make("textarea","session-textarea");area.value=personalInstructions;area.maxLength=2000;
@@ -1046,10 +1007,6 @@
     const checkbox=make("input","");checkbox.type="checkbox";checkbox.id="sessionTemporary";
     label.append(checkbox,make("span","","Включить"));tempRow.append(label);
     settings?.append(tempRow);
-    const aiRow=make("div","setting-item"),info=make("div","");
-    info.append(make("h2","","Доступ к текстовому ИИ"),make("p","","GPT-OSS 120B. Для личного тестирования на Cloudflare нужен защитный ключ."));
-    aiRow.append(info,button("Настроить ключ","ai-access",null,"setting-control"));
-    settings?.append(aiRow);
     const overlay=make("div","session-overlay");overlay.id="sessionOverlay";overlay.hidden=true;
     const dialog=make("section","session-dialog");dialog.setAttribute("role","dialog");dialog.setAttribute("aria-modal","true");dialog.setAttribute("aria-labelledby","sessionTitle");
     const close=button("×","dialog-close",null,"session-dialog-close");close.id="sessionClose";

@@ -1,4 +1,4 @@
-/* Kaz AI private-text beta Worker. Requires AI binding + secret; never opens to anonymous use. */
+/* Kaz AI text Worker. Public chat requires Workers AI and server-side rate limiting. */
 const json=(data,status=200)=>new Response(JSON.stringify(data),{
   status,
   headers:{
@@ -32,14 +32,6 @@ async function readLimitedBody(request){
   }finally{
     reader.releaseLock();
   }
-}
-async function equalSecret(a,b){
-  if(typeof a!=="string"||typeof b!=="string"||b.length<24||a.length>1000)return false;
-  const encoder=new TextEncoder();
-  const [ha,hb]=await Promise.all([crypto.subtle.digest("SHA-256",encoder.encode(a)),crypto.subtle.digest("SHA-256",encoder.encode(b))]);
-  const aa=new Uint8Array(ha),bb=new Uint8Array(hb);
-  let result=0;for(let i=0;i<aa.length;i++)result|=aa[i]^bb[i];
-  return result===0;
 }
 function answerText(result){
   if(typeof result?.output_text==="string"&&result.output_text.trim())return result.output_text;
@@ -102,12 +94,11 @@ export default {
     if(request.method!=="POST")return codeError("METHOD_NOT_ALLOWED","Используйте POST.",405);
     const origin=request.headers.get("origin");
     if(origin&&origin!==url.origin)return codeError("ORIGIN_MISMATCH","Недопустимый источник запроса.",403);
-    if(typeof env.KAZ_AI_ACCESS_KEY!=="string"||env.KAZ_AI_ACCESS_KEY.length<24
-       ||env.KAZ_AI_ACCESS_KEY.length>1000||!env.AI)
-      return codeError("ACCESS_REQUIRED","Серверный ИИ ещё не настроен.",503);
-    const auth=request.headers.get("authorization")||"";
-    const permitted=await equalSecret(auth.startsWith("Bearer ")?auth.slice(7):"",env.KAZ_AI_ACCESS_KEY);
-    if(!permitted)return codeError("ACCESS_REQUIRED","Неверный ключ доступа к тестовому ИИ.",401);
+    // Public requests need no visitor password. Missing protection must not
+    // accidentally expose unlimited paid AI usage after a misconfigured deploy.
+    if(!env.AI||typeof env.IP_RATE_LIMITER?.limit!=="function"
+      ||typeof env.SHARED_RATE_LIMITER?.limit!=="function")
+      return codeError("AI_UNAVAILABLE","Серверный ИИ пока недоступен.",503);
     if(!/^application\/json(?:;|$)/i.test(request.headers.get("content-type")||""))
       return codeError("INVALID_REQUEST","Требуется JSON.",415);
     const length=Number(request.headers.get("content-length")||0);
@@ -119,6 +110,16 @@ export default {
     let payload;try{payload=JSON.parse(body.raw)}catch{return codeError("INVALID_REQUEST","Некорректный JSON.",400)}
     const input=validatedInput(payload);
     if(!input)return codeError("INVALID_REQUEST","Неподдерживаемый запрос.",400);
+    // Two independent budget guards, invisible to the visitor. These are
+    // per-Cloudflare-location rate limits, not a global daily allowance.
+    try{
+      const visitorKey=request.headers.get("CF-Connecting-IP")||"unknown-visitor";
+      if(!(await env.IP_RATE_LIMITER.limit({key:visitorKey})).success
+        ||!(await env.SHARED_RATE_LIMITER.limit({key:"kaz-ai-public-chat"})).success)
+        return codeError("AI_RATE_LIMITED","Слишком много запросов за короткое время. Попробуйте позднее.",429);
+    }catch{
+      return codeError("AI_UNAVAILABLE","Защита сервера временно недоступна. Попробуйте позже.",503);
+    }
     const messages=[
       {role:"system",content:"Ты Kaz AI. Отвечай полезно, точно и понятно. Не выдумывай источники. Если ответа не знаешь, так и скажи."+
         (input.instructions?" Пользовательские предпочтения: "+input.instructions:"")},

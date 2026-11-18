@@ -185,3 +185,16 @@ test('partial responses stay visible with a manual retry and history empty state
   assert.match(session,/uiText\("Пока нет проектов"\)/);
   assert.match(lang,/"Ответ ИИ получен не полностью\. Можно повторить последний ответ\."/);
 });
+
+test('long assistant context keeps beginning and end without raising message limits',()=>{
+  const session=readFileSync('public/session.js','utf8');
+  const worker=readFileSync('src/index.js','utf8');
+  assert.match(session,/function compactAssistantContext\(value\)/);
+  assert.match(session,/const tailLength=4000-headLength-marker.length/);
+  assert.match(session,/compactAssistantContext\(m.content\)/);
+  assert.match(worker,/m.content.length>4000/);
+  const i18n=readFileSync('public/i18n.js','utf8');
+  for(const label of ['Язык перевода','Текст для перевода','Задача по программированию','Описание документа']){
+    assert.ok(i18n.includes('"'+label+'":'),'Missing text tool translation '+label);
+  }
+});

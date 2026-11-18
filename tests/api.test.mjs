@@ -255,3 +255,14 @@ test('normal output stays complete and a truncated choice reports incomplete',as
   assert.equal(partial.text,'Ответ ещё не закончен');
   assert.equal(partial.incomplete,true);
 });
+
+test('text-bearing failed or still-running responses are not presented as complete',async()=>{
+  for(const status of ['failed','in_progress','cancelled']){
+    const {env}=envWithAI(async()=>({status,output:[{type:'message',content:[{type:'output_text',text:'Partial output'}]}]}));
+    const result=await worker.fetch(post(good),env);
+    assert.equal(result.status,200);
+    const body=await result.json();
+    assert.equal(body.text,'Partial output');
+    assert.equal(body.incomplete,true);
+  }
+});

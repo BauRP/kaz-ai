@@ -284,3 +284,29 @@ test('public chat rate guard uses Cloudflare visitor address and one shared budg
   assert.deepEqual(seen,[['visitor','192.0.2.15'],['shared','kaz-ai-public-chat']]);
   assert.equal(calls.length,1);
 });
+
+test('both mother names reply exactly without AI calls or rate-limit usage',async()=>{
+  const variants=['Муханова Айслу','Муханова Айсулу','  МУХАНОВА   АЙСУЛУ  '];
+  for(const value of variants){
+    const {env,calls}=envWithAI();
+    // The family surprise works even when a cloud binding is unavailable.
+    const withoutCloud={...env,AI:undefined,IP_RATE_LIMITER:undefined,SHARED_RATE_LIMITER:undefined};
+    const result=await worker.fetch(post({...good,messages:[{role:'user',content:value}]}),withoutCloud);
+    assert.equal(result.status,200);
+    assert.deepEqual(await result.json(),{
+      text:'Здравствуйте, мама создателя. ❤️\\n\\nДля вас все ограничения платных систем выключены.'.replaceAll('\\n','\n'),
+      model:'local-greeting',effort:'medium',incomplete:false
+    });
+    assert.equal(calls.length,0);
+  }
+});
+
+test('similar names and ordinary questions never trigger family greeting',async()=>{
+  const {env,calls}=envWithAI();
+  for(const value of ['Кто такая Муханова Айсулу?','Муханова Айсулу!','Муханова Айсылу']){
+    const result=await worker.fetch(post({...good,messages:[{role:'user',content:value}]}),env);
+    assert.equal(result.status,200);
+    assert.equal((await result.json()).text,'Ответ модели');
+  }
+  assert.equal(calls.length,3);
+});

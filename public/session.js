@@ -475,6 +475,16 @@
       body.append(save);
     });
   }
+  // Keep the beginning and conclusion of long AI replies in later context.
+  function compactAssistantContext(value){
+    if(value.length<=4000)return value;
+    const marker="\n[... середина предыдущего ответа сокращена для контекста ...]\n";
+    const headLength=1750;
+    const tailLength=4000-headLength-marker.length;
+    const head=value.slice(0,headLength).replace(/[\uD800-\uDBFF]$/u,"");
+    const tail=value.slice(-tailLength).replace(/^[\uDC00-\uDFFF]/u,"");
+    return head+marker+tail;
+  }
   async function runAI(chat,replaceId=null){
     // A pending unlock dialog can outlive the conversation that opened it.
     // Never submit an old conversation when the user is now in another chat.
@@ -507,7 +517,7 @@
     const candidates=chat.messages.filter(m=>(m.role==="user"||m.role==="assistant")&&m.id!==replaceId).slice(-16)
       // Do not split a Unicode surrogate pair when shortening AI context.
       .map(m=>({role:m.role,content:m.role==="assistant"
-        ?m.content.slice(0,4000).replace(/[\uD800-\uDBFF]$/u,"")
+        ?compactAssistantContext(m.content)
         :m.content}));
     // Preserve full recent messages, but do not exceed the server's 50 KB payload cap.
     // Account for JSON encoding, user instructions and non-ASCII characters.
@@ -945,9 +955,9 @@
         // Leading whitespace and final newlines can be meaningful in code or
         // source text. Validate using trim, but preserve the original payload.
         const value=field.value;
-        if(!value.trim()){notify("Сначала введите текст или описание задачи.");field.focus();return}
+        if(!value.trim()){notify(uiText("Сначала введите текст или описание задачи."));field.focus();return}
         const input=$("#messageInput");
-        if(input.value.length){notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");return}
+        if(input.value.length){notify(uiText("В поле сообщения есть черновик. Сначала отправьте или очистите его."));return}
         let prompt="";
         const ui=window.KazI18n?.language||"ru";
         if(kind===22){
@@ -975,10 +985,10 @@
             kk:"Төмендегі сипаттамаға сай құжат мәтінін дайында. Түсінікті әрі жүйелі жаз. Белгісіз мәліметтерді ойдан қоспа. Сипаттама:\n\n"
           }[ui]+value;
         }
-        if(prompt.length>4000){notify("Текст слишком длинный. Сократите описание.");return}
+        if(prompt.length>4000){notify(uiText("Текст слишком длинный. Сократите описание."));return}
         closeDialog();showScreen(selected()?"chat":"welcome");
         input.value=prompt;resizeInput();input.focus();
-        notify("Запрос подготовлен. Проверьте текст и нажмите отправку.");
+        notify(uiText("Запрос подготовлен. Проверьте текст и нажмите отправку."));
       });
       body.append(prepare);
     });

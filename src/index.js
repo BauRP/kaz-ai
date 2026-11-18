@@ -136,10 +136,10 @@ export default {
       const text=answerText(result);
       if(!text.trim())return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
       // Preserve partial text while distinguishing it from a finished response.
-      const incomplete=result?.status==="incomplete"
+      const incomplete=["incomplete","failed","cancelled","in_progress","queued"].includes(result?.status)
         || result?.incomplete_details!=null
         || result?.choices?.[0]?.finish_reason==="length"
-        || (Array.isArray(result?.output)&&result.output.some(item=>item?.status==="incomplete"));
+        || (Array.isArray(result?.output)&&result.output.some(item=>["incomplete","failed","in_progress"].includes(item?.status)));
       return json({text,model:"gpt-oss-120b",effort:input.effort,incomplete});
     }catch(e){
       const kind=classifyAILimit(e);

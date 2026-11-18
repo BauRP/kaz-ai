@@ -1969,10 +1969,34 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const encoder=new TextEncoder();
     let budget=39000-encoder.encode(personalInstructions).length;
     const history=[];
+    const messageBytes=item=>encoder.encode(JSON.stringify(item)).length+2;
+    // Preserve the full answer in the chat. Only the next AI request uses
+    // an explicitly abbreviated context when an older reply is too large.
+    function fitAssistantContext(item,limitBytes){
+      const source=item.content;
+      const marker="\n\n[... середина предыдущего ответа сокращена для контекста ...]\n\n";
+      if(limitBytes<500||source.length<200)return null;
+      let low=0,high=Math.min(8000,source.length-1),best=null;
+      while(low<=high){
+        const keep=Math.floor((low+high)/2);
+        const first=Math.ceil(keep*.35),last=keep-first;
+        const prefix=source.slice(0,first).replace(/[\uD800-\uDBFF]$/u,"");
+        const suffix=last?source.slice(-last).replace(/^[\uDC00-\uDFFF]/u,""):"";
+        const compact={role:"assistant",content:prefix+marker+suffix};
+        if(compact.content.length<=20000&&messageBytes(compact)<=limitBytes){
+          best=compact;low=keep+1;
+        }else high=keep-1;
+      }
+      return best?.content.length>=200?best:null;
+    }
     for(let i=candidates.length-1;i>=0;i--){
-      const item={role:candidates[i].role,content:candidates[i].content};
-      const bytes=encoder.encode(JSON.stringify(item)).length+2;
-      if(bytes>budget)continue; // skip only complete older messages; never silently cut code
+      let item={role:candidates[i].role,content:candidates[i].content};
+      let bytes=messageBytes(item);
+      if((bytes>budget||item.content.length>20000)&&item.role==="assistant"){
+        const compact=fitAssistantContext(item,Math.min(budget,12000));
+        if(compact){item=compact;bytes=messageBytes(item)}
+      }
+      if(bytes>budget||item.content.length>20000)continue;
       history.unshift(item);budget-=bytes;
     }
     while(history.length>1&&history[0].role!=="user")history.shift();
@@ -2215,18 +2239,25 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
           const content=bubble.querySelector(":scope > .rich-answer")
             ||bubble.querySelector(":scope > span");
           if(phrase&&content){
+            // Search matches can cross Markdown elements (e.g. bold + plain).
             const walker=document.createTreeWalker(content,NodeFilter.SHOW_TEXT);
-            let node;
+            const parts=[];let whole="",node;
             while((node=walker.nextNode())){
-              const match=findTextMatch(node.nodeValue||"",phrase);
-              if(!match)continue;
-              const original=node.nodeValue;
-              const highlighted=make("mark","session-search-hit",original.slice(match.start,match.end));
-              const fragment=document.createDocumentFragment();
-              fragment.append(document.createTextNode(original.slice(0,match.start)),
-                highlighted,document.createTextNode(original.slice(match.end)));
-              node.replaceWith(fragment);
-              break;
+              const start=whole.length;whole+=node.nodeValue||"";
+              parts.push({node,start,end:whole.length});
+            }
+            const match=findTextMatch(whole,phrase);
+            if(match){
+              const first=parts.find(p=>p.end>match.start);
+              const last=parts.find(p=>p.end>=match.end&&p.start<match.end);
+              if(first&&last){
+                const range=document.createRange();
+                range.setStart(first.node,match.start-first.start);
+                range.setEnd(last.node,match.end-last.start);
+                const highlighted=make("mark","session-search-hit");
+                highlighted.append(range.extractContents());
+                range.insertNode(highlighted);
+              }
             }
           }
           bubble.scrollIntoView({block:"center"});
@@ -2563,6 +2594,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const overlay=make("div","session-overlay");overlay.id="sessionOverlay";overlay.hidden=true;
     const dialog=make("section","session-dialog");dialog.setAttribute("role","dialog");dialog.setAttribute("aria-modal","true");dialog.setAttribute("aria-labelledby","sessionTitle");
     const close=button("×","dialog-close",null,"session-dialog-close");close.id="sessionClose";
+    close.setAttribute("aria-label",uiText("Закрыть окно"));
     const title=make("h2","");title.id="sessionTitle";
     const body=make("div","session-dialog-body");body.id="sessionBody";
     dialog.append(close,title,body);overlay.append(dialog);document.body.append(overlay);
@@ -2756,6 +2788,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
 /* Kaz AI session-only localization. No translation of user content. */
 (function(){
   const dictionary={
+  "Закрыть окно": {"en":"Close dialog","kk":"Терезені жабу"},
   "Язык перевода": {"en":"Translation language","kk":"Аударма тілі"},
   "Текст для перевода": {"en":"Text to translate","kk":"Аударылатын мәтін"},
   "Задача по программированию": {"en":"Programming task","kk":"Бағдарламалау тапсырмасы"},

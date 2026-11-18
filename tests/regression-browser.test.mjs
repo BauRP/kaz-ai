@@ -918,3 +918,57 @@ test('programming text helper keeps indents and prepares draft by Ctrl+Enter',as
     assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
   });
 });
+
+test('very long AI answer keeps its beginning and conclusion in the next request',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8');
+    const reply='НАЧАЛО_ОТВЕТА\n'+'Подробности '.repeat(3800)+'\nЗАКЛЮЧЕНИЕ_ОТВЕТА';
+    let calls=0,followup=null;
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        calls++;
+        if(calls===2)followup=route.request().postDataJSON();
+        return route.fulfill({status:200,contentType:'application/json',
+          body:JSON.stringify({text:calls===1?reply:'Следующий ответ'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Первый вопрос');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('ЗАКЛЮЧЕНИЕ_ОТВЕТА'));
+    await page.locator('#messageInput').fill('Второй вопрос');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('Следующий ответ'));
+    assert.equal(calls,2);
+    const earlier=followup?.messages.find(m=>m.role==='assistant');
+    assert.ok(earlier,'Long assistant answer was omitted');
+    assert.match(earlier.content,/НАЧАЛО_ОТВЕТА/);
+    assert.match(earlier.content,/ЗАКЛЮЧЕНИЕ_ОТВЕТА/);
+    assert.match(earlier.content,/середина предыдущего ответа сокращена/);
+    assert.ok(earlier.content.length<=20000);
+    assert.equal(followup.messages.at(-1).content,'Второй вопрос');
+  });
+});
+test('search across formatted text nodes keeps Markdown formatting',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat')
+        return route.fulfill({status:200,contentType:'application/json',
+          body:JSON.stringify({text:'**Сильная** связь сохраняется'})});
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Проверка формата');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages .rich-answer strong')?.textContent==='Сильная');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('Сильная связь');
+    await page.locator('#historyList [data-session="open-chat"]').first().click();
+    const mark=page.locator('#chatMessages .session-jump-hit mark.session-search-hit');
+    assert.equal(await mark.count(),1);
+    assert.equal(await mark.innerText(),'Сильная связь');
+    assert.equal(await page.locator('#chatMessages .session-jump-hit strong').innerText(),'Сильная');
+  });
+});

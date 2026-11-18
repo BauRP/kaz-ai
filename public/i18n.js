@@ -3,6 +3,7 @@
 /* Kaz AI session-only localization. No translation of user content. */
 (function(){
   const dictionary={
+  "Закрыть окно": {"en":"Close dialog","kk":"Терезені жабу"},
   "Язык перевода": {"en":"Translation language","kk":"Аударма тілі"},
   "Текст для перевода": {"en":"Text to translate","kk":"Аударылатын мәтін"},
   "Задача по программированию": {"en":"Programming task","kk":"Бағдарламалау тапсырмасы"},

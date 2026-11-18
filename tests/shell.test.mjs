@@ -187,3 +187,13 @@ test('main site labels text AI accurately and localized tool fields are availabl
   assert.match(locale,/Translation language/);
   assert.match(locale,/queueMicrotask/);
 });
+
+test('long reply context preserves both ends and modal close has an accessible name',()=>{
+  const session=readFileSync('public/session.js','utf8');
+  assert.match(session,/function fitAssistantContext\(item,limitBytes\)/);
+  assert.match(session,/source\.slice\(-last\)/);
+  assert.match(session,/item\.content\.length>20000/);
+  assert.match(session,/uiText\("Закрыть окно"\)/);
+  const locale=readFileSync('public/i18n.js','utf8');
+  assert.match(locale,/Close dialog/);
+});

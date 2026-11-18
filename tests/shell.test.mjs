@@ -175,3 +175,13 @@ test('Silver Kaz AI browser tab icon supports ICO and PNG at real URLs',()=>{
     assert.doesNotMatch(page,/href="data:image\/png;base64,/,'Avoid data URI favicon');
   }
 });
+
+test('partial responses stay visible with a manual retry and history empty states are localized',()=>{
+  const session=readFileSync('public/session.js','utf8');
+  const lang=readFileSync('public/i18n.js','utf8');
+  assert.match(session,/data\.incomplete===true/);
+  assert.match(session,/retryAnswerId=last\.id/);
+  assert.match(session,/uiText\(value\?"Совпадений не найдено"/);
+  assert.match(session,/uiText\("Пока нет проектов"\)/);
+  assert.match(lang,/"Ответ ИИ получен не полностью\. Можно повторить последний ответ\."/);
+});

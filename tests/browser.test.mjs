@@ -1040,7 +1040,7 @@ test('project selection opens with keyboard focus on the choice, not Save',async
   }finally{await browser.close()}
 });
 
-test('real browser: rejected AI key allows retry with a new key and no duplicate user message',async()=>{
+test('real browser: public AI retry after a failed request keeps one user message',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -1048,29 +1048,23 @@ test('real browser: rejected AI key allows retry with a new key and no duplicate
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     let requests=0;
-    await page.route('https://kaz-ai.test/**',async route=>{
+    await page.route('https://kaz-ai.test/**',route=>{
       if(new URL(route.request().url()).pathname==='/api/chat'){
         requests++;
-        if(requests===1)return route.fulfill({status:401,contentType:'application/json',body:JSON.stringify({code:'ACCESS_REQUIRED',message:'Bad key'})});
-        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Ответ после обновления ключа'})});
+        return route.fulfill({status:requests===1?503:200,contentType:'application/json',
+          body:JSON.stringify(requests===1?{code:'AI_UNAVAILABLE',message:'ИИ временно недоступен'}:{text:'Ответ после повторного запроса'})});
       }
       return route.fulfill({status:200,contentType:'text/html',body:html});
     });
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Вопрос, который нельзя дублировать');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('first-invalid-key-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Ключ доступа не принят'));
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('ИИ временно недоступен'));
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
     await page.locator('#sessionRetry').waitFor({state:'visible'});
-    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
     await page.locator('#sessionRetry').click();
-    await page.locator('#sessionBody input[type=password]').fill('new-valid-test-key-12345678901234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ после обновления ключа'));
-    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
-    assert.equal(snapshot.threads.length,1);
-    assert.equal(snapshot.threads[0].messages,2);
+    await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ после повторного запроса'));
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads[0].messages,2);
     assert.equal(requests,2);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
@@ -2587,7 +2581,7 @@ test('dismissed private-key dialog keeps the original question retryable without
   }finally{await browser.close()}
 });
 
-test('server setup failure keeps valid key for retry, unlike a rejected key',async()=>{
+test('server unavailable can be retried without a visitor secret',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -2599,7 +2593,7 @@ test('server setup failure keeps valid key for retry, unlike a rejected key',asy
       if(new URL(route.request().url()).pathname==='/api/chat'){
         requests++;
         return route.fulfill({status:requests===1?503:200,contentType:'application/json',body:JSON.stringify(
-          requests===1?{code:'ACCESS_REQUIRED',message:'AI binding missing'}:{text:'Сервер восстановился'}
+          requests===1?{code:'AI_UNAVAILABLE',message:'Серверный ИИ пока недоступен.'}:{text:'Сервер восстановился'}
         )});
       }
       return route.fulfill({status:200,contentType:'text/html',body:html});
@@ -2607,20 +2601,16 @@ test('server setup failure keeps valid key for retry, unlike a rejected key',asy
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Проверить сервер');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('valid-private-test-key-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Серверный ИИ ещё не настроен'));
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Серверный ИИ пока недоступен'));
     assert.equal(await page.locator('#sessionRetry').isVisible(),true);
     await page.locator('#sessionRetry').click();
-    assert.equal(await page.locator('#sessionOverlay').isVisible(),false,'retry must not ask for the same valid key');
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Сервер восстановился'));
     assert.equal(requests,2);
     assert.equal(await page.locator('.message-user').count(),1);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
-
-
 test('export sanitizes invisible direction overrides in chat filename, preserving original message',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
@@ -2643,21 +2633,17 @@ test('export sanitizes invisible direction overrides in chat filename, preservin
   }finally{await browser.close()}
 });
 
-test('rejected key and server setup errors show correct English and Kazakh text',async()=>{
+test('public AI rate limits show translated English and Kazakh messages without passwords',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
     const page=await browser.newPage({viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     const html=readFileSync('public/preview.html','utf8');
-    let requests=0;
     await page.route('https://kaz-ai.test/**',route=>{
-      if(new URL(route.request().url()).pathname==='/api/chat'){
-        requests++;
-        const serverNotReady=requests===1;
-        return route.fulfill({status:serverNotReady?503:401,contentType:'application/json',
-          body:JSON.stringify({code:'ACCESS_REQUIRED',message:'Backend issue'})});
-      }
+      if(new URL(route.request().url()).pathname==='/api/chat')return route.fulfill({
+        status:429,contentType:'application/json',body:JSON.stringify({code:'AI_RATE_LIMITED'})
+      });
       return route.fulfill({status:200,contentType:'text/html',body:html});
     });
     await page.goto('https://kaz-ai.test/');
@@ -2665,22 +2651,15 @@ test('rejected key and server setup errors show correct English and Kazakh text'
     await page.locator('#languageMenu [data-language="en"]').click();
     await page.locator('#messageInput').fill('Verify locale');
     await page.locator('#sendButton').click();
-    await page.locator('#sessionBody input[type=password]').fill('valid-private-test-key-1234567890');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('AI is not configured on the server yet'));
+    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Too many requests in a short time'));
     assert.equal(await page.locator('#sessionRetry').isVisible(),true);
     await page.locator('#languageToggle').click();
     await page.locator('#languageMenu [data-language="kk"]').click();
-    assert.ok((await page.locator('#statusBanner').textContent()).includes('Серверде ЖИ әлі бапталмаған'));
-    await page.locator('#sessionRetry').click();
-    await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Қолжетімділік кілті қабылданбады'));
-    assert.equal(requests,2);
-    assert.equal(await page.locator('.message-user').count(),1);
+    assert.ok((await page.locator('#statusBanner').textContent()).includes('Қысқа уақытта тым көп сұрау'));
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
-
-
 test('daily Cloudflare quota leaves original question retryable after reset without duplicates',async()=>{
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});

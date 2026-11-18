@@ -1943,6 +1943,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       const m=c.messages[index];
       if(action==="retry-answer"){
         if(abort){notify("Дождитесь завершения предыдущего запроса.");return}
+        if(m.localGreeting){notify("Это специальное приветствие не требует повтора.");return}
         if(m.role!=="assistant"||index!==c.messages.length-1){notify("Повторить можно только последний ответ.");return}
         if(c.messages[index-1]?.role==="user")runAI(c,m.id);
         else showStatus("Не удалось определить вопрос для повторного ответа.");

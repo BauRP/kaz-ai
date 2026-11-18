@@ -53,7 +53,9 @@ test('human report reflects the 21 working features without misleading AI claims
   assert.match(report,/21 незавершённ/);
   assert.ok(report.includes(d.overall_now.toFixed(2).replace('.',',')));
   assert.ok(report.includes(d.now.toFixed(2).replace('.',',')));
-  assert.match(report,/Настоящие ответы GPT-OSS 120B пока не проверены/);
+  assert.match(report,/Основной Cloudflare Worker опубликован/);
+  assert.match(report,/ручное тестирование на чужих устройствах/);
+  assert.doesNotMatch(report,/Нужны защищённое развёртывание, AI binding/);
   assert.doesNotMatch(report,/\| 29 \| Создание изображений/);
   const fullList=report.slice(report.indexOf('## Все 22 направления:'),report.indexOf('## Прогресс по группам'));
   assert.match(fullList,/\| 25 \|/,'Completed calculator must stay visible in the main progress list');

@@ -217,7 +217,7 @@ test('real browser: failed GPT answer retry preserves original reply until new r
         calls++;
         const payload=route.request().postDataJSON();
         assert.ok(['low','medium','high'].includes(payload.effort));
-        assert.ok(route.request().headers().authorization.startsWith('Bearer '));
+        assert.equal(route.request().headers().authorization,undefined);
         if(calls===2)return route.fulfill({
           status:503,contentType:'application/json',
           body:JSON.stringify({code:'AI_UNAVAILABLE',message:'Тестовая ошибка ответа'})
@@ -232,9 +232,7 @@ test('real browser: failed GPT answer retry preserves original reply until new r
     await page.goto('https://kaz-ai.test/');
     await page.locator('#messageInput').fill('Первая задача');
     await page.locator('#sendButton').click();
-    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
-    await page.locator('#sessionBody input').fill('test-secret-1234567890123456789');
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Первый успешный ответ'));
     await page.locator('[data-session="retry-answer"]').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Тестовая ошибка ответа'));
@@ -646,7 +644,7 @@ test('recent chats reorder by activity while pinned chats remain at the top',asy
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
-test('closing access-key modal removes hidden password input; temporary draft is deleted only after clearing it',async()=>{
+test('keyless settings preserve temporary drafts and never prompt for a password',async()=>{
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
@@ -654,24 +652,18 @@ test('closing access-key modal removes hidden password input; temporary draft is
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('[data-session="ai-access"]').click();
-    await page.locator('#sessionBody input[type=password]').fill('unsaved-test-private-key-value');
-    await page.locator('#sessionClose').click();
+    assert.equal(await page.locator('[data-session="ai-access"]').count(),0);
     assert.equal(await page.locator('#sessionBody input[type=password]').count(),0);
     await page.locator('#sessionTemporary').check();
     await page.locator('#messageInput').fill('Временное сообщение');
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Секретный несохранённый черновик');
     await page.locator('.sidebar [data-action="new-chat"]').click();
-    // The new safety rule prevents deleting unsent private text by accident.
     assert.equal(await page.locator('#messageInput').inputValue(),'Секретный несохранённый черновик');
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,1);
-    // Clearing the draft deliberately permits removing the temporary chat.
     await page.locator('#messageInput').fill('');
     await page.locator('.sidebar [data-action="new-chat"]').click();
-    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
-    assert.equal(snapshot.threads.length,0);
-    assert.equal(snapshot.draftCount,0);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
@@ -2506,26 +2498,21 @@ test('static accessible control names switch RU EN KK and back without changing 
   }finally{await browser.close()}
 });
 
-test('AI access dialog validates the same 1,000-character maximum as the server',async()=>{
-  const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
-  const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+test('public chat does not show access-key dialogs when submitting a question',async()=>{
+  const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
     const page=await browser.newPage({viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
-    await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('[data-session="ai-access"]').click();
-    const field=page.locator('#sessionBody input[type=password]');
-    await field.fill('a'.repeat(1001));
-    await page.locator('#sessionBody [data-session="dialog-save"]').click();
-    assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
-    assert.match(await page.locator('#toast').innerText(),/Максимум 1000/);
-    await page.locator('#sessionClose').click();
+    await page.locator('#messageInput').fill('Проверка без пароля');
+    await page.locator('#sendButton').click();
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
     assert.equal(await page.locator('#sessionBody input[type=password]').count(),0);
+    assert.equal(await page.locator('[data-session="ai-access"]').count(),0);
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
-
 test('browser keeps formatted replies and sends emoji-safe context to GPT',async()=>{
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),

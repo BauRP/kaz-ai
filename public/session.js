@@ -259,6 +259,23 @@
     if(start+needle.length>ends.length)return null;
     return {start:starts[start],end:ends[start+needle.length-1]};
   }
+  // Assistant Markdown markers are not visible to users. Search the same
+  // words they read, while mapping matches back to the original export text.
+  function findMessageMatch(message,query){
+    const direct=findTextMatch(message.content,query);
+    if(direct||message.role!=="assistant")return direct;
+    const source=message.content;
+    let plain="",offsets=[];
+    for(let i=0;i<source.length;){
+      // Only strip structural emphasis markers; never modify stored messages.
+      if(source.startsWith("**",i)||source.startsWith("__",i)){i+=2;continue}
+      offsets.push(i);
+      plain+=source[i++];
+    }
+    const found=findTextMatch(plain,query);
+    if(!found||!offsets.length)return null;
+    return {start:offsets[found.start],end:offsets[found.end-1]+1};
+  }
   function searchExcerptBounds(text,range){
     let from=Math.max(0,range.start-38),to=Math.min(text.length,range.end+46);
     for(const {segment,index} of textSegments(text)){
@@ -286,7 +303,7 @@
       matchingTitle.set(c.id,titleMatch);
       let index=-1,range=null;
       for(let i=0;i<c.messages.length;i++){
-        const found=findTextMatch(c.messages[i].content,query);
+        const found=findMessageMatch(c.messages[i],query);
         if(found){index=i;range=found;break}
       }
       matchingMessage.set(c.id,{index,range});

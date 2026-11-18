@@ -859,14 +859,23 @@
         if(bubble){
           bubble.classList.add("session-jump-hit");
           const phrase=$("#historySearch").value.trim();
-          const textNode=bubble.querySelector(":scope > span");
-          if(phrase&&textNode){
-            const content=textNode.textContent;
-            const match=findTextMatch(content,phrase);
-            if(match){
-              textNode.replaceChildren(document.createTextNode(content.slice(0,match.start)),
-                make("mark","session-search-hit",content.slice(match.start,match.end)),
-                document.createTextNode(content.slice(match.end)));
+          // Rich Markdown replies use nested elements instead of a plain span.
+          // Highlight inside text nodes without destroying links or code blocks.
+          const content=bubble.querySelector(":scope > .rich-answer")
+            ||bubble.querySelector(":scope > span");
+          if(phrase&&content){
+            const walker=document.createTreeWalker(content,NodeFilter.SHOW_TEXT);
+            let node;
+            while((node=walker.nextNode())){
+              const match=findTextMatch(node.nodeValue||"",phrase);
+              if(!match)continue;
+              const original=node.nodeValue;
+              const highlighted=make("mark","session-search-hit",original.slice(match.start,match.end));
+              const fragment=document.createDocumentFragment();
+              fragment.append(document.createTextNode(original.slice(0,match.start)),
+                highlighted,document.createTextNode(original.slice(match.end)));
+              node.replaceWith(fragment);
+              break;
             }
           }
           bubble.scrollIntoView({block:"center"});
@@ -1098,6 +1107,13 @@
       field.placeholder=kind===22?"Введите текст для перевода":kind===23?"Что нужно исправить или написать?":"Например: деловое письмо о встрече";
       body.append(field);
       const prepare=button("Подготовить запрос","dialog-save",null,"session-primary");
+      // Ctrl/Cmd+Enter prepares text without sending it to GPT-OSS.
+      field.addEventListener("keydown",event=>{
+        if(event.isComposing||event.keyCode===229)return;
+        if(event.key==="Enter"&&(event.ctrlKey||event.metaKey)&&!event.altKey){
+          event.preventDefault();prepare.click();
+        }
+      });
       prepare.addEventListener("click",()=>{
         // Leading whitespace and final newlines can be meaningful in code or
         // source text. Validate using trim, but preserve the original payload.
@@ -1132,7 +1148,7 @@
             kk:"Төмендегі сипаттамаға сай құжат мәтінін дайында. Түсінікті әрі жүйелі жаз. Белгісіз мәліметтерді ойдан қоспа. Сипаттама:\n\n"
           }[ui]+value;
         }
-        if(prompt.length>4000){notify("Текст слишком длинный. Сократите описание.");return}
+        if(prompt.length>4000){notify("Текст слишком длинный. Сократите описание.");field.focus();return}
         closeDialog();showScreen(selected()?"chat":"welcome");
         input.value=prompt;resizeInput();input.focus();
         notify("Запрос подготовлен. Проверьте текст и нажмите отправку.");

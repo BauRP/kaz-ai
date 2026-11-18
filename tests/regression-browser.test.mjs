@@ -2,7 +2,7 @@ import { test as nodeTest } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
 const test=(name,fn)=>nodeTest(name,{timeout:35000},fn);
@@ -882,4 +882,39 @@ test('mother surprise appears locally for both spellings without asking for cred
       assert.equal(await page.locator('#chatMessages [data-session="retry-answer"]').count(),0);
     });
   }
+});
+
+test('history search highlights text inside formatted AI answers without removing formatting',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat')
+        return route.fulfill({status:200,contentType:'application/json',
+          body:JSON.stringify({text:'## Результат\n\n**Особенное** слово в ответе'})});
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Проверка поиска в ответе');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages .rich-answer')?.textContent.includes('Особенное'));
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('Особенное');
+    await page.locator('#historyList [data-session="open-chat"]').first().click();
+    assert.equal(await page.locator('#chatMessages .session-jump-hit .rich-answer strong mark.session-search-hit').count(),1);
+    assert.equal(await page.locator('#chatMessages .session-jump-hit .rich-answer strong').innerText(),'Особенное');
+  });
+});
+test('programming text helper keeps indents and prepares draft by Ctrl+Enter',async()=>{
+  await withPage(async page=>{
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-23"]').click();
+    const field=page.locator('#sessionBody textarea');
+    assert.equal(await field.getAttribute('aria-label'),'Programming task');
+    await field.fill('  const k = 42;\n');
+    await field.press('Control+Enter');
+    assert.ok((await page.locator('#messageInput').inputValue()).includes('  const k = 42;\n'));
+    assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+  });
 });

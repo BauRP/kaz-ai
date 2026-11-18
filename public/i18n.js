@@ -3,6 +3,13 @@
 /* Kaz AI session-only localization. No translation of user content. */
 (function(){
   const dictionary={
+  "Язык перевода": {"en":"Translation language","kk":"Аударма тілі"},
+  "Текст для перевода": {"en":"Text to translate","kk":"Аударылатын мәтін"},
+  "Задача по программированию": {"en":"Programming task","kk":"Бағдарламалау тапсырмасы"},
+  "Описание документа": {"en":"Document description","kk":"Құжаттың сипаттамасы"},
+  "Текстовый ИИ": {"en":"Text AI","kk":"Мәтіндік ЖИ"},
+  "GPT-OSS 120B доступен при наличии лимита Cloudflare.": {"en":"GPT-OSS 120B is available while Cloudflare quota remains.","kk":"GPT-OSS 120B Cloudflare лимиті бар кезде қолжетімді."},
+
   "Новый чат": {
     "en": "New chat",
     "kk": "Жаңа чат"
@@ -727,8 +734,12 @@
     }
     document.documentElement.lang=language==="kk"?"kk":language==="en"?"en":"ru";
   }
+  // Batch simultaneous modal/history/project mutations into one refresh.
+  let refreshQueued=false;
   const observer=new MutationObserver(changes=>{
-    if(changes.some(x=>x.type==="childList"))refresh();
+    if(refreshQueued||!changes.some(x=>x.type==="childList"))return;
+    refreshQueued=true;
+    queueMicrotask(()=>{refreshQueued=false;refresh()});
   });
   function set(next){
     if(!["ru","kk","en"].includes(next))return;

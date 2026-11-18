@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#041021">
-  <meta name="description" content="Kaz AI — казахстанский ИИ-сервис онлайн в разработке: умный чат, тексты, код, перевод, создание и редактирование картинок. GPT-OSS 120B и FLUX планируются к подключению.">
+  <meta name="description" content="Kaz AI — казахстанский ИИ-сервис онлайн в разработке: умный чат, тексты, код, перевод, создание и редактирование картинок. GPT-OSS 120B подключён; создание изображений с FLUX разрабатывается.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Kaz AI — Казахстанский искусственный интеллект онлайн">
   <meta property="og:description" content="Kaz AI объединит ИИ для текста и генерации изображений. Запланированная связка GPT-OSS 120B и FLUX, интерфейс уже доступен для ознакомления.">
@@ -614,7 +614,7 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
     <div class="sidebar-footer">
       <div class="ornament-line" aria-hidden="true"></div>
       <button type="button" class="google-button" data-feature="google"><span class="google-g">G</span><span>Войти через Google</span><svg class="icon"><use href="#ic-arrow-right"/></svg></button>
-      <div class="footer-note"><span class="online-dot"></span>Предварительный интерфейс</div>
+      <div class="footer-note"><span class="online-dot"></span>Текстовый ИИ</div>
 
     </div>
   </aside>
@@ -623,7 +623,7 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
       <div class="topbar-start">
         <button type="button" class="icon-button menu-button" data-action="toggle-sidebar" aria-label="Открыть меню" aria-controls="sidebar" aria-expanded="false"><svg class="icon"><use href="#ic-menu"/></svg></button>
         <span id="pageTitle" class="topbar-title">Kaz AI</span>
-        <span class="preview-pill"><span class="online-dot"></span>Демо оболочки</span>
+        <span class="preview-pill"><span class="online-dot"></span>GPT-OSS 120B</span>
       </div>
       <div class="topbar-actions">
         <button type="button" class="icon-button" data-action="toggle-theme" aria-pressed="false" aria-label="Переключить тему" title="Переключить тему"><svg class="icon icon-theme"><use href="#ic-sun"/></svg></button>
@@ -794,7 +794,7 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
           </div>
         </div>
       </div>
-      <p id="composerNote" class="composer-note">История временная. Настоящие ответы ИИ требуют настройки защищённого Cloudflare.</p>
+      <p id="composerNote" class="composer-note">История временная. GPT-OSS 120B доступен при наличии лимита Cloudflare..</p>
     </div>
   </div>
 </div>
@@ -2210,14 +2210,23 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         if(bubble){
           bubble.classList.add("session-jump-hit");
           const phrase=$("#historySearch").value.trim();
-          const textNode=bubble.querySelector(":scope > span");
-          if(phrase&&textNode){
-            const content=textNode.textContent;
-            const match=findTextMatch(content,phrase);
-            if(match){
-              textNode.replaceChildren(document.createTextNode(content.slice(0,match.start)),
-                make("mark","session-search-hit",content.slice(match.start,match.end)),
-                document.createTextNode(content.slice(match.end)));
+          // Rich Markdown replies use nested elements instead of a plain span.
+          // Highlight inside text nodes without destroying links or code blocks.
+          const content=bubble.querySelector(":scope > .rich-answer")
+            ||bubble.querySelector(":scope > span");
+          if(phrase&&content){
+            const walker=document.createTreeWalker(content,NodeFilter.SHOW_TEXT);
+            let node;
+            while((node=walker.nextNode())){
+              const match=findTextMatch(node.nodeValue||"",phrase);
+              if(!match)continue;
+              const original=node.nodeValue;
+              const highlighted=make("mark","session-search-hit",original.slice(match.start,match.end));
+              const fragment=document.createDocumentFragment();
+              fragment.append(document.createTextNode(original.slice(0,match.start)),
+                highlighted,document.createTextNode(original.slice(match.end)));
+              node.replaceWith(fragment);
+              break;
             }
           }
           bubble.scrollIntoView({block:"center"});
@@ -2449,6 +2458,13 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       field.placeholder=kind===22?"Введите текст для перевода":kind===23?"Что нужно исправить или написать?":"Например: деловое письмо о встрече";
       body.append(field);
       const prepare=button("Подготовить запрос","dialog-save",null,"session-primary");
+      // Ctrl/Cmd+Enter prepares text without sending it to GPT-OSS.
+      field.addEventListener("keydown",event=>{
+        if(event.isComposing||event.keyCode===229)return;
+        if(event.key==="Enter"&&(event.ctrlKey||event.metaKey)&&!event.altKey){
+          event.preventDefault();prepare.click();
+        }
+      });
       prepare.addEventListener("click",()=>{
         // Leading whitespace and final newlines can be meaningful in code or
         // source text. Validate using trim, but preserve the original payload.
@@ -2483,7 +2499,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
             kk:"Төмендегі сипаттамаға сай құжат мәтінін дайында. Түсінікті әрі жүйелі жаз. Белгісіз мәліметтерді ойдан қоспа. Сипаттама:\n\n"
           }[ui]+value;
         }
-        if(prompt.length>4000){notify("Текст слишком длинный. Сократите описание.");return}
+        if(prompt.length>4000){notify("Текст слишком длинный. Сократите описание.");field.focus();return}
         closeDialog();showScreen(selected()?"chat":"welcome");
         input.value=prompt;resizeInput();input.focus();
         notify("Запрос подготовлен. Проверьте текст и нажмите отправку.");
@@ -2740,6 +2756,13 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
 /* Kaz AI session-only localization. No translation of user content. */
 (function(){
   const dictionary={
+  "Язык перевода": {"en":"Translation language","kk":"Аударма тілі"},
+  "Текст для перевода": {"en":"Text to translate","kk":"Аударылатын мәтін"},
+  "Задача по программированию": {"en":"Programming task","kk":"Бағдарламалау тапсырмасы"},
+  "Описание документа": {"en":"Document description","kk":"Құжаттың сипаттамасы"},
+  "Текстовый ИИ": {"en":"Text AI","kk":"Мәтіндік ЖИ"},
+  "GPT-OSS 120B доступен при наличии лимита Cloudflare.": {"en":"GPT-OSS 120B is available while Cloudflare quota remains.","kk":"GPT-OSS 120B Cloudflare лимиті бар кезде қолжетімді."},
+
   "Новый чат": {
     "en": "New chat",
     "kk": "Жаңа чат"
@@ -3464,8 +3487,12 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     }
     document.documentElement.lang=language==="kk"?"kk":language==="en"?"en":"ru";
   }
+  // Batch simultaneous modal/history/project mutations into one refresh.
+  let refreshQueued=false;
   const observer=new MutationObserver(changes=>{
-    if(changes.some(x=>x.type==="childList"))refresh();
+    if(refreshQueued||!changes.some(x=>x.type==="childList"))return;
+    refreshQueued=true;
+    queueMicrotask(()=>{refreshQueued=false;refresh()});
   });
   function set(next){
     if(!["ru","kk","en"].includes(next))return;

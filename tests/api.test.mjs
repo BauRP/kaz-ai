@@ -238,3 +238,20 @@ test('model answers retain meaningful leading and trailing whitespace',async()=>
   assert.equal(blank.status,502);
   assert.equal((await blank.json()).code,'AI_EMPTY');
 });
+
+test('incomplete GPT-OSS output is preserved and explicitly marked',async()=>{
+  const {env}=envWithAI(async()=>({status:'incomplete',incomplete_details:{reason:'max_output_tokens'},output:[{type:'message',content:[{type:'output_text',text:'Начало решения'}]}]}));
+  const response=await worker.fetch(post(good),env);
+  assert.equal(response.status,200);
+  const body=await response.json();
+  assert.equal(body.text,'Начало решения');
+  assert.equal(body.incomplete,true);
+});
+test('normal output stays complete and a truncated choice reports incomplete',async()=>{
+  const normal=envWithAI();
+  assert.equal((await (await worker.fetch(post(good),normal.env)).json()).incomplete,false);
+  const limited=envWithAI(async()=>({choices:[{finish_reason:'length',message:{content:'Ответ ещё не закончен'}}]}));
+  const partial=await (await worker.fetch(post(good),limited.env)).json();
+  assert.equal(partial.text,'Ответ ещё не закончен');
+  assert.equal(partial.incomplete,true);
+});

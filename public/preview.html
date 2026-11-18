@@ -2271,9 +2271,16 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
                 const range=document.createRange();
                 range.setStart(first.node,match.start-first.start);
                 range.setEnd(last.node,match.end-last.start);
+                const wrappers=[first.node.parentElement,last.node.parentElement];
                 const highlighted=make("mark","session-search-hit");
                 highlighted.append(range.extractContents());
                 range.insertNode(highlighted);
+                // Range extraction can leave an empty <strong>/<em> element.
+                // Remove only empty formatting shells, never actual text.
+                for(const wrapper of wrappers){
+                  if(wrapper?.isConnected&&/^(STRONG|EM|B|I)$/u.test(wrapper.tagName)
+                    &&!wrapper.textContent&&!wrapper.children.length)wrapper.remove();
+                }
               }
             }
           }

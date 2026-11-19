@@ -122,12 +122,21 @@
     return parts;
   };
   function download(name,body,mime){
-    // Blob accepts parts directly. Multi-chat exports should not concatenate
-    // the entire history into one additional giant JavaScript string.
-    const blob=new Blob([mime.startsWith("text/plain")?"\uFEFF":"",...(Array.isArray(body)?body:[body])],{type:mime});
-    const url=URL.createObjectURL(blob);
-    const link=document.createElement("a");link.href=url;link.download=name;document.body.append(link);link.click();link.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),30000);
+    // Blob accepts parts directly. Keep the original transcript unmodified.
+    // A blocked download must not be reported as successfully saved.
+    let url=null,link=null;
+    try{
+      const blob=new Blob([mime.startsWith("text/plain")?"\uFEFF":"",...(Array.isArray(body)?body:[body])],{type:mime});
+      url=URL.createObjectURL(blob);
+      link=document.createElement("a");link.href=url;link.download=name;
+      document.body.append(link);link.click();
+      setTimeout(()=>{try{URL.revokeObjectURL(url)}catch{}},30000);
+      return true;
+    }catch{
+      if(url)try{URL.revokeObjectURL(url)}catch{}
+      notify("Не удалось подготовить файл для скачивания. Попробуйте ещё раз.");
+      return false;
+    }finally{link?.remove()}
   }
   function openDialog(title,paragraph="",build){
     modalReturn=document.activeElement;
@@ -157,7 +166,7 @@
       ?$("#projectsWorkspace [data-session='new-project']")
       :state.screen==="history" ?$("#historySearch"):$("#messageInput");
     const visible=element=>element?.isConnected&&!element.disabled&&!element.closest("[hidden]")
-      &&typeof element.focus==="function";
+      &&element.getClientRects().length>0&&typeof element.focus==="function";
     if(visible(previous))previous.focus();
     else if(visible(matching))matching.focus();
     else if(visible(fallback))fallback.focus();
@@ -952,8 +961,8 @@
       return;
     }
     if(action==="export-chat"&&chat&&!chat.temporary){
-      download("Kaz-AI-"+safeExportName(chat.title)+".txt",exportParts(chat),"text/plain;charset=utf-8");
-      notify("Переписка скачана в текстовый файл.");return
+      if(download("Kaz-AI-"+safeExportName(chat.title)+".txt",exportParts(chat),"text/plain;charset=utf-8"))
+        notify("Переписка скачана в текстовый файл.");return
     }
     if(action==="remove-chat-from-project"&&chat){
       const focused=document.activeElement?.dataset.session==="remove-chat-from-project";
@@ -1002,9 +1011,9 @@
         if(index)parts.push(separator);
         for(const segment of exportParts(chat))parts.push(segment);
       });
-      download("Kaz-AI-project-"+safeExportName(project.name)+".txt",
-        parts,"text/plain;charset=utf-8");
-      notify("Переписки проекта скачаны. Временные чаты не включены.");return
+      if(download("Kaz-AI-project-"+safeExportName(project.name)+".txt",
+        parts,"text/plain;charset=utf-8"))
+        notify("Переписки проекта скачаны. Временные чаты не включены.");return
     }
     if(action==="add-chat-to-project"&&project){
       const available=threads.filter(c=>!c.temporary&&c.projectId!==project.id);
@@ -1121,8 +1130,8 @@
         if(index)parts.push(separator);
         for(const segment of exportParts(chat))parts.push(segment);
       });
-      download("Kaz-AI-history.txt",parts,"text/plain;charset=utf-8");
-      notify("История текущей вкладки скачана. Временные чаты не включены.");return;
+      if(download("Kaz-AI-history.txt",parts,"text/plain;charset=utf-8"))
+        notify("История текущей вкладки скачана. Временные чаты не включены.");return;
     }
     if(action==="instructions"){
       openDialog("Личные инструкции","Правила действуют только в этой вкладке. Они передаются модели вместе с вашим запросом при подключённом ИИ.",body=>{

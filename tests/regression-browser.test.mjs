@@ -1010,3 +1010,21 @@ test('all three text helpers preserve longer source drafts',async()=>{
     });
   }
 });
+
+test('failed history export reports an error and never deletes chat content',async()=>{
+  await withPage(async page=>{
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.locator('#messageInput').fill('Важные заметки для экспорта');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.evaluate(()=>{
+      URL.createObjectURL=()=>{throw new Error('Simulated blocked download')};
+    });
+    await page.locator('#historyList [data-session="export-chat"]').first().click();
+    const toast=await page.locator('#toast').innerText();
+    assert.match(toast,/Не удалось подготовить файл/);
+    assert.doesNotMatch(toast,/скачана/);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),1);
+    assert.deepEqual(errors,[]);
+  });
+});

@@ -3,6 +3,7 @@
 /* Kaz AI session-only localization. No translation of user content. */
 (function(){
   const dictionary={
+    "Не удалось подготовить файл для скачивания. Попробуйте ещё раз.": {"en":"Could not prepare the download. Please try again.","kk":"Жүктеп алу файлын дайындау мүмкін болмады. Қайталап көріңіз."},
   "Закрыть окно": {"en":"Close dialog","kk":"Терезені жабу"},
   "Язык перевода": {"en":"Translation language","kk":"Аударма тілі"},
   "Текст для перевода": {"en":"Text to translate","kk":"Аударылатын мәтін"},

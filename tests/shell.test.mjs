@@ -206,3 +206,12 @@ test('existing long chat and text helpers share safe input limits',()=>{
   assert.match(session,/field\.maxLength=7800/);
   assert.match(session,/if\(prompt\.length>8000\)/);
 });
+
+test('failed file exports cannot falsely claim a successful download',()=>{
+  const session=readFileSync('public/session.js','utf8');
+  assert.match(session,/function download\(name,body,mime\)/);
+  assert.match(session,/Не удалось подготовить файл для скачивания/);
+  assert.match(session,/if\(download\("Kaz-AI-history.txt"/);
+  const translations=readFileSync('public/i18n.js','utf8');
+  assert.match(translations,/Could not prepare the download/);
+});

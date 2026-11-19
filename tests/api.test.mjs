@@ -963,3 +963,36 @@ test('other names and phrases do not consume the special greeting path',async()=
   }
   assert.equal(calls.length,3);
 });
+
+test('text-bearing non-completed GPT-OSS statuses are visibly marked and never reviewed',async()=>{
+  for(const status of ['incomplete','failed','cancelled','in_progress','queued']){
+    const {env,calls}=envWithAI(async()=>({
+      status,
+      output_text:'  Часть вычислений GPT-OSS ещё не подтверждена\n'
+    }));
+    const response=await worker.fetch(post({...good,
+      messages:[{role:'user',content:'Вычисли и докажи точный результат'}]}),env);
+    assert.equal(response.status,200);
+    const data=await response.json();
+    assert.match(data.text,/Ответ модели не завершён/);
+    assert.match(data.text,/Часть вычислений GPT-OSS/);
+    assert.equal(calls.length,1,'Incomplete answer must not trigger paid review');
+  }
+});
+test('incomplete nested output status cannot masquerade as a completed model reply',async()=>{
+  const {env}=envWithAI(async()=>({
+    status:'completed',output_text:'Доступный текст',
+    output:[{type:'message',status:'incomplete',content:[{type:'output_text',text:'Доступный текст'}]}]
+  }));
+  const reply=await worker.fetch(post(good),env);
+  assert.equal(reply.status,200);
+  assert.match((await reply.json()).text,/Ответ модели не завершён/);
+});
+test('personal instructions retain intentional indentation, newlines and trailing spaces',async()=>{
+  const instructions='  Пожалуйста, сохраняй формат:\n    два пробела в начале\n  ';
+  const {env,calls}=envWithAI();
+  const reply=await worker.fetch(post({...good,instructions}),env);
+  assert.equal(reply.status,200);
+  assert.equal(calls.length,1);
+  assert.ok(calls[0][1].input[0].content.includes(instructions),'Instruction formatting was trimmed');
+});

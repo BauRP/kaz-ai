@@ -24,10 +24,16 @@ async function withStageDeadline(task,ms){
   ])}finally{clearTimeout(timer)}
 }
 function completionState(result){
-  return result?.status==="incomplete"||result?.incomplete_details!=null||
-    ["length","max_tokens","max_output_tokens"].includes(result?.finish_reason)||
-    ["length","max_tokens","max_output_tokens"].includes(result?.choices?.[0]?.finish_reason)
-    ?"incomplete":"completed";
+  // A text-bearing provider response is not necessarily finished. Failed,
+  // cancelled or still-running Responses API output must never be displayed as
+  // an audited, complete answer even when partial output_text exists.
+  const incompleteStatuses=["incomplete","failed","cancelled","in_progress","queued"];
+  const incomplete= incompleteStatuses.includes(result?.status)
+    ||result?.incomplete_details!=null
+    ||["length","max_tokens","max_output_tokens"].includes(result?.finish_reason)
+    ||["length","max_tokens","max_output_tokens"].includes(result?.choices?.[0]?.finish_reason)
+    ||(Array.isArray(result?.output)&&result.output.some(item=>incompleteStatuses.includes(item?.status)));
+  return incomplete?"incomplete":"completed";
 }
 function markIncomplete(text){
   return "## Ответ модели не завершён\n\nНиже сохранён полученный текст. Это неполное решение.\n\n"+text;
@@ -160,7 +166,9 @@ function validatedInput(payload){
   if(messages.at(-1).role!=="user")return null;
   if(!["low","medium","high"].includes(payload.effort))return null;
   if(payload.instructions!==undefined&&(typeof payload.instructions!=="string"||payload.instructions.length>2000))return null;
-  return {messages,effort:payload.effort,instructions:(payload.instructions||"").trim()};
+  // Never modify user-authored personal instructions. Whitespace may carry
+  // deliberate formatting, indentation or a quoted code example.
+  return {messages,effort:payload.effort,instructions:payload.instructions||""};
 }
 function classifyAILimit(error){
   // The previous single-word 'neurons' and 'daily' heuristics incorrectly

@@ -764,7 +764,7 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
       <div id="statusBanner" class="status-banner" hidden role="status" aria-live="polite"></div>
       <div class="composer" id="composer">
         <label class="sr-only" for="messageInput">Ваше сообщение Kaz AI</label>
-        <textarea id="messageInput" rows="1" maxlength="4000" placeholder="Напишите сообщение..." aria-describedby="composerNote"></textarea>
+        <textarea id="messageInput" rows="1" maxlength="8000" placeholder="Напишите сообщение..." aria-describedby="composerNote"></textarea>
         <div class="composer-toolbar">
           <div class="composer-left">
             <div class="popover-anchor">
@@ -2178,7 +2178,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   const motherGreeting="Здравствуйте, мама создателя. ❤️\n\nДля вас все ограничения платных систем выключены.";
   function sendMessage(){
     const text=composeText();if(!text.trim()||abort)return;
-    if(text.length>4000){notify("Сообщение длиннее 4000 символов. Сократите его перед отправкой.");return}
+    if(text.length>8000){notify("Сообщение длиннее 8000 символов. Сократите его перед отправкой.");return}
     const chat=(state.screen==="welcome"?newThread(text):selected()||newThread(text));
     const familyGreeting=isMotherName(text);
     chat.messages.push({id:nextId(),role:"user",content:text});
@@ -2508,7 +2508,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         languageSelect.value=window.KazI18n?.language||"ru";
         body.append(languageSelect);
       }
-      const field=make("textarea","session-textarea");field.rows=6;field.maxLength=3500;
+      const field=make("textarea","session-textarea");field.rows=6;field.maxLength=7800;
       field.setAttribute("aria-label",kind===22?"Текст для перевода":kind===23?"Задача по программированию":"Описание документа");
       field.placeholder=kind===22?"Введите текст для перевода":kind===23?"Что нужно исправить или написать?":"Например: деловое письмо о встрече";
       body.append(field);
@@ -2554,7 +2554,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
             kk:"Төмендегі сипаттамаға сай құжат мәтінін дайында. Түсінікті әрі жүйелі жаз. Белгісіз мәліметтерді ойдан қоспа. Сипаттама:\n\n"
           }[ui]+value;
         }
-        if(prompt.length>4000){notify("Текст слишком длинный. Сократите описание.");field.focus();return}
+        if(prompt.length>8000){notify("Текст слишком длинный. Сократите описание.");field.focus();return}
         closeDialog();showScreen(selected()?"chat":"welcome");
         input.value=prompt;resizeInput();input.focus();
         notify("Запрос подготовлен. Проверьте текст и нажмите отправку.");
@@ -3410,7 +3410,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   "Проект с таким названием уже есть.": {"en":"A project with this name already exists.","kk":"Мұндай атауы бар жоба бұрыннан бар."},
   "Повторить можно только последний ответ.": {"en":"Only the latest response can be retried.","kk":"Тек соңғы жауапты қайта сұрауға болады."},
   "Не удалось определить вопрос для повторного ответа.": {"en":"Could not find the original question to retry.","kk":"Жауапты қайталау үшін бастапқы сұрақ табылмады."},
-  "Сообщение длиннее 4000 символов. Сократите его перед отправкой.": {"en":"The message is over 4,000 characters. Shorten it before sending.","kk":"Хабарлама 4000 таңбадан ұзын. Жібермес бұрын қысқартыңыз."},
+  "Сообщение длиннее 8000 символов. Сократите его перед отправкой.": {"en":"The message is over 8,000 characters. Shorten it before sending.","kk":"Хабарлама 8000 таңбадан ұзын. Жібермес бұрын қысқартыңыз."},
   "Введите ключ не короче 24 символов.": {"en":"Enter an access key of at least 24 characters.","kk":"Кемінде 24 таңбадан тұратын қол жеткізу кілтін енгізіңіз."},
   "Этот чат уже недоступен.": {"en":"This chat is no longer available.","kk":"Бұл чат енді қолжетімді емес."},
   "Дождитесь завершения предыдущего запроса.": {"en":"Wait for the previous request to finish.","kk":"Алдыңғы сұраудың аяқталуын күтіңіз."},

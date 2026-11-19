@@ -197,3 +197,12 @@ test('long reply context preserves both ends and modal close has an accessible n
   const locale=readFileSync('public/i18n.js','utf8');
   assert.match(locale,/Close dialog/);
 });
+
+test('existing long chat and text helpers share safe input limits',()=>{
+  const html=readFileSync('public/index.html','utf8');
+  const session=readFileSync('public/session.js','utf8');
+  assert.match(html,/id="messageInput"[^>]+maxlength="8000"/);
+  assert.match(session,/if\(text\.length>8000\)/);
+  assert.match(session,/field\.maxLength=7800/);
+  assert.match(session,/if\(prompt\.length>8000\)/);
+});

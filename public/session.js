@@ -827,7 +827,7 @@
   const motherGreeting="Здравствуйте, мама создателя. ❤️\n\nДля вас все ограничения платных систем выключены.";
   function sendMessage(){
     const text=composeText();if(!text.trim()||abort)return;
-    if(text.length>4000){notify("Сообщение длиннее 4000 символов. Сократите его перед отправкой.");return}
+    if(text.length>8000){notify("Сообщение длиннее 8000 символов. Сократите его перед отправкой.");return}
     const chat=(state.screen==="welcome"?newThread(text):selected()||newThread(text));
     const familyGreeting=isMotherName(text);
     chat.messages.push({id:nextId(),role:"user",content:text});
@@ -1157,7 +1157,7 @@
         languageSelect.value=window.KazI18n?.language||"ru";
         body.append(languageSelect);
       }
-      const field=make("textarea","session-textarea");field.rows=6;field.maxLength=3500;
+      const field=make("textarea","session-textarea");field.rows=6;field.maxLength=7800;
       field.setAttribute("aria-label",kind===22?"Текст для перевода":kind===23?"Задача по программированию":"Описание документа");
       field.placeholder=kind===22?"Введите текст для перевода":kind===23?"Что нужно исправить или написать?":"Например: деловое письмо о встрече";
       body.append(field);
@@ -1203,7 +1203,7 @@
             kk:"Төмендегі сипаттамаға сай құжат мәтінін дайында. Түсінікті әрі жүйелі жаз. Белгісіз мәліметтерді ойдан қоспа. Сипаттама:\n\n"
           }[ui]+value;
         }
-        if(prompt.length>4000){notify("Текст слишком длинный. Сократите описание.");field.focus();return}
+        if(prompt.length>8000){notify("Текст слишком длинный. Сократите описание.");field.focus();return}
         closeDialog();showScreen(selected()?"chat":"welcome");
         input.value=prompt;resizeInput();input.focus();
         notify("Запрос подготовлен. Проверьте текст и нажмите отправку.");

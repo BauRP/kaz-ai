@@ -972,3 +972,41 @@ test('search across formatted text nodes keeps Markdown formatting',async()=>{
     assert.equal(await page.locator('#chatMessages .session-jump-hit strong').innerText(),'Сильная');
   });
 });
+
+test('chat sends long code between 4K and 8K without truncation',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8');
+    let sent=null;
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        sent=route.request().postDataJSON();
+        return route.fulfill({status:200,contentType:'application/json',
+          body:JSON.stringify({text:'Код принят полностью'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    const code='  const x = 1;\n'+' console.log(x);\n'.repeat(440);
+    assert.ok(code.length>4000&&code.length<8000);
+    await page.locator('#messageInput').fill(code);
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('Код принят полностью'));
+    assert.equal(sent.messages.at(-1).content,code);
+  });
+});
+test('all three text helpers preserve longer source drafts',async()=>{
+  for(const id of [22,23,24]){
+    await withPage(async page=>{
+      await page.locator('.sidebar [data-screen="tools"]').click();
+      await page.locator('#toolGroups [data-feature="tool-'+id+'"]').click();
+      const field=page.locator('#sessionBody textarea');
+      assert.equal(await field.getAttribute('maxlength'),'7800');
+      const value='  Исходный текст\n'.repeat(260);
+      assert.ok(value.length>3500&&value.length<7800);
+      await field.fill(value);
+      await page.locator('#sessionBody [data-session="dialog-save"]').click();
+      assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+      assert.ok((await page.locator('#messageInput').inputValue()).includes(value));
+    });
+  }
+});

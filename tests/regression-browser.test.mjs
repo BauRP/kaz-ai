@@ -1028,3 +1028,43 @@ test('failed history export reports an error and never deletes chat content',asy
     assert.deepEqual(errors,[]);
   });
 });
+
+test('history search matches bold inline code and italic text as one visible phrase',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat')
+        return route.fulfill({status:200,contentType:'application/json',
+          body:JSON.stringify({text:'**Важный** \x60код\x60 и *перевод* выполнены'})});
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Тест поиска по оформленному ответу');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages .rich-answer')?.textContent.includes('Важный'));
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('Важный код и перевод');
+    assert.equal(await page.locator('#historyList [data-session="open-chat"]').count(),1);
+    await page.locator('#historyList [data-session="open-chat"]').click();
+    const text=page.locator('#chatMessages .session-jump-hit .rich-answer');
+    assert.ok((await text.innerText()).includes('Важный код и перевод'));
+    assert.equal(await text.locator('mark.session-search-hit').count(),1);
+    assert.equal(await text.locator('mark.session-search-hit').innerText(),'Важный код и перевод');
+  });
+});
+test('updated history remains localized in English after adding and searching a chat',async()=>{
+  await withPage(async page=>{
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    await page.locator('#messageInput').fill('Keep original title');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historySearch').fill('Keep');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    assert.equal(await page.locator('#historyList [data-session="rename-chat"]').first().innerText(),'Rename');
+    assert.match(await page.locator('#historyList .session-chat-label').innerText(),/Keep/);
+    await page.locator('#historySearch').fill('No matching text');
+    assert.equal(await page.locator('#historyList .session-chat-row').count(),0);
+    assert.match(await page.locator('#historyList .empty-card').innerText(),/No matches/);
+  });
+});

@@ -274,16 +274,39 @@
     const direct=findTextMatch(message.content,query);
     if(direct||message.role!=="assistant")return direct;
     const source=message.content;
-    let plain="",offsets=[];
+    // Avoid creating one large offset array per character of an AI reply.
+    if(!/[*_~\x60]/u.test(source))return null;
+    const markerSize=i=>{
+      if(source.startsWith("**",i)||source.startsWith("__",i)
+        ||source.startsWith("~~",i))return 2;
+      if(source.charCodeAt(i)===96)return 1;
+      if(source[i]==="*"||source[i]==="_"){
+        const before=source[i-1]||"",after=source[i+1]||"";
+        const opening=(!before||/[\s([{]/u.test(before))&&!!after&&!/\s/u.test(after);
+        const closing=!!before&&!/\s/u.test(before)
+          &&(!after||/[\s.,!?)}\]]/u.test(after));
+        if(opening||closing)return 1;
+      }
+      return 0;
+    };
+    let visible="";
     for(let i=0;i<source.length;){
-      // Only strip structural emphasis markers; never modify stored messages.
-      if(source.startsWith("**",i)||source.startsWith("__",i)){i+=2;continue}
-      offsets.push(i);
-      plain+=source[i++];
+      const skip=markerSize(i);
+      if(skip){i+=skip;continue}
+      visible+=source[i++];
     }
-    const found=findTextMatch(plain,query);
-    if(!found||!offsets.length)return null;
-    return {start:offsets[found.start],end:offsets[found.end-1]+1};
+    const found=findTextMatch(visible,query);
+    if(!found)return null;
+    // Map only the matched range back to original UTF-16 indices.
+    let position=0,start=-1,end=-1;
+    for(let i=0;i<source.length&&position<found.end;){
+      const skip=markerSize(i);
+      if(skip){i+=skip;continue}
+      if(position===found.start)start=i;
+      i++;position++;
+      if(position===found.end)end=i;
+    }
+    return start>=0&&end>start?{start,end}:null;
   }
   function searchExcerptBounds(text,range){
     let from=Math.max(0,range.start-38),to=Math.min(text.length,range.end+46);
@@ -964,7 +987,7 @@
       if(download("Kaz-AI-"+safeExportName(chat.title)+".txt",exportParts(chat),"text/plain;charset=utf-8"))
         notify("Переписка скачана в текстовый файл.");return
     }
-    if(action==="remove-chat-from-project"&&chat){
+    if(action==="remove-chat-from-project"&&chat&&!chat.temporary&&chat.projectId&&projects.some(p=>p.id===chat.projectId)){
       const focused=document.activeElement?.dataset.session==="remove-chat-from-project";
       chat.projectId=null;renderSessionProjects();renderHistory();
       if(focused){
@@ -1078,6 +1101,7 @@
         return;
       }
       if(action==="rate-up"||action==="rate-down"){
+        if(m.role!=="assistant")return;
         const nextRating=action==="rate-up"?"up":"down";
         m.rating=m.rating===nextRating?null:nextRating;
         // Do not rebuild or scroll the entire conversation when rating a message.

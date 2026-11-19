@@ -736,12 +736,26 @@
     }
     document.documentElement.lang=language==="kk"?"kk":language==="en"?"en":"ru";
   }
-  // Batch simultaneous modal/history/project mutations into one refresh.
+  // Translate only changed UI roots; no full-page walk on every search
+  // keystroke, project update or streaming status update.
+  const observedRoots=[];
+  const dirtyRoots=new Set();
   let refreshQueued=false;
   const observer=new MutationObserver(changes=>{
-    if(refreshQueued||!changes.some(x=>x.type==="childList"))return;
+    for(const change of changes){
+      if(change.type!=="childList")continue;
+      const root=observedRoots.find(el=>el===change.target||el.contains(change.target));
+      if(root)dirtyRoots.add(root);
+    }
+    if(refreshQueued||!dirtyRoots.size)return;
     refreshQueued=true;
-    queueMicrotask(()=>{refreshQueued=false;refresh()});
+    queueMicrotask(()=>{
+      refreshQueued=false;
+      const roots=[...dirtyRoots];dirtyRoots.clear();
+      for(const root of roots)translateText(root);
+      // The shell updates page titles when changing screens.
+      if(roots.some(root=>root.matches(".topbar")))refresh();
+    });
   });
   function set(next){
     if(!["ru","kk","en"].includes(next))return;
@@ -757,7 +771,7 @@
     refresh();
     for(const selector of selectors){
       const root=document.querySelector(selector);
-      if(root)observer.observe(root,{childList:true,subtree:true});
+      if(root){observedRoots.push(root);observer.observe(root,{childList:true,subtree:true})}
     }
   },{once:true});
 })();

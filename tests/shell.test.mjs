@@ -215,3 +215,12 @@ test('failed file exports cannot falsely claim a successful download',()=>{
   const translations=readFileSync('public/i18n.js','utf8');
   assert.match(translations,/Could not prepare the download/);
 });
+
+test('history search avoids per-character offsets and localization avoids full-page walks',()=>{
+  const source=readFileSync('public/session.js','utf8');
+  assert.match(source,/Map only the matched range/);
+  assert.doesNotMatch(source,/let plain="",offsets=\[\]/);
+  const locale=readFileSync('public/i18n.js','utf8');
+  assert.match(locale,/const dirtyRoots=new Set\(\)/);
+  assert.match(locale,/for\(const root of roots\)translateText\(root\)/);
+});

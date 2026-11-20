@@ -123,9 +123,9 @@
           <h3>Внешний вид</h3>
           <div class="is-row"><div><strong>Режим</strong><p>Системный, светлый или тёмный</p></div>
             <fieldset class="is-mode" aria-label="Режим">
-              <label><input type="radio" name="innerMode" value="system">Авто</label>
-              <label><input type="radio" name="innerMode" value="light">Светлый</label>
-              <label><input type="radio" name="innerMode" value="dark">Тёмный</label>
+              <label class="is-mode-choice"><input type="radio" name="innerMode" value="system"><span class="is-mini-preview is-mini-system" aria-hidden="true"><i></i><i></i></span><span>Авто</span></label>
+              <label class="is-mode-choice"><input type="radio" name="innerMode" value="light"><span class="is-mini-preview is-mini-light" aria-hidden="true"><i></i><i></i></span><span>Светлый</span></label>
+              <label class="is-mode-choice"><input type="radio" name="innerMode" value="dark"><span class="is-mini-preview is-mini-dark" aria-hidden="true"><i></i><i></i></span><span>Тёмный</span></label>
             </fieldset></div>
           <div class="is-row"><div><strong>Тема</strong><p>10 вариантов цветов и стиля</p></div><select id="innerTheme" aria-label="Тема"></select></div>
           <div class="is-colors">

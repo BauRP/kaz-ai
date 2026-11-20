@@ -961,6 +961,10 @@ test('internal settings translate account, security and billing details and dial
     await page.locator('.sidebar [data-screen="settings"]').click();
     const root=page.locator('#internalSettingsRoot');
     await page.locator('#innerLanguage').selectOption('en');
+    await root.locator('[data-is-tab="appearance"]').click();
+    assert.equal(await page.locator('#innerTheme option[value="ocean"]').innerText(),'Ocean');
+    await root.locator('[data-is-action="reset-appearance"]').click();
+    assert.match(await page.locator('#toast').innerText(),/Appearance reset/);
     await root.locator('[data-is-tab="account"]').click();
     assert.match(await root.innerText(),/Google sign-in is not connected/);
     assert.match(await root.innerText(),/Email address/);
@@ -977,6 +981,8 @@ test('internal settings translate account, security and billing details and dial
     await page.locator('[data-is-dialog-close]').last().click();
     await root.locator('[data-is-tab="general"]').click();
     await page.locator('#innerLanguage').selectOption('kk');
+    await root.locator('[data-is-tab="appearance"]').click();
+    assert.equal(await page.locator('#innerTheme option[value="forest"]').innerText(),'Орман');
     await root.locator('[data-is-tab="account"]').click();
     assert.match(await root.innerText(),/Google арқылы кіру әлі қосылмаған/);
     await root.locator('[data-is-tab="security"]').click();

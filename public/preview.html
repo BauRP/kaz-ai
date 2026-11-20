@@ -3895,6 +3895,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     "Платёжные данные появятся после подключения настоящего платёжного сервиса. Сейчас ввод данных отключён.":["Billing details will appear after a real payment service is connected. Entering payment information is disabled.","Төлем деректері нақты төлем қызметі қосылғаннан кейін көрсетіледі. Деректерді енгізу өшірілген."],
     "Активной подписки Kaz AI нет. Кнопка подготовлена для будущей системы оплаты, отменять пока нечего.":["There is no active Kaz AI subscription. Cancellation is only a placeholder.","Белсенді Kaz AI жазылымы жоқ. Жазылымды тоқтату батырмасы әзірге үлгі ғана."],
     "Сервис аккаунтов ещё не подключён. Поэтому удалять нечего. Мы не выдаём демонстрацию за настоящее удаление.":["Accounts are not connected. This is only a preview, not actual account deletion.","Аккаунттар әлі қосылмаған. Бұл тек үлгі, нақты аккаунт жойылмайды."],
+    "Ответ ИИ готов.":["AI response is ready.","ЖИ жауабы дайын."],
+    "Не удалось выполнить запрос ИИ.":["AI request failed.","ЖИ сұрауын орындау мүмкін болмады."],
+    "Оформление сброшено":["Appearance reset.","Көрініс қалпына келтірілді."],
     "Закрыть":["Close","Жабу"],
     "Закрыть окно":["Close dialog","Терезені жабу"]
   };
@@ -3937,6 +3940,12 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     ["sand","Песчаный","#cc9960","#292018","#fff3df"],
     ["graphite","Графит","#acb8cb","#171b23","#f1f4fa"]
   ];
+  const themeNames={
+    kaz:["Kaz AI","Kaz AI"],ocean:["Ocean","Мұхит"],aurora:["Aurora","Шұғыла"],
+    sapphire:["Sapphire","Сапфир"],forest:["Forest","Орман"],sunset:["Sunset","Күн батуы"],
+    violet:["Violet","Күлгін"],rose:["Rose gold","Қызғылт алтын"],
+    sand:["Sand","Құм"],graphite:["Graphite","Графит"]
+  };
   const preset=Object.fromEntries(themePresets.map(([key,name,accent,bg,fg])=>[key,{name,accent,bg,fg}]));
   const defaultPrefs=()=>({language:"auto",mode:"dark",theme:"kaz",accent:null,bg:null,fg:null,
     notifications:{completed:false,failed:false,news:false,security:false}});
@@ -4083,6 +4092,11 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const tabs=qa("[data-is-tab]");
     tabs.forEach((tab,i)=>{tab.textContent=translated[i+1]});
     qs("#innerLanguage").options[0].textContent=translated[8];
+    const themes=qs("#innerTheme");
+    for(const option of themes.options){
+      const key=option.value,source=preset[key];
+      if(source)option.textContent=lang==="ru"?source.name:(themeNames[key]?.[lang==="kk"?1:0]||source.name);
+    }
     qa("[data-is-panel]").forEach((panel,i)=>{
       const heading=qs("h3",panel);
       if(heading)heading.textContent=translated[i+1];
@@ -4179,7 +4193,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       if(command){showDialog(command.dataset.isDialog);return}
       if(event.target.closest('[data-is-action="reset-appearance"]')){
         prefs.theme="kaz";prefs.accent=null;prefs.bg=null;prefs.fg=null;
-        applyAppearance();showToast(t("Сбросить оформление"));return;
+        applyAppearance();showToast(t("Оформление сброшено"));return;
       }
     });
     language.addEventListener("change",()=>chooseLanguage(language.value));
@@ -4231,7 +4245,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       applyAppearance();
     },
     notify:type=>{
-      if(prefs.notifications[type])showToast(type==="completed"?"Ответ ИИ готов.":"Не удалось выполнить запрос ИИ.");
+      if(prefs.notifications[type])showToast(t(type==="completed"?"Ответ ИИ готов.":"Не удалось выполнить запрос ИИ."));
     },
     get selectedLanguage(){return prefs.language},
     get currentTheme(){return prefs.theme}

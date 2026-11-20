@@ -1,18 +1,18 @@
 {
   "scope": "22 working approved Kaz AI directions and 1 completed calculator = 23 total. The new approved direction is \"внутренности настроек\". Paid billing and Google account integration are excluded from this shell stage.",
-  "basis": "New Kaz AI internal-settings localization across EN and KK plus English fallback for other selectable languages: 70+ UI labels, account/security/usage/billing/appearance/notification sections, nonfunctional safe dialogs, 10 theme names and localized notifications. Updated browser regression tests. New source syntax/preview reverified; full test run and Cloudflare release not confirmed. All original 23 directions retained, emulator/phone and real Google/payment excluded.",
+  "basis": "Hardening 4 connected chat directions: reject pinning temporary chats; exclude local greetings from AI rating/retry controls; reject stale assignments to deleted chats/projects. Added two targeted browser regressions. Saved in GitHub main; script syntax and generated preview verified; full browser tests and Cloudflare deploy not confirmed. Manual phone/emulator checks and Google/payment integrations remain outside coding-scope unfinished tasks.",
   "branch": "main",
   "date": "2026-11-20",
-  "previous": 78.1190909090909,
-  "now": 78.52363636363636,
-  "delta": 0.4045454545454561,
+  "previous": 78.52363636363636,
+  "now": 78.60090909090908,
+  "delta": 0.07727272727272805,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
       "previous": 92.55600000000001,
-      "now": 92.55600000000001,
-      "delta": 0
+      "now": 92.691,
+      "delta": 0.1349999999999909
     },
     {
       "name": "Интеллект",
@@ -24,9 +24,9 @@
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 86.57571428571428,
-      "now": 87.84714285714286,
-      "delta": 1.2714285714285722
+      "previous": 87.84714285714286,
+      "now": 87.89714285714285,
+      "delta": 0.04999999999999716
     }
   ],
   "items": [
@@ -85,9 +85,9 @@
       "name": "Закрепить чат",
       "group": "Чаты",
       "previous": 94.1,
-      "now": 94.1,
-      "delta": 0,
-      "summary": "Без изменений в этом цикле.",
+      "now": 94.45,
+      "delta": 0.35,
+      "summary": "Закрепление временных чатов теперь запрещено как в истории, так и при запуске из меню инструментов.",
       "status": "in_progress"
     },
     {
@@ -95,9 +95,9 @@
       "name": "Папки и проекты",
       "group": "Чаты",
       "previous": 99.34,
-      "now": 99.34,
-      "delta": 0,
-      "summary": "Экспорт проекта использует теперь переведённые подписи для всех 17 языков, без сбоя для новых локалей.",
+      "now": 99.74,
+      "delta": 0.4,
+      "summary": "При назначении чата в проект повторно проверяется, что чат и выбранный проект существуют; защищено окно добавления при изменении списка.",
       "status": "in_progress"
     },
     {
@@ -125,9 +125,9 @@
       "name": "Оценка ответа",
       "group": "Чаты",
       "previous": 94.05,
-      "now": 94.05,
-      "delta": 0,
-      "summary": "Оценки применяются только к настоящим ответам помощника, не к сообщениям пользователя.",
+      "now": 94.65,
+      "delta": 0.6,
+      "summary": "Локальные приветствия больше не получают кнопки оценок и повтора ИИ; защита действует и на уровне обработчика действий.",
       "status": "in_progress"
     },
     {
@@ -195,18 +195,18 @@
       "name": "Временный чат",
       "group": "Настройки",
       "previous": 93.6,
-      "now": 93.6,
-      "delta": 0,
-      "summary": "Без изменений в этом цикле.",
+      "now": 93.95,
+      "delta": 0.35,
+      "summary": "Временные чаты нельзя закрепить в истории; история сохраняет правило приватности временных разговоров.",
       "status": "in_progress"
     },
     {
       "id": 42,
       "name": "Светлая и тёмная тема",
       "group": "Настройки",
-      "previous": 91.18,
+      "previous": 91.63,
       "now": 91.63,
-      "delta": 0.45,
+      "delta": 0,
       "summary": "Десять тем оформления теперь имеют локализованные названия на английском и казахском; безопасный английский вариант для других языков.",
       "status": "in_progress"
     },
@@ -214,9 +214,9 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 79.78,
+      "previous": 81.43,
       "now": 81.43,
-      "delta": 1.65,
+      "delta": 0,
       "summary": "Расширена локализация текста внутренних настроек: 70+ подписей на EN/KK, английский запасной вариант, правильное переключение языков и RTL.",
       "status": "in_progress"
     },
@@ -244,9 +244,9 @@
       "id": 47,
       "name": "внутренности настроек",
       "group": "Настройки",
-      "previous": 73.94,
+      "previous": 80.74,
       "now": 80.74,
-      "delta": 6.8,
+      "delta": 0,
       "summary": "Локализованы учётная запись, безопасность, использование, оплата, внешний вид, уведомления и диалоги на английском и казахском; остальные языки показывают английский запасной вариант. Реальный Google/платежи не подключались.",
       "status": "in_progress"
     }
@@ -268,7 +268,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.07043478260869,
-  "overall_now": 79.45739130434782,
-  "overall_delta": 0.38695652173913686
+  "overall_previous": 79.45739130434782,
+  "overall_now": 79.53130434782608,
+  "overall_delta": 0.07391304347825667
 }

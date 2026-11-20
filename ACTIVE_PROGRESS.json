@@ -1,18 +1,18 @@
 {
   "scope": "22 working approved Kaz AI directions and 1 completed calculator = 23 total. The new approved direction is \"внутренности настроек\". Paid billing and Google account integration are excluded from this shell stage.",
-  "basis": "Corrected TXT export crash for all newly added interface languages; translated per-conversation labels in all 17, safe plural labels for tools/projects, preserved original Kaz AI dark appearance on first load. Source syntax and preview bundling verified; targeted browser tests added but their CI run and Cloudflare deploy are not confirmed. Owner-only Android/emulator actions and real Google/payment services excluded.",
+  "basis": "New Kaz AI internal-settings localization across EN and KK plus English fallback for other selectable languages: 70+ UI labels, account/security/usage/billing/appearance/notification sections, nonfunctional safe dialogs, 10 theme names and localized notifications. Updated browser regression tests. New source syntax/preview reverified; full test run and Cloudflare release not confirmed. All original 23 directions retained, emulator/phone and real Google/payment excluded.",
   "branch": "main",
   "date": "2026-11-20",
-  "previous": 78.02727272727272,
-  "now": 78.1190909090909,
-  "delta": 0.09181818181818358,
+  "previous": 78.1190909090909,
+  "now": 78.52363636363636,
+  "delta": 0.4045454545454561,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.536,
+      "previous": 92.55600000000001,
       "now": 92.55600000000001,
-      "delta": 0.020000000000010232
+      "delta": 0
     },
     {
       "name": "Интеллект",
@@ -24,9 +24,9 @@
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 86.3157142857143,
-      "now": 86.57571428571428,
-      "delta": 0.2599999999999909
+      "previous": 86.57571428571428,
+      "now": 87.84714285714286,
+      "delta": 1.2714285714285722
     }
   ],
   "items": [
@@ -44,9 +44,9 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 90.65,
+      "previous": 90.77,
       "now": 90.77,
-      "delta": 0.12,
+      "delta": 0,
       "summary": "Экспортированные переписки доступны на всех 17 языках без ошибки подписи; тексты сообщений и их порядок не изменены.",
       "status": "in_progress"
     },
@@ -94,9 +94,9 @@
       "id": 7,
       "name": "Папки и проекты",
       "group": "Чаты",
-      "previous": 99.26,
+      "previous": 99.34,
       "now": 99.34,
-      "delta": 0.08,
+      "delta": 0,
       "summary": "Экспорт проекта использует теперь переведённые подписи для всех 17 языков, без сбоя для новых локалей.",
       "status": "in_progress"
     },
@@ -204,20 +204,20 @@
       "id": 42,
       "name": "Светлая и тёмная тема",
       "group": "Настройки",
-      "previous": 91,
-      "now": 91.18,
-      "delta": 0.18,
-      "summary": "Первый запуск сохраняет исходное тёмное оформление Kaz AI; автоматическое переключение по системе остаётся отдельным выбором.",
+      "previous": 91.18,
+      "now": 91.63,
+      "delta": 0.45,
+      "summary": "Десять тем оформления теперь имеют локализованные названия на английском и казахском; безопасный английский вариант для других языков.",
       "status": "in_progress"
     },
     {
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 79.36,
-      "now": 79.78,
-      "delta": 0.42,
-      "summary": "Мультиязычный интерфейс теперь безопасно экспортирует беседы и подписывает количество чатов/функций при всех 17 локалях.",
+      "previous": 79.78,
+      "now": 81.43,
+      "delta": 1.65,
+      "summary": "Расширена локализация текста внутренних настроек: 70+ подписей на EN/KK, английский запасной вариант, правильное переключение языков и RTL.",
       "status": "in_progress"
     },
     {
@@ -234,9 +234,9 @@
       "id": 45,
       "name": "Экспорт истории",
       "group": "Настройки",
-      "previous": 98.47,
+      "previous": 99.25,
       "now": 99.25,
-      "delta": 0.78,
+      "delta": 0,
       "summary": "Исправлен сбой экспорта на 14 дополнительных языках, добавлены переведённые TXT-заголовки и подписи авторов на всех 17 языках; есть новые регрессионные тесты.",
       "status": "in_progress"
     },
@@ -244,10 +244,10 @@
       "id": 47,
       "name": "внутренности настроек",
       "group": "Настройки",
-      "previous": 73.5,
-      "now": 73.94,
-      "delta": 0.44,
-      "summary": "Внутренние настройки сохраняют тёмный дизайн по умолчанию; языки и экспорт согласованы с историей и проектами.",
+      "previous": 73.94,
+      "now": 80.74,
+      "delta": 6.8,
+      "summary": "Локализованы учётная запись, безопасность, использование, оплата, внешний вид, уведомления и диалоги на английском и казахском; остальные языки показывают английский запасной вариант. Реальный Google/платежи не подключались.",
       "status": "in_progress"
     }
   ],
@@ -268,7 +268,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 78.98260869565216,
-  "overall_now": 79.07043478260869,
-  "overall_delta": 0.08782608695652527
+  "overall_previous": 79.07043478260869,
+  "overall_now": 79.45739130434782,
+  "overall_delta": 0.38695652173913686
 }

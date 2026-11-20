@@ -559,8 +559,11 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
             upstreamBytesSeen=true;
             receivedBytes=encoder.encode(collected).byteLength;receivedChunks=1;
             if(completionState(result)==="incomplete"){
-              write("event: final\ndata: "+JSON.stringify({text:markIncomplete(collected)})+"\n\n");
-              write("event: done\ndata: {}\n\n");
+              // Incomplete drafts may be shown temporarily, never archived as completed.
+              write("event: preview\ndata: "+JSON.stringify({text:markIncomplete(collected)})+"\n\n");
+              write("event: error\ndata: "+JSON.stringify({
+                code:"AI_OUTPUT_INCOMPLETE",message:"Модель остановилась до завершения ответа.",incidentId
+              })+"\n\n");
               phase="incomplete";diagnostic("model_incomplete");
               return;
             }
@@ -632,8 +635,11 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
               const partial=collected.trim()
                 ?markIncomplete(collected)
                 :"## Ответ модели не завершён\n\nCloudflare закрыл поток без подтверждения завершения.";
-              write("event: final\ndata: "+JSON.stringify({text:partial})+"\n\n");
-              write("event: done\ndata: {}\n\n");
+              // Never acknowledge a partial native stream as a finished answer.
+              write("event: preview\ndata: "+JSON.stringify({text:partial})+"\n\n");
+              write("event: error\ndata: "+JSON.stringify({
+                code:"AI_OUTPUT_INCOMPLETE",message:"Поток завершился без полного ответа.",incidentId
+              })+"\n\n");
               return;
             }
           }
@@ -781,14 +787,15 @@ export default {
       const text=answerText(result);
       if(!text.trim())return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
       const fullQuestion=input.messages.map(m=>(m.role==="user"?"Пользователь: ":"Ранее ответил ИИ: ")+m.content).join("\n\n");
-      const finalText=completionState(result)==="incomplete"
+      const incomplete=completionState(result)==="incomplete";
+      const finalText=incomplete
         ?markIncomplete(text)
         :text.length>MAX_REVIEW_CHARS&&mode
           ?unverifiedDraft(text,["Ответ превышает размер независимой проверки; сохранён полностью."],mode)
           :mode==="engineering"
             ?await verifyEngineering(env,fullQuestion,text,input.effort)
             :mode==="proof"?await verifyAndImproveProof(env,fullQuestion,text,input.effort):text;
-      return json({text:finalText,model:"gpt-oss-120b",effort:input.effort});
+      return json({text:finalText,model:"gpt-oss-120b",effort:input.effort,incomplete});
     }catch(e){
       const {code,message}=safeAIError(e);
       const status=code==="AI_QUOTA_EXHAUSTED"||code==="AI_RATE_LIMITED"||code==="AI_CAPACITY_UNAVAILABLE"?429:503;

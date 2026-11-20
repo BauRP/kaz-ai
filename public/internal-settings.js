@@ -152,7 +152,7 @@
     <div class="is-modal-foot"><button type="button" data-is-dialog-close>Закрыть</button></div>
   `;
   const dialogContent={
-    password:["Пароль","Пароль будет доступен после подключения Google-входа. Мы не собираем и не сохраняем пароль в этой версии."],
+    password:["Пароль","Если вход выполняется через Google, пароль меняется только в настройках Google. Kaz AI не получает и не хранит пароль. Отдельный пароль появится только при создании собственной системы аккаунтов."],
     sessions:["Активные сеансы","Список устройств и активных входов появится после подключения авторизации. Сейчас нет достоверной истории сеансов."],
     securityHistory:["История безопасности","После подключения аккаунтов здесь будут даты, время и устройства входов и выходов. Пока записи недоступны."],
     transactions:["История транзакций","Платёжная система не подключена. Достоверной истории платежей нет."],
@@ -164,6 +164,14 @@
     const isLight=prefs.mode==="light"||(prefs.mode==="system"&&matchMedia("(prefers-color-scheme: light)").matches);
     if(typeof state!=="undefined"&&state.light!==isLight&&typeof toggleTheme==="function")toggleTheme(true);
     const color=preset[prefs.theme],bg=prefs.bg||(isLight?"#edf4fb":color.bg),fg=prefs.fg||(isLight?"#11273d":color.fg);
+    document.body.dataset.kazTheme=prefs.theme;
+    if(prefs.theme!=="kaz"){
+      document.body.style.setProperty("--panel",`color-mix(in srgb, ${bg} 90%, ${fg})`);
+      document.body.style.setProperty("--panel2",`color-mix(in srgb, ${bg} 78%, ${fg})`);
+    }else{
+      document.body.style.removeProperty("--panel");
+      document.body.style.removeProperty("--panel2");
+    }
     document.body.style.setProperty("--accent",prefs.accent||color.accent);
     document.body.style.setProperty("--accent2",prefs.accent||color.accent);
     document.body.style.setProperty("--bg",bg);

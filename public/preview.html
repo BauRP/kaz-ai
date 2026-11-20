@@ -1571,8 +1571,22 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const labels={
       ru:{note:"Экспорт текущей переписки (без сохранения в облаке)",user:"Вы: "},
       en:{note:"Current conversation export (not saved to the cloud)",user:"You: "},
-      kk:{note:"Ағымдағы әңгіме экспорты (бұлтта сақталмайды)",user:"Сіз: "}
-    }[["ru","en","kk"].includes(lang)?lang:"en"];
+      kk:{note:"Ағымдағы әңгіме экспорты (бұлтта сақталмайды)",user:"Сіз: "},
+      pt:{note:"Exportação da conversa atual (não salva na nuvem)",user:"Você: "},
+      es:{note:"Exportación de la conversación actual (no guardada en la nube)",user:"Tú: "},
+      fr:{note:"Export de la conversation actuelle (non enregistré dans le cloud)",user:"Vous : "},
+      ar:{note:"تصدير المحادثة الحالية (غير محفوظة في السحابة)",user:"أنت: "},
+      zh:{note:"当前对话导出（未保存到云端）",user:"你："},
+      ko:{note:"현재 대화 내보내기 (클라우드에 저장되지 않음)",user:"사용자: "},
+      ja:{note:"現在の会話をエクスポート（クラウドには保存されません）",user:"あなた: "},
+      de:{note:"Export der aktuellen Unterhaltung (nicht in der Cloud gespeichert)",user:"Sie: "},
+      it:{note:"Esportazione della conversazione attuale (non salvata nel cloud)",user:"Tu: "},
+      tr:{note:"Mevcut sohbet dışa aktarımı (buluta kaydedilmez)",user:"Siz: "},
+      pl:{note:"Eksport bieżącej rozmowy (nie zapisano w chmurze)",user:"Ty: "},
+      hi:{note:"वर्तमान बातचीत निर्यात (क्लाउड में सहेजी नहीं गई)",user:"आप: "},
+      vi:{note:"Xuất cuộc trò chuyện hiện tại (không lưu trên đám mây)",user:"Bạn: "},
+      id:{note:"Ekspor percakapan saat ini (tidak disimpan di cloud)",user:"Anda: "}
+    }[lang]||{note:"Current conversation export (not saved to the cloud)",user:"You: "};
     const parts=["Kaz AI — ",c.title,"\n",labels.note,"\n"];
     for(const m of c.messages){
       parts.push("\n",m.role==="assistant"?"Kaz AI: ":labels.user,m.content,"\n");

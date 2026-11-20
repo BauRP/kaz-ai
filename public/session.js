@@ -18,6 +18,7 @@
   const projects=[];
   const drafts=new Map();
   let welcomeDraft="";
+  let requestsAttempted=0; // Per-tab attempts only; never claim this is token usage.
   let activitySerial=0;
   const touchChat=chat=>{chat.activity=++activitySerial};
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
@@ -729,6 +730,8 @@
     }
     let streamingBubble=null,streamedPartial="",keepIncomplete=false;
     try{
+      requestsAttempted++;
+      window.KazInternalSettings?.refreshUsage?.();
       const response=await fetch("/api/chat",{
         method:"POST",headers:{"content-type":"application/json","accept":"text/event-stream"},
         credentials:"same-origin",signal:controller.signal,
@@ -1547,7 +1550,7 @@
   submitMessage=sendMessage;
   renderHistory();renderChat();renderTools();
   setup();
-  window.KazSession={snapshot:()=>({
+  window.KazSession={usageSnapshot:()=>({requestsAttempted}),snapshot:()=>({
     threads:threads.map(c=>({id:c.id,title:c.title,messages:c.messages.length,pinned:c.pinned,temporary:c.temporary,projectId:c.projectId})),
     projects:projects.map(p=>({id:p.id,name:p.name})),active:current,draftCount:drafts.size
   }),compute,sendMessage,refreshLocale:()=>{

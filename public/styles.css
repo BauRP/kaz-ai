@@ -608,3 +608,25 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
 .is-mini-preview.is-mini-dark i{background:linear-gradient(180deg,#101b2b 8px,#243751 8px 13px,#2883ce 13px 15px,#243751 15px)}
 .is-mode-choice:has(input:checked) .is-mini-preview{outline:2px solid var(--accent);outline-offset:1px}
 @media(max-width:390px){.is-mode .is-mode-choice{min-width:63px;padding:5px}.is-mode-choice .is-mini-preview{width:57px}}
+
+
+/* Theme palette applies throughout the shell; keep original Kaz AI default unchanged. */
+body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .sidebar{
+  background:linear-gradient(170deg,var(--panel),var(--bg));
+  border-right-color:color-mix(in srgb,var(--accent) 28%,transparent);
+}
+body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .view-welcome{
+  background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 65%),var(--bg);
+}
+body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .topbar,
+body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .composer{
+  border-color:color-mix(in srgb,var(--accent) 35%,transparent);
+}
+html[dir="rtl"] .sidebar{border-right:0;border-left:1px solid var(--line)}
+html[dir="rtl"] .topbar,
+html[dir="rtl"] #view-settings,
+html[dir="rtl"] .sidebar{direction:rtl}
+@media(max-width:760px){
+  html[dir="rtl"] .sidebar{left:auto;right:0;transform:translateX(105%)}
+  html[dir="rtl"] .sidebar.open{transform:translateX(0)}
+}

@@ -1,32 +1,32 @@
 {
   "scope": "22 working approved Kaz AI directions and 1 completed calculator = 23 total. The new approved direction is \"внутренности настроек\". Paid billing and Google account integration are excluded from this shell stage.",
-  "basis": "Added user-approved direction \"внутренности настроек\" with 17 available languages plus automatic detection, ten appearance presets, local appearance/notification preferences, and honest no-account/no-billing shells. New direction starts at 0% for current-cycle comparison; device/emulator and owner-only checks excluded. 70% is engineering estimate; new browser regression has not been independently executed.",
+  "basis": "Cross-direction fixes after adding 17 UI languages: translation targets expanded to 17; code/document helpers and calculator provide safe English fallback for other locales; interruption text corrected; browser and source regression coverage added. GitHub code saved and preview synced, syntax verified; full CI and live publishing not confirmed. External device/emulator and unimplemented Google/payment integrations excluded from current software scope.",
   "branch": "main",
   "date": "2026-11-20",
-  "previous": 74.36181818181818,
-  "now": 77.56,
-  "delta": 3.1981818181818227,
+  "previous": 77.56,
+  "now": 78.02727272727272,
+  "delta": 0.4672727272727144,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.521,
-      "now": 92.533,
-      "delta": 0.012000000000000455
+      "previous": 92.533,
+      "now": 92.536,
+      "delta": 0.0030000000000001137
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 36.188,
-      "now": 36.236000000000004,
-      "delta": 0.04800000000000182
+      "previous": 36.236000000000004,
+      "now": 37.406,
+      "delta": 1.1699999999999946
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 75.68714285714285,
-      "now": 85.68714285714285,
-      "delta": 10
+      "previous": 85.68714285714285,
+      "now": 86.3157142857143,
+      "delta": 0.6285714285714477
     }
   ],
   "items": [
@@ -104,10 +104,10 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 75.09,
-      "now": 75.21,
-      "delta": 0.12,
-      "summary": "При неполном ответе ручной повтор не дублирует пользовательский вопрос; черновик не сохраняется как завершённый.",
+      "previous": 75.21,
+      "now": 75.24,
+      "delta": 0.03,
+      "summary": "При неполном ответе текст остаётся только во временном просмотре, а повтор не сохраняет ложный результат.",
       "status": "in_progress"
     },
     {
@@ -134,19 +134,19 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 62.17,
-      "now": 62.37,
-      "delta": 0.2,
-      "summary": "Worker различает завершённые и оборванные ответы; SSE отдаёт неполный текст только как предварительный, JSON явно помечает incomplete.",
+      "previous": 62.37,
+      "now": 62.42,
+      "delta": 0.05,
+      "summary": "Исправлено сообщение о прерванном ответе: клиент прямо сообщает, что неполный текст не сохранён.",
       "status": "in_progress"
     },
     {
       "id": 16,
       "name": "Уровни рассуждения",
       "group": "Интеллект",
-      "previous": 58.37,
+      "previous": 58.41,
       "now": 58.41,
-      "delta": 0.04,
+      "delta": 0,
       "summary": "Обработка неполного ответа одинаково защищает низкий, средний и высокий уровни рассуждения.",
       "status": "in_progress"
     },
@@ -155,9 +155,9 @@
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
       "previous": 20.05,
-      "now": 20.05,
-      "delta": 0,
-      "summary": "Для перевода можно подготовить больший исходный текст без обрезания.",
+      "now": 23.05,
+      "delta": 3,
+      "summary": "Целевой язык переводчика расширен с 3 до всех 17; для остальных локалей безопасная английская подсказка.",
       "status": "in_progress"
     },
     {
@@ -165,9 +165,9 @@
       "name": "Программирование с ИИ",
       "group": "Интеллект",
       "previous": 20.2,
-      "now": 20.2,
-      "delta": 0,
-      "summary": "Для программирования увеличен объём исходного кода при сохранении отступов и переносов строк.",
+      "now": 21.6,
+      "delta": 1.4,
+      "summary": "Подготовка задания по программированию исправлена для всех 17 интерфейсных языков; сохраняются отступы.",
       "status": "in_progress"
     },
     {
@@ -175,9 +175,9 @@
       "name": "Подготовка документов",
       "group": "Интеллект",
       "previous": 20.15,
-      "now": 20.15,
-      "delta": 0,
-      "summary": "Для документов увеличен объём исходного текста; подготовка по-прежнему не отправляет запрос автоматически.",
+      "now": 21.55,
+      "delta": 1.4,
+      "summary": "Подготовка документов теперь использует безопасную подсказку для 17 локалей, не создавая undefined в тексте.",
       "status": "in_progress"
     },
     {
@@ -215,9 +215,9 @@
       "name": "Язык интерфейса",
       "group": "Настройки",
       "previous": 78.46,
-      "now": 78.46,
-      "delta": 0,
-      "summary": "Переводы обновляются в изменённой области экрана без обхода всего интерфейса после каждого ввода.",
+      "now": 79.36,
+      "delta": 0.9,
+      "summary": "Настройки языка работают с инструментами и переводчиком на всех 17 выбранных языках; полный перевод интерфейса остаётся отдельным объёмом.",
       "status": "in_progress"
     },
     {
@@ -244,10 +244,10 @@
       "id": 47,
       "name": "внутренности настроек",
       "group": "Настройки",
-      "previous": 0,
-      "now": 70,
-      "delta": 70,
-      "summary": "Создан отдельный раздел с 7 вкладками: общие/17 языков и авто, учётная запись, безопасность, использование, оплата, 10 тем и цветовые настройки, уведомления. Настоящая оплата и Google-вход не подключены по ТЗ. Полный перевод новых экранов на все языки и автоматическая браузерная проверка ещё не подтверждены.",
+      "previous": 70,
+      "now": 73.5,
+      "delta": 3.5,
+      "summary": "Согласована работа внутренних языковых настроек и внешних инструментов; сохранены 10 тем, аккаунт и оплата остаются оболочкой.",
       "status": "in_progress"
     }
   ],
@@ -268,7 +268,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 75.47652173913043,
-  "overall_now": 78.53565217391305,
-  "overall_delta": 3.0591304347826167
+  "overall_previous": 78.53565217391305,
+  "overall_now": 78.98260869565216,
+  "overall_delta": 0.4469565217391107
 }

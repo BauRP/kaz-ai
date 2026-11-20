@@ -1034,10 +1034,8 @@ test('font size and reasoning effort persist across reload without restoring cha
     await page.locator('#fontToggle').click();
     await page.locator('[data-font="large"]').click();
     assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('font-large')),true);
-    await page.locator('.sidebar [data-screen="chat"]').click().catch(async()=>{
-      await page.locator('.sidebar [data-screen="tools"]').click();
-    });
-    await page.locator('#reasonToggle').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-16"]').click();
     await page.locator('[data-reason="high"]').click();
     await page.reload();
     assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('font-large')),true);

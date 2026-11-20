@@ -146,6 +146,60 @@ test('history and project controls translate dynamically on English and Kazakh w
   });
 });
 
+test('split-CRLF streaming answer completes and counts only real API attempts',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({locale:"ru-RU"});
+    const html=readFileSync('public/preview.html','utf8');
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.addInitScript(()=>{
+      const nativeFetch=window.fetch.bind(window);
+      window.fetch=(url,options)=>{
+        if(new URL(url,location.href).pathname!=="/api/chat")return nativeFetch(url,options);
+        // Every SSE byte is a separate read, including CR/LF and UTF-8 pieces.
+        const payload=': connected\r\n\r\nevent: final\r\ndata: {"text":"Полный ответ без ошибок"}\r\n\r\nevent: done\r\ndata: {}\r\n\r\n';
+        const bytes=new TextEncoder().encode(payload);
+        return Promise.resolve(new Response(new ReadableStream({
+          start(controller){for(const byte of bytes)controller.enqueue(Uint8Array.of(byte));controller.close()}
+        }),{status:200,headers:{"content-type":"text/event-stream"}}));
+      };
+    });
+    await page.route('https://kaz-ai.test/**',route=>route.fulfill({status:200,contentType:'text/html',body:html}));
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Объясни мне потоки');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages .message-assistant')?.textContent.includes('Полный ответ без ошибок'));
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads[0].messages,2);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#internalSettingsRoot [data-is-tab="usage"]').click();
+    assert.equal(await page.locator('#innerRequestsAttempted').innerText(),'1');
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
+test('translator prepares natural Russian and Kazakh names for additional target languages',async()=>{
+  await withPage(async page=>{
+    for(const [ui,target,text,expected] of [
+      ['ru','ja','Доброе утро','на японский язык'],
+      ['kk','pt','Қайырлы таң','португал тіліне']
+    ]){
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+ui+'"]').click();
+      await page.locator('.sidebar [data-screen="tools"]').click();
+      await page.locator('#toolGroups [data-feature="tool-22"]').click();
+      await page.locator('#sessionBody select').selectOption(target);
+      await page.locator('#sessionBody textarea').fill(text);
+      await page.locator('#sessionBody [data-session="dialog-save"]').click();
+      const prompt=await page.locator('#messageInput').inputValue();
+      assert.ok(prompt.includes(expected),prompt);
+      assert.ok(prompt.endsWith(text));
+      await page.locator('#messageInput').fill('');
+    }
+  });
+});
+
 test('assigning an existing chat to a folder updates both screens and keeps keyboard focus',async()=>{
   await withPage(async page=>{
     await page.locator('#messageInput').fill('Сохранённый разговор');

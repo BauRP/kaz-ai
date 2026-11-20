@@ -12,7 +12,7 @@
     ["id","Bahasa Indonesia"]
   ];
   const languageNames=Object.fromEntries(languages);
-  const codes=new Set(languageNames?Object.keys(languageNames):[]);
+  const codes=new Set(Object.keys(languageNames));
   const labels={
     ru:["Внутренности настроек","Общие","Учётная запись","Безопасность и вход","Использование","Оплата","Внешний вид","Уведомления","Автоматически"],
     en:["Internal settings","General","Account","Security & sign-in","Usage","Billing","Appearance","Notifications","Automatic"],
@@ -162,7 +162,7 @@
   };
   const applyAppearance=()=>{
     const isLight=prefs.mode==="light"||(prefs.mode==="system"&&matchMedia("(prefers-color-scheme: light)").matches);
-    if(typeof state!=="undefined"&&state.light!==isLight&&typeof toggleTheme==="function")toggleTheme();
+    if(typeof state!=="undefined"&&state.light!==isLight&&typeof toggleTheme==="function")toggleTheme(true);
     const color=preset[prefs.theme],bg=prefs.bg||(isLight?"#edf4fb":color.bg),fg=prefs.fg||(isLight?"#11273d":color.fg);
     document.documentElement.style.setProperty("--accent",prefs.accent||color.accent);
     document.documentElement.style.setProperty("--accent2",prefs.accent||color.accent);
@@ -298,7 +298,7 @@
     refreshLabels();
     // Preserve existing default site language until the visitor explicitly
     // selects an option, so original chat behaviour is not silently rewritten.
-    if(prefs.language!=="auto")chooseLanguage(prefs.language);
+    chooseLanguage(prefs.language);
   }
   window.KazInternalSettings={
     open:(panel="general")=>{

@@ -189,7 +189,10 @@
   }
   const addButtons=(target,items)=>{
     const actions=make("div","session-actions");
-    for(const item of items)actions.append(button(item.label,item.action,item.id,item.className||"session-button"));
+    for(const item of items){
+      const label=item.label.startsWith("＋ ")?"＋ "+uiText(item.label.slice(2)):uiText(item.label);
+      actions.append(button(label,item.action,item.id,item.className||"session-button"));
+    }
     target.append(actions);
   };
   function sessionNewChat(temporary=false,allowDiscard=false){

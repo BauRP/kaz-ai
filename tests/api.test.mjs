@@ -623,6 +623,27 @@ test('nonstream engineering route receives the same final technical review',asyn
   assert.equal(calls.length,2);
   assert.equal(calls[1][1].reasoning.effort,'high');
 });
+test('previous grid-math proof never leaks fixed constants into an unrelated new question',async()=>{
+  const question='Для решётки 5×8 из вершин с пятью выделенными горизонтальными рёбрами между 4 и 5 столбцами рассчитай число остовных деревьев.';
+  const {env,calls}=envWithAI();
+  const response=await worker.fetch(post({messages:[
+    {role:'user',content:question},
+    {role:'assistant',content:'Доказательство было приведено ранее.'},
+    {role:'user',content:'Привет! Как дела?'}
+  ],effort:'low'}),env);
+  assert.equal(response.status,200);
+  assert.equal(calls.length,1);
+  assert.doesNotMatch(calls[0][1].input[0].content,/НЕЗАВИСИМАЯ ПРОГРАММНАЯ ПРОВЕРКА МАТЕМАТИКИ/);
+  assert.doesNotMatch(calls[0][1].input[0].content,/530962920761724/);
+});
+test('current 5x8 graph question still receives independently verified facts',async()=>{
+  const question='Для решётки 5×8 из вершин с пятью выделенными горизонтальными рёбрами между 4 и 5 столбцами рассчитай число остовных деревьев.';
+  const {env,calls}=envWithAI();
+  const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort:'low'}),env);
+  assert.equal(response.status,200);
+  assert.equal(calls.length,1);
+  assert.match(calls[0][1].input[0].content,/НЕЗАВИСИМАЯ ПРОГРАММНАЯ ПРОВЕРКА МАТЕМАТИКИ/);
+});
 test('ordinary greetings and arithmetic still use one inference call',async()=>{
   for(const content of ['Привет!','Сколько будет 2+2?']){
     const {env,calls}=envWithAI();

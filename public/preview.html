@@ -1032,11 +1032,12 @@ function renderTools(query=""){const target=$("#toolGroups");target.replaceChild
   }
   return names.join(" ").toLocaleLowerCase().includes(value);
 });if(!list.length)continue;total+=list.length;const section=node("section","tool-group");const title=node("h2","tool-group-title");title.append(node("span","",group.title),node("small","",list.length+" функций"));section.append(title);const grid=node("div","tool-grid");for(const [number,name,description,iconName] of list){const card=node("button","tool-card");card.type="button";card.dataset.feature="tool-"+number;card.setAttribute("aria-label",name+", функция будет подключена позже");const head=node("div","tool-card-top");head.append(icon(iconName),node("small","","В плане"));card.append(head,node("strong","",name),node("p","",description));grid.append(card)}section.append(grid);target.append(section)}if(!total)target.append(node("p","","Ничего не найдено"))}
-function selectReason(value){
+function selectReason(value,quiet=false){
   if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){
     featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return;
   }
   state.reason=value;
+  try{localStorage.setItem("kaz-ai-reason-v1",value)}catch{}
   $("#currentReason").textContent=REASONS[value].name;
   $$("[data-reason]").forEach(btn=>{
     const active=btn.dataset.reason===value;
@@ -1044,6 +1045,7 @@ function selectReason(value){
     if(btn.dataset.reason!=="deep")btn.setAttribute("aria-pressed",String(active));
   });
   closePopovers();
+  if(quiet)return;
   const lang=window.KazI18n?.language||"ru";
   const label=window.KazI18n?.translate?.(REASONS[value].name)||REASONS[value].name;
   if(lang==="en")notify('Reasoning level: '+label+'. This will apply when the AI is connected.');
@@ -1073,7 +1075,7 @@ function selectLanguage(value,quiet=false){
   const notification={ru:"Язык интерфейса: ",en:"Interface language: ",kk:"Интерфейс тілі: "};
   if(!quiet)notify((notification[value]||notification.en)+languages[value]);
 }
-function selectFont(value){
+function selectFont(value,quiet=false){
   if(!["small","normal","large"].includes(value))return;
   document.body.classList.remove("font-small","font-large");
   if(value!=="normal")document.body.classList.add("font-"+value);
@@ -1084,7 +1086,8 @@ function selectFont(value){
     el.setAttribute("aria-pressed",String(active));
   });
   closePopovers();
-  notify(window.KazI18n?.translate?.("Выбран размер текста для предпросмотра.")||"Выбран размер текста для предпросмотра.");
+  try{localStorage.setItem("kaz-ai-font-size-v1",value)}catch{}
+  if(!quiet)notify(window.KazI18n?.translate?.("Выбран размер текста для предпросмотра.")||"Выбран размер текста для предпросмотра.");
 }
 function openGoogle(){
   state.dialogTrigger=document.activeElement;
@@ -1172,7 +1175,15 @@ $("#messageInput").addEventListener("input",()=>{
   if($("#sessionStop")?.hidden===false||$("#sessionRetry")?.hidden===false)return;
   banner.hidden=true;
 });
-renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$$("[data-reason]").forEach(button=>{const selected=button.dataset.reason==="medium";button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");
+renderTools();renderHistory();renderChat();try{
+  const savedFont=localStorage.getItem("kaz-ai-font-size-v1");
+  if(["small","normal","large"].includes(savedFont))selectFont(savedFont,true);
+}catch{}
+try{
+  const savedReason=localStorage.getItem("kaz-ai-reason-v1");
+  if(["low","medium","high"].includes(savedReason))selectReason(savedReason,true);
+}catch{}
+$("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").forEach(button=>{const selected=button.dataset.reason===state.reason;button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");
 
 </script>
 <script>
@@ -1251,10 +1262,18 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   function separator(l){const c=cells(l);return c.length>=2&&c.every(x=>/^:?-{3,}:?$/.test(x))}
   function code(lang,value){
     const section=node("section","answer-code-block"),bar=node("div","answer-code-toolbar"),title=node("span"),button=node("button","answer-code-copy");
-    title.textContent=lang||"Код";button.type="button";button.textContent="Копировать код";
-    button.addEventListener("click",async()=>{if(!navigator.clipboard?.writeText){button.textContent="Недоступно";return}
-      try{await navigator.clipboard.writeText(value);button.textContent="Скопировано"}
-      catch{button.textContent="Ошибка копирования"}
+    title.textContent=lang||"Код";button.type="button";
+    const copyLabels=()=>({
+      en:["Copy code","Copied","Unavailable","Copy failed"],
+      kk:["Кодты көшіру","Көшірілді","Қолжетімсіз","Көшіру қатесі"],
+      ru:["Копировать код","Скопировано","Недоступно","Ошибка копирования"]
+    })[["ru","kk"].includes(window.KazI18n?.language)?window.KazI18n.language:"en"];
+    button.textContent=copyLabels()[0];
+    button.addEventListener("click",async()=>{
+      const labels=copyLabels();
+      if(!navigator.clipboard?.writeText){button.textContent=labels[2];return}
+      try{await navigator.clipboard.writeText(value);button.textContent=labels[1]}
+      catch{button.textContent=labels[3]}
     });
     bar.append(title,button);section.append(bar);
     const pre=node("pre"),inside=node("code");inside.textContent=value;pre.append(inside);section.append(pre);return section;
@@ -4203,7 +4222,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       const command=event.target.closest("[data-is-dialog]");
       if(command){showDialog(command.dataset.isDialog);return}
       if(event.target.closest('[data-is-action="reset-appearance"]')){
-        prefs.theme="kaz";prefs.accent=null;prefs.bg=null;prefs.fg=null;
+        prefs.theme="kaz";prefs.mode="dark";prefs.accent=null;prefs.bg=null;prefs.fg=null;
         applyAppearance();showToast(t("Оформление сброшено"));return;
       }
     });

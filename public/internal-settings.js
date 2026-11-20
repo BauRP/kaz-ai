@@ -164,10 +164,10 @@
     const isLight=prefs.mode==="light"||(prefs.mode==="system"&&matchMedia("(prefers-color-scheme: light)").matches);
     if(typeof state!=="undefined"&&state.light!==isLight&&typeof toggleTheme==="function")toggleTheme(true);
     const color=preset[prefs.theme],bg=prefs.bg||(isLight?"#edf4fb":color.bg),fg=prefs.fg||(isLight?"#11273d":color.fg);
-    document.documentElement.style.setProperty("--accent",prefs.accent||color.accent);
-    document.documentElement.style.setProperty("--accent2",prefs.accent||color.accent);
-    document.documentElement.style.setProperty("--bg",bg);
-    document.documentElement.style.setProperty("--text",fg);
+    document.body.style.setProperty("--accent",prefs.accent||color.accent);
+    document.body.style.setProperty("--accent2",prefs.accent||color.accent);
+    document.body.style.setProperty("--bg",bg);
+    document.body.style.setProperty("--text",fg);
     qs("#innerAccent").value=prefs.accent||color.accent;
     qs("#innerBg").value=bg;
     qs("#innerFg").value=fg;

@@ -1,32 +1,32 @@
 {
   "scope": "22 working approved Kaz AI directions and 1 completed calculator = 23 total. The new approved direction is \"внутренности настроек\". Paid billing and Google account integration are excluded from this shell stage.",
-  "basis": "Hardening 4 connected chat directions: reject pinning temporary chats; exclude local greetings from AI rating/retry controls; reject stale assignments to deleted chats/projects. Added two targeted browser regressions. Saved in GitHub main; script syntax and generated preview verified; full browser tests and Cloudflare deploy not confirmed. Manual phone/emulator checks and Google/payment integrations remain outside coding-scope unfinished tasks.",
+  "basis": "Scoped special 5x8 grid proof facts to last user question; persistent font size and low/medium/high reasoning preferences; translated copy-code feedback; full default dark appearance reset. Added focused API and browser tests; code syntax and preview bundling verified. End-to-end browser suite and Cloudflare deployment not yet confirmed; external Android/emulator checks and Google/payment integrations excluded from coding-scope pending work.",
   "branch": "main",
   "date": "2026-11-20",
-  "previous": 78.52363636363636,
-  "now": 78.60090909090908,
-  "delta": 0.07727272727272805,
+  "previous": 78.60090909090908,
+  "now": 78.84636363636365,
+  "delta": 0.2454545454545638,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.55600000000001,
+      "previous": 92.691,
       "now": 92.691,
-      "delta": 0.1349999999999909
+      "delta": 0
     },
     {
       "name": "Интеллект",
       "count": 5,
       "previous": 37.406,
-      "now": 37.406,
-      "delta": 0
+      "now": 37.846000000000004,
+      "delta": 0.44000000000000483
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 87.84714285714286,
-      "now": 87.89714285714285,
-      "delta": 0.04999999999999716
+      "previous": 87.89714285714285,
+      "now": 88.35428571428572,
+      "delta": 0.45714285714286973
     }
   ],
   "items": [
@@ -84,9 +84,9 @@
       "id": 6,
       "name": "Закрепить чат",
       "group": "Чаты",
-      "previous": 94.1,
+      "previous": 94.45,
       "now": 94.45,
-      "delta": 0.35,
+      "delta": 0,
       "summary": "Закрепление временных чатов теперь запрещено как в истории, так и при запуске из меню инструментов.",
       "status": "in_progress"
     },
@@ -94,9 +94,9 @@
       "id": 7,
       "name": "Папки и проекты",
       "group": "Чаты",
-      "previous": 99.34,
+      "previous": 99.74,
       "now": 99.74,
-      "delta": 0.4,
+      "delta": 0,
       "summary": "При назначении чата в проект повторно проверяется, что чат и выбранный проект существуют; защищено окно добавления при изменении списка.",
       "status": "in_progress"
     },
@@ -124,9 +124,9 @@
       "id": 13,
       "name": "Оценка ответа",
       "group": "Чаты",
-      "previous": 94.05,
+      "previous": 94.65,
       "now": 94.65,
-      "delta": 0.6,
+      "delta": 0,
       "summary": "Локальные приветствия больше не получают кнопки оценок и повтора ИИ; защита действует и на уровне обработчика действий.",
       "status": "in_progress"
     },
@@ -135,9 +135,9 @@
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
       "previous": 62.42,
-      "now": 62.42,
-      "delta": 0,
-      "summary": "Исправлено сообщение о прерванном ответе: клиент прямо сообщает, что неполный текст не сохранён.",
+      "now": 63.07,
+      "delta": 0.65,
+      "summary": "Проверенные математические факты для специальной задачи теперь добавляются только когда она находится в последнем вопросе, а не по старой переписке.",
       "status": "in_progress"
     },
     {
@@ -145,9 +145,9 @@
       "name": "Уровни рассуждения",
       "group": "Интеллект",
       "previous": 58.41,
-      "now": 58.41,
-      "delta": 0,
-      "summary": "Обработка неполного ответа одинаково защищает низкий, средний и высокий уровни рассуждения.",
+      "now": 59.51,
+      "delta": 1.1,
+      "summary": "Выбор низкого, среднего или высокого уровня рассуждения сохраняется локально и восстанавливается без автоматического запроса. Углублённый режим не включён.",
       "status": "in_progress"
     },
     {
@@ -165,9 +165,9 @@
       "name": "Программирование с ИИ",
       "group": "Интеллект",
       "previous": 21.6,
-      "now": 21.6,
-      "delta": 0,
-      "summary": "Подготовка задания по программированию исправлена для всех 17 интерфейсных языков; сохраняются отступы.",
+      "now": 22.05,
+      "delta": 0.45,
+      "summary": "Для кода улучшены подписи и результаты копирования, включая английский вариант для новых языков интерфейса.",
       "status": "in_progress"
     },
     {
@@ -194,9 +194,9 @@
       "id": 41,
       "name": "Временный чат",
       "group": "Настройки",
-      "previous": 93.6,
+      "previous": 93.95,
       "now": 93.95,
-      "delta": 0.35,
+      "delta": 0,
       "summary": "Временные чаты нельзя закрепить в истории; история сохраняет правило приватности временных разговоров.",
       "status": "in_progress"
     },
@@ -205,9 +205,9 @@
       "name": "Светлая и тёмная тема",
       "group": "Настройки",
       "previous": 91.63,
-      "now": 91.63,
-      "delta": 0,
-      "summary": "Десять тем оформления теперь имеют локализованные названия на английском и казахском; безопасный английский вариант для других языков.",
+      "now": 92.18,
+      "delta": 0.55,
+      "summary": "Сброс оформления возвращает исходный тёмный режим Kaz AI, а также тему и пользовательские цвета.",
       "status": "in_progress"
     },
     {
@@ -215,9 +215,9 @@
       "name": "Язык интерфейса",
       "group": "Настройки",
       "previous": 81.43,
-      "now": 81.43,
-      "delta": 0,
-      "summary": "Расширена локализация текста внутренних настроек: 70+ подписей на EN/KK, английский запасной вариант, правильное переключение языков и RTL.",
+      "now": 81.68,
+      "delta": 0.25,
+      "summary": "Кнопка копирования кода использует русский, казахский или английский запасной текст в зависимости от локали.",
       "status": "in_progress"
     },
     {
@@ -225,9 +225,9 @@
       "name": "Размер текста",
       "group": "Настройки",
       "previous": 82.1,
-      "now": 82.1,
-      "delta": 0,
-      "summary": "Без изменений в этом цикле.",
+      "now": 83.95,
+      "delta": 1.85,
+      "summary": "Выбранный размер текста теперь сохраняется между перезагрузками и восстанавливается без всплывающего уведомления.",
       "status": "in_progress"
     },
     {
@@ -245,9 +245,9 @@
       "name": "внутренности настроек",
       "group": "Настройки",
       "previous": 80.74,
-      "now": 80.74,
-      "delta": 0,
-      "summary": "Локализованы учётная запись, безопасность, использование, оплата, внешний вид, уведомления и диалоги на английском и казахском; остальные языки показывают английский запасной вариант. Реальный Google/платежи не подключались.",
+      "now": 81.29,
+      "delta": 0.55,
+      "summary": "Кнопка сброса полностью возвращает исходные настройки внешнего вида, включая режим отображения.",
       "status": "in_progress"
     }
   ],
@@ -268,7 +268,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.45739130434782,
-  "overall_now": 79.53130434782608,
-  "overall_delta": 0.07391304347825667
+  "overall_previous": 79.53130434782608,
+  "overall_now": 79.76608695652176,
+  "overall_delta": 0.23478260869568146
 }

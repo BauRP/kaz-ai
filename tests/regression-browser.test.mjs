@@ -165,6 +165,27 @@ test('code indentation survives send, history navigation and TXT export',async()
   });
 });
 
+test('full history TXT export works in all newly selectable languages',async()=>{
+  await withPage(async page=>{
+    const source='  Kaz AI: қазақша, русский, Español 😀';
+    await page.locator('#messageInput').fill(source);
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    for(const locale of ['fr','ar','ja']){
+      await page.locator('#innerLanguage').selectOption(locale);
+      const pending=page.waitForEvent('download');
+      await page.locator('#view-settings [data-feature="export"]').click();
+      const file=await pending;
+      assert.equal(file.suggestedFilename(),'Kaz-AI-history.txt');
+      const text=readFileSync(await file.path(),'utf8');
+      assert.ok(text.startsWith('\uFEFF'));
+      assert.match(text,/Kaz AI: қазақша, русский, Español/);
+      assert.match(text,/Current conversation export/);
+      assert.match(text,/You: /);
+    }
+  });
+});
+
 test('AI-dependent rating and personal instructions accurately show partial status',async()=>{
   await withPage(async page=>{
     await page.locator('.sidebar [data-screen="tools"]').click();

@@ -131,7 +131,7 @@ function toggleTheme(fromInternalSettings=false){
   if(!fromInternalSettings)window.KazInternalSettings?.onLegacyThemeToggle(state.light);
 }
 const languages={en:"English",ru:"Русский",kk:"Қазақша",pt:"Português",es:"Español",fr:"Français",ar:"العربية",zh:"中文",ko:"한국어",ja:"日本語",de:"Deutsch",it:"Italiano",tr:"Türkçe",pl:"Polski",hi:"हिन्दी",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
-function selectLanguage(value){
+function selectLanguage(value,quiet=false){
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
   state.language=value;
   $$(".language-current").forEach(el=>{el.textContent=languages[value]});
@@ -143,7 +143,7 @@ function selectLanguage(value){
   else renderHistory();
   renderTools($("#toolsSearch").value);
   const notification={ru:"Язык интерфейса: ",en:"Interface language: ",kk:"Интерфейс тілі: "};
-  notify((notification[value]||notification.en)+languages[value]);
+  if(!quiet)notify((notification[value]||notification.en)+languages[value]);
 }
 function selectFont(value){
   if(!["small","normal","large"].includes(value))return;

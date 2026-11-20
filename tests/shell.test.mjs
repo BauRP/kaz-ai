@@ -260,7 +260,9 @@ test('all 17 selectable languages are available as translation targets with safe
 test('history and projects safely support all added interface languages',()=>{
   const session=readFileSync('public/session.js','utf8');
   const settings=readFileSync('public/internal-settings.js','utf8');
-  assert.match(session,/\}\[\["ru","en","kk"\]\.includes\(lang\)\?lang:"en"\]/);
+  for(const language of ['en','ru','kk','pt','es','fr','ar','zh','ko','ja','de','it','tr','pl','hi','vi','id'])
+    assert.ok(session.includes(language+':{note:'),'Missing localized export label: '+language);
+  assert.match(session,/\}\[lang\]\|\|\{note:/);
   assert.match(session,/if\(!\["ru","kk"\]\.includes\(lang\)\)/);
   assert.match(session,/if\(!\["ru","kk"\]\.includes\(language\)\)/);
   assert.match(settings,/language:"auto",mode:"dark"/);

@@ -122,14 +122,15 @@ function selectReason(value){
   else if(lang==="kk")notify('Ойлау деңгейі: '+label+'. ЖИ қосылғанда қолданылады.');
   else notify("Выбран уровень «"+label+"». Подключение к модели — на следующем этапе.");
 }
-function toggleTheme(){
+function toggleTheme(fromInternalSettings=false){
   state.light=!state.light;
   document.body.classList.toggle("light",state.light);
   $("#themeLabel").textContent=state.light?"Светлая":"Тёмная";
   $$('[data-action="toggle-theme"]').forEach(button=>button.setAttribute("aria-pressed",String(state.light)));
   $$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"));
+  if(!fromInternalSettings)window.KazInternalSettings?.onLegacyThemeToggle(state.light);
 }
-const languages={ru:"Русский",kk:"Қазақша",en:"English"};
+const languages={en:"English",ru:"Русский",kk:"Қазақ тілі",pt:"Português",es:"Español",fr:"Français",ar:"العربية",zh:"中文",ko:"한국어",ja:"日本語",de:"Deutsch",it:"Italiano",tr:"Türkçe",pl:"Polski",hi:"हिन्दी",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
 function selectLanguage(value){
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
   state.language=value;
@@ -137,11 +138,12 @@ function selectLanguage(value){
   $$("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
   closePopovers();
   window.KazI18n?.set(value);
+  window.KazInternalSettings?.syncLanguage(value);
   if(window.KazSession?.refreshLocale)window.KazSession.refreshLocale();
   else renderHistory();
   renderTools($("#toolsSearch").value);
   const notification={ru:"Язык интерфейса: ",en:"Interface language: ",kk:"Интерфейс тілі: "};
-  notify(notification[value]+languages[value]);
+  notify((notification[value]||notification.en)+languages[value]);
 }
 function selectFont(value){
   if(!["small","normal","large"].includes(value))return;

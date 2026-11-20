@@ -73,10 +73,18 @@
   function separator(l){const c=cells(l);return c.length>=2&&c.every(x=>/^:?-{3,}:?$/.test(x))}
   function code(lang,value){
     const section=node("section","answer-code-block"),bar=node("div","answer-code-toolbar"),title=node("span"),button=node("button","answer-code-copy");
-    title.textContent=lang||"Код";button.type="button";button.textContent="Копировать код";
-    button.addEventListener("click",async()=>{if(!navigator.clipboard?.writeText){button.textContent="Недоступно";return}
-      try{await navigator.clipboard.writeText(value);button.textContent="Скопировано"}
-      catch{button.textContent="Ошибка копирования"}
+    title.textContent=lang||"Код";button.type="button";
+    const copyLabels=()=>({
+      en:["Copy code","Copied","Unavailable","Copy failed"],
+      kk:["Кодты көшіру","Көшірілді","Қолжетімсіз","Көшіру қатесі"],
+      ru:["Копировать код","Скопировано","Недоступно","Ошибка копирования"]
+    })[["en","kk"].includes(window.KazI18n?.language)?window.KazI18n.language:"ru"];
+    button.textContent=copyLabels()[0];
+    button.addEventListener("click",async()=>{
+      const labels=copyLabels();
+      if(!navigator.clipboard?.writeText){button.textContent=labels[2];return}
+      try{await navigator.clipboard.writeText(value);button.textContent=labels[1]}
+      catch{button.textContent=labels[3]}
     });
     bar.append(title,button);section.append(bar);
     const pre=node("pre"),inside=node("code");inside.textContent=value;pre.append(inside);section.append(pre);return section;

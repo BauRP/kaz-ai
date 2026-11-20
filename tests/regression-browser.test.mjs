@@ -1028,6 +1028,40 @@ test('local welcome greeting is not mistaken for a genuine rated AI answer',asyn
   });
 });
 
+test('font size and reasoning effort persist across reload without restoring chat history',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#fontToggle').click();
+    await page.locator('[data-font="large"]').click();
+    assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('font-large')),true);
+    await page.locator('.sidebar [data-screen="chat"]').click().catch(async()=>{
+      await page.locator('.sidebar [data-screen="tools"]').click();
+    });
+    await page.locator('#reasonToggle').click();
+    await page.locator('[data-reason="high"]').click();
+    await page.reload();
+    assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('font-large')),true);
+    assert.equal(await page.locator('#fontLabel').innerText(),'Крупный');
+    assert.equal(await page.locator('#currentReason').innerText(),'Высокий');
+    assert.equal(await page.locator('[data-reason="high"]').getAttribute('aria-pressed'),'true');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+  });
+});
+
+test('reset appearance restores original dark mode as well as custom colors',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    const root=page.locator('#internalSettingsRoot');
+    await root.locator('[data-is-tab="appearance"]').click();
+    await root.locator('input[name="innerMode"][value="light"]').check();
+    await root.locator('#innerTheme').selectOption('ocean');
+    await root.locator('[data-is-action="reset-appearance"]').click();
+    assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('light')),false);
+    assert.equal(await root.locator('#innerTheme').inputValue(),'kaz');
+    assert.equal(await root.locator('input[name="innerMode"][value="dark"]').isChecked(),true);
+  });
+});
+
 test('math formatter preserves prose after a same-line closed block formula',async()=>{
   await withPage(async page=>{
     const result=await page.evaluate(()=>{

@@ -28,6 +28,7 @@
   <script src="./calculator.js" defer></script>
 <script src="./session.js" defer></script>
   <script src="./i18n.js" defer></script>
+  <script src="./internal-settings.js" defer></script>
 </head>
 <body>
 <svg xmlns="http://www.w3.org/2000/svg" class="svg-library" aria-hidden="true">
@@ -127,6 +128,7 @@
       </section>
       <section id="view-settings" class="view view-panel" hidden aria-labelledby="settingsHeading">
         <div class="panel-heading"><span class="eyebrow">ЛИЧНОЕ ПРОСТРАНСТВО</span><h1 id="settingsHeading">Настройки</h1><p>Основные параметры вашего будущего Kaz AI.</p></div>
+        <div id="internalSettingsRoot" class="internal-settings-root" aria-label="Внутренности настроек"></div>
         <div class="settings-list">
           <div class="setting-item"><div><h2>Оформление</h2><p>Светлая или тёмная тема</p></div><button class="setting-control" data-action="toggle-theme" aria-pressed="false"><svg class="icon"><use href="#ic-sun"/></svg><span id="themeLabel">Тёмная</span></button></div>
           <div class="setting-item"><div><h2>Язык интерфейса</h2><p>Русский, қазақша, English</p></div><div class="popover-anchor settings-popover-anchor language-anchor"><button type="button" class="setting-control" id="settingsLanguageToggle" data-action="toggle-language" aria-expanded="false" aria-controls="settingsLanguageMenu"><span class="language-current">Русский</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div id="settingsLanguageMenu" class="popover-menu language-menu" hidden>

@@ -23,7 +23,13 @@ test('the calculator is archived and all 22 working directions exclude it',()=>{
 test('individual and group progress agrees with the last full baseline',()=>{
   for(const item of d.items){
     const old=prior.items.find(i=>i.id===item.id);
-    if(item.id===47){assert.equal(item.name,'внутренности настроек');assert.equal(item.previous,0);close(item.delta,item.now);continue}
+    if(item.id===47){
+      assert.equal(item.name,'внутренности настроек');
+      assert.ok(item.previous>=0&&item.previous<100,'The new settings direction keeps accumulated progress');
+      assert.ok(item.now>=item.previous&&item.now<100);
+      close(item.delta,item.now-item.previous);
+      continue;
+    }
     assert.ok(old,'Unknown item '+item.id);
     assert.ok(item.previous>=old.now,'Previous cycle score cannot fall below the archived baseline for '+item.id);
     close(item.delta,item.now-item.previous);

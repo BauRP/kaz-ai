@@ -145,7 +145,7 @@ function selectLanguage(value,quiet=false){
   const notification={ru:"Язык интерфейса: ",en:"Interface language: ",kk:"Интерфейс тілі: "};
   if(!quiet)notify((notification[value]||notification.en)+languages[value]);
 }
-function selectFont(value){
+function selectFont(value,quiet=false){
   if(!["small","normal","large"].includes(value))return;
   document.body.classList.remove("font-small","font-large");
   if(value!=="normal")document.body.classList.add("font-"+value);
@@ -156,7 +156,8 @@ function selectFont(value){
     el.setAttribute("aria-pressed",String(active));
   });
   closePopovers();
-  notify(window.KazI18n?.translate?.("Выбран размер текста для предпросмотра.")||"Выбран размер текста для предпросмотра.");
+  try{localStorage.setItem("kaz-ai-font-size-v1",value)}catch{}
+  if(!quiet)notify(window.KazI18n?.translate?.("Выбран размер текста для предпросмотра.")||"Выбран размер текста для предпросмотра.");
 }
 function openGoogle(){
   state.dialogTrigger=document.activeElement;
@@ -244,4 +245,8 @@ $("#messageInput").addEventListener("input",()=>{
   if($("#sessionStop")?.hidden===false||$("#sessionRetry")?.hidden===false)return;
   banner.hidden=true;
 });
-renderTools();renderHistory();renderChat();$("#currentReason").textContent="Средний";$$("[data-reason]").forEach(button=>{const selected=button.dataset.reason==="medium";button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");
+renderTools();renderHistory();renderChat();try{
+  const savedFont=localStorage.getItem("kaz-ai-font-size-v1");
+  if(["small","normal","large"].includes(savedFont))selectFont(savedFont,true);
+}catch{}
+$("#currentReason").textContent="Средний";$$("[data-reason]").forEach(button=>{const selected=button.dataset.reason==="medium";button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");

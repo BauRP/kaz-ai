@@ -318,6 +318,8 @@
       if(!languageChangeInside){prefs.language=value;save()}
       const control=qs("#innerLanguage");
       if(control)control.value=prefs.language;
+      // A top-bar language change is an explicit language selection.
+      // Keep both menus and the 17-language workspace in sync.
       refreshLabels();
     },
     onLegacyThemeToggle:isLight=>{

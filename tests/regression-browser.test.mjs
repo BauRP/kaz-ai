@@ -985,6 +985,7 @@ test('internal settings translate account, security and billing details and dial
     await page.locator('#innerLanguage').selectOption('es');
     await root.locator('[data-is-tab="billing"]').click();
     assert.match(await root.innerText(),/Payments and subscriptions are disabled/);
+    await root.locator('[data-is-tab="usage"]').click();
     await root.locator('[data-is-dialog="plans"]').click();
     assert.match(await page.locator('#innerDialogBody').innerText(),/Payments and subscriptions|payments are disabled/i);
     await page.locator('[data-is-dialog-close]').last().click();

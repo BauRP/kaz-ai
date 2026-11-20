@@ -877,7 +877,10 @@ test('internal settings shell exposes languages, appearance, account and payment
     assert.equal(await page.locator('#innerTheme option').count(),10);
     await page.locator('input[name="innerMode"][value="light"]').check();
     assert.equal(await page.locator('body').evaluate(el=>el.classList.contains("light")),true);
-    await page.locator('#innerAccent').fill('#ff8800');
+    await page.locator('#innerAccent').evaluate(input=>{
+      input.value='#ff8800';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+    });
     assert.equal(await page.locator('body').evaluate(el=>el.style.getPropertyValue('--accent')),'#ff8800');
     await settings.locator('[data-is-tab="billing"]').click();
     assert.match(await settings.innerText(),/•••• •••• •••• ••••/);

@@ -687,7 +687,7 @@
     if(!captured.has(node))captured.set(node,value);
     const original=captured.get(node);
     const key=original.trim();
-    const translated=language==="ru"?key:(dictionary[key]?.[language]||key);
+    const translated=language==="ru"?key:(dictionary[key]?.[language]||dictionary[key]?.en||key);
     const prefix=original.match(/^\s*/)?.[0]||"";
     const suffix=original.match(/\s*$/)?.[0]||"";
     const output=prefix+translated+suffix;
@@ -701,7 +701,7 @@
       if(element.hasAttribute?.("placeholder")){
         if(!element.dataset.originalPlaceholder)element.dataset.originalPlaceholder=element.getAttribute("placeholder");
         const original=element.dataset.originalPlaceholder;
-        const translated=language==="ru"?original:(dictionary[original]?.[language]||original);
+        const translated=language==="ru"?original:(dictionary[original]?.[language]||dictionary[original]?.en||original);
         if(element.placeholder!==translated)element.placeholder=translated;
       }
       if(!element.hasAttribute?.("aria-label"))continue;
@@ -709,9 +709,9 @@
       let original=originalAria.get(element);
       // Controls can change labels themselves. Treat unexpected new values as
       // fresh authored text instead of restoring an outdated cached label.
-      if(original&&![original,dictionary[original]?.en,dictionary[original]?.kk].includes(value))original=null;
+      if(original&&![original,...Object.values(dictionary[original]||{})].includes(value))original=null;
       if(!original){original=value;originalAria.set(element,original)}
-      const translated=language==="ru"?original:(dictionary[original]?.[language]||original);
+      const translated=language==="ru"?original:(dictionary[original]?.[language]||dictionary[original]?.en||original);
       if(value!==translated)element.setAttribute("aria-label",translated);
     }
   }
@@ -724,17 +724,17 @@
       en:{welcome:"Kaz AI",chat:"Conversation",history:"Chats",projects:"Projects",tools:"Tools",settings:"Settings",about:"About"},
       kk:{welcome:"Kaz AI",chat:"Әңгіме",history:"Чаттар",projects:"Жобалар",tools:"Құралдар",settings:"Баптаулар",about:"Жоба туралы"}};
     const title=document.querySelector("#pageTitle");
-    if(title&&typeof state!=="undefined"&&state.screen){const next=labels[language][state.screen]||"Kaz AI";if(title.textContent!==next)title.textContent=next}
+    if(title&&typeof state!=="undefined"&&state.screen){const next=(labels[language]||labels.en)[state.screen]||"Kaz AI";if(title.textContent!==next)title.textContent=next}
     // These region labels are outside the translated controls. Update only
     // their accessible names: never walk through chat messages or user drafts.
     for(const [selector,original] of [["#sidebar","Боковое меню"],
       ["#view-welcome","Главная Kaz AI"],["#view-chat","Переписка"]]){
       const region=document.querySelector(selector);
       if(!region)continue;
-      const translated=language==="ru"?original:(dictionary[original]?.[language]||original);
+      const translated=language==="ru"?original:(dictionary[original]?.[language]||dictionary[original]?.en||original);
       if(region.getAttribute("aria-label")!==translated)region.setAttribute("aria-label",translated);
     }
-    document.documentElement.lang=language==="kk"?"kk":language==="en"?"en":"ru";
+    document.documentElement.lang=language;
   }
   // Translate only changed UI roots; no full-page walk on every search
   // keystroke, project update or streaming status update.
@@ -758,13 +758,13 @@
     });
   });
   function set(next){
-    if(!["ru","kk","en"].includes(next))return;
+    if(!["en","ru","kk","pt","es","fr","ar","zh","ko","ja","de","it","tr","pl","hi","vi","id"].includes(next))return;
     language=next;refresh();
   }
   // Read-only translations for language-independent tool discovery.
   // Never change the selected language while indexing names.
   const translateFor=(lang,value)=>
-    lang==="ru"?value:(dictionary[value]?.[lang]||value);
+    lang==="ru"?value:(dictionary[value]?.[lang]||dictionary[value]?.en||value);
   window.KazI18n={set,refresh,translate:value=>translateFor(language,value),
     translateFor,get language(){return language}};
   window.addEventListener("DOMContentLoaded",()=>{

@@ -96,7 +96,7 @@ test('real browser: session chats, search, project folders, export and calculato
     headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
   });
   try {
-    const page=await browser.newPage({viewport:{width:1400,height:900},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1400,height:900},acceptDownloads:true});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     assert.equal(await page.evaluate(()=>Boolean(window.KazSession)),true);
@@ -168,7 +168,7 @@ test('real browser: Russian English Kazakh navigation and safe temporary chats',
     headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
   });
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#languageToggle').click();
@@ -207,7 +207,7 @@ test('real browser: failed GPT answer retry preserves original reply until new r
     headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
   });
   try{
-    const page=await browser.newPage({viewport:{width:1200,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1200,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     let calls=0;
@@ -251,7 +251,7 @@ test('all three reasoning levels stream long answers without any client deadline
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1250,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1250,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     await page.route('https://kaz-ai.test/**',route=>route.fulfill({status:200,contentType:'text/html',body:html}));
@@ -311,7 +311,7 @@ test('formatted Kaz AI answers safely render headings, lists, tables, code, form
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1150,height:850}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1150,height:850}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     const result=await page.evaluate(()=>{
@@ -375,7 +375,7 @@ test('all three levels render ONLY the corrected final rigorous answer',async()=
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1200,height:840}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1200,height:840}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     await page.route('https://kaz-ai.test/**',route=>route.fulfill({status:200,contentType:'text/html',body:html}));
@@ -417,7 +417,7 @@ test('GPT-OSS streaming renders partial complex answers before completion and st
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1260,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1260,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     await page.route('https://kaz-ai.test/**',route=>route.fulfill({status:200,contentType:'text/html',body:html}));
@@ -463,7 +463,7 @@ test('real browser: retry a failed request without duplicating question; cancel 
     headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
   });
   try{
-    const page=await browser.newPage({viewport:{width:1200,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1200,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     let count=0;
     const html=readFileSync('public/preview.html','utf8');
@@ -505,7 +505,7 @@ test('keyboard modal: focus stays inside dialog and returns to opening control',
     headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
   });
   try{
-    const page=await browser.newPage({viewport:{width:1200,height:780}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1200,height:780}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="settings"]').click();
@@ -534,7 +534,7 @@ test('SEO pages remain readable with JavaScript disabled and responsive layout',
       ['privacy','Конфиденциальность'],['kk','Kaz AI дегеніміз не'],['en','What is Kaz AI'],
       ['ai-chat','ИИ-чат Kaz AI'],['ai-images','Создание и редактирование картинок'],['help','Помощь']
     ]){
-      const page=await browser.newPage({viewport:{width:390,height:844},javaScriptEnabled:false});
+      const page=await browser.newPage({locale:"ru-RU",viewport:{width:390,height:844},javaScriptEnabled:false});
       const errors=[];page.on('pageerror',e=>errors.push(e.message));
       await page.goto(pathToFileURL(resolve('public',pagePath,'index.html')).href);
       assert.ok((await page.locator('main').innerText()).includes(heading));
@@ -634,7 +634,7 @@ test('drafts stay with their conversation and About never clears the composer',a
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первый чат');
@@ -663,7 +663,7 @@ test('search highlights matching message safely while pinned and recent chats re
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первый разговор');
@@ -702,7 +702,7 @@ test('project names cannot be duplicated by case and modal remains editable',asy
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="projects"]').click();
@@ -731,7 +731,7 @@ test('history TXT export keeps Cyrillic readable and excludes temporary chats',a
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800},acceptDownloads:true});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Қазақша и русский: проверка');
@@ -757,7 +757,7 @@ test('real browser: match navigation, in-place project organization and individu
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820},acceptDownloads:true});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Начало проекта');
@@ -834,7 +834,7 @@ test('recent chats reorder by activity while pinned chats remain at the top',asy
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первый чат');await page.locator('#sendButton').click();
@@ -855,7 +855,7 @@ test('public chat has no key dialog; temporary draft is deleted only after clear
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="settings"]').click();
@@ -882,7 +882,7 @@ test('project TXT export downloads only saved project conversations',async()=>{
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800},acceptDownloads:true});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('ПЕРВЫЙ ТЕКСТ ПРОЕКТА');await page.locator('#sendButton').click();
@@ -912,7 +912,7 @@ test('send stays disabled while a GPT request is pending, including when typing'
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const gate=new Promise(resolve=>{release=resolve});
     const html=readFileSync('public/preview.html','utf8');
@@ -944,7 +944,7 @@ test('manually cancelled AI request offers retry and rejects late responses',asy
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
@@ -981,7 +981,7 @@ test('real browser: failed answer regeneration can be retried without duplicatin
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     let calls=0;
@@ -1015,7 +1015,7 @@ test('real browser: a long assistant reply does not invalidate the next chat req
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const bodies=[];
@@ -1045,7 +1045,7 @@ test('real browser: calculator keeps tiny results and language selection transla
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     assert.equal(await page.evaluate(()=>window.KazSession.compute('1/10000000000')),1e-10);
@@ -1072,7 +1072,7 @@ test('deleting the selected conversation clears its private draft and leaves oth
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Чат, который нужно сохранить');
@@ -1099,7 +1099,7 @@ test('home starts fresh chat without erasing the previous conversation or its dr
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первый пользовательский вопрос');
@@ -1123,7 +1123,7 @@ test('search opens highlighted message text safely, including special characters
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первое сообщение');
@@ -1144,7 +1144,7 @@ test('ratings and pin controls expose their toggled state to assistive technolog
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Для закрепления');
@@ -1162,7 +1162,7 @@ test('temporary drafts require explicit clearing before opening saved chats',asy
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Обычный чат сохранён в истории');
@@ -1190,7 +1190,7 @@ test('rating a response changes only its buttons without destroying the displaye
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     await page.route('https://kaz-ai.test/**',route=>{
@@ -1224,7 +1224,7 @@ test('project selection opens with keyboard focus on the choice, not Save',async
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Переписка для проекта');
@@ -1245,7 +1245,7 @@ test('real browser: rate-limited response can be retried without duplicate user 
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     let requests=0;
@@ -1276,7 +1276,7 @@ test('projects reject equivalent Unicode names without changing an existing proj
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="projects"]').click();
@@ -1298,7 +1298,7 @@ test('all three existing font settings change composer and dialog text without a
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Сохраняемый черновик');
@@ -1328,7 +1328,7 @@ test('project counters use correct Russian forms and live Kazakh/English labels 
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="projects"]').click();
@@ -1370,7 +1370,7 @@ test('changing language does not translate user-written history search snippets 
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Пример темы');
@@ -1393,7 +1393,7 @@ test('public chat sends directly to GPT endpoint without visitor password',async
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     let calls=0;
@@ -1419,7 +1419,7 @@ test('failed AI request does not leak Retry into settings and restores it on ret
   const chromePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     let calls=0;
@@ -1458,7 +1458,7 @@ test('text helpers use EN and KK prompts while preserving user drafts and never 
   const exec=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(exec?{executablePath:exec}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="settings"]').click();
@@ -1493,7 +1493,7 @@ test('calculator result and errors use selected RU EN and KK',async()=>{
   const exec=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(exec?{executablePath:exec}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     async function calculate(input){
@@ -1523,7 +1523,7 @@ test('tools search supports translated names and correct group counts',async()=>
   const exec=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(exec?{executablePath:exec}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="tools"]').click();
@@ -1555,7 +1555,7 @@ test('calculator rejects inputs and intermediate results beyond safe numeric pre
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     assert.equal(await page.evaluate(()=>window.KazSession.compute('9007199254740991')),9007199254740991);
@@ -1578,7 +1578,7 @@ test('existing Retry answer tool recovers the latest unanswered question without
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     let calls=0;
     const html=readFileSync('public/preview.html','utf8');
@@ -1638,7 +1638,7 @@ test('returning from About restores the previous reading position in the same ch
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1200,height:700}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1200,height:700}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Длинная переписка '+('Содержание для проверки позиции. '.repeat(90)));
@@ -1667,7 +1667,7 @@ test('TXT export retains original messages while localizing headers and user lab
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1250,height:800},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1250,height:800},acceptDownloads:true});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Қазақша и русский: ORIGINAL');
@@ -1697,7 +1697,7 @@ test('reasoning effort buttons announce selection and send existing low-medium-h
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1250,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1250,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     assert.equal(await page.locator('[data-reason="medium"]').getAttribute('aria-pressed'),'true');
@@ -1757,7 +1757,7 @@ test('Tools reasoning entry opens the visible composer control without losing ch
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Несохранённый черновик');
@@ -1787,7 +1787,7 @@ test('Rating entry from Tools focuses the latest AI rating rather than rating th
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     await page.route('https://kaz-ai.test/**',route=>{
@@ -1814,7 +1814,7 @@ test('Rating entry is truthful when the latest chat has no generated assistant r
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Вопрос без подключения модели');
@@ -1832,7 +1832,7 @@ test('existing tools show localized warnings without altering drafts or automati
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     async function language(value){
@@ -1867,7 +1867,7 @@ test('history search highlights case-expanding Unicode letters at correct origin
   const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Начальная тема');
@@ -1891,7 +1891,7 @@ test('Stop response from Tools returns to visible chat and offers retry without 
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
@@ -1928,7 +1928,7 @@ test('theme and font settings announce their current state across navigation and
   const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:800}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Текст оставляем без изменений');
@@ -1961,7 +1961,7 @@ test('history search Escape clears the filter without losing chat or draft',asyn
   const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Павлодар и университет');
@@ -1983,7 +1983,7 @@ test('tools show accurate localized readiness and accessible labels after langua
   const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#languageToggle').click();
@@ -2008,7 +2008,7 @@ test('chat pins and reply ratings have localized accessible names without changi
   const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     await page.route('https://kaz-ai.test/**',route=>new URL(route.request().url()).pathname==='/api/chat'
@@ -2039,7 +2039,7 @@ test('locked fourth reasoning level is never labelled as selected',async()=>{
   const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#reasonToggle').click();
@@ -2055,7 +2055,7 @@ test('pinning preserves keyboard focus after history cards reorder',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первый чат');
@@ -2080,7 +2080,7 @@ test('project changes and removing chats restore visible keyboard focus',async()
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Задачи команды');
@@ -2106,7 +2106,7 @@ test('deleting active chat returns keyboard focus to the clean composer',async()
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Удалить только этот чат');
@@ -2126,7 +2126,7 @@ test('pending AI status reappears on returning to the same chat without duplicat
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
@@ -2162,7 +2162,7 @@ test('Unicode search matches precomposed and decomposed letters while showing or
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Тема изучения');
@@ -2188,7 +2188,7 @@ test('retrying an AI request moves keyboard focus from the hidden Retry button t
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
@@ -2224,7 +2224,7 @@ test('AI pending and error messages remain localized when switching language mid
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
@@ -2259,7 +2259,7 @@ test('Unicode search preserves accent highlights when Intl.Segmenter is unavaila
   const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.addInitScript(()=>{Intl.Segmenter=undefined});
     await page.goto(appUrl);
@@ -2279,7 +2279,7 @@ test('manual Stop immediately unlocks retry while the old request remains unreso
   const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
@@ -2317,7 +2317,7 @@ test('stop and retry of regeneration keeps original reply until a real replaceme
   const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
@@ -2355,7 +2355,7 @@ test('opening a saved chat after a temporary chat switches off temporary mode sa
   const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Сохранённая тема');
@@ -2383,7 +2383,7 @@ test('chat title ends at a complete emoji without corrupt surrogate halves',asyn
   const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     const message='А'.repeat(54)+'😀'+'продолжение';
@@ -2400,7 +2400,7 @@ test('projects show ungrouped chats before any folder and after deleting the las
   const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Обычная переписка без папки');
@@ -2429,7 +2429,7 @@ test('individual TXT export does not split an emoji in long filenames',async()=>
   const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820},acceptDownloads:true});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Проверка длинного имени файла');
@@ -2454,7 +2454,7 @@ test('clear-history-search accessible label follows RU EN KK and preserves searc
   const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="history"]').click();
@@ -2474,7 +2474,7 @@ test('renaming a chat and a project restores focus to the same action after rebu
   const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первый вопрос');
@@ -2506,7 +2506,7 @@ test('adding a chat to a project preserves keyboard focus and its saved conversa
   const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('План на неделю');
@@ -2530,7 +2530,7 @@ test('compound emoji remain whole in first-message titles and exported TXT filen
   const bin=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(bin?{executablePath:bin}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820},acceptDownloads:true});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto(appUrl);
     const family='👨‍👩‍👧‍👦';
@@ -2563,7 +2563,7 @@ test('manual Stop unlocks Retry for a stalled long request and rejects late answ
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
@@ -2609,7 +2609,7 @@ test('long request remains pending across History navigation and is cancellable 
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   let release;
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const gate=new Promise(resolve=>{release=resolve});
@@ -2643,7 +2643,7 @@ test('static accessible control names switch RU EN KK and back without changing 
   const path=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(path?{executablePath:path}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Текст пользователя должен сохраниться');
@@ -2671,7 +2671,7 @@ test('public chat has no secret-key setting',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="settings"]').click();
@@ -2686,7 +2686,7 @@ test('browser keeps formatted replies and sends emoji-safe context to GPT',async
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),
     headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     const requests=[];
@@ -2724,7 +2724,7 @@ test('public reply does not duplicate the original question',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const html=readFileSync('public/preview.html','utf8');
     let calls=0;
@@ -2750,7 +2750,7 @@ test('public server setup failure remains retryable',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     const html=readFileSync('public/preview.html','utf8');
     let requests=0;
@@ -2782,7 +2782,7 @@ test('export sanitizes invisible direction overrides in chat filename, preservin
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820},acceptDownloads:true});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     const original='Отчёт\u202Ecod.exe\u2067 завершён';
     await page.goto(appUrl);
@@ -2804,7 +2804,7 @@ test('public server setup errors show correct English and Kazakh text',async()=>
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     const html=readFileSync('public/preview.html','utf8');
     let requests=0;
@@ -2840,7 +2840,7 @@ test('daily Cloudflare quota leaves original question retryable after reset with
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const html=readFileSync('public/preview.html','utf8');
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     let calls=0;
@@ -2874,7 +2874,7 @@ test('daily quota during answer regeneration keeps original reply until manual R
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const html=readFileSync('public/preview.html','utf8');
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     let calls=0;
@@ -2911,7 +2911,7 @@ test('duplicate project warning follows selected Kaz AI language',async()=>{
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="projects"]').click();
@@ -2940,7 +2940,7 @@ test('history search treats Russian е and ё as the same while highlighting ori
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Всё готово, ёлка наряжена');
@@ -2962,7 +2962,7 @@ test('chat export removes additional invisible filename controls but preserves o
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820},acceptDownloads:true});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto(appUrl);
     const original='Отчёт\u200b\u2060\ufeff\u2028\u2029\u00ad\u034f\u007f и символы 👩‍💻';
@@ -2987,7 +2987,7 @@ test('high readiness: Unicode compatibility search highlights the exact original
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Офис: ﬁnal');
@@ -3006,7 +3006,7 @@ test('high readiness: long emoji export title stays within 255 UTF-8 bytes and k
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820},acceptDownloads:true});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     const userText='Важный текст для сохранения';
@@ -3034,7 +3034,7 @@ test('high readiness: deleting a chat removes it from its project and leaves oth
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первый чат');
@@ -3069,7 +3069,7 @@ test('high readiness: invisible formatting characters cannot create duplicate pr
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try {
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="projects"]').click();
@@ -3092,7 +3092,7 @@ test('97 percent directions: projects reject names made entirely of invisible Un
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="projects"]').click();
@@ -3118,7 +3118,7 @@ test('97 percent directions: double confirmation cannot delete another chat',asy
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первый сохранённый чат');
@@ -3146,7 +3146,7 @@ test('97 percent directions: cached history search preserves title and message m
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Где найти ёлку');
@@ -3172,7 +3172,7 @@ test('high readiness: multi-chat history export keeps separators, BOM, and Unico
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820},acceptDownloads:true});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первый 🧪 разговор');
@@ -3197,7 +3197,7 @@ test('high readiness: chunked individual TXT export preserves exact original sep
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820},acceptDownloads:true});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Первый короткий');
@@ -3222,7 +3222,7 @@ test('high readiness: multiple projects retain exact counts and chat isolation a
   const binary=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     for(const title of ['Первый архив','Второй архив','Третий архив']){
@@ -3267,7 +3267,7 @@ test('new invisible Unicode characters do not create hidden or duplicate project
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="projects"]').click();
@@ -3293,7 +3293,7 @@ test('TXT export preserves invisible characters in content but cleans file name'
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820},acceptDownloads:true});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820},acceptDownloads:true});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     const original='Важное\u034f\u180e\u2061\u2062\u2063\u2064 содержание 🇰🇿';
@@ -3314,7 +3314,7 @@ test('new chat title stops after 55 complete graphemes even for a long input',as
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1240,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     const family='👨‍👩‍👧‍👦';
@@ -3337,7 +3337,7 @@ test('invisible-only chat rename is rejected without changing saved messages',as
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Важный разговор');
@@ -3362,7 +3362,7 @@ test('invisible-only first message gets a visible chat title, without modifying 
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     const original='\u200d\u2061\u200c';
@@ -3381,7 +3381,7 @@ test('invisible-only project names are rejected while joined emoji names remain 
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="projects"]').click();
@@ -3404,7 +3404,7 @@ test('interrupted SSE keeps incomplete text visible and manual retry restores a 
   const browser=await chromium.launch({...chromePath?{executablePath:chromePath}:{channel:'chrome'},
     headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1200,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1200,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     let count=0;
     const html=readFileSync('public/preview.html','utf8');
@@ -3440,7 +3440,7 @@ test('provider SSE outage is not falsely blamed on user internet connectivity',a
   const browser=await chromium.launch({...chromePath?{executablePath:chromePath}:{channel:'chrome'},
     headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1100,height:780}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1100,height:780}});
     const html=readFileSync('public/preview.html','utf8');
     await page.route('https://kaz-ai.test/**',async(route)=>{
       if(new URL(route.request().url()).pathname!=='/api/chat')
@@ -3463,7 +3463,7 @@ test('server incident ID is visible on interrupted long request for Cloudflare d
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),
     headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1150,height:760}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1150,height:760}});
     const html=readFileSync('public/preview.html','utf8');
     await page.route('https://kaz-ai.test/**',async(route)=>{
       if(new URL(route.request().url()).pathname!=='/api/chat')

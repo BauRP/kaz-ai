@@ -418,7 +418,7 @@
       const command=event.target.closest("[data-is-dialog]");
       if(command){showDialog(command.dataset.isDialog);return}
       if(event.target.closest('[data-is-action="reset-appearance"]')){
-        prefs.theme="kaz";prefs.accent=null;prefs.bg=null;prefs.fg=null;
+        prefs.theme="kaz";prefs.mode="dark";prefs.accent=null;prefs.bg=null;prefs.fg=null;
         applyAppearance();showToast(t("Оформление сброшено"));return;
       }
     });

@@ -498,6 +498,8 @@
         if(plain&&window.KazFormat?.render){
           plain.replaceWith(window.KazFormat.render(message.content));
         }
+        // Local greetings are not AI answers and cannot be rated.
+        if(message.localGreeting)return;
         const actions=make("div","session-message-actions");
         const up=button("👍","rate-up",message.id),down=button("👎","rate-down",message.id);
         if(message.rating==="up")up.classList.add("selected");
@@ -1002,6 +1004,7 @@
     }
     if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{chat.title=v;renderHistory();renderSessionProjects()});return}
     if(action==="pin-chat"&&chat){
+      if(chat.temporary){notify("Временные чаты нельзя закреплять в истории.");return}
       const focused=document.activeElement?.dataset.session==="pin-chat"
         &&document.activeElement.dataset.id===chat.id;
       chat.pinned=!chat.pinned;renderHistory();
@@ -1046,7 +1049,12 @@
         body.append(select);
         const save=button("Сохранить","dialog-save",null,"session-primary");
         save.addEventListener("click",()=>{
-          chat.projectId=select.value||null;
+          const target=select.value;
+          if(!threads.includes(chat)||chat.temporary){notify("Чат больше недоступен для проекта.");closeDialog();return}
+          if(target&&!projects.some(p=>p.id===target)){
+            notify("Проект больше не существует. Выберите другой проект.");return;
+          }
+          chat.projectId=target||null;
           // Rebuild first so closing the dialog can return keyboard focus to
           // the current history action, not a detached old button.
           renderSessionProjects();renderHistory();closeDialog();
@@ -1086,7 +1094,9 @@
         const save=button("Добавить","dialog-save",null,"session-primary");
         save.addEventListener("click",()=>{
           const chosen=threads.find(c=>c.id===select.value);
-          if(!chosen||chosen.temporary){notify("Этот чат уже недоступен.");return}
+          if(!chosen||chosen.temporary||!projects.includes(project)){
+            notify("Чат или проект уже недоступен.");return;
+          }
           chosen.projectId=project.id;renderSessionProjects();renderHistory();closeDialog();
           notify("Чат добавлен в проект.");
         });
@@ -1131,7 +1141,7 @@
         return;
       }
       if(action==="rate-up"||action==="rate-down"){
-        if(m.role!=="assistant")return;
+        if(m.role!=="assistant"||m.localGreeting)return;
         const nextRating=action==="rate-up"?"up":"down";
         m.rating=m.rating===nextRating?null:nextRating;
         // Do not rebuild or scroll the entire conversation when rating a message.
@@ -1433,6 +1443,7 @@
         if(number===4)return handle("rename-chat",chat.id);
         if(number===5)return handle("delete-chat",chat.id);
         if(number===6){
+          if(chat.temporary){notify("Временные чаты нельзя закреплять в истории.");return}
           // A Tools card must show the result of its action: the pin changes
           // inside History, which was otherwise hidden behind Tools.
           showScreen("history");

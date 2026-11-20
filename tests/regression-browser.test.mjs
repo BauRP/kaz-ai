@@ -14,7 +14,7 @@ async function withPage(run){
     headless:true,args:['--no-sandbox','--disable-dev-shm-usage']
   });
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     await page.goto(appUrl);
@@ -807,7 +807,7 @@ test('preliminary AI reasoning preview is replaced by finished answer, without s
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const {readFileSync}=await import('node:fs');
     const html=readFileSync('public/preview.html','utf8');
@@ -836,7 +836,7 @@ test('incomplete JSON AI reply stays a temporary preview and retry saves only th
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     const {readFileSync}=await import('node:fs');
     const html=readFileSync('public/preview.html','utf8');
@@ -880,7 +880,7 @@ test('preview survives progress updates and a failed review, without claiming ve
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const {readFileSync}=await import('node:fs');
     const html=readFileSync('public/preview.html','utf8');
     const frames=[

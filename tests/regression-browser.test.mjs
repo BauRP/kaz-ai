@@ -832,6 +832,40 @@ test('preliminary AI reasoning preview is replaced by finished answer, without s
   }finally{await browser.close()}
 });
 
+test('incomplete JSON AI reply stays a temporary preview and retry saves only the finished response',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({viewport:{width:1280,height:820}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const {readFileSync}=await import('node:fs');
+    const html=readFileSync('public/preview.html','utf8');
+    let calls=0;
+    await page.route('https://kaz-ai.test/**',route=>new URL(route.request().url()).pathname==='/api/chat'
+      ?route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(
+        ++calls===1
+          ?{text:'## Ответ модели не завершён\\n\\nНЕПОЛНОЕ_РЕШЕНИЕ',incomplete:true}
+          :{text:'Проверенный_полный_ответ',incomplete:false}
+      )})
+      :route.fulfill({status:200,contentType:'text/html',body:html}));
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Сложный вопрос');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('Ответ прервался'));
+    assert.match(await page.locator('#chatMessages').innerText(),/НЕПОЛНОЕ_РЕШЕНИЕ/);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)).length,1);
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    await page.locator('#sessionRetry').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('Проверенный_полный_ответ'));
+    const saved=await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages);
+    assert.equal(saved.length,2);
+    assert.equal(saved[1].content,'Проверенный_полный_ответ');
+    assert.doesNotMatch(await page.locator('#chatMessages').innerText(),/НЕПОЛНОЕ_РЕШЕНИЕ/);
+    assert.equal(calls,2);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
 test('math formatter preserves prose after a same-line closed block formula',async()=>{
   await withPage(async page=>{
     const result=await page.evaluate(()=>{

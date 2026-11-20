@@ -956,6 +956,41 @@ test('internal settings shell exposes languages, appearance, account and payment
   });
 });
 
+test('internal settings translate account, security and billing details and dialogs without fake account data',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    const root=page.locator('#internalSettingsRoot');
+    await page.locator('#innerLanguage').selectOption('en');
+    await root.locator('[data-is-tab="account"]').click();
+    assert.match(await root.innerText(),/Google sign-in is not connected/);
+    assert.match(await root.innerText(),/Email address/);
+    assert.match(await root.innerText(),/Not connected/);
+    await root.locator('[data-is-tab="security"]').click();
+    await root.locator('[data-is-dialog="sessions"]').click();
+    assert.equal(await page.locator('#innerDialogTitle').innerText(),'Active sessions');
+    assert.match(await page.locator('#innerDialogBody').innerText(),/No real session history/);
+    await page.locator('[data-is-dialog-close]').last().click();
+    await root.locator('[data-is-tab="billing"]').click();
+    assert.match(await root.innerText(),/Payments and subscriptions are disabled/);
+    await root.locator('[data-is-dialog="transactions"]').click();
+    assert.match(await page.locator('#innerDialogBody').innerText(),/no genuine transaction history/);
+    await page.locator('[data-is-dialog-close]').last().click();
+    await page.locator('#innerLanguage').selectOption('kk');
+    await root.locator('[data-is-tab="account"]').click();
+    assert.match(await root.innerText(),/Google арқылы кіру әлі қосылмаған/);
+    await root.locator('[data-is-tab="security"]').click();
+    await root.locator('[data-is-dialog="sessions"]').click();
+    assert.match(await page.locator('#innerDialogBody').innerText(),/Әзірге нақты тарих жоқ/);
+    await page.locator('[data-is-dialog-close]').last().click();
+    await page.locator('#innerLanguage').selectOption('es');
+    await root.locator('[data-is-tab="billing"]').click();
+    assert.match(await root.innerText(),/Payments and subscriptions are disabled/);
+    await root.locator('[data-is-dialog="plans"]').click();
+    assert.match(await page.locator('#innerDialogBody').innerText(),/Payments and subscriptions|payments are disabled/i);
+    await page.locator('[data-is-dialog-close]').last().click();
+  });
+});
+
 test('math formatter preserves prose after a same-line closed block formula',async()=>{
   await withPage(async page=>{
     const result=await page.evaluate(()=>{

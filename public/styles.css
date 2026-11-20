@@ -594,3 +594,17 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
   .is-row>div:first-child{min-width:100%}
   .is-row select,.is-panels select{max-width:100%;width:100%}
 }
+
+
+/* Three visual light/system/dark cards, matching the user's appearance example. */
+.is-mode .is-mode-choice{min-width:68px;display:flex;flex-direction:column;align-items:center;gap:5px;border-radius:10px;padding:6px 7px}
+.is-mode-choice input{position:absolute;opacity:0;width:1px;height:1px}
+.is-mode-choice:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:3px}
+.is-mode-choice .is-mini-preview{width:64px;height:43px;border-radius:7px;display:flex;overflow:hidden;border:1px solid var(--line-strong);background:#f0f5fc;padding:4px;gap:3px}
+.is-mini-preview i{height:100%;flex:1;border-radius:2px;background:linear-gradient(180deg,#bddaf5 8px,#f7fbff 8px 13px,#dceaf7 13px 15px,#f7fbff 15px)}
+.is-mini-preview.is-mini-system i:last-child{background:linear-gradient(180deg,#0f2545 8px,#162a44 8px 13px,#3299e8 13px 15px,#162a44 15px)}
+.is-mini-preview.is-mini-light{background:#eff8ff}
+.is-mini-preview.is-mini-dark{background:#162438}
+.is-mini-preview.is-mini-dark i{background:linear-gradient(180deg,#101b2b 8px,#243751 8px 13px,#2883ce 13px 15px,#243751 15px)}
+.is-mode-choice:has(input:checked) .is-mini-preview{outline:2px solid var(--accent);outline-offset:1px}
+@media(max-width:390px){.is-mode .is-mode-choice{min-width:63px;padding:5px}.is-mode-choice .is-mini-preview{width:57px}}

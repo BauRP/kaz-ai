@@ -866,6 +866,36 @@ test('incomplete JSON AI reply stays a temporary preview and retry saves only th
   }finally{await browser.close()}
 });
 
+
+test('internal settings shell exposes languages, appearance, account and payment without fake data',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    const settings=page.locator('#internalSettingsRoot');
+    assert.equal(await settings.locator('[data-is-tab]').count(),7);
+    assert.equal(await page.locator('#innerLanguage option').count(),18);
+    await settings.locator('[data-is-tab="appearance"]').click();
+    assert.equal(await page.locator('#innerTheme option').count(),10);
+    await page.locator('input[name="innerMode"][value="light"]').check();
+    assert.equal(await page.locator('body').evaluate(el=>el.classList.contains("light")),true);
+    await page.locator('#innerAccent').fill('#ff8800');
+    assert.equal(await page.locator('body').evaluate(el=>el.style.getPropertyValue('--accent')),'#ff8800');
+    await settings.locator('[data-is-tab="billing"]').click();
+    assert.match(await settings.innerText(),/•••• •••• •••• ••••/);
+    await settings.locator('[data-is-dialog="transactions"]').click();
+    assert.equal(await page.locator('#innerSettingsDialog').isVisible(),true);
+    assert.match(await page.locator('#innerDialogBody').innerText(),/не подключена/i);
+    await page.locator('[data-is-dialog-close]').last().click();
+    await settings.locator('[data-is-tab="general"]').click();
+    await page.locator('#innerLanguage').selectOption('en');
+    assert.equal(await page.locator('#innerSettingsTitle').innerText(),'Internal settings');
+    assert.equal(await page.locator('html').getAttribute('lang'),'en');
+    await page.locator('#innerLanguage').selectOption('ar');
+    assert.equal(await page.locator('html').getAttribute('dir'),'rtl');
+    await page.locator('#innerLanguage').selectOption('ru');
+    assert.equal(await page.locator('html').getAttribute('dir'),'ltr');
+  });
+});
+
 test('math formatter preserves prose after a same-line closed block formula',async()=>{
   await withPage(async page=>{
     const result=await page.evaluate(()=>{

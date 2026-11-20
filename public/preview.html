@@ -554,11 +554,79 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
 .message-user .session-message-expand .icon{width:15px;height:15px;transition:transform .15s}
 .message-user .session-message-expand[aria-expanded="true"] .icon{transform:rotate(180deg)}
 
+
+/* Internal settings: integrated account-style workspace, no real billing. */
+.internal-settings-root{margin:0 0 22px}
+.is-head{margin-bottom:16px}
+.is-head h2{font-size:20px;margin:0 0 6px;font-weight:700;letter-spacing:-.3px}
+.is-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.6}
+.is-workspace{display:grid;grid-template-columns:minmax(145px,210px) minmax(0,1fr);border:1px solid var(--line);background:var(--glass);border-radius:19px;overflow:hidden;min-height:405px}
+.is-nav{padding:14px 10px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:5px;background:rgba(0,0,0,.08)}
+.is-nav button{padding:11px 12px;text-align:left;background:transparent;border:1px solid transparent;color:var(--muted);border-radius:10px;font-size:12px}
+.is-nav button:hover,.is-nav button.selected{border-color:var(--line-strong);background:rgba(66,170,218,.12);color:var(--text)}
+.is-panels{min-width:0;padding:22px 22px 24px}
+.is-panels section h3{font-size:18px;margin:0 0 15px}
+.is-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid var(--line);min-width:0}
+.is-row>div:first-child{min-width:0;flex:1}
+.is-row strong{font-size:13px;font-weight:650}
+.is-row p{font-size:11px;line-height:1.55;color:var(--muted);margin:5px 0 0}
+.is-row select,.is-panels select{min-width:142px;max-width:min(100%,240px);padding:9px 10px;border:1px solid var(--line-strong);border-radius:10px;background:var(--panel);color:var(--text);font:inherit}
+.is-row button,.is-reset{padding:9px 12px;border:1px solid var(--line-strong);background:rgba(65,158,220,.09);color:var(--text);border-radius:10px;font-size:12px;white-space:normal}
+.is-row button:hover,.is-reset:hover{border-color:var(--accent)}
+.is-row button:focus-visible,.is-nav button:focus-visible,.is-modal button:focus-visible,.is-row select:focus-visible,.is-colors input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.is-dash{color:var(--muted);font-size:12px;text-align:right;overflow-wrap:anywhere}
+.is-notice{padding:12px 14px;border:1px solid var(--line);background:rgba(65,158,220,.07);border-radius:11px;font-size:12px;color:var(--muted);line-height:1.6}
+.is-footnote{font-size:11px;color:var(--muted);line-height:1.6;margin-top:13px}
+.is-mode{border:0;padding:0;margin:0;display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.is-mode label{position:relative;border:1px solid var(--line-strong);border-radius:9px;padding:8px 10px;font-size:11px;cursor:pointer}
+.is-mode label:has(input:checked){background:rgba(55,191,234,.16);border-color:var(--accent)}
+.is-mode input{accent-color:var(--accent);vertical-align:middle;margin-right:3px}
+.is-colors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:17px 0}
+.is-colors label{display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--muted)}
+.is-colors input[type=color]{height:37px;width:100%;min-width:0;padding:3px;background:var(--panel);border:1px solid var(--line-strong);border-radius:9px}
+.is-check{cursor:pointer}
+.is-check span{display:flex;flex-direction:column;gap:5px}
+.is-check small{font-size:11px;color:var(--muted)}
+.is-check input{width:18px;height:18px;accent-color:var(--accent)}
+.is-meters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:17px 0}
+.is-meters>div{border:1px solid var(--line);border-radius:12px;padding:14px;background:rgba(0,0,0,.05);display:flex;flex-direction:column;gap:8px}
+.is-meters span{font-size:11px;color:var(--muted)}.is-meters strong{font-size:21px}
+.is-modal{width:min(92vw,530px);max-height:min(80vh,720px);overflow:auto;border:1px solid var(--line-strong);border-radius:17px;padding:0;background:var(--panel);color:var(--text);box-shadow:0 22px 80px rgba(0,0,0,.5)}
+.is-modal::backdrop{background:rgba(0,6,20,.73)}
+.is-modal-head,.is-modal-foot{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:17px 20px}
+.is-modal-head{border-bottom:1px solid var(--line)}
+.is-modal-head h2{font-size:17px;margin:0}
+.is-modal-head button,.is-modal-foot button{padding:7px 12px;background:rgba(65,158,220,.1);border:1px solid var(--line);border-radius:9px;color:var(--text)}
+.is-modal-head button{font-size:20px;line-height:1}
+.is-modal-body{padding:16px 20px;line-height:1.65;font-size:13px}
+.is-modal-body>p{margin:0 0 12px}
+.is-modal-foot{border-top:1px solid var(--line);justify-content:flex-end}
+.is-plan{border:1px solid var(--line);border-radius:11px;padding:13px;margin-top:10px}
+.is-plan p{margin:5px 0;font-size:12px;color:var(--muted)}
+.is-plan span{font-size:11px;color:var(--accent)}
+.internal-settings-root[dir=rtl] .is-nav{border-right:0;border-left:1px solid var(--line)}
+.internal-settings-root[dir=rtl] .is-nav button{text-align:right}
+@media(max-width:760px){
+  .is-workspace{display:block}
+  .is-nav{flex-direction:row;overflow-x:auto;scrollbar-width:thin;border-right:0;border-bottom:1px solid var(--line);padding:10px;gap:5px}
+  .is-nav button{flex:none;white-space:nowrap;padding:10px}
+  .is-panels{padding:16px}
+  .is-row{align-items:flex-start;flex-wrap:wrap}
+  .is-row>div:first-child{min-width:145px}
+  .is-colors,.is-meters{grid-template-columns:1fr}
+  .is-mode{justify-content:flex-start}
+}
+@media(max-width:390px){
+  .is-row>div:first-child{min-width:100%}
+  .is-row select,.is-panels select{max-width:100%;width:100%}
+}
+
 </style>
   
   
   
 
+  
   
 </head>
 <body>
@@ -659,6 +727,7 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
       </section>
       <section id="view-settings" class="view view-panel" hidden aria-labelledby="settingsHeading">
         <div class="panel-heading"><span class="eyebrow">ЛИЧНОЕ ПРОСТРАНСТВО</span><h1 id="settingsHeading">Настройки</h1><p>Основные параметры вашего будущего Kaz AI.</p></div>
+        <div id="internalSettingsRoot" class="internal-settings-root" aria-label="Внутренности настроек"></div>
         <div class="settings-list">
           <div class="setting-item"><div><h2>Оформление</h2><p>Светлая или тёмная тема</p></div><button class="setting-control" data-action="toggle-theme" aria-pressed="false"><svg class="icon"><use href="#ic-sun"/></svg><span id="themeLabel">Тёмная</span></button></div>
           <div class="setting-item"><div><h2>Язык интерфейса</h2><p>Русский, қазақша, English</p></div><div class="popover-anchor settings-popover-anchor language-anchor"><button type="button" class="setting-control" id="settingsLanguageToggle" data-action="toggle-language" aria-expanded="false" aria-controls="settingsLanguageMenu"><span class="language-current">Русский</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div id="settingsLanguageMenu" class="popover-menu language-menu" hidden>
@@ -945,14 +1014,15 @@ function selectReason(value){
   else if(lang==="kk")notify('Ойлау деңгейі: '+label+'. ЖИ қосылғанда қолданылады.');
   else notify("Выбран уровень «"+label+"». Подключение к модели — на следующем этапе.");
 }
-function toggleTheme(){
+function toggleTheme(fromInternalSettings=false){
   state.light=!state.light;
   document.body.classList.toggle("light",state.light);
   $("#themeLabel").textContent=state.light?"Светлая":"Тёмная";
   $$('[data-action="toggle-theme"]').forEach(button=>button.setAttribute("aria-pressed",String(state.light)));
   $$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"));
+  if(!fromInternalSettings)window.KazInternalSettings?.onLegacyThemeToggle(state.light);
 }
-const languages={ru:"Русский",kk:"Қазақша",en:"English"};
+const languages={en:"English",ru:"Русский",kk:"Қазақ тілі",pt:"Português",es:"Español",fr:"Français",ar:"العربية",zh:"中文",ko:"한국어",ja:"日本語",de:"Deutsch",it:"Italiano",tr:"Türkçe",pl:"Polski",hi:"हिन्दी",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
 function selectLanguage(value){
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
   state.language=value;
@@ -960,11 +1030,12 @@ function selectLanguage(value){
   $$("[data-language]").forEach(el=>el.classList.toggle("selected",el.dataset.language===value));
   closePopovers();
   window.KazI18n?.set(value);
+  window.KazInternalSettings?.syncLanguage(value);
   if(window.KazSession?.refreshLocale)window.KazSession.refreshLocale();
   else renderHistory();
   renderTools($("#toolsSearch").value);
   const notification={ru:"Язык интерфейса: ",en:"Interface language: ",kk:"Интерфейс тілі: "};
-  notify(notification[value]+languages[value]);
+  notify((notification[value]||notification.en)+languages[value]);
 }
 function selectFont(value){
   if(!["small","normal","large"].includes(value))return;
@@ -2118,6 +2189,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
           retryAnswerId=replaceId;
           showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
         }
+        window.KazInternalSettings?.notify("failed");
         return;
       }
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat))return;
@@ -2143,6 +2215,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       }
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
       showStatus("");
+      window.KazInternalSettings?.notify("completed");
     }catch(e){
       if(abort!==controller)return;
       if(controller.signal.aborted){
@@ -2188,6 +2261,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
         const incident=typeof e?.incidentId==="string"&&/^[a-f0-9]{12}$/.test(e.incidentId)
           ?" Код ошибки: "+e.incidentId:"";
         showStatus(message+incident,quota,true);
+        window.KazInternalSettings?.notify("failed");
       }
     }finally{
       if(!keepIncomplete)streamingBubble?.remove();
@@ -3542,7 +3616,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     if(!captured.has(node))captured.set(node,value);
     const original=captured.get(node);
     const key=original.trim();
-    const translated=language==="ru"?key:(dictionary[key]?.[language]||key);
+    const translated=language==="ru"?key:(dictionary[key]?.[language]||dictionary[key]?.en||key);
     const prefix=original.match(/^\s*/)?.[0]||"";
     const suffix=original.match(/\s*$/)?.[0]||"";
     const output=prefix+translated+suffix;
@@ -3556,7 +3630,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       if(element.hasAttribute?.("placeholder")){
         if(!element.dataset.originalPlaceholder)element.dataset.originalPlaceholder=element.getAttribute("placeholder");
         const original=element.dataset.originalPlaceholder;
-        const translated=language==="ru"?original:(dictionary[original]?.[language]||original);
+        const translated=language==="ru"?original:(dictionary[original]?.[language]||dictionary[original]?.en||original);
         if(element.placeholder!==translated)element.placeholder=translated;
       }
       if(!element.hasAttribute?.("aria-label"))continue;
@@ -3564,9 +3638,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       let original=originalAria.get(element);
       // Controls can change labels themselves. Treat unexpected new values as
       // fresh authored text instead of restoring an outdated cached label.
-      if(original&&![original,dictionary[original]?.en,dictionary[original]?.kk].includes(value))original=null;
+      if(original&&![original,...Object.values(dictionary[original]||{})].includes(value))original=null;
       if(!original){original=value;originalAria.set(element,original)}
-      const translated=language==="ru"?original:(dictionary[original]?.[language]||original);
+      const translated=language==="ru"?original:(dictionary[original]?.[language]||dictionary[original]?.en||original);
       if(value!==translated)element.setAttribute("aria-label",translated);
     }
   }
@@ -3579,17 +3653,17 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       en:{welcome:"Kaz AI",chat:"Conversation",history:"Chats",projects:"Projects",tools:"Tools",settings:"Settings",about:"About"},
       kk:{welcome:"Kaz AI",chat:"Әңгіме",history:"Чаттар",projects:"Жобалар",tools:"Құралдар",settings:"Баптаулар",about:"Жоба туралы"}};
     const title=document.querySelector("#pageTitle");
-    if(title&&typeof state!=="undefined"&&state.screen){const next=labels[language][state.screen]||"Kaz AI";if(title.textContent!==next)title.textContent=next}
+    if(title&&typeof state!=="undefined"&&state.screen){const next=(labels[language]||labels.en)[state.screen]||"Kaz AI";if(title.textContent!==next)title.textContent=next}
     // These region labels are outside the translated controls. Update only
     // their accessible names: never walk through chat messages or user drafts.
     for(const [selector,original] of [["#sidebar","Боковое меню"],
       ["#view-welcome","Главная Kaz AI"],["#view-chat","Переписка"]]){
       const region=document.querySelector(selector);
       if(!region)continue;
-      const translated=language==="ru"?original:(dictionary[original]?.[language]||original);
+      const translated=language==="ru"?original:(dictionary[original]?.[language]||dictionary[original]?.en||original);
       if(region.getAttribute("aria-label")!==translated)region.setAttribute("aria-label",translated);
     }
-    document.documentElement.lang=language==="kk"?"kk":language==="en"?"en":"ru";
+    document.documentElement.lang=language;
   }
   // Translate only changed UI roots; no full-page walk on every search
   // keystroke, project update or streaming status update.
@@ -3613,13 +3687,13 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     });
   });
   function set(next){
-    if(!["ru","kk","en"].includes(next))return;
+    if(!["en","ru","kk","pt","es","fr","ar","zh","ko","ja","de","it","tr","pl","hi","vi","id"].includes(next))return;
     language=next;refresh();
   }
   // Read-only translations for language-independent tool discovery.
   // Never change the selected language while indexing names.
   const translateFor=(lang,value)=>
-    lang==="ru"?value:(dictionary[value]?.[lang]||value);
+    lang==="ru"?value:(dictionary[value]?.[lang]||dictionary[value]?.en||value);
   window.KazI18n={set,refresh,translate:value=>translateFor(language,value),
     translateFor,get language(){return language}};
   window.addEventListener("DOMContentLoaded",()=>{
@@ -3631,6 +3705,339 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   },{once:true});
 })();
 
+</script>
+<script>
+"use strict";
+/* Kaz AI internal settings shell. Payment, identity and security are UI-only.
+   Never manufacture account details, token balances or payment-card digits. */
+(function(){
+  const qs=(s,root=document)=>root.querySelector(s);
+  const qa=(s,root=document)=>Array.from(root.querySelectorAll(s));
+  const languages=[
+    ["en","English"],["ru","Русский"],["kk","Қазақ тілі"],["pt","Português"],
+    ["es","Español"],["fr","Français"],["ar","العربية"],["zh","中文"],
+    ["ko","한국어"],["ja","日本語"],["de","Deutsch"],["it","Italiano"],
+    ["tr","Türkçe"],["pl","Polski"],["hi","हिन्दी"],["vi","Tiếng Việt"],
+    ["id","Bahasa Indonesia"]
+  ];
+  const languageNames=Object.fromEntries(languages);
+  const codes=new Set(Object.keys(languageNames));
+  const labels={
+    ru:["внутренности настроек","Общие","Учётная запись","Безопасность и вход","Использование","Оплата","Внешний вид","Уведомления","Автоматически"],
+    en:["Internal settings","General","Account","Security & sign-in","Usage","Billing","Appearance","Notifications","Automatic"],
+    kk:["Ішкі параметрлер","Жалпы","Есептік жазба","Қауіпсіздік және кіру","Пайдалану","Төлем","Сыртқы көрініс","Хабарландырулар","Автоматты"],
+    pt:["Configurações internas","Geral","Conta","Segurança e login","Uso","Pagamentos","Aparência","Notificações","Automático"],
+    es:["Configuración interna","General","Cuenta","Seguridad e inicio de sesión","Uso","Facturación","Apariencia","Notificaciones","Automático"],
+    fr:["Paramètres internes","Général","Compte","Sécurité et connexion","Utilisation","Facturation","Apparence","Notifications","Automatique"],
+    ar:["الإعدادات الداخلية","عام","الحساب","الأمان وتسجيل الدخول","الاستخدام","الفوترة","المظهر","الإشعارات","تلقائي"],
+    zh:["内部设置","常规","账户","安全与登录","使用情况","账单","外观","通知","自动"],
+    ko:["내부 설정","일반","계정","보안 및 로그인","사용량","결제","모양","알림","자동"],
+    ja:["内部設定","一般","アカウント","セキュリティとログイン","使用状況","請求","外観","通知","自動"],
+    de:["Interne Einstellungen","Allgemein","Konto","Sicherheit und Anmeldung","Nutzung","Abrechnung","Aussehen","Benachrichtigungen","Automatisch"],
+    it:["Impostazioni interne","Generale","Account","Sicurezza e accesso","Utilizzo","Fatturazione","Aspetto","Notifiche","Automatico"],
+    tr:["Dahili ayarlar","Genel","Hesap","Güvenlik ve giriş","Kullanım","Ödeme","Görünüm","Bildirimler","Otomatik"],
+    pl:["Ustawienia wewnętrzne","Ogólne","Konto","Bezpieczeństwo i logowanie","Wykorzystanie","Płatności","Wygląd","Powiadomienia","Automatycznie"],
+    hi:["आंतरिक सेटिंग्स","सामान्य","खाता","सुरक्षा और साइन-इन","उपयोग","बिलिंग","दिखावट","सूचनाएँ","स्वचालित"],
+    vi:["Cài đặt nội bộ","Chung","Tài khoản","Bảo mật và đăng nhập","Sử dụng","Thanh toán","Giao diện","Thông báo","Tự động"],
+    id:["Pengaturan internal","Umum","Akun","Keamanan & masuk","Penggunaan","Penagihan","Tampilan","Notifikasi","Otomatis"]
+  };
+  const themePresets=[
+    ["kaz","Kaz AI","#42e2fa","#030c1e","#eaf7ff"],
+    ["ocean","Океан","#38bdf8","#071e30","#ecfeff"],
+    ["aurora","Северное сияние","#3ddc97","#081c20","#e8fff4"],
+    ["sapphire","Сапфир","#6289ff","#0c1230","#ebf0ff"],
+    ["forest","Лес","#9aca59","#102018","#f2fbea"],
+    ["sunset","Закат","#ff9263","#2b1516","#fff1e5"],
+    ["violet","Фиолетовый","#b78aff","#1e1631","#f7efff"],
+    ["rose","Розовое золото","#ec83b9","#2a1827","#ffebf5"],
+    ["sand","Песчаный","#cc9960","#292018","#fff3df"],
+    ["graphite","Графит","#acb8cb","#171b23","#f1f4fa"]
+  ];
+  const preset=Object.fromEntries(themePresets.map(([key,name,accent,bg,fg])=>[key,{name,accent,bg,fg}]));
+  const defaultPrefs=()=>({language:"auto",mode:"system",theme:"kaz",accent:null,bg:null,fg:null,
+    notifications:{completed:false,failed:false,news:false,security:false}});
+  let prefs=defaultPrefs(),themeWatch=null,dialogOpener=null,active="general",languageChangeInside=false;
+  try{
+    const stored=JSON.parse(localStorage.getItem("kaz-ai-internal-settings-v1")||"null");
+    if(stored&&typeof stored==="object"){
+      if(stored.language==="auto"||codes.has(stored.language))prefs.language=stored.language;
+      if(["system","light","dark"].includes(stored.mode))prefs.mode=stored.mode;
+      if(preset[stored.theme])prefs.theme=stored.theme;
+      for(const k of ["accent","bg","fg"])if(typeof stored[k]==="string"&&/^#[0-9a-fA-F]{6}$/.test(stored[k]))prefs[k]=stored[k];
+      if(stored.notifications&&typeof stored.notifications==="object")
+        for(const key of Object.keys(prefs.notifications))
+          prefs.notifications[key]=stored.notifications[key]===true;
+    }
+  }catch{}
+  const save=()=>{try{localStorage.setItem("kaz-ai-internal-settings-v1",JSON.stringify(prefs))}catch{}};
+  const resolveLanguage=()=>{
+    if(prefs.language!=="auto")return prefs.language;
+    const browser=(navigator.languages?.[0]||navigator.language||"ru").toLowerCase().split("-")[0];
+    return codes.has(browser)?browser:"en";
+  };
+  const rootTemplate=String.raw`
+    <div class="is-head">
+      <h2 id="innerSettingsTitle">внутренности настроек</h2>
+      <p>Параметры интерфейса работают в этом браузере. Аккаунт, платежи и безопасность подключим позже.</p>
+    </div>
+    <div class="is-workspace">
+      <nav class="is-nav" aria-label="Разделы внутренних настроек">
+        <button type="button" data-is-tab="general" aria-current="page">Общие</button>
+        <button type="button" data-is-tab="account">Учётная запись</button>
+        <button type="button" data-is-tab="security">Безопасность и вход</button>
+        <button type="button" data-is-tab="usage">Использование</button>
+        <button type="button" data-is-tab="billing">Оплата</button>
+        <button type="button" data-is-tab="appearance">Внешний вид</button>
+        <button type="button" data-is-tab="notifications">Уведомления</button>
+      </nav>
+      <div class="is-panels">
+        <section data-is-panel="general">
+          <h3>Общие</h3>
+          <div class="is-row">
+            <div><strong>Язык интерфейса</strong><p>Автоматически по языку браузера или выбранный вручную. Полный перевод остальных экранов добавляется постепенно.</p></div>
+            <select id="innerLanguage" aria-label="Язык интерфейса"></select>
+          </div>
+          <p class="is-footnote">Арабский язык включает направление справа налево. Для остальных экранов пока используется английский перевод там, где нет перевода выбранного языка.</p>
+        </section>
+        <section data-is-panel="account" hidden>
+          <h3>Учётная запись</h3><p class="is-notice">Google-вход пока не подключён. Не показываем личные данные со скриншотов как данные действующего аккаунта.</p>
+          <div class="is-row"><div><strong>Имя</strong><p>Имя владельца аккаунта</p></div><span class="is-dash">Не подключено</span></div>
+          <div class="is-row"><div><strong>Имя пользователя</strong><p>Уникальное имя в Kaz AI</p></div><span class="is-dash">Не подключено</span></div>
+          <div class="is-row"><div><strong>Электронная почта</strong><p>Адрес подтверждённого аккаунта</p></div><span class="is-dash">Не подключено</span></div>
+          <div class="is-row"><div><strong>План</strong><p>Действующий тариф</p></div><span class="is-dash">Без подписки</span></div>
+          <div class="is-row"><div><strong>Возраст</strong><p>Возрастная категория после регистрации</p></div><span class="is-dash">Не указано</span></div>
+          <div class="is-row"><div><strong>Профиль создателя GPT</strong><p>Будущая функция аккаунта</p></div><span class="is-dash">Не подключено</span></div>
+          <div class="is-row"><div><strong>Удалить учётную запись</strong><p>Появится после подключения аккаунтов</p></div><button type="button" data-is-dialog="delete">Удалить</button></div>
+        </section>
+        <section data-is-panel="security" hidden>
+          <h3>Безопасность и вход</h3><p class="is-notice">Данные о входах и устройствах будут доступны только после настоящей авторизации.</p>
+          <div class="is-row"><div><strong>Пароль</strong><p>Управление паролем аккаунта</p></div><button type="button" data-is-dialog="password">Управлять</button></div>
+          <div class="is-row"><div><strong>Активные сеансы</strong><p>Устройства, на которых открыт аккаунт</p></div><button type="button" data-is-dialog="sessions">Просмотреть</button></div>
+          <div class="is-row"><div><strong>История безопасности</strong><p>Входы и выходы с датой и временем</p></div><button type="button" data-is-dialog="securityHistory">Открыть</button></div>
+        </section>
+        <section data-is-panel="usage" hidden>
+          <h3>Использование</h3>
+          <div class="is-row"><div><strong>Текущий план</strong><p>Бесплатная версия, платные тарифы пока не действуют</p></div><button type="button" data-is-dialog="plans">Подключить тариф</button></div>
+          <div class="is-meters"><div><span>Использовано токенов</span><strong>—</strong></div><div><span>Осталось токенов</span><strong>—</strong></div><div><span>Запросов за период</span><strong>—</strong></div></div>
+          <p class="is-footnote">Точная статистика появится после подключения серверного учёта. Сейчас показаны прочерки, а не выдуманные цифры.</p>
+        </section>
+        <section data-is-panel="billing" hidden>
+          <h3>Оплата</h3><p class="is-notice">Оплата и подписки отключены. Никакие деньги не списываются через эти настройки.</p>
+          <div class="is-row"><div><strong>История транзакций</strong><p>Платежи и возвраты</p></div><button type="button" data-is-dialog="transactions">Открыть</button></div>
+          <div class="is-row"><div><strong>Информация для выставления счетов</strong><p>Платёжные реквизиты</p></div><button type="button" data-is-dialog="invoice">Просмотреть</button></div>
+          <div class="is-row"><div><strong>Подключённая карта</strong><p>Последние 4 цифры будут показаны только для настоящей карты</p></div><span class="is-dash" aria-label="Карта не подключена">•••• •••• •••• ••••</span></div>
+          <div class="is-row"><div><strong>Отменить подписку</strong><p>Доступно только при активной подписке</p></div><button type="button" data-is-dialog="cancel">Отменить подписку</button></div>
+        </section>
+        <section data-is-panel="appearance" hidden>
+          <h3>Внешний вид</h3>
+          <div class="is-row"><div><strong>Режим</strong><p>Системный, светлый или тёмный</p></div>
+            <fieldset class="is-mode" aria-label="Режим">
+              <label><input type="radio" name="innerMode" value="system">Авто</label>
+              <label><input type="radio" name="innerMode" value="light">Светлый</label>
+              <label><input type="radio" name="innerMode" value="dark">Тёмный</label>
+            </fieldset></div>
+          <div class="is-row"><div><strong>Тема</strong><p>10 вариантов цветов и стиля</p></div><select id="innerTheme" aria-label="Тема"></select></div>
+          <div class="is-colors">
+            <label>Акцентный цвет<input type="color" id="innerAccent" aria-label="Акцентный цвет"></label>
+            <label>Фон<input type="color" id="innerBg" aria-label="Фон"></label>
+            <label>Цвет переднего плана<input type="color" id="innerFg" aria-label="Цвет переднего плана"></label>
+          </div>
+          <button type="button" data-is-action="reset-appearance" class="is-reset">Сбросить оформление</button>
+        </section>
+        <section data-is-panel="notifications" hidden>
+          <h3>Уведомления</h3>
+          <label class="is-row is-check"><span><strong>О выполненных задачах ИИ</strong><small>О завершении ответа в открытой вкладке</small></span><input type="checkbox" data-is-notify="completed"></label>
+          <label class="is-row is-check"><span><strong>Об ошибках ИИ</strong><small>Уведомления о неудачных запросах</small></span><input type="checkbox" data-is-notify="failed"></label>
+          <label class="is-row is-check"><span><strong>О новых возможностях</strong><small>Будущие обновления Kaz AI</small></span><input type="checkbox" data-is-notify="news"></label>
+          <label class="is-row is-check"><span><strong>О событиях безопасности</strong><small>После подключения аккаунтов</small></span><input type="checkbox" data-is-notify="security"></label>
+          <p class="is-footnote">Параметры сохраняются только в этом браузере. Push и электронные письма не подключены.</p>
+        </section>
+      </div>
+    </div>
+  `;
+  const modalMarkup=String.raw`
+    <div class="is-modal-head"><h2 id="innerDialogTitle"></h2><button type="button" aria-label="Закрыть окно" data-is-dialog-close>×</button></div>
+    <div class="is-modal-body" id="innerDialogBody"></div>
+    <div class="is-modal-foot"><button type="button" data-is-dialog-close>Закрыть</button></div>
+  `;
+  const dialogContent={
+    password:["Пароль","Пароль будет доступен после подключения Google-входа. Мы не собираем и не сохраняем пароль в этой версии."],
+    sessions:["Активные сеансы","Список устройств и активных входов появится после подключения авторизации. Сейчас нет достоверной истории сеансов."],
+    securityHistory:["История безопасности","После подключения аккаунтов здесь будут даты, время и устройства входов и выходов. Пока записи недоступны."],
+    transactions:["История транзакций","Платёжная система не подключена. Достоверной истории платежей нет."],
+    invoice:["Информация для выставления счетов","Платёжные данные появятся после подключения настоящего платёжного сервиса. Сейчас ввод данных отключён."],
+    cancel:["Отменить подписку","Активной подписки Kaz AI нет. Кнопка подготовлена для будущей системы оплаты, отменять пока нечего."],
+    delete:["Удалить учётную запись","Сервис аккаунтов ещё не подключён. Поэтому удалять нечего. Мы не выдаём демонстрацию за настоящее удаление."]
+  };
+  const applyAppearance=()=>{
+    const isLight=prefs.mode==="light"||(prefs.mode==="system"&&matchMedia("(prefers-color-scheme: light)").matches);
+    if(typeof state!=="undefined"&&state.light!==isLight&&typeof toggleTheme==="function")toggleTheme(true);
+    const color=preset[prefs.theme],bg=prefs.bg||(isLight?"#edf4fb":color.bg),fg=prefs.fg||(isLight?"#11273d":color.fg);
+    document.documentElement.style.setProperty("--accent",prefs.accent||color.accent);
+    document.documentElement.style.setProperty("--accent2",prefs.accent||color.accent);
+    document.documentElement.style.setProperty("--bg",bg);
+    document.documentElement.style.setProperty("--text",fg);
+    qs("#innerAccent").value=prefs.accent||color.accent;
+    qs("#innerBg").value=bg;
+    qs("#innerFg").value=fg;
+    qs("#innerTheme").value=prefs.theme;
+    const radio=qs('input[name="innerMode"][value="'+prefs.mode+'"]');
+    if(radio)radio.checked=true;
+    save();
+  };
+  const refreshLabels=()=>{
+    const lang=resolveLanguage(),translated=labels[lang]||labels.en;
+    qs("#innerSettingsTitle").textContent=translated[0];
+    const tabs=qa("[data-is-tab]");
+    tabs.forEach((tab,i)=>{tab.textContent=translated[i+1]});
+    qs("#innerLanguage").options[0].textContent=translated[8];
+    qa("[data-is-panel]").forEach((panel,i)=>{
+      const heading=qs("h3",panel);
+      if(heading)heading.textContent=translated[i+1];
+    });
+    document.documentElement.dir=lang==="ar"?"rtl":"ltr";
+    qs("#internalSettingsRoot").dir=lang==="ar"?"rtl":"ltr";
+  };
+  const chooseLanguage=(v)=>{
+    prefs.language=v;save();
+    const value=resolveLanguage();
+    if(typeof selectLanguage==="function"){
+      languageChangeInside=true;
+      selectLanguage(value);
+      languageChangeInside=false;
+    }
+    refreshLabels();
+    qs("#innerLanguage").value=prefs.language;
+  };
+  const showTab=(name)=>{
+    if(!qs('[data-is-panel="'+name+'"]'))return;
+    active=name;
+    qa("[data-is-panel]").forEach(p=>p.hidden=p.dataset.isPanel!==name);
+    qa("[data-is-tab]").forEach(b=>{
+      const picked=b.dataset.isTab===name;
+      b.classList.toggle("selected",picked);
+      if(picked)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");
+    });
+  };
+  const showDialog=(kind)=>{
+    const modal=qs("#innerSettingsDialog");
+    dialogOpener=document.activeElement;
+    const title=qs("#innerDialogTitle"),body=qs("#innerDialogBody");
+    body.replaceChildren();
+    if(kind==="plans"){
+      title.textContent="Тарифы Kaz AI";
+      const info=document.createElement("p");
+      info.textContent="Тарифы показаны для ознакомления. Цены не установлены, оформление и оплата отключены.";
+      body.append(info);
+      for(const [name,details] of [
+        ["Бесплатный","Текущий доступ к сайту, в пределах лимитов провайдера ИИ"],
+        ["Расширенный","Будущий тариф. Цена и условия пока не утверждены"],
+        ["Максимальный","Будущий тариф. Цена и условия пока не утверждены"]
+      ]){
+        const el=document.createElement("div");el.className="is-plan";
+        const strong=document.createElement("strong");strong.textContent=name;
+        const desc=document.createElement("p");desc.textContent=details;
+        const status=document.createElement("span");status.textContent=name==="Бесплатный"?"Бесплатно":"Недоступно";
+        el.append(strong,desc,status);body.append(el);
+      }
+    }else{
+      const data=dialogContent[kind];if(!data)return;
+      title.textContent=data[0];
+      const p=document.createElement("p");p.textContent=data[1];body.append(p);
+    }
+    if(typeof modal.showModal==="function")modal.showModal();else modal.hidden=false;
+    qs("[data-is-dialog-close]",modal).focus();
+  };
+  const closeDialog=()=>{
+    const dialog=qs("#innerSettingsDialog");
+    if(dialog.open)dialog.close();else dialog.hidden=true;
+    if(dialogOpener?.isConnected)dialogOpener.focus();
+  };
+  const showToast=(message)=>{
+    if(typeof notify==="function")notify(message);
+  };
+  function setup(){
+    const root=qs("#internalSettingsRoot");
+    if(!root)return;
+    root.innerHTML=rootTemplate; // Constant authored markup; never interpolate user or account data.
+    const dialog=document.createElement("dialog");
+    dialog.className="is-modal";dialog.id="innerSettingsDialog";dialog.setAttribute("aria-labelledby","innerDialogTitle");
+    dialog.innerHTML=modalMarkup;
+    document.body.append(dialog);
+    dialog.addEventListener("click",event=>{if(event.target===dialog)closeDialog()});
+    dialog.addEventListener("cancel",event=>{event.preventDefault();closeDialog()});
+    dialog.addEventListener("click",event=>{if(event.target.closest("[data-is-dialog-close]"))closeDialog()});
+    const language=qs("#innerLanguage");
+    language.append(new Option(labels.ru[8],"auto"));
+    for(const [key,name] of languages)language.append(new Option(name,key));
+    language.value=prefs.language;
+    for(const [key,info] of Object.entries(preset))
+      qs("#innerTheme").append(new Option(info.name,key));
+    root.addEventListener("click",event=>{
+      const tab=event.target.closest("[data-is-tab]");
+      if(tab){showTab(tab.dataset.isTab);return}
+      const command=event.target.closest("[data-is-dialog]");
+      if(command){showDialog(command.dataset.isDialog);return}
+      if(event.target.closest('[data-is-action="reset-appearance"]')){
+        prefs.theme="kaz";prefs.accent=null;prefs.bg=null;prefs.fg=null;
+        applyAppearance();showToast("Оформление сброшено");return;
+      }
+    });
+    language.addEventListener("change",()=>chooseLanguage(language.value));
+    qs("#innerTheme").addEventListener("change",event=>{
+      prefs.theme=event.target.value;prefs.accent=null;prefs.bg=null;prefs.fg=null;applyAppearance();
+    });
+    for(const [key,id] of [["accent","innerAccent"],["bg","innerBg"],["fg","innerFg"]])
+      qs("#"+id).addEventListener("input",event=>{prefs[key]=event.target.value;applyAppearance()});
+    qa('input[name="innerMode"]').forEach(el=>el.addEventListener("change",()=>{
+      if(el.checked){prefs.mode=el.value;applyAppearance()}
+    }));
+    qa("[data-is-notify]").forEach(el=>{
+      el.checked=prefs.notifications[el.dataset.isNotify];
+      el.addEventListener("change",()=>{prefs.notifications[el.dataset.isNotify]=el.checked;save()});
+    });
+    if(typeof matchMedia==="function"){
+      themeWatch=matchMedia("(prefers-color-scheme: light)");
+      themeWatch.addEventListener?.("change",()=>{
+        if(prefs.mode==="system")applyAppearance();
+      });
+    }
+    showTab(active);
+    applyAppearance();
+    refreshLabels();
+    // Preserve existing default site language until the visitor explicitly
+    // selects an option, so original chat behaviour is not silently rewritten.
+    chooseLanguage(prefs.language);
+  }
+  window.KazInternalSettings={
+    open:(panel="general")=>{
+      if(typeof showScreen==="function")showScreen("settings");
+      showTab(panel);
+      qs('[data-is-tab="'+panel+'"]')?.focus();
+    },
+    syncLanguage:value=>{
+      if(!languageChangeInside){prefs.language=value;save()}
+      const control=qs("#innerLanguage");
+      if(control)control.value=prefs.language;
+      refreshLabels();
+    },
+    onLegacyThemeToggle:isLight=>{
+      if(!qs("#innerSettingsRoot .is-workspace"))return;
+      // A click on the old theme toggle becomes an explicit light/dark choice.
+      prefs.mode=isLight?"light":"dark";
+      const control=qs('input[name="innerMode"][value="'+prefs.mode+'"]');
+      if(control)control.checked=true;
+      applyAppearance();
+    },
+    notify:type=>{
+      if(prefs.notifications[type])showToast(type==="completed"?"Ответ ИИ готов.":"Не удалось выполнить запрос ИИ.");
+    },
+    get selectedLanguage(){return prefs.language},
+    get currentTheme(){return prefs.theme}
+  };
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",setup,{once:true});
+  else setup();
+})();
 </script>
 </body>
 </html>

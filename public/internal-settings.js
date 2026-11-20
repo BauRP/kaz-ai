@@ -121,6 +121,9 @@
     "Платёжные данные появятся после подключения настоящего платёжного сервиса. Сейчас ввод данных отключён.":["Billing details will appear after a real payment service is connected. Entering payment information is disabled.","Төлем деректері нақты төлем қызметі қосылғаннан кейін көрсетіледі. Деректерді енгізу өшірілген."],
     "Активной подписки Kaz AI нет. Кнопка подготовлена для будущей системы оплаты, отменять пока нечего.":["There is no active Kaz AI subscription. Cancellation is only a placeholder.","Белсенді Kaz AI жазылымы жоқ. Жазылымды тоқтату батырмасы әзірге үлгі ғана."],
     "Сервис аккаунтов ещё не подключён. Поэтому удалять нечего. Мы не выдаём демонстрацию за настоящее удаление.":["Accounts are not connected. This is only a preview, not actual account deletion.","Аккаунттар әлі қосылмаған. Бұл тек үлгі, нақты аккаунт жойылмайды."],
+    "Ответ ИИ готов.":["AI response is ready.","ЖИ жауабы дайын."],
+    "Не удалось выполнить запрос ИИ.":["AI request failed.","ЖИ сұрауын орындау мүмкін болмады."],
+    "Оформление сброшено":["Appearance reset.","Көрініс қалпына келтірілді."],
     "Закрыть":["Close","Жабу"],
     "Закрыть окно":["Close dialog","Терезені жабу"]
   };
@@ -405,7 +408,7 @@
       if(command){showDialog(command.dataset.isDialog);return}
       if(event.target.closest('[data-is-action="reset-appearance"]')){
         prefs.theme="kaz";prefs.accent=null;prefs.bg=null;prefs.fg=null;
-        applyAppearance();showToast(t("Сбросить оформление"));return;
+        applyAppearance();showToast(t("Оформление сброшено"));return;
       }
     });
     language.addEventListener("change",()=>chooseLanguage(language.value));
@@ -457,7 +460,7 @@
       applyAppearance();
     },
     notify:type=>{
-      if(prefs.notifications[type])showToast(type==="completed"?"Ответ ИИ готов.":"Не удалось выполнить запрос ИИ.");
+      if(prefs.notifications[type])showToast(t(type==="completed"?"Ответ ИИ готов.":"Не удалось выполнить запрос ИИ."));
     },
     get selectedLanguage(){return prefs.language},
     get currentTheme(){return prefs.theme}

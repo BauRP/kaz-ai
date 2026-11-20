@@ -767,6 +767,7 @@
           retryAnswerId=replaceId;
           showStatus(data?.message||"Ответ ИИ сейчас недоступен. Попробуйте позже.",false,true);
         }
+        window.KazInternalSettings?.notify("failed");
         return;
       }
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat))return;
@@ -792,6 +793,7 @@
       }
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
       showStatus("");
+      window.KazInternalSettings?.notify("completed");
     }catch(e){
       if(abort!==controller)return;
       if(controller.signal.aborted){
@@ -837,6 +839,7 @@
         const incident=typeof e?.incidentId==="string"&&/^[a-f0-9]{12}$/.test(e.incidentId)
           ?" Код ошибки: "+e.incidentId:"";
         showStatus(message+incident,quota,true);
+        window.KazInternalSettings?.notify("failed");
       }
     }finally{
       if(!keepIncomplete)streamingBubble?.remove();

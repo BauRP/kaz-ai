@@ -256,3 +256,12 @@ test('all 17 selectable languages are available as translation targets with safe
   assert.match(session,/\}\[\["ru","kk","en"\]\.includes\(lang\)\?lang:"en"\]/);
   assert.match(session,/Неполный текст не сохранён/);
 });
+
+test('history and projects safely support all added interface languages',()=>{
+  const session=readFileSync('public/session.js','utf8');
+  const settings=readFileSync('public/internal-settings.js','utf8');
+  assert.match(session,/\}\[\["ru","en","kk"\]\.includes\(lang\)\?lang:"en"\]/);
+  assert.match(session,/if\(!\["ru","kk"\]\.includes\(lang\)\)/);
+  assert.match(session,/if\(!\["ru","kk"\]\.includes\(language\)\)/);
+  assert.match(settings,/language:"auto",mode:"dark"/);
+});

@@ -14,7 +14,7 @@
   const languageNames=Object.fromEntries(languages);
   const codes=new Set(Object.keys(languageNames));
   const labels={
-    ru:["Внутренности настроек","Общие","Учётная запись","Безопасность и вход","Использование","Оплата","Внешний вид","Уведомления","Автоматически"],
+    ru:["внутренности настроек","Общие","Учётная запись","Безопасность и вход","Использование","Оплата","Внешний вид","Уведомления","Автоматически"],
     en:["Internal settings","General","Account","Security & sign-in","Usage","Billing","Appearance","Notifications","Automatic"],
     kk:["Ішкі параметрлер","Жалпы","Есептік жазба","Қауіпсіздік және кіру","Пайдалану","Төлем","Сыртқы көрініс","Хабарландырулар","Автоматты"],
     pt:["Configurações internas","Geral","Conta","Segurança e login","Uso","Pagamentos","Aparência","Notificações","Automático"],
@@ -68,7 +68,7 @@
   };
   const rootTemplate=String.raw`
     <div class="is-head">
-      <h2 id="innerSettingsTitle">Внутренности настроек</h2>
+      <h2 id="innerSettingsTitle">внутренности настроек</h2>
       <p>Параметры интерфейса работают в этом браузере. Аккаунт, платежи и безопасность подключим позже.</p>
     </div>
     <div class="is-workspace">
@@ -318,7 +318,7 @@
       prefs.mode=isLight?"light":"dark";
       const control=qs('input[name="innerMode"][value="'+prefs.mode+'"]');
       if(control)control.checked=true;
-      save();
+      applyAppearance();
     },
     notify:type=>{
       if(prefs.notifications[type])showToast(type==="completed"?"Ответ ИИ готов.":"Не удалось выполнить запрос ИИ.");

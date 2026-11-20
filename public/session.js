@@ -1271,15 +1271,25 @@
         // Russian, Kazakh and English prompt wording is retained.
         const promptLocale=["ru","kk","en"].includes(ui)?ui:"en";
         if(kind===22){
-          const target={
-            ru:{ru:"русский",kk:"казахский",en:"английский"},
-            en:{ru:"Russian",kk:"Kazakh",en:"English"},
-            kk:{ru:"орыс",kk:"қазақ",en:"ағылшын"}
-          }[promptLocale][languageSelect.value]||{
-            pt:"Portuguese",es:"Spanish",fr:"French",ar:"Arabic",zh:"Chinese",
-            ko:"Korean",ja:"Japanese",de:"German",it:"Italian",tr:"Turkish",
-            pl:"Polish",hi:"Hindi",vi:"Vietnamese",id:"Indonesian"
-          }[languageSelect.value];
+          const targetCode=languageSelect.value;
+          const englishNames={
+            en:"English",ru:"Russian",kk:"Kazakh",pt:"Portuguese",es:"Spanish",
+            fr:"French",ar:"Arabic",zh:"Chinese",ko:"Korean",ja:"Japanese",
+            de:"German",it:"Italian",tr:"Turkish",pl:"Polish",
+            hi:"Hindi",vi:"Vietnamese",id:"Indonesian"
+          };
+          const localNames={
+            ru:{ru:"русский",kk:"казахский",en:"английский",pt:"португальский",es:"испанский",
+              fr:"французский",ar:"арабский",zh:"китайский",ko:"корейский",ja:"японский",
+              de:"немецкий",it:"итальянский",tr:"турецкий",pl:"польский",
+              hi:"хинди",vi:"вьетнамский",id:"индонезийский"},
+            kk:{ru:"орыс",kk:"қазақ",en:"ағылшын",pt:"португал",es:"испан",
+              fr:"француз",ar:"араб",zh:"қытай",ko:"корей",ja:"жапон",
+              de:"неміс",it:"итальян",tr:"түрік",pl:"поляк",
+              hi:"хинди",vi:"вьетнам",id:"индонезия"}
+          };
+          const target=(promptLocale==="en"?englishNames:localNames[promptLocale])?.[targetCode];
+          if(!target){notify("Выберите язык перевода.");languageSelect.focus();return}
           const prefix={
             ru:"Переведи следующий текст на "+target+" язык. Сохрани смысл, имена и форматирование. Выведи только перевод.\n\n",
             en:"Translate the following text into "+target+". Preserve meaning, names, and formatting. Return only the translation.\n\n",

@@ -45,7 +45,7 @@
     ["graphite","Графит","#acb8cb","#171b23","#f1f4fa"]
   ];
   const preset=Object.fromEntries(themePresets.map(([key,name,accent,bg,fg])=>[key,{name,accent,bg,fg}]));
-  const defaultPrefs=()=>({language:"auto",mode:"system",theme:"kaz",accent:null,bg:null,fg:null,
+  const defaultPrefs=()=>({language:"auto",mode:"dark",theme:"kaz",accent:null,bg:null,fg:null,
     notifications:{completed:false,failed:false,news:false,security:false}});
   let prefs=defaultPrefs(),themeWatch=null,dialogOpener=null,active="general",languageChangeInside=false;
   try{

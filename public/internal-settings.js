@@ -32,6 +32,109 @@
     vi:["Cài đặt nội bộ","Chung","Tài khoản","Bảo mật và đăng nhập","Sử dụng","Thanh toán","Giao diện","Thông báo","Tự động"],
     id:["Pengaturan internal","Umum","Akun","Keamanan & masuk","Penggunaan","Penagihan","Tampilan","Notifikasi","Otomatis"]
   };
+
+  // Translate authored UI strings, never user data or account information.
+  // EN is a readable fallback until all 17 locale dictionaries are complete.
+  const copy={
+    "Параметры интерфейса работают в этом браузере. Аккаунт, платежи и безопасность подключим позже.":["Interface preferences work in this browser. Accounts, payments and security will be connected later.","Интерфейс баптаулары осы браузерде жұмыс істейді. Аккаунт, төлемдер және қауіпсіздік кейін қосылады."],
+    "Язык интерфейса":["Interface language","Интерфейс тілі"],
+    "Автоматически по языку браузера или выбранный вручную. Полный перевод остальных экранов добавляется постепенно.":["Use your browser language or choose manually. Other screens are being translated gradually.","Браузер тілін автоматты түрде пайдаланыңыз немесе қолмен таңдаңыз. Қалған экрандар біртіндеп аударылады."],
+    "Арабский язык включает направление справа налево. Для остальных экранов пока используется английский перевод там, где нет перевода выбранного языка.":["Arabic enables right-to-left layout. Other screens use English where a translation is not yet available.","Араб тілі оңнан солға қарай көрсетіледі. Аударма жоқ экрандарда ағылшын тілі пайдаланылады."],
+    "Google-вход пока не подключён. Не показываем личные данные со скриншотов как данные действующего аккаунта.":["Google sign-in is not connected. No account information is being simulated.","Google арқылы кіру әлі қосылмаған. Аккаунттың жеке деректері ойдан көрсетілмейді."],
+    "Имя":["Name","Аты"],
+    "Имя владельца аккаунта":["Account holder's name","Аккаунт иесінің аты"],
+    "Имя пользователя":["Username","Пайдаланушы аты"],
+    "Уникальное имя в Kaz AI":["Unique Kaz AI username","Kaz AI жүйесіндегі бірегей пайдаланушы аты"],
+    "Электронная почта":["Email address","Электрондық пошта"],
+    "Адрес подтверждённого аккаунта":["Verified account email","Расталған аккаунттың поштасы"],
+    "План":["Plan","Жоспар"],
+    "Действующий тариф":["Current subscription plan","Ағымдағы жазылым"],
+    "Возраст":["Age","Жас"],
+    "Возрастная категория после регистрации":["Age category after registration","Тіркелгеннен кейінгі жас санаты"],
+    "Профиль создателя GPT":["GPT creator profile","GPT жасаушысының профилі"],
+    "Будущая функция аккаунта":["Future account feature","Аккаунттың болашақ мүмкіндігі"],
+    "Удалить учётную запись":["Delete account","Аккаунтты жою"],
+    "Появится после подключения аккаунтов":["Available after accounts are enabled","Аккаунттар қосылғаннан кейін қолжетімді"],
+    "Удалить":["Delete","Жою"],
+    "Не подключено":["Not connected","Қосылмаған"],
+    "Без подписки":["No subscription","Жазылым жоқ"],
+    "Не указано":["Not provided","Көрсетілмеген"],
+    "Данные о входах и устройствах будут доступны только после настоящей авторизации.":["Sign-in and device details will only be available after real account authorization.","Кірулер мен құрылғылар туралы деректер аккаунтқа шынайы кіргеннен кейін қолжетімді болады."],
+    "Пароль":["Password","Құпиясөз"],
+    "Управление паролем аккаунта":["Manage your account password","Аккаунт құпиясөзін басқару"],
+    "Управлять":["Manage","Басқару"],
+    "Активные сеансы":["Active sessions","Белсенді сеанстар"],
+    "Устройства, на которых открыт аккаунт":["Devices signed in to this account","Аккаунт ашылған құрылғылар"],
+    "Просмотреть":["View","Қарау"],
+    "История безопасности":["Security history","Қауіпсіздік тарихы"],
+    "Входы и выходы с датой и временем":["Sign-ins and sign-outs with date and time","Күні мен уақыты көрсетілген кірулер мен шығулар"],
+    "Открыть":["Open","Ашу"],
+    "Текущий план":["Current plan","Ағымдағы жоспар"],
+    "Бесплатная версия, платные тарифы пока не действуют":["Free version. Paid subscriptions are not yet available.","Тегін нұсқа. Ақылы жазылымдар әзірге қолжетімсіз."],
+    "Подключить тариф":["Choose a plan","Жоспарды таңдау"],
+    "Использовано токенов":["Tokens used","Пайдаланылған токендер"],
+    "Осталось токенов":["Tokens remaining","Қалған токендер"],
+    "Запросов за период":["Requests this period","Осы кезеңдегі сұраулар"],
+    "Точная статистика появится после подключения серверного учёта. Сейчас показаны прочерки, а не выдуманные цифры.":["Accurate usage statistics require server-side accounting. Dashes are shown instead of invented numbers.","Нақты статистика серверлік есеп іске қосылғаннан кейін көрсетіледі. Ойдан шығарылған сандардың орнына сызықша көрсетілген."],
+    "Оплата и подписки отключены. Никакие деньги не списываются через эти настройки.":["Payments and subscriptions are disabled. These settings cannot charge money.","Төлемдер мен жазылымдар өшірілген. Бұл баптаулар ақша алмайды."],
+    "История транзакций":["Transaction history","Төлемдер тарихы"],
+    "Платежи и возвраты":["Payments and refunds","Төлемдер мен қайтарымдар"],
+    "Информация для выставления счетов":["Billing information","Төлем деректемелері"],
+    "Платёжные реквизиты":["Billing details","Төлем деректемелері"],
+    "Подключённая карта":["Linked card","Қосылған карта"],
+    "Последние 4 цифры будут показаны только для настоящей карты":["Only a real linked card can show its last four digits","Тек шынайы қосылған картаның соңғы төрт саны көрсетіледі"],
+    "Отменить подписку":["Cancel subscription","Жазылымды тоқтату"],
+    "Доступно только при активной подписке":["Available only with an active subscription","Тек белсенді жазылым болса қолжетімді"],
+    "Режим":["Mode","Режим"],
+    "Системный, светлый или тёмный":["System, light or dark","Жүйелік, ашық немесе күңгірт"],
+    "Авто":["Auto","Авто"],
+    "Светлый":["Light","Ашық"],
+    "Тёмный":["Dark","Күңгірт"],
+    "Тема":["Theme","Тақырып"],
+    "10 вариантов цветов и стиля":["10 color and style presets","10 түс пен стиль нұсқасы"],
+    "Акцентный цвет":["Accent color","Ерекшелеу түсі"],
+    "Фон":["Background","Фон"],
+    "Цвет переднего плана":["Foreground color","Алдыңғы жоспар түсі"],
+    "Сбросить оформление":["Reset appearance","Көріністі қалпына келтіру"],
+    "О выполненных задачах ИИ":["AI tasks completed","ЖИ тапсырмалары аяқталғаны туралы"],
+    "О завершении ответа в открытой вкладке":["When an answer finishes in the open tab","Ашық қойындыдағы жауап аяқталғанда"],
+    "Об ошибках ИИ":["AI errors","ЖИ қателері"],
+    "Уведомления о неудачных запросах":["Notifications for failed requests","Орындалмаған сұраулар туралы хабарламалар"],
+    "О новых возможностях":["New features","Жаңа мүмкіндіктер"],
+    "Будущие обновления Kaz AI":["Future Kaz AI updates","Kaz AI жүйесінің болашақ жаңартулары"],
+    "О событиях безопасности":["Security events","Қауіпсіздік оқиғалары"],
+    "После подключения аккаунтов":["After accounts are connected","Аккаунттар қосылғаннан кейін"],
+    "Параметры сохраняются только в этом браузере. Push и электронные письма не подключены.":["Preferences are saved only in this browser. Push and email notifications are not connected.","Баптаулар тек осы браузерде сақталады. Push және электрондық пошта хабарламалары қосылмаған."],
+    "Закрыть":["Close","Жабу"],
+    "Закрыть окно":["Close dialog","Терезені жабу"]
+  };
+  const authoredText=new WeakMap();
+  const t=value=>{
+    const entry=copy[value];
+    if(!entry||resolveLanguage()==="ru")return value;
+    return entry[resolveLanguage()==="kk"?1:0];
+  };
+  function refreshBodyCopy(){
+    const root=qs("#internalSettingsRoot");
+    if(!root)return;
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let part;
+    while((part=walker.nextNode())){
+      const parent=part.parentElement;
+      if(!parent||parent.closest("h3,#innerSettingsTitle,[data-is-tab],script,style,option"))continue;
+      const original=authoredText.get(part)||part.nodeValue.trim();
+      if(!copy[original])continue;
+      if(!authoredText.has(part))authoredText.set(part,original);
+      const wanted=t(original);
+      if(part.nodeValue!==wanted)part.nodeValue=wanted;
+    }
+    for(const el of root.querySelectorAll("[aria-label]")){
+      if(!el.dataset.isOriginalAria)el.dataset.isOriginalAria=el.getAttribute("aria-label");
+      const result=t(el.dataset.isOriginalAria);
+      if(el.getAttribute("aria-label")!==result)el.setAttribute("aria-label",result);
+    }
+  }
+
   const themePresets=[
     ["kaz","Kaz AI","#42e2fa","#030c1e","#eaf7ff"],
     ["ocean","Океан","#38bdf8","#071e30","#ecfeff"],
@@ -196,6 +299,7 @@
     });
     document.documentElement.dir=lang==="ar"?"rtl":"ltr";
     qs("#internalSettingsRoot").dir=lang==="ar"?"rtl":"ltr";
+    refreshBodyCopy();
   };
   const chooseLanguage=(v,quiet=false)=>{
     prefs.language=v;save();

@@ -197,12 +197,12 @@
     document.documentElement.dir=lang==="ar"?"rtl":"ltr";
     qs("#internalSettingsRoot").dir=lang==="ar"?"rtl":"ltr";
   };
-  const chooseLanguage=(v)=>{
+  const chooseLanguage=(v,quiet=false)=>{
     prefs.language=v;save();
     const value=resolveLanguage();
     if(typeof selectLanguage==="function"){
       languageChangeInside=true;
-      selectLanguage(value);
+      selectLanguage(value,quiet);
       languageChangeInside=false;
     }
     refreshLabels();
@@ -306,7 +306,7 @@
     refreshLabels();
     // Preserve existing default site language until the visitor explicitly
     // selects an option, so original chat behaviour is not silently rewritten.
-    chooseLanguage(prefs.language);
+    chooseLanguage(prefs.language,true);
   }
   window.KazInternalSettings={
     open:(panel="general")=>{

@@ -1,11 +1,11 @@
 {
-  "scope": "21 unfinished approved light-medium Kaz AI directions; 1 completed simple calculator archived separately; removed complex and deleted features excluded.",
-  "basis": "Исправлены окончание и сохранение неполных ответов GPT-OSS 120B в SSE и JSON, восстановление черновика и ручной повтор. Добавлены серверные и браузерные регрессионные проверки; их запуск в GitHub Actions на момент обновления отчёта не подтверждён. Проверки на телефоне/эмуляторе не входят в незавершённую программную работу.",
+  "scope": "22 working approved Kaz AI directions and 1 completed calculator = 23 total. The new approved direction is \"внутренности настроек\". Paid billing and Google account integration are excluded from this shell stage.",
+  "basis": "Added user-approved direction \"внутренности настроек\" with 17 available languages plus automatic detection, ten appearance presets, local appearance/notification preferences, and honest no-account/no-billing shells. New direction starts at 0% for current-cycle comparison; device/emulator and owner-only checks excluded. 70% is engineering estimate; new browser regression has not been independently executed.",
   "branch": "main",
   "date": "2026-11-20",
-  "previous": 77.90285714285714,
-  "now": 77.92,
-  "delta": 0.017142857142857792,
+  "previous": 74.36181818181818,
+  "now": 77.56,
+  "delta": 3.1981818181818227,
   "groups": [
     {
       "name": "Чаты",
@@ -23,10 +23,10 @@
     },
     {
       "name": "Настройки",
-      "count": 6,
-      "previous": 88.30166666666666,
-      "now": 88.30166666666666,
-      "delta": 0
+      "count": 7,
+      "previous": 75.68714285714285,
+      "now": 85.68714285714285,
+      "delta": 10
     }
   ],
   "items": [
@@ -239,13 +239,23 @@
       "delta": 0,
       "summary": "Скачивание чата, проекта и истории безопасно обрабатывает отказ браузера и не сообщает ложный успех.",
       "status": "in_progress"
+    },
+    {
+      "id": 47,
+      "name": "внутренности настроек",
+      "group": "Настройки",
+      "previous": 0,
+      "now": 70,
+      "delta": 70,
+      "summary": "Создан отдельный раздел с 7 вкладками: общие/17 языков и авто, учётная запись, безопасность, использование, оплата, 10 тем и цветовые настройки, уведомления. Настоящая оплата и Google-вход не подключены по ТЗ. Полный перевод новых экранов на все языки и автоматическая браузерная проверка ещё не подтверждены.",
+      "status": "in_progress"
     }
   ],
   "completed_ids": [
     25
   ],
   "completed_count": 1,
-  "incomplete_count": 21,
+  "incomplete_count": 22,
   "completed_items": [
     {
       "id": 25,
@@ -258,7 +268,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 78.90727272727273,
-  "overall_now": 78.92363636363638,
-  "overall_delta": 0.016363636363649903
+  "overall_previous": 75.47652173913043,
+  "overall_now": 78.53565217391305,
+  "overall_delta": 3.0591304347826167
 }

@@ -78,7 +78,7 @@
       en:["Copy code","Copied","Unavailable","Copy failed"],
       kk:["Кодты көшіру","Көшірілді","Қолжетімсіз","Көшіру қатесі"],
       ru:["Копировать код","Скопировано","Недоступно","Ошибка копирования"]
-    })[["en","kk"].includes(window.KazI18n?.language)?window.KazI18n.language:"ru"];
+    })[["ru","kk"].includes(window.KazI18n?.language)?window.KazI18n.language:"en"];
     button.textContent=copyLabels()[0];
     button.addEventListener("click",async()=>{
       const labels=copyLabels();

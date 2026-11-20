@@ -1059,7 +1059,7 @@ function toggleTheme(fromInternalSettings=false){
   if(!fromInternalSettings)window.KazInternalSettings?.onLegacyThemeToggle(state.light);
 }
 const languages={en:"English",ru:"Русский",kk:"Қазақша",pt:"Português",es:"Español",fr:"Français",ar:"العربية",zh:"中文",ko:"한국어",ja:"日本語",de:"Deutsch",it:"Italiano",tr:"Türkçe",pl:"Polski",hi:"हिन्दी",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
-function selectLanguage(value){
+function selectLanguage(value,quiet=false){
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
   state.language=value;
   $$(".language-current").forEach(el=>{el.textContent=languages[value]});
@@ -1071,7 +1071,7 @@ function selectLanguage(value){
   else renderHistory();
   renderTools($("#toolsSearch").value);
   const notification={ru:"Язык интерфейса: ",en:"Interface language: ",kk:"Интерфейс тілі: "};
-  notify((notification[value]||notification.en)+languages[value]);
+  if(!quiet)notify((notification[value]||notification.en)+languages[value]);
 }
 function selectFont(value){
   if(!["small","normal","large"].includes(value))return;
@@ -3942,12 +3942,12 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     document.documentElement.dir=lang==="ar"?"rtl":"ltr";
     qs("#internalSettingsRoot").dir=lang==="ar"?"rtl":"ltr";
   };
-  const chooseLanguage=(v)=>{
+  const chooseLanguage=(v,quiet=false)=>{
     prefs.language=v;save();
     const value=resolveLanguage();
     if(typeof selectLanguage==="function"){
       languageChangeInside=true;
-      selectLanguage(value);
+      selectLanguage(value,quiet);
       languageChangeInside=false;
     }
     refreshLabels();
@@ -4051,7 +4051,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     refreshLabels();
     // Preserve existing default site language until the visitor explicitly
     // selects an option, so original chat behaviour is not silently rewritten.
-    chooseLanguage(prefs.language);
+    chooseLanguage(prefs.language,true);
   }
   window.KazInternalSettings={
     open:(panel="general")=>{

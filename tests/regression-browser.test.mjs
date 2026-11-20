@@ -1000,6 +1000,34 @@ test('internal settings translate account, security and billing details and dial
   });
 });
 
+test('temporary chat cannot be pinned or shown in saved history',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#sessionTemporary').check();
+    await page.locator('#messageInput').fill('Временный чат для проверки закрепления');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-6"]').click();
+    assert.match(await page.locator('#toast').innerText(),/Временные чаты нельзя закреплять/);
+    const snapshot=await page.evaluate(()=>window.KazSession.snapshot());
+    assert.equal(snapshot.threads[0].temporary,true);
+    assert.equal(snapshot.threads[0].pinned,false);
+    await page.locator('.sidebar [data-screen="history"]').click();
+    assert.equal(await page.locator('#historyList [data-session="pin-chat"]').count(),0);
+  });
+});
+
+test('local welcome greeting is not mistaken for a genuine rated AI answer',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill('Муханова Айслу');
+    await page.locator('#sendButton').click();
+    assert.match(await page.locator('#chatMessages').innerText(),/Здравствуйте, мама создателя/);
+    assert.equal(await page.locator('#chatMessages [data-session="rate-up"]').count(),0);
+    assert.equal(await page.locator('#chatMessages [data-session="rate-down"]').count(),0);
+    assert.equal(await page.locator('#chatMessages [data-session="retry-answer"]').count(),0);
+  });
+});
+
 test('math formatter preserves prose after a same-line closed block formula',async()=>{
   await withPage(async page=>{
     const result=await page.evaluate(()=>{

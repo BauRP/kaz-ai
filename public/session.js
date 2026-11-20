@@ -593,10 +593,14 @@
     try{
       while(true){
         const {value,done}=await reader.read();
-        if(done){buffer+=decoder.decode();break}
-        buffer+=decoder.decode(value,{stream:true});
+        // Decode the final bytes and process all complete frames before EOF.
+        // A CRLF may be split across reader.read() calls: keep a trailing CR
+        // until the following chunk is available.
+        if(done)buffer+=decoder.decode();
+        else buffer+=decoder.decode(value,{stream:true});
         if(buffer.length>1_000_000)throw new Error("STREAM_INVALID");
-        buffer=buffer.replace(/\r\n/g,"\n");
+        buffer=done?buffer.replace(/\r\n?/g,"\n")
+          :buffer.replace(/\r\n/g,"\n").replace(/\r(?!$)/g,"\n");
         let boundary;
         while((boundary=buffer.indexOf("\n\n"))>=0){
           const frame=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);
@@ -649,6 +653,7 @@
             onText(output);
           }
         }
+        if(done)break;
       }
       if(buffer.trim()){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error;}
       if(!finished){const error=new Error("STREAM_INTERRUPTED");error.code="STREAM_INTERRUPTED";throw error;}

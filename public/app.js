@@ -104,11 +104,12 @@ function renderTools(query=""){const target=$("#toolGroups");target.replaceChild
   }
   return names.join(" ").toLocaleLowerCase().includes(value);
 });if(!list.length)continue;total+=list.length;const section=node("section","tool-group");const title=node("h2","tool-group-title");title.append(node("span","",group.title),node("small","",list.length+" функций"));section.append(title);const grid=node("div","tool-grid");for(const [number,name,description,iconName] of list){const card=node("button","tool-card");card.type="button";card.dataset.feature="tool-"+number;card.setAttribute("aria-label",name+", функция будет подключена позже");const head=node("div","tool-card-top");head.append(icon(iconName),node("small","","В плане"));card.append(head,node("strong","",name),node("p","",description));grid.append(card)}section.append(grid);target.append(section)}if(!total)target.append(node("p","","Ничего не найдено"))}
-function selectReason(value){
+function selectReason(value,quiet=false){
   if(!Object.prototype.hasOwnProperty.call(REASONS,value)||value==="deep"){
     featureModal("Углублённый уровень","Кнопка предусмотрена. Дополнительные этапы анализа и проверки ответа будут разработаны только по вашему разрешению.");return;
   }
   state.reason=value;
+  try{localStorage.setItem("kaz-ai-reason-v1",value)}catch{}
   $("#currentReason").textContent=REASONS[value].name;
   $$("[data-reason]").forEach(btn=>{
     const active=btn.dataset.reason===value;
@@ -116,6 +117,7 @@ function selectReason(value){
     if(btn.dataset.reason!=="deep")btn.setAttribute("aria-pressed",String(active));
   });
   closePopovers();
+  if(quiet)return;
   const lang=window.KazI18n?.language||"ru";
   const label=window.KazI18n?.translate?.(REASONS[value].name)||REASONS[value].name;
   if(lang==="en")notify('Reasoning level: '+label+'. This will apply when the AI is connected.');
@@ -249,4 +251,8 @@ renderTools();renderHistory();renderChat();try{
   const savedFont=localStorage.getItem("kaz-ai-font-size-v1");
   if(["small","normal","large"].includes(savedFont))selectFont(savedFont,true);
 }catch{}
-$("#currentReason").textContent="Средний";$$("[data-reason]").forEach(button=>{const selected=button.dataset.reason==="medium";button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");
+try{
+  const savedReason=localStorage.getItem("kaz-ai-reason-v1");
+  if(["low","medium","high"].includes(savedReason))selectReason(savedReason,true);
+}catch{}
+$("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").forEach(button=>{const selected=button.dataset.reason===state.reason;button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");

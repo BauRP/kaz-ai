@@ -1,32 +1,32 @@
 {
   "scope": "22 working approved Kaz AI directions and 1 completed calculator = 23 total. The new approved direction is \"внутренности настроек\". Paid billing and Google account integration are excluded from this shell stage.",
-  "basis": "Translated dynamic history, search, project names/actions and empty states on English and Kazakh, with English fallback for other UI languages. Kept user-authored titles untouched. Added targeted browser regression and synced static preview. JavaScript source syntax checked; CI/browser execution and Cloudflare deployment not confirmed. Manual Android emulator/phone tests, Google account and billing functions excluded.",
+  "basis": "2026-11-20 50/50 cycle: reliability fixes for byte-split CRLF and final SSE frames; development improvements to 17-language translation prompts and honest per-tab AI request attempt usage. Unit syntax and preview source equality confirmed; two browser tests added, full execution/Cloudflare deploy unconfirmed. External phone/emulator checks, real Google account and payments excluded from unfinished coding work.",
   "branch": "main",
   "date": "2026-11-20",
-  "previous": 78.84636363636365,
-  "now": 78.91227272727274,
-  "delta": 0.06590909090908781,
+  "previous": 78.91227272727274,
+  "now": 79.13727272727273,
+  "delta": 0.22499999999999432,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.691,
-      "now": 92.786,
-      "delta": 0.09499999999999886
+      "previous": 92.786,
+      "now": 92.821,
+      "delta": 0.03499999999999659
     },
     {
       "name": "Интеллект",
       "count": 5,
       "previous": 37.846000000000004,
-      "now": 37.846000000000004,
-      "delta": 0
+      "now": 38.346000000000004,
+      "delta": 0.5
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 88.35428571428572,
-      "now": 88.42571428571429,
-      "delta": 0.0714285714285694
+      "previous": 88.42571428571429,
+      "now": 88.72571428571428,
+      "delta": 0.29999999999998295
     }
   ],
   "items": [
@@ -44,9 +44,9 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 90.77,
+      "previous": 91.47,
       "now": 91.47,
-      "delta": 0.7,
+      "delta": 0,
       "summary": "Динамические элементы истории переводятся на выбранный язык: пустые состояния, кнопки действий, недавние чаты и их подписи.",
       "status": "in_progress"
     },
@@ -94,9 +94,9 @@
       "id": 7,
       "name": "Папки и проекты",
       "group": "Чаты",
-      "previous": 99.74,
+      "previous": 99.99,
       "now": 99.99,
-      "delta": 0.25,
+      "delta": 0,
       "summary": "Кнопки папок и проектов теперь локализуются при рендере; названия созданных пользователем папок и чатов остаются неизменными.",
       "status": "in_progress"
     },
@@ -105,9 +105,9 @@
       "name": "Повторить ответ",
       "group": "Чаты",
       "previous": 75.24,
-      "now": 75.24,
-      "delta": 0,
-      "summary": "При неполном ответе текст остаётся только во временном просмотре, а повтор не сохраняет ложный результат.",
+      "now": 75.59,
+      "delta": 0.35,
+      "summary": "Повторный запрос после ошибочно разорванного SSE не требуется при корректном завершении, включая раздельные CR/LF.",
       "status": "in_progress"
     },
     {
@@ -135,9 +135,9 @@
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
       "previous": 63.07,
-      "now": 63.07,
-      "delta": 0,
-      "summary": "Проверенные математические факты для специальной задачи теперь добавляются только когда она находится в последнем вопросе, а не по старой переписке.",
+      "now": 64.02,
+      "delta": 0.95,
+      "summary": "Клиент ИИ корректно разбирает SSE-пакеты с разорванными CR/LF, а последний завершённый кадр не теряется при EOF.",
       "status": "in_progress"
     },
     {
@@ -155,9 +155,9 @@
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
       "previous": 23.05,
-      "now": 23.05,
-      "delta": 0,
-      "summary": "Целевой язык переводчика расширен с 3 до всех 17; для остальных локалей безопасная английская подсказка.",
+      "now": 24.6,
+      "delta": 1.55,
+      "summary": "Все 17 языков перевода имеют естественные названия в русских, казахских и английских инструкциях, вместо англоязычных вставок в RU/KK.",
       "status": "in_progress"
     },
     {
@@ -214,10 +214,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 81.68,
-      "now": 82.18,
-      "delta": 0.5,
-      "summary": "Добавлены недостающие переводы действий папок, вывод истории и проектов согласован с локалью; английский fallback для дополнительных языков.",
+      "previous": 82.18,
+      "now": 82.53,
+      "delta": 0.35,
+      "summary": "Названия 17 языков перевода согласованы с выбранным языком интерфейса RU, KK, EN и английским fallback.",
       "status": "in_progress"
     },
     {
@@ -245,9 +245,9 @@
       "name": "внутренности настроек",
       "group": "Настройки",
       "previous": 81.29,
-      "now": 81.29,
-      "delta": 0,
-      "summary": "Кнопка сброса полностью возвращает исходные настройки внешнего вида, включая режим отображения.",
+      "now": 83.04,
+      "delta": 1.75,
+      "summary": "Раздел использования теперь показывает реальные попытки запросов из текущей вкладки; серверные токены и тарифные лимиты по-прежнему показываются как неизвестные.",
       "status": "in_progress"
     }
   ],
@@ -268,7 +268,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.76608695652176,
-  "overall_now": 79.82913043478261,
-  "overall_delta": 0.06304347826085177
+  "overall_previous": 79.82913043478261,
+  "overall_now": 80.04434782608696,
+  "overall_delta": 0.2152173913043498
 }

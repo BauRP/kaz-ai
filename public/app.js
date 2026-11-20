@@ -130,7 +130,7 @@ function toggleTheme(fromInternalSettings=false){
   $$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"));
   if(!fromInternalSettings)window.KazInternalSettings?.onLegacyThemeToggle(state.light);
 }
-const languages={en:"English",ru:"Русский",kk:"Қазақ тілі",pt:"Português",es:"Español",fr:"Français",ar:"العربية",zh:"中文",ko:"한국어",ja:"日本語",de:"Deutsch",it:"Italiano",tr:"Türkçe",pl:"Polski",hi:"हिन्दी",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
+const languages={en:"English",ru:"Русский",kk:"Қазақша",pt:"Português",es:"Español",fr:"Français",ar:"العربية",zh:"中文",ko:"한국어",ja:"日本語",de:"Deutsch",it:"Italiano",tr:"Türkçe",pl:"Polski",hi:"हिन्दी",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
 function selectLanguage(value){
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
   state.language=value;

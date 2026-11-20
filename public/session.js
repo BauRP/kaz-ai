@@ -23,7 +23,7 @@
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
   const projectCountLabel=count=>{
     const lang=window.KazI18n?.language||"ru";
-    if(lang==="en")return count+" "+(count===1?"chat":"chats");
+    if(!["ru","kk"].includes(lang))return count+" "+(count===1?"chat":"chats");
     if(lang==="kk")return count+" чат";
     const last=count%10,lastTwo=count%100;
     const suffix=last===1&&lastTwo!==11?"чат":last>=2&&last<=4&&(lastTwo<12||lastTwo>14)?"чата":"чатов";
@@ -114,7 +114,7 @@
       ru:{note:"Экспорт текущей переписки (без сохранения в облаке)",user:"Вы: "},
       en:{note:"Current conversation export (not saved to the cloud)",user:"You: "},
       kk:{note:"Ағымдағы әңгіме экспорты (бұлтта сақталмайды)",user:"Сіз: "}
-    }[lang];
+    }[["ru","en","kk"].includes(lang)?lang:"en"];
     const parts=["Kaz AI — ",c.title,"\n",labels.note,"\n"];
     for(const m of c.messages){
       parts.push("\n",m.role==="assistant"?"Kaz AI: ":labels.user,m.content,"\n");
@@ -1388,7 +1388,7 @@
     for(const heading of document.querySelectorAll("#toolGroups .tool-group-title small")){
       const count=Number.parseInt(heading.textContent,10);
       if(!Number.isSafeInteger(count))continue;
-      if(language==="en")heading.textContent=count+" "+(count===1?"function":"functions");
+      if(!["ru","kk"].includes(language))heading.textContent=count+" "+(count===1?"function":"functions");
       else if(language==="kk")heading.textContent=count+" функция";
       else {
         const last=count%10,lastTwo=count%100;

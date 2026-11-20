@@ -1,32 +1,32 @@
 {
   "scope": "22 working approved Kaz AI directions and 1 completed calculator = 23 total. The new approved direction is \"внутренности настроек\". Paid billing and Google account integration are excluded from this shell stage.",
-  "basis": "Scoped special 5x8 grid proof facts to last user question; persistent font size and low/medium/high reasoning preferences; translated copy-code feedback; full default dark appearance reset. Added focused API and browser tests; code syntax and preview bundling verified. End-to-end browser suite and Cloudflare deployment not yet confirmed; external Android/emulator checks and Google/payment integrations excluded from coding-scope pending work.",
+  "basis": "Translated dynamic history, search, project names/actions and empty states on English and Kazakh, with English fallback for other UI languages. Kept user-authored titles untouched. Added targeted browser regression and synced static preview. JavaScript source syntax checked; CI/browser execution and Cloudflare deployment not confirmed. Manual Android emulator/phone tests, Google account and billing functions excluded.",
   "branch": "main",
   "date": "2026-11-20",
-  "previous": 78.60090909090908,
-  "now": 78.84636363636365,
-  "delta": 0.2454545454545638,
+  "previous": 78.84636363636365,
+  "now": 78.91227272727274,
+  "delta": 0.06590909090908781,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
       "previous": 92.691,
-      "now": 92.691,
-      "delta": 0
+      "now": 92.786,
+      "delta": 0.09499999999999886
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 37.406,
+      "previous": 37.846000000000004,
       "now": 37.846000000000004,
-      "delta": 0.44000000000000483
+      "delta": 0
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 87.89714285714285,
-      "now": 88.35428571428572,
-      "delta": 0.45714285714286973
+      "previous": 88.35428571428572,
+      "now": 88.42571428571429,
+      "delta": 0.0714285714285694
     }
   ],
   "items": [
@@ -45,9 +45,9 @@
       "name": "История чатов",
       "group": "Чаты",
       "previous": 90.77,
-      "now": 90.77,
-      "delta": 0,
-      "summary": "Экспортированные переписки доступны на всех 17 языках без ошибки подписи; тексты сообщений и их порядок не изменены.",
+      "now": 91.47,
+      "delta": 0.7,
+      "summary": "Динамические элементы истории переводятся на выбранный язык: пустые состояния, кнопки действий, недавние чаты и их подписи.",
       "status": "in_progress"
     },
     {
@@ -57,7 +57,7 @@
       "previous": 99.99,
       "now": 99.99,
       "delta": 0,
-      "summary": "Поиск расширен на фразы через жирное выделение, курсив и фрагменты кода. Готовность остаётся 99,99%.",
+      "summary": "Поисковая выдача, сообщение об отсутствии результатов и очистка поиска согласованы с языком интерфейса без изменения содержимого сообщений.",
       "status": "in_progress"
     },
     {
@@ -95,9 +95,9 @@
       "name": "Папки и проекты",
       "group": "Чаты",
       "previous": 99.74,
-      "now": 99.74,
-      "delta": 0,
-      "summary": "При назначении чата в проект повторно проверяется, что чат и выбранный проект существуют; защищено окно добавления при изменении списка.",
+      "now": 99.99,
+      "delta": 0.25,
+      "summary": "Кнопки папок и проектов теперь локализуются при рендере; названия созданных пользователем папок и чатов остаются неизменными.",
       "status": "in_progress"
     },
     {
@@ -134,9 +134,9 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 62.42,
+      "previous": 63.07,
       "now": 63.07,
-      "delta": 0.65,
+      "delta": 0,
       "summary": "Проверенные математические факты для специальной задачи теперь добавляются только когда она находится в последнем вопросе, а не по старой переписке.",
       "status": "in_progress"
     },
@@ -144,9 +144,9 @@
       "id": 16,
       "name": "Уровни рассуждения",
       "group": "Интеллект",
-      "previous": 58.41,
+      "previous": 59.51,
       "now": 59.51,
-      "delta": 1.1,
+      "delta": 0,
       "summary": "Выбор низкого, среднего или высокого уровня рассуждения сохраняется локально и восстанавливается без автоматического запроса. Углублённый режим не включён.",
       "status": "in_progress"
     },
@@ -164,9 +164,9 @@
       "id": 23,
       "name": "Программирование с ИИ",
       "group": "Интеллект",
-      "previous": 21.6,
+      "previous": 22.05,
       "now": 22.05,
-      "delta": 0.45,
+      "delta": 0,
       "summary": "Для кода улучшены подписи и результаты копирования, включая английский вариант для новых языков интерфейса.",
       "status": "in_progress"
     },
@@ -204,9 +204,9 @@
       "id": 42,
       "name": "Светлая и тёмная тема",
       "group": "Настройки",
-      "previous": 91.63,
+      "previous": 92.18,
       "now": 92.18,
-      "delta": 0.55,
+      "delta": 0,
       "summary": "Сброс оформления возвращает исходный тёмный режим Kaz AI, а также тему и пользовательские цвета.",
       "status": "in_progress"
     },
@@ -214,19 +214,19 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 81.43,
-      "now": 81.68,
-      "delta": 0.25,
-      "summary": "Кнопка копирования кода использует русский, казахский или английский запасной текст в зависимости от локали.",
+      "previous": 81.68,
+      "now": 82.18,
+      "delta": 0.5,
+      "summary": "Добавлены недостающие переводы действий папок, вывод истории и проектов согласован с локалью; английский fallback для дополнительных языков.",
       "status": "in_progress"
     },
     {
       "id": 44,
       "name": "Размер текста",
       "group": "Настройки",
-      "previous": 82.1,
+      "previous": 83.95,
       "now": 83.95,
-      "delta": 1.85,
+      "delta": 0,
       "summary": "Выбранный размер текста теперь сохраняется между перезагрузками и восстанавливается без всплывающего уведомления.",
       "status": "in_progress"
     },
@@ -244,9 +244,9 @@
       "id": 47,
       "name": "внутренности настроек",
       "group": "Настройки",
-      "previous": 80.74,
+      "previous": 81.29,
       "now": 81.29,
-      "delta": 0.55,
+      "delta": 0,
       "summary": "Кнопка сброса полностью возвращает исходные настройки внешнего вида, включая режим отображения.",
       "status": "in_progress"
     }
@@ -268,7 +268,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.53130434782608,
-  "overall_now": 79.76608695652176,
-  "overall_delta": 0.23478260869568146
+  "overall_previous": 79.76608695652176,
+  "overall_now": 79.82913043478261,
+  "overall_delta": 0.06304347826085177
 }

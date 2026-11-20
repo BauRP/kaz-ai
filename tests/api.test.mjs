@@ -870,7 +870,9 @@ test('premature native SSE close never becomes a falsely completed response',asy
   const body=await response.text();
   assert.match(body,/Ответ модели не завершён/);
   assert.match(body,/Часть готового текста/);
-  assert.match(body,/event: final/);
+  assert.match(body,/event: preview/);
+  assert.match(body,/"code":"AI_OUTPUT_INCOMPLETE"/);
+  assert.doesNotMatch(body,/event: final|event: done/);
   assert.equal(calls.length,1);
 });
 test('corrupted upstream SSE event is reported, never treated as a full model answer',async()=>{
@@ -894,6 +896,9 @@ test('Cloudflare incomplete mathematics is marked partial and does not start rev
   },TOKEN,{Accept:'text/event-stream'}),env)).text();
   assert.match(body,/Ответ модели не завершён/);
   assert.match(body,/Недописанное доказательство/);
+  assert.match(body,/event: preview/);
+  assert.match(body,/"code":"AI_OUTPUT_INCOMPLETE"/);
+  assert.doesNotMatch(body,/event: final|event: done/);
   assert.equal(calls.length,1);
 });
 test('independent review sees original requirements from earlier messages',async()=>{
@@ -987,6 +992,35 @@ test('incomplete nested output status cannot masquerade as a completed model rep
   const reply=await worker.fetch(post(good),env);
   assert.equal(reply.status,200);
   assert.match((await reply.json()).text,/Ответ модели не завершён/);
+});
+test('JSON incomplete reply is explicitly marked for clients to avoid saving it',async()=>{
+  const {env,calls}=envWithAI(async()=>({
+    status:'incomplete',output_text:'Незаконченный ответ для JSON клиента'
+  }));
+  const response=await worker.fetch(post(good),env);
+  assert.equal(response.status,200);
+  const result=await response.json();
+  assert.equal(result.incomplete,true);
+  assert.match(result.text,/Незаконченный ответ/);
+  assert.equal(calls.length,1);
+});
+test('completed JSON reply is explicitly marked complete',async()=>{
+  const {env}=envWithAI();
+  const result=await (await worker.fetch(post(good),env)).json();
+  assert.equal(result.incomplete,false);
+  assert.equal(result.text,'Ответ модели');
+});
+test('native SSE with partial text and explicit incomplete status is never committed',async()=>{
+  const upstream='data: {"response":"Недописанный ответ"}\\n\\n'
+    +'data: {"status":"incomplete","incomplete_details":{"reason":"max_tokens"}}\\n\\n';
+  const {env}=envWithAI(async()=>new ReadableStream({start(c){
+    c.enqueue(new TextEncoder().encode(upstream.replaceAll('\\n','\n')));
+    c.close();
+  }}));
+  const body=await (await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env)).text();
+  assert.match(body,/event: preview/);
+  assert.match(body,/"code":"AI_OUTPUT_INCOMPLETE"/);
+  assert.doesNotMatch(body,/event: final|event: done/);
 });
 test('personal instructions retain intentional indentation, newlines and trailing spaces',async()=>{
   const instructions='  Пожалуйста, сохраняй формат:\n    два пробела в начале\n  ';

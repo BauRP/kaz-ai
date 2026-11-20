@@ -89,6 +89,37 @@ test('translation, coding and document draft helpers preserve whitespace-only dr
 });
 
 
+test('newly enabled interface languages can prepare translation, code and document drafts',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#innerLanguage').selectOption('es');
+    assert.equal(await page.locator('html').getAttribute('lang'),'es');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-22"]').click();
+    const languages=page.locator('#sessionBody select');
+    assert.equal(await languages.locator('option').count(),17);
+    await languages.selectOption('ja');
+    await page.locator('#sessionBody textarea').fill('Buenos días');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    const draft=await page.locator('#messageInput').inputValue();
+    assert.match(draft,/Translate the following text into Japanese/);
+    assert.match(draft,/Buenos días$/);
+    await page.locator('#messageInput').fill('');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-23"]').click();
+    await page.locator('#sessionBody textarea').fill('  print("hola")\n');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.match(await page.locator('#messageInput').inputValue(),/Help with programming/);
+    await page.locator('#messageInput').fill('');
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-24"]').click();
+    await page.locator('#sessionBody textarea').fill('Brief meeting agenda');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    assert.match(await page.locator('#messageInput').inputValue(),/Draft the document text/);
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+  });
+});
+
 test('assigning an existing chat to a folder updates both screens and keeps keyboard focus',async()=>{
   await withPage(async page=>{
     await page.locator('#messageInput').fill('Сохранённый разговор');

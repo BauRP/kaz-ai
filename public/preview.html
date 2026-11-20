@@ -1481,7 +1481,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
   const projectCountLabel=count=>{
     const lang=window.KazI18n?.language||"ru";
-    if(lang==="en")return count+" "+(count===1?"chat":"chats");
+    if(!["ru","kk"].includes(lang))return count+" "+(count===1?"chat":"chats");
     if(lang==="kk")return count+" чат";
     const last=count%10,lastTwo=count%100;
     const suffix=last===1&&lastTwo!==11?"чат":last>=2&&last<=4&&(lastTwo<12||lastTwo>14)?"чата":"чатов";
@@ -1572,7 +1572,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
       ru:{note:"Экспорт текущей переписки (без сохранения в облаке)",user:"Вы: "},
       en:{note:"Current conversation export (not saved to the cloud)",user:"You: "},
       kk:{note:"Ағымдағы әңгіме экспорты (бұлтта сақталмайды)",user:"Сіз: "}
-    }[lang];
+    }[["ru","en","kk"].includes(lang)?lang:"en"];
     const parts=["Kaz AI — ",c.title,"\n",labels.note,"\n"];
     for(const m of c.messages){
       parts.push("\n",m.role==="assistant"?"Kaz AI: ":labels.user,m.content,"\n");
@@ -2846,7 +2846,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     for(const heading of document.querySelectorAll("#toolGroups .tool-group-title small")){
       const count=Number.parseInt(heading.textContent,10);
       if(!Number.isSafeInteger(count))continue;
-      if(language==="en")heading.textContent=count+" "+(count===1?"function":"functions");
+      if(!["ru","kk"].includes(language))heading.textContent=count+" "+(count===1?"function":"functions");
       else if(language==="kk")heading.textContent=count+" функция";
       else {
         const last=count%10,lastTwo=count%100;
@@ -3805,7 +3805,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     ["graphite","Графит","#acb8cb","#171b23","#f1f4fa"]
   ];
   const preset=Object.fromEntries(themePresets.map(([key,name,accent,bg,fg])=>[key,{name,accent,bg,fg}]));
-  const defaultPrefs=()=>({language:"auto",mode:"system",theme:"kaz",accent:null,bg:null,fg:null,
+  const defaultPrefs=()=>({language:"auto",mode:"dark",theme:"kaz",accent:null,bg:null,fg:null,
     notifications:{completed:false,failed:false,news:false,security:false}});
   let prefs=defaultPrefs(),themeWatch=null,dialogOpener=null,active="general",languageChangeInside=false;
   try{

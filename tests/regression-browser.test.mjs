@@ -120,6 +120,32 @@ test('newly enabled interface languages can prepare translation, code and docume
   });
 });
 
+test('history and project controls translate dynamically on English and Kazakh without changing user titles',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill('Личный проект Ω');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
+    await page.locator('[data-session="new-project"]').click();
+    await page.locator('#sessionBody input').fill('Моя папка Ω');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    for(const [lang,rename,folder] of [
+      ['en','Rename','Add chat'],
+      ['kk','Қайта атау','Чат қосу']
+    ]){
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+lang+'"]').click();
+      await page.locator('.sidebar [data-screen="history"]').click();
+      const renameAction=page.locator('#historyList [data-session="rename-chat"]');
+      assert.equal((await renameAction.innerText()).trim(),rename);
+      assert.match(await page.locator('#historyList').innerText(),/Личный проект Ω/);
+      await page.locator('.sidebar [data-screen="projects"]').click();
+      assert.match(await page.locator('#projectsWorkspace').innerText(),/Моя папка Ω/);
+      const add=page.locator('#projectsWorkspace [data-session="add-chat-to-project"]');
+      assert.equal((await add.innerText()).trim(),'＋ '+folder);
+    }
+  });
+});
+
 test('assigning an existing chat to a folder updates both screens and keeps keyboard focus',async()=>{
   await withPage(async page=>{
     await page.locator('#messageInput').fill('Сохранённый разговор');

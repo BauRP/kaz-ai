@@ -1200,10 +1200,18 @@
       if(kind===22){
         languageSelect=make("select","session-input");
         languageSelect.setAttribute("aria-label","Язык перевода");
-        for(const [value,label] of [["ru","Русский"],["kk","Қазақша"],["en","English"]]){
+        for(const [value,label] of [
+          ["ru","Русский"],["kk","Қазақ тілі"],["en","English"],["pt","Português"],
+          ["es","Español"],["fr","Français"],["ar","العربية"],["zh","中文"],
+          ["ko","한국어"],["ja","日本語"],["de","Deutsch"],["it","Italiano"],
+          ["tr","Türkçe"],["pl","Polski"],["hi","हिन्दी"],["vi","Tiếng Việt"],
+          ["id","Bahasa Indonesia"]
+        ]){
           const option=make("option","",label);option.value=value;languageSelect.append(option);
         }
-        languageSelect.value=window.KazI18n?.language||"ru";
+        const selectedLanguage=window.KazI18n?.language||"ru";
+        languageSelect.value=Array.from(languageSelect.options).some(option=>option.value===selectedLanguage)
+          ?selectedLanguage:"en";
         body.append(languageSelect);
       }
       const field=make("textarea","session-textarea");field.rows=6;field.maxLength=7800;
@@ -1227,30 +1235,37 @@
         if(input.value.length){notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");return}
         let prompt="";
         const ui=window.KazI18n?.language||"ru";
+        // Every supported interface locale can use these tools. Their existing
+        // Russian, Kazakh and English prompt wording is retained.
+        const promptLocale=["ru","kk","en"].includes(ui)?ui:"en";
         if(kind===22){
           const target={
             ru:{ru:"русский",kk:"казахский",en:"английский"},
             en:{ru:"Russian",kk:"Kazakh",en:"English"},
             kk:{ru:"орыс",kk:"қазақ",en:"ағылшын"}
-          }[ui][languageSelect.value];
+          }[promptLocale][languageSelect.value]||{
+            pt:"Portuguese",es:"Spanish",fr:"French",ar:"Arabic",zh:"Chinese",
+            ko:"Korean",ja:"Japanese",de:"German",it:"Italian",tr:"Turkish",
+            pl:"Polish",hi:"Hindi",vi:"Vietnamese",id:"Indonesian"
+          }[languageSelect.value];
           const prefix={
             ru:"Переведи следующий текст на "+target+" язык. Сохрани смысл, имена и форматирование. Выведи только перевод.\n\n",
             en:"Translate the following text into "+target+". Preserve meaning, names, and formatting. Return only the translation.\n\n",
             kk:"Келесі мәтінді "+target+" тіліне аудар. Мағынасын, есімдерді және пішімдеуді сақта. Тек аударманы бер.\n\n"
-          }[ui];
+          }[promptLocale];
           prompt=prefix+value;
         }else if(kind===23){
           prompt={
             ru:"Помоги с программированием. Если информации не хватает, уточни её. Объясняй простыми словами, а код приводи в удобном виде. Задача:\n\n",
             en:"Help with programming. Ask for missing details. Explain simply and format code clearly. Task:\n\n",
             kk:"Бағдарламалауға көмектес. Ақпарат жетіспесе, нақтылап сұра. Қарапайым тілмен түсіндіріп, кодты түсінікті түрде көрсет. Тапсырма:\n\n"
-          }[ui]+value;
+          }[promptLocale]+value;
         }else{
           prompt={
             ru:"Подготовь текст документа по следующему описанию. Сделай его понятным и аккуратно структурированным. Не выдумывай неизвестные данные. Описание:\n\n",
             en:"Draft the document text described below. Organize it clearly and do not invent missing details. Description:\n\n",
             kk:"Төмендегі сипаттамаға сай құжат мәтінін дайында. Түсінікті әрі жүйелі жаз. Белгісіз мәліметтерді ойдан қоспа. Сипаттама:\n\n"
-          }[ui]+value;
+          }[promptLocale]+value;
         }
         if(prompt.length>8000){notify("Текст слишком длинный. Сократите описание.");field.focus();return}
         closeDialog();showScreen(selected()?"chat":"welcome");
@@ -1272,7 +1287,7 @@
           ru:{answer:"Ответ: ",zero:"На ноль делить нельзя.",invalid:"Проверьте математическое выражение.",unsafe:"Число слишком большое для точного расчёта."},
           en:{answer:"Result: ",zero:"Cannot divide by zero.",invalid:"Check the mathematical expression.",unsafe:"Number too large for accurate calculation."},
           kk:{answer:"Нәтиже: ",zero:"Нөлге бөлуге болмайды.",invalid:"Математикалық өрнекті тексеріңіз.",unsafe:"Дәл есептеу үшін сан тым үлкен."}
-        }[lang];
+        }[["ru","kk","en"].includes(lang)?lang:"en"];
         try{output.textContent=t.answer+window.KazCalculator.format(field.value)}
         catch(e){output.textContent=e.message==="ZERO"?t.zero:e.message==="UNSAFE"?t.unsafe:t.invalid}
       });

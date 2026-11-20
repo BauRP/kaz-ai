@@ -621,6 +621,42 @@ body.light .session-jump-hit .session-search-hit{background:rgba(0,117,197,.24)}
   .is-row select,.is-panels select{max-width:100%;width:100%}
 }
 
+
+/* Three visual light/system/dark cards, matching the user's appearance example. */
+.is-mode .is-mode-choice{min-width:68px;display:flex;flex-direction:column;align-items:center;gap:5px;border-radius:10px;padding:6px 7px}
+.is-mode-choice input{position:absolute;opacity:0;width:1px;height:1px}
+.is-mode-choice:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:3px}
+.is-mode-choice .is-mini-preview{width:64px;height:43px;border-radius:7px;display:flex;overflow:hidden;border:1px solid var(--line-strong);background:#f0f5fc;padding:4px;gap:3px}
+.is-mini-preview i{height:100%;flex:1;border-radius:2px;background:linear-gradient(180deg,#bddaf5 8px,#f7fbff 8px 13px,#dceaf7 13px 15px,#f7fbff 15px)}
+.is-mini-preview.is-mini-system i:last-child{background:linear-gradient(180deg,#0f2545 8px,#162a44 8px 13px,#3299e8 13px 15px,#162a44 15px)}
+.is-mini-preview.is-mini-light{background:#eff8ff}
+.is-mini-preview.is-mini-dark{background:#162438}
+.is-mini-preview.is-mini-dark i{background:linear-gradient(180deg,#101b2b 8px,#243751 8px 13px,#2883ce 13px 15px,#243751 15px)}
+.is-mode-choice:has(input:checked) .is-mini-preview{outline:2px solid var(--accent);outline-offset:1px}
+@media(max-width:390px){.is-mode .is-mode-choice{min-width:63px;padding:5px}.is-mode-choice .is-mini-preview{width:57px}}
+
+
+/* Theme palette applies throughout the shell; keep original Kaz AI default unchanged. */
+body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .sidebar{
+  background:linear-gradient(170deg,var(--panel),var(--bg));
+  border-right-color:color-mix(in srgb,var(--accent) 28%,transparent);
+}
+body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .view-welcome{
+  background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 65%),var(--bg);
+}
+body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .topbar,
+body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .composer{
+  border-color:color-mix(in srgb,var(--accent) 35%,transparent);
+}
+html[dir="rtl"] .sidebar{border-right:0;border-left:1px solid var(--line)}
+html[dir="rtl"] .topbar,
+html[dir="rtl"] #view-settings,
+html[dir="rtl"] .sidebar{direction:rtl}
+@media(max-width:760px){
+  html[dir="rtl"] .sidebar{left:auto;right:0;transform:translateX(105%)}
+  html[dir="rtl"] .sidebar.open{transform:translateX(0)}
+}
+
 </style>
   
   
@@ -1022,7 +1058,7 @@ function toggleTheme(fromInternalSettings=false){
   $$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"));
   if(!fromInternalSettings)window.KazInternalSettings?.onLegacyThemeToggle(state.light);
 }
-const languages={en:"English",ru:"Русский",kk:"Қазақ тілі",pt:"Português",es:"Español",fr:"Français",ar:"العربية",zh:"中文",ko:"한국어",ja:"日本語",de:"Deutsch",it:"Italiano",tr:"Türkçe",pl:"Polski",hi:"हिन्दी",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
+const languages={en:"English",ru:"Русский",kk:"Қазақша",pt:"Português",es:"Español",fr:"Français",ar:"العربية",zh:"中文",ko:"한국어",ja:"日本語",de:"Deutsch",it:"Italiano",tr:"Türkçe",pl:"Polski",hi:"हिन्दी",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
 function selectLanguage(value){
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
   state.language=value;
@@ -3832,9 +3868,9 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
           <h3>Внешний вид</h3>
           <div class="is-row"><div><strong>Режим</strong><p>Системный, светлый или тёмный</p></div>
             <fieldset class="is-mode" aria-label="Режим">
-              <label><input type="radio" name="innerMode" value="system">Авто</label>
-              <label><input type="radio" name="innerMode" value="light">Светлый</label>
-              <label><input type="radio" name="innerMode" value="dark">Тёмный</label>
+              <label class="is-mode-choice"><input type="radio" name="innerMode" value="system"><span class="is-mini-preview is-mini-system" aria-hidden="true"><i></i><i></i></span><span>Авто</span></label>
+              <label class="is-mode-choice"><input type="radio" name="innerMode" value="light"><span class="is-mini-preview is-mini-light" aria-hidden="true"><i></i><i></i></span><span>Светлый</span></label>
+              <label class="is-mode-choice"><input type="radio" name="innerMode" value="dark"><span class="is-mini-preview is-mini-dark" aria-hidden="true"><i></i><i></i></span><span>Тёмный</span></label>
             </fieldset></div>
           <div class="is-row"><div><strong>Тема</strong><p>10 вариантов цветов и стиля</p></div><select id="innerTheme" aria-label="Тема"></select></div>
           <div class="is-colors">
@@ -3861,7 +3897,7 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     <div class="is-modal-foot"><button type="button" data-is-dialog-close>Закрыть</button></div>
   `;
   const dialogContent={
-    password:["Пароль","Пароль будет доступен после подключения Google-входа. Мы не собираем и не сохраняем пароль в этой версии."],
+    password:["Пароль","Если вход выполняется через Google, пароль меняется только в настройках Google. Kaz AI не получает и не хранит пароль. Отдельный пароль появится только при создании собственной системы аккаунтов."],
     sessions:["Активные сеансы","Список устройств и активных входов появится после подключения авторизации. Сейчас нет достоверной истории сеансов."],
     securityHistory:["История безопасности","После подключения аккаунтов здесь будут даты, время и устройства входов и выходов. Пока записи недоступны."],
     transactions:["История транзакций","Платёжная система не подключена. Достоверной истории платежей нет."],
@@ -3873,10 +3909,18 @@ renderTools();renderHistory();renderChat();$("#currentReason").textContent="Ср
     const isLight=prefs.mode==="light"||(prefs.mode==="system"&&matchMedia("(prefers-color-scheme: light)").matches);
     if(typeof state!=="undefined"&&state.light!==isLight&&typeof toggleTheme==="function")toggleTheme(true);
     const color=preset[prefs.theme],bg=prefs.bg||(isLight?"#edf4fb":color.bg),fg=prefs.fg||(isLight?"#11273d":color.fg);
-    document.documentElement.style.setProperty("--accent",prefs.accent||color.accent);
-    document.documentElement.style.setProperty("--accent2",prefs.accent||color.accent);
-    document.documentElement.style.setProperty("--bg",bg);
-    document.documentElement.style.setProperty("--text",fg);
+    document.body.dataset.kazTheme=prefs.theme;
+    if(prefs.theme!=="kaz"){
+      document.body.style.setProperty("--panel",`color-mix(in srgb, ${bg} 90%, ${fg})`);
+      document.body.style.setProperty("--panel2",`color-mix(in srgb, ${bg} 78%, ${fg})`);
+    }else{
+      document.body.style.removeProperty("--panel");
+      document.body.style.removeProperty("--panel2");
+    }
+    document.body.style.setProperty("--accent",prefs.accent||color.accent);
+    document.body.style.setProperty("--accent2",prefs.accent||color.accent);
+    document.body.style.setProperty("--bg",bg);
+    document.body.style.setProperty("--text",fg);
     qs("#innerAccent").value=prefs.accent||color.accent;
     qs("#innerBg").value=bg;
     qs("#innerFg").value=fg;

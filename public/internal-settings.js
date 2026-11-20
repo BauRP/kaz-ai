@@ -166,6 +166,12 @@
     ["sand","Песчаный","#cc9960","#292018","#fff3df"],
     ["graphite","Графит","#acb8cb","#171b23","#f1f4fa"]
   ];
+  const themeNames={
+    kaz:["Kaz AI","Kaz AI"],ocean:["Ocean","Мұхит"],aurora:["Aurora","Шұғыла"],
+    sapphire:["Sapphire","Сапфир"],forest:["Forest","Орман"],sunset:["Sunset","Күн батуы"],
+    violet:["Violet","Күлгін"],rose:["Rose gold","Қызғылт алтын"],
+    sand:["Sand","Құм"],graphite:["Graphite","Графит"]
+  };
   const preset=Object.fromEntries(themePresets.map(([key,name,accent,bg,fg])=>[key,{name,accent,bg,fg}]));
   const defaultPrefs=()=>({language:"auto",mode:"dark",theme:"kaz",accent:null,bg:null,fg:null,
     notifications:{completed:false,failed:false,news:false,security:false}});
@@ -312,6 +318,11 @@
     const tabs=qa("[data-is-tab]");
     tabs.forEach((tab,i)=>{tab.textContent=translated[i+1]});
     qs("#innerLanguage").options[0].textContent=translated[8];
+    const themes=qs("#innerTheme");
+    for(const option of themes.options){
+      const key=option.value,source=preset[key];
+      if(source)option.textContent=lang==="ru"?source.name:(themeNames[key]?.[lang==="kk"?1:0]||source.name);
+    }
     qa("[data-is-panel]").forEach((panel,i)=>{
       const heading=qs("h3",panel);
       if(heading)heading.textContent=translated[i+1];

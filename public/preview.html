@@ -1495,6 +1495,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
   const projects=[];
   const drafts=new Map();
   let welcomeDraft="";
+  let requestsAttempted=0; // Per-tab attempts only; never claim this is token usage.
   let activitySerial=0;
   const touchChat=chat=>{chat.activity=++activitySerial};
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
@@ -2070,10 +2071,14 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
     try{
       while(true){
         const {value,done}=await reader.read();
-        if(done){buffer+=decoder.decode();break}
-        buffer+=decoder.decode(value,{stream:true});
+        // Decode the final bytes and process all complete frames before EOF.
+        // A CRLF may be split across reader.read() calls: keep a trailing CR
+        // until the following chunk is available.
+        if(done)buffer+=decoder.decode();
+        else buffer+=decoder.decode(value,{stream:true});
         if(buffer.length>1_000_000)throw new Error("STREAM_INVALID");
-        buffer=buffer.replace(/\r\n/g,"\n");
+        buffer=done?buffer.replace(/\r\n?/g,"\n")
+          :buffer.replace(/\r\n/g,"\n").replace(/\r(?!$)/g,"\n");
         let boundary;
         while((boundary=buffer.indexOf("\n\n"))>=0){
           const frame=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);
@@ -2126,6 +2131,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
             onText(output);
           }
         }
+        if(done)break;
       }
       if(buffer.trim()){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error;}
       if(!finished){const error=new Error("STREAM_INTERRUPTED");error.code="STREAM_INTERRUPTED";throw error;}
@@ -2201,6 +2207,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
     }
     let streamingBubble=null,streamedPartial="",keepIncomplete=false;
     try{
+      requestsAttempted++;
+      window.KazInternalSettings?.refreshUsage?.();
       const response=await fetch("/api/chat",{
         method:"POST",headers:{"content-type":"application/json","accept":"text/event-stream"},
         credentials:"same-origin",signal:controller.signal,
@@ -2743,15 +2751,25 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
         // Russian, Kazakh and English prompt wording is retained.
         const promptLocale=["ru","kk","en"].includes(ui)?ui:"en";
         if(kind===22){
-          const target={
-            ru:{ru:"русский",kk:"казахский",en:"английский"},
-            en:{ru:"Russian",kk:"Kazakh",en:"English"},
-            kk:{ru:"орыс",kk:"қазақ",en:"ағылшын"}
-          }[promptLocale][languageSelect.value]||{
-            pt:"Portuguese",es:"Spanish",fr:"French",ar:"Arabic",zh:"Chinese",
-            ko:"Korean",ja:"Japanese",de:"German",it:"Italian",tr:"Turkish",
-            pl:"Polish",hi:"Hindi",vi:"Vietnamese",id:"Indonesian"
-          }[languageSelect.value];
+          const targetCode=languageSelect.value;
+          const englishNames={
+            en:"English",ru:"Russian",kk:"Kazakh",pt:"Portuguese",es:"Spanish",
+            fr:"French",ar:"Arabic",zh:"Chinese",ko:"Korean",ja:"Japanese",
+            de:"German",it:"Italian",tr:"Turkish",pl:"Polish",
+            hi:"Hindi",vi:"Vietnamese",id:"Indonesian"
+          };
+          const localNames={
+            ru:{ru:"русский",kk:"казахский",en:"английский",pt:"португальский",es:"испанский",
+              fr:"французский",ar:"арабский",zh:"китайский",ko:"корейский",ja:"японский",
+              de:"немецкий",it:"итальянский",tr:"турецкий",pl:"польский",
+              hi:"хинди",vi:"вьетнамский",id:"индонезийский"},
+            kk:{ru:"орыс",kk:"қазақ",en:"ағылшын",pt:"португал",es:"испан",
+              fr:"француз",ar:"араб",zh:"қытай",ko:"корей",ja:"жапон",
+              de:"неміс",it:"итальян",tr:"түрік",pl:"поляк",
+              hi:"хинди",vi:"вьетнам",id:"индонезия"}
+          };
+          const target=(promptLocale==="en"?englishNames:localNames[promptLocale])?.[targetCode];
+          if(!target){notify("Выберите язык перевода.");languageSelect.focus();return}
           const prefix={
             ru:"Переведи следующий текст на "+target+" язык. Сохрани смысл, имена и форматирование. Выведи только перевод.\n\n",
             en:"Translate the following text into "+target+". Preserve meaning, names, and formatting. Return only the translation.\n\n",
@@ -3009,7 +3027,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
   submitMessage=sendMessage;
   renderHistory();renderChat();renderTools();
   setup();
-  window.KazSession={snapshot:()=>({
+  window.KazSession={usageSnapshot:()=>({requestsAttempted}),snapshot:()=>({
     threads:threads.map(c=>({id:c.id,title:c.title,messages:c.messages.length,pinned:c.pinned,temporary:c.temporary,projectId:c.projectId})),
     projects:projects.map(p=>({id:p.id,name:p.name})),active:current,draftCount:drafts.size
   }),compute,sendMessage,refreshLocale:()=>{
@@ -3883,6 +3901,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
     "Использовано токенов":["Tokens used","Пайдаланылған токендер"],
     "Осталось токенов":["Tokens remaining","Қалған токендер"],
     "Запросов за период":["Requests this period","Осы кезеңдегі сұраулар"],
+    "Попыток запросов ИИ в этой вкладке":["AI request attempts in this tab","Осы қойындыдағы ЖИ сұрауларының әрекеттері"],
     "Точная статистика появится после подключения серверного учёта. Сейчас показаны прочерки, а не выдуманные цифры.":["Accurate usage statistics require server-side accounting. Dashes are shown instead of invented numbers.","Нақты статистика серверлік есеп іске қосылғаннан кейін көрсетіледі. Ойдан шығарылған сандардың орнына сызықша көрсетілген."],
     "Оплата и подписки отключены. Никакие деньги не списываются через эти настройки.":["Payments and subscriptions are disabled. These settings cannot charge money.","Төлемдер мен жазылымдар өшірілген. Бұл баптаулар ақша алмайды."],
     "История транзакций":["Transaction history","Төлемдер тарихы"],
@@ -4045,7 +4064,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
         <section data-is-panel="usage" hidden>
           <h3>Использование</h3>
           <div class="is-row"><div><strong>Текущий план</strong><p>Бесплатная версия, платные тарифы пока не действуют</p></div><button type="button" data-is-dialog="plans">Подключить тариф</button></div>
-          <div class="is-meters"><div><span>Использовано токенов</span><strong>—</strong></div><div><span>Осталось токенов</span><strong>—</strong></div><div><span>Запросов за период</span><strong>—</strong></div></div>
+          <div class="is-meters"><div><span>Использовано токенов</span><strong>—</strong></div><div><span>Осталось токенов</span><strong>—</strong></div><div><span>Попыток запросов ИИ в этой вкладке</span><strong id="innerRequestsAttempted">0</strong></div></div>
           <p class="is-footnote">Точная статистика появится после подключения серверного учёта. Сейчас показаны прочерки, а не выдуманные цифры.</p>
         </section>
         <section data-is-panel="billing" hidden>
@@ -4150,9 +4169,16 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
     refreshLabels();
     qs("#innerLanguage").value=prefs.language;
   };
+  const refreshUsage=()=>{
+    const el=qs("#innerRequestsAttempted");
+    if(!el)return;
+    const count=window.KazSession?.usageSnapshot?.()?.requestsAttempted;
+    el.textContent=Number.isSafeInteger(count)&&count>=0?String(count):"—";
+  };
   const showTab=(name)=>{
     if(!qs('[data-is-panel="'+name+'"]'))return;
     active=name;
+    if(name==="usage")refreshUsage();
     qa("[data-is-panel]").forEach(p=>p.hidden=p.dataset.isPanel!==name);
     qa("[data-is-tab]").forEach(b=>{
       const picked=b.dataset.isTab===name;
@@ -4250,6 +4276,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
       });
     }
     showTab(active);
+    refreshUsage();
     applyAppearance();
     refreshLabels();
     // Preserve existing default site language until the visitor explicitly
@@ -4257,6 +4284,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
     chooseLanguage(prefs.language,true);
   }
   window.KazInternalSettings={
+    refreshUsage,
     open:(panel="general")=>{
       if(typeof showScreen==="function")showScreen("settings");
       showTab(panel);

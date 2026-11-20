@@ -245,3 +245,14 @@ test('internal settings direction exposes 17 languages and seven sections withou
   assert.match(internal,/Оплата и подписки отключены/);
   assert.doesNotMatch(internal,/\bfetch\s*\(|google\.accounts|Stripe\(|PaymentIntent/);
 });
+
+
+test('all 17 selectable languages are available as translation targets with safe fallback in writing tools',()=>{
+  const session=readFileSync('public/session.js','utf8');
+  for(const language of ['pt','es','fr','ar','zh','ko','ja','de','it','tr','pl','hi','vi','id'])
+    assert.ok(session.includes('["'+language+'",'),'Missing translation destination '+language);
+  assert.match(session,/const promptLocale=\["ru","kk","en"\]\.includes\(ui\)\?ui:"en"/);
+  assert.match(session,/\}\[promptLocale\]\+value;/);
+  assert.match(session,/\}\[\["ru","kk","en"\]\.includes\(lang\)\?lang:"en"\]/);
+  assert.match(session,/Неполный текст не сохранён/);
+});

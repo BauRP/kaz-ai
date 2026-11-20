@@ -224,3 +224,24 @@ test('history search avoids per-character offsets and localization avoids full-p
   assert.match(locale,/const dirtyRoots=new Set\(\)/);
   assert.match(locale,/for\(const root of roots\)translateText\(root\)/);
 });
+
+
+test('internal settings direction exposes 17 languages and seven sections without activating accounts or billing',()=>{
+  const internal=readFileSync('public/internal-settings.js','utf8');
+  const preview=readFileSync('public/preview.html','utf8');
+  assert.match(html,/id="internalSettingsRoot"/);
+  assert.match(html,/src="\.\/internal-settings\.js"/);
+  assert.ok(preview.includes(internal),'Preview includes the complete internal settings module');
+  for(const tab of ['general','account','security','usage','billing','appearance','notifications'])
+    assert.ok(internal.includes('data-is-panel="'+tab+'"'),tab);
+  const supported=['en','ru','kk','pt','es','fr','ar','zh','ko','ja','de','it','tr','pl','hi','vi','id'];
+  for(const lang of supported)assert.ok(internal.includes('["'+lang+'",'),'Missing language: '+lang);
+  assert.match(internal,/language:"auto"/);
+  for(const theme of ['kaz','ocean','aurora','sapphire','forest','sunset','violet','rose','sand','graphite'])
+    assert.ok(internal.includes('["'+theme+'",'),'Missing theme: '+theme);
+  assert.match(internal,/data-is-dialog="sessions"/);
+  assert.match(internal,/data-is-dialog="transactions"/);
+  assert.match(internal,/data-is-dialog="cancel"/);
+  assert.match(internal,/Оплата и подписки отключены/);
+  assert.doesNotMatch(internal,/\bfetch\s*\(|google\.accounts|Stripe\(|PaymentIntent/);
+});

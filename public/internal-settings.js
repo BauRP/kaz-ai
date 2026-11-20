@@ -105,6 +105,22 @@
     "О событиях безопасности":["Security events","Қауіпсіздік оқиғалары"],
     "После подключения аккаунтов":["After accounts are connected","Аккаунттар қосылғаннан кейін"],
     "Параметры сохраняются только в этом браузере. Push и электронные письма не подключены.":["Preferences are saved only in this browser. Push and email notifications are not connected.","Баптаулар тек осы браузерде сақталады. Push және электрондық пошта хабарламалары қосылмаған."],
+    "Тарифы Kaz AI":["Kaz AI plans","Kaz AI тарифтері"],
+    "Тарифы показаны для ознакомления. Цены не установлены, оформление и оплата отключены.":["Plans are for preview only. Prices are not set, and checkout and payments are disabled.","Тарифтер тек танысу үшін көрсетіледі. Бағалар белгіленбеген, рәсімдеу мен төлем өшірілген."],
+    "Бесплатный":["Free","Тегін"],
+    "Расширенный":["Extended","Кеңейтілген"],
+    "Максимальный":["Maximum","Максималды"],
+    "Текущий доступ к сайту, в пределах лимитов провайдера ИИ":["Current access, subject to AI provider limits","ЖИ провайдерінің лимиттері шегіндегі ағымдағы қолжетімділік"],
+    "Будущий тариф. Цена и условия пока не утверждены":["Future plan. Pricing and terms are not yet approved","Болашақ тариф. Баға мен шарттар әлі бекітілмеген"],
+    "Бесплатно":["Free","Тегін"],
+    "Недоступно":["Unavailable","Қолжетімсіз"],
+    "Если вход выполняется через Google, пароль меняется только в настройках Google. Kaz AI не получает и не хранит пароль. Отдельный пароль появится только при создании собственной системы аккаунтов.":["Google passwords are managed by Google, not Kaz AI. Kaz AI cannot access or store them. A separate password would require its own account system.","Google құпиясөзі тек Google баптауларында өзгертіледі. Kaz AI оны алмайды және сақтамайды. Жеке құпиясөз үшін бөлек аккаунт жүйесі қажет."],
+    "Список устройств и активных входов появится после подключения авторизации. Сейчас нет достоверной истории сеансов.":["Device and active session lists will be available after sign-in is implemented. No real session history is available yet.","Құрылғылар мен белсенді сеанстар тізімі кіру жүйесі қосылғаннан кейін көрсетіледі. Әзірге нақты тарих жоқ."],
+    "После подключения аккаунтов здесь будут даты, время и устройства входов и выходов. Пока записи недоступны.":["Sign-in and sign-out dates, times and devices will appear after accounts are connected. No records are available yet.","Аккаунттар қосылғаннан кейін кіру мен шығудың күні, уақыты және құрылғылар көрсетіледі. Әзірге жазбалар жоқ."],
+    "Платёжная система не подключена. Достоверной истории платежей нет.":["Payment processing is not connected. There is no genuine transaction history.","Төлем жүйесі қосылмаған. Нақты төлемдер тарихы жоқ."],
+    "Платёжные данные появятся после подключения настоящего платёжного сервиса. Сейчас ввод данных отключён.":["Billing details will appear after a real payment service is connected. Entering payment information is disabled.","Төлем деректері нақты төлем қызметі қосылғаннан кейін көрсетіледі. Деректерді енгізу өшірілген."],
+    "Активной подписки Kaz AI нет. Кнопка подготовлена для будущей системы оплаты, отменять пока нечего.":["There is no active Kaz AI subscription. Cancellation is only a placeholder.","Белсенді Kaz AI жазылымы жоқ. Жазылымды тоқтату батырмасы әзірге үлгі ғана."],
+    "Сервис аккаунтов ещё не подключён. Поэтому удалять нечего. Мы не выдаём демонстрацию за настоящее удаление.":["Accounts are not connected. This is only a preview, not actual account deletion.","Аккаунттар әлі қосылмаған. Бұл тек үлгі, нақты аккаунт жойылмайды."],
     "Закрыть":["Close","Жабу"],
     "Закрыть окно":["Close dialog","Терезені жабу"]
   };
@@ -328,9 +344,9 @@
     const title=qs("#innerDialogTitle"),body=qs("#innerDialogBody");
     body.replaceChildren();
     if(kind==="plans"){
-      title.textContent="Тарифы Kaz AI";
+      title.textContent=t("Тарифы Kaz AI");
       const info=document.createElement("p");
-      info.textContent="Тарифы показаны для ознакомления. Цены не установлены, оформление и оплата отключены.";
+      info.textContent=t("Тарифы показаны для ознакомления. Цены не установлены, оформление и оплата отключены.");
       body.append(info);
       for(const [name,details] of [
         ["Бесплатный","Текущий доступ к сайту, в пределах лимитов провайдера ИИ"],
@@ -338,17 +354,23 @@
         ["Максимальный","Будущий тариф. Цена и условия пока не утверждены"]
       ]){
         const el=document.createElement("div");el.className="is-plan";
-        const strong=document.createElement("strong");strong.textContent=name;
-        const desc=document.createElement("p");desc.textContent=details;
-        const status=document.createElement("span");status.textContent=name==="Бесплатный"?"Бесплатно":"Недоступно";
+        const strong=document.createElement("strong");strong.textContent=t(name);
+        const desc=document.createElement("p");desc.textContent=t(details);
+        const status=document.createElement("span");status.textContent=t(name==="Бесплатный"?"Бесплатно":"Недоступно");
         el.append(strong,desc,status);body.append(el);
       }
     }else{
       const data=dialogContent[kind];if(!data)return;
-      title.textContent=data[0];
-      const p=document.createElement("p");p.textContent=data[1];body.append(p);
+      title.textContent=t(data[0]);
+      const p=document.createElement("p");p.textContent=t(data[1]);body.append(p);
     }
     if(typeof modal.showModal==="function")modal.showModal();else modal.hidden=false;
+    for(const close of qa("[data-is-dialog-close]",modal)){
+      if(close.textContent.trim()==="Закрыть"||close.dataset.isDialogOriginal==="Закрыть"){
+        close.dataset.isDialogOriginal="Закрыть";close.textContent=t("Закрыть");
+      }
+      if(close.hasAttribute("aria-label"))close.setAttribute("aria-label",t("Закрыть окно"));
+    }
     qs("[data-is-dialog-close]",modal).focus();
   };
   const closeDialog=()=>{
@@ -383,7 +405,7 @@
       if(command){showDialog(command.dataset.isDialog);return}
       if(event.target.closest('[data-is-action="reset-appearance"]')){
         prefs.theme="kaz";prefs.accent=null;prefs.bg=null;prefs.fg=null;
-        applyAppearance();showToast("Оформление сброшено");return;
+        applyAppearance();showToast(t("Сбросить оформление"));return;
       }
     });
     language.addEventListener("change",()=>chooseLanguage(language.value));

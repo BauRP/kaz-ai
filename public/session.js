@@ -771,6 +771,19 @@
       }
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat))return;
       if(!data||typeof data.text!=="string"||!data.text.trim())throw new Error("EMPTY_RESPONSE");
+      if(data.incomplete===true){
+        // The JSON fallback must never silently save an unfinished AI answer.
+        streamingBubble=make("div","message message-assistant");
+        streamingBubble.append(make("div","message-label","Kaz AI"));
+        const partial=make("div","session-stream-answer");
+        if(window.KazFormat?.render)partial.append(window.KazFormat.render(data.text));
+        else partial.textContent=data.text;
+        streamingBubble.append(partial);
+        $("#chatMessages").append(streamingBubble);
+        streamedPartial=data.text;
+        const error=new Error("AI_OUTPUT_INCOMPLETE");error.code="AI_OUTPUT_INCOMPLETE";
+        throw error;
+      }
       if(replaceId){
         const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
         if(existing){existing.content=data.text;existing.rating=null}

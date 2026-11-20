@@ -975,6 +975,7 @@ test('internal settings translate account, security and billing details and dial
     await root.locator('[data-is-dialog="transactions"]').click();
     assert.match(await page.locator('#innerDialogBody').innerText(),/no genuine transaction history/);
     await page.locator('[data-is-dialog-close]').last().click();
+    await root.locator('[data-is-tab="general"]').click();
     await page.locator('#innerLanguage').selectOption('kk');
     await root.locator('[data-is-tab="account"]').click();
     assert.match(await root.innerText(),/Google арқылы кіру әлі қосылмаған/);
@@ -982,6 +983,7 @@ test('internal settings translate account, security and billing details and dial
     await root.locator('[data-is-dialog="sessions"]').click();
     assert.match(await page.locator('#innerDialogBody').innerText(),/Әзірге нақты тарих жоқ/);
     await page.locator('[data-is-dialog-close]').last().click();
+    await root.locator('[data-is-tab="general"]').click();
     await page.locator('#innerLanguage').selectOption('es');
     await root.locator('[data-is-tab="billing"]').click();
     assert.match(await root.innerText(),/Payments and subscriptions are disabled/);

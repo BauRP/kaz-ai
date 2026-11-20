@@ -180,8 +180,13 @@ test('full history TXT export works in all newly selectable languages',async()=>
       const text=readFileSync(await file.path(),'utf8');
       assert.ok(text.startsWith('\uFEFF'));
       assert.match(text,/Kaz AI: қазақша, русский, Español/);
-      assert.match(text,/Current conversation export/);
-      assert.match(text,/You: /);
+      const localized={
+        fr:['Export de la conversation actuelle','Vous : '],
+        ar:['تصدير المحادثة الحالية','أنت: '],
+        ja:['現在の会話をエクスポート','あなた: ']
+      }[locale];
+      assert.ok(text.includes(localized[0]),'Localized export heading: '+locale);
+      assert.ok(text.includes(localized[1]),'Localized speaker: '+locale);
     }
   });
 });

@@ -181,9 +181,18 @@ function classifyAILimit(error){
   return null;
 }
 
-// Cloudflare GPT-OSS supports native SSE streaming with {messages, stream:true}.
-// Its separate Responses API does not currently support streaming. Keep the
-// existing JSON path for older clients, but use native SSE for long answers.
+// Cloudflare supports two GPT-OSS formats: native SSE uses messages +
+// reasoning_effort; non-streaming Responses uses input + reasoning.effort.
+// This one builder keeps low/medium/high consistent without disabling SSE.
+// https://developers.cloudflare.com/workers-ai/models/gpt-oss-120b/
+// https://github.com/cloudflare/ai/tree/main/packages/workers-ai-provider
+// https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/
+function gptOssParams(messages,effort,stream=false){
+  if(!["low","medium","high"].includes(effort))throw new TypeError("Unsupported reasoning effort");
+  return stream
+    ?{messages,reasoning_effort:effort,max_tokens:12288,stream:true}
+    :{input:messages,reasoning:{effort},stream:false,max_output_tokens:12288};
+}
 
 function wantsProofAudit(input){
   const q=input.messages.at(-1)?.content||"";
@@ -387,16 +396,13 @@ async function independentProofReview(env,question,answer,effort,allowCorrection
       ?"Для задачи 25 лошадей учитывай транзитивность сравнений: нельзя доказывать минимум только сравнением 66 и 60. После пяти групповых забегов исключаются четвёртая и пятая лошади каждой группы. Нижняя граница требует универсального аргумента о непобеждённых лошадях. "
       :"")+
     "Верни ТОЛЬКО JSON: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"assumptions\":true,\"eliminations\":true,\"lower_bound\":true},\"issues\":[\"конкретные проблемы\"],\"corrected_answer\":\"полный исправленный ответ\"}. При pass все checks=true, issues=[], corrected_answer пустой. При revise перечисли точные ошибки и только если можешь, напиши ПОЛНЫЙ исправленный ответ, сохраняющий все требуемые доказательства, вычисления и код. При uncertain честно перечисли сомнения и не выдумывай ответ.";
-  const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",{
-    input:[
+  const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",gptOssParams([
       {role:"system",content:system},
       {role:"user",content:"ЗАДАЧА:\n"+question+
         (horseProofReference(question)?"\n\nПРОВЕРЕННЫЕ КОНТРОЛЬНЫЕ ФАКТЫ:\n"+horseProofReference(question):"")+
         "\n\nПОТЕНЦИАЛЬНЫЕ ОШИБКИ, НАЙДЕННЫЕ БЕЗ МОДЕЛИ:\n"+(horseProofIssues(question,answer).join("\n")||"не обнаружены типовые ошибки")+
         "\n\nДАННЫЕ ТОЧНЫХ РАСЧЁТОВ (ТОЛЬКО ЕСЛИ УСЛОВИЕ ОДНОЗНАЧНО):\n"+(verifiedGridMathFacts(question)||"нет специальных вычислений")+"\n\nРЕШЕНИЕ:\n"+answer}
-    ],
-    reasoning:{effort},stream:false,max_output_tokens:12288
-  }),REVIEW_DEADLINE_MS);
+    ],effort)),REVIEW_DEADLINE_MS);
   if(completionState(result)==="incomplete")
     return {verdict:"uncertain",issues:["Дополнительная проверка не завершилась из-за ограничения ответа."],corrected:""};
   return parseProofReview(answerText(result));
@@ -405,15 +411,12 @@ async function independentEngineeringReview(env,question,answer,effort,repair=fa
   const instructions=repair
     ?"Проведи независимый технический аудит и при необходимости исправь весь ответ. Проверь КАЖДОЕ требование пользователя, соответствие заявленных свойств протоколам и реальному коду, согласованность, порядок, отказы, ошибки параллельного выполнения, переполнение чисел, повторную доставку, сохранность и реалистичность измерений. Для распределённых систем: два большинства одного Raft-кластера не могут быть непересекающимися; committed log нельзя пересортировывать по HLC; HLC не заменяет консенсус; RGA не равен сортировке ID; vector clock сравнивают по компонентам; eventual ordering при CRDT не равно строгой неизменной доставке; учти FIFO по отправителю и недоступные регионы. Битовые поля (64-bit HLC, 16-bit SiteID, 32-bit Seq) требуют 112 бит и непересекающихся сдвигов 48 и 32, если packed. Не утверждай '100% uptime', exact-once, отсутствие потерь и RTT без доказательств. Если требование физически несовместимо с другим, укажи компромисс, не выдавай его за исполнение. Верни ТОЛЬКО JSON: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"requirements\":true,\"ordering\":true,\"partitions\":true,\"code\":true,\"claims\":true},\"issues\":[],\"corrected_answer\":\"\"}. При отсутствии ошибок pass, все checks=true и issues=[]. При ошибках revise, перечисли проблемы и предоставь ПОЛНОСТЬЮ ИСПРАВЛЕННЫЙ ответ в corrected_answer. Если нельзя исправить надёжно, uncertain без ложных гарантий."
     :"Повторно независимо проверь уже исправленный технический ответ. Особое внимание: не перепутаны FIFO и глобальный порядок; при partition не обещана одновременно локальная финальная доставка и строгая линейная согласованность; Raft quorums/committed log верны; RGA/HLC/VC верны; packed ID не перекрывается; sender-seq и retries учтены; точные задержки не придуманы; требования пользователя соблюдены; код и алгоритмы непротиворечивы. Если что-то важное недоказано или ошибочно, ответ не может получить pass. Верни ТОЛЬКО JSON: {\"verdict\":\"pass|revise|uncertain\",\"checks\":{\"requirements\":true,\"ordering\":true,\"partitions\":true,\"code\":true,\"claims\":true},\"issues\":[],\"corrected_answer\":\"\"}. При pass все checks=true и issues=[]. Исправленный ответ не создавай в этой повторной проверке.";
-  const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",{
-    input:[
+  const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",gptOssParams([
       {role:"system",content:instructions},
       {role:"user",content:"ЗАДАЧА:\n"+question+"\n\nПРАВИЛА:\n"+engineeringGuide(question)+
         "\n\nПРОБЛЕМЫ, ОПРЕДЕЛЁННЫЕ ПРОГРАММОЙ:\n"+(engineeringIssues(question,answer).join("\n")||"нет очевидных совпадений")+
         "\n\nОТВЕТ:\n"+answer}
-    ],
-    reasoning:{effort},stream:false,max_output_tokens:12288
-  }),REVIEW_DEADLINE_MS);
+    ],effort)),REVIEW_DEADLINE_MS);
   if(completionState(result)==="incomplete")
     return {verdict:"uncertain",issues:["Дополнительная проверка не завершилась из-за ограничения ответа."],corrected:""};
   return parseEngineeringReview(answerText(result));
@@ -495,12 +498,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
   // All reasoning levels get the same generous output allowance. The chosen
   // effort changes how the model reasons, not how much answer it may produce.
   // 12,288 is the previously tested high-level budget, now shared by all.
-  const opts={
-    messages,
-    reasoning_effort:effort,
-    max_tokens:12288,
-    stream:true
-  };
+  const opts=gptOssParams(messages,effort,true);
   let upstreamReader=null,heartbeat=null,closed=false;
   let collected="",sseTail="",upstreamBytesSeen=false,receivedBytes=0,receivedChunks=0;
   let modelCompleted=false,modelIncomplete=false;
@@ -545,9 +543,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
             // The documented GPT-OSS Responses format accepts reasoning.effort,
             // but is non-streaming. The user already sees progress rather than
             // the unverified draft during mathematical verification.
-            const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",{
-              input:messages,reasoning:{effort},stream:false,max_output_tokens:12288
-            }),DRAFT_DEADLINE_MS);
+            const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",gptOssParams(messages,effort)),DRAFT_DEADLINE_MS);
             phase="model_read";diagnostic("model_connected");
             if(closed)return;
             collected=answerText(result);
@@ -779,14 +775,9 @@ export default {
     if((request.headers.get("accept")||"").includes("text/event-stream"))
       return streamedAIResponse(env,messages,input.effort,mode);
     try{
-      // Cloudflare's GPT-OSS Workers binding supports Responses API input
-      // with reasoning.effort. The older reasoning_effort field is not part of
-      // its published input schema and may silently leave the level unchanged.
-      const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",{
-        input:messages,
-        reasoning:{effort:input.effort},
-        stream:false,max_output_tokens:12288
-      }),DRAFT_DEADLINE_MS);
+      // Preserve selected level in the documented non-streaming format.
+      const result=await withStageDeadline(()=>env.AI.run("@cf/openai/gpt-oss-120b",
+        gptOssParams(messages,input.effort)),DRAFT_DEADLINE_MS);
       const text=answerText(result);
       if(!text.trim())return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
       const fullQuestion=input.messages.map(m=>(m.role==="user"?"Пользователь: ":"Ранее ответил ИИ: ")+m.content).join("\n\n");

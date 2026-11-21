@@ -33,6 +33,8 @@
   };
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,pendingReplaceId=null,personalInstructions="",retryAnswerId=null;
   let incompleteBubble=null; // Only transient UI; an interrupted draft never enters chat history.
+  // In-memory UI state only: do not collapse opened questions when answers arrive.
+  const expandedPrompts=new Set();
   let statusRetryable=false;
   const nextId=()=>String(++serial);
   const uiText=value=>window.KazI18n?.translate?.(value)||value;
@@ -478,13 +480,15 @@
       if(message.role==="user"){
         const plain=bubble.querySelector(":scope > span");
         if(plain){
-          plain.classList.add("session-user-text","is-collapsed");
+          const expanded=expandedPrompts.has(message.id);
+          plain.classList.add("session-user-text");
+          plain.classList.toggle("is-collapsed",!expanded);
           const toggle=make("button","session-message-expand");
           toggle.type="button";
-          toggle.hidden=true;
-          toggle.setAttribute("aria-expanded","false");
-          toggle.setAttribute("aria-label",promptLabel(false));
-          toggle.append(make("span","",promptLabel(false)));
+          toggle.hidden=!expanded;
+          toggle.setAttribute("aria-expanded",String(expanded));
+          toggle.setAttribute("aria-label",promptLabel(expanded));
+          toggle.append(make("span","",promptLabel(expanded)));
           const arrow=document.createElementNS("http://www.w3.org/2000/svg","svg");
           arrow.setAttribute("class","icon");
           arrow.setAttribute("aria-hidden","true");
@@ -493,6 +497,8 @@
           arrow.append(use);toggle.append(arrow);
           toggle.addEventListener("click",()=>{
             const expanded=toggle.getAttribute("aria-expanded")!=="true";
+            if(expanded)expandedPrompts.add(message.id);
+            else expandedPrompts.delete(message.id);
             plain.classList.toggle("is-collapsed",!expanded);
             toggle.setAttribute("aria-expanded",String(expanded));
             toggle.setAttribute("aria-label",promptLabel(expanded));

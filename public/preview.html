@@ -657,6 +657,75 @@ html[dir="rtl"] .sidebar{direction:rtl}
   html[dir="rtl"] .sidebar.open{transform:translateX(0)}
 }
 
+
+/* Direction 48: Расширение экрана. Use available CSS viewport size and zoom,
+   not unreliable physical diagonal inches. Keep all sidebar actions reachable. */
+.app-shell{height:100dvh;min-height:0}
+.sidebar{min-height:0;max-height:100%;overflow:hidden}
+.sidebar-scroll{
+  display:flex;flex-direction:column;flex:1 1 auto;min-height:0;min-width:0;
+  overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;
+}
+.sidebar-scroll .sidebar-header{flex:none}
+.sidebar-scroll .new-chat-button,.sidebar-scroll .primary-nav{flex:none}
+.sidebar-scroll .sidebar-recent{
+  flex:none;min-height:0;overflow:visible;
+  margin-top:clamp(16px,3.5vh,32px);
+  padding-bottom:12px;
+}
+.sidebar-scroll #recentChats{min-width:0}
+.sidebar-footer{
+  flex:0 0 auto;margin-top:0;min-width:0;
+  padding-bottom:max(2px,env(safe-area-inset-bottom));
+  background:inherit;
+}
+.sidebar-footer .google-button{min-width:0;min-height:44px;height:auto;padding:10px 8px}
+.sidebar-footer .google-button>span{min-width:0}
+.sidebar-footer .footer-note{margin-top:clamp(6px,1.5vh,16px)}
+@media(max-height:740px){
+  .sidebar{padding-top:clamp(9px,2vh,18px);padding-bottom:8px}
+  .sidebar-header{margin-bottom:12px}
+  .primary-nav{margin-top:12px;gap:3px}
+  .sidebar-scroll .sidebar-recent{margin-top:14px}
+  .sidebar-footer .ornament-line{height:6px;margin-bottom:5px}
+  .sidebar-footer .footer-note{margin-top:6px}
+}
+@media(max-height:520px){
+  .sidebar{padding-top:6px;padding-bottom:4px}
+  .sidebar-header{margin-bottom:7px}
+  .primary-nav{margin-top:8px;gap:1px}
+  .sidebar-footer .ornament-line{display:none}
+  .sidebar-footer .google-button{min-height:38px;padding:6px}
+  .sidebar-footer .footer-note{margin-top:4px}
+}
+@media(min-width:761px) and (max-width:980px){
+  :root{--sidebar-width:clamp(210px,24vw,236px)}
+  .topbar{padding-inline:clamp(12px,2vw,24px);gap:7px}
+  .topbar-start,.topbar-actions{gap:6px;min-width:0}
+  .view-panel{padding-inline:clamp(16px,3vw,27px)}
+  .composer-region{width:calc(100% - 28px)}
+}
+@media(max-width:760px){
+  .sidebar{height:100dvh;max-height:100dvh}
+  .sidebar-scroll{min-height:0}
+}
+@media(max-width:460px){
+  .topbar{gap:5px}
+  .topbar-title{font-size:clamp(11px,3.4vw,14px)}
+  .language-pill{padding:7px 5px;gap:4px}
+  .topbar-actions{gap:2px}
+  .composer-region{width:calc(100% - 12px)}
+  .composer-toolbar{gap:3px}
+  .composer-left,.composer-right{gap:3px}
+}
+@media(max-height:470px) and (max-width:760px){
+  .sidebar{padding-top:max(5px,env(safe-area-inset-top));padding-bottom:4px}
+  .sidebar-footer .footer-note{display:none}
+  .composer-region{padding-top:3px;padding-bottom:max(3px,env(safe-area-inset-bottom))}
+  .composer-note{display:none}
+}
+
 </style>
   
   
@@ -697,6 +766,7 @@ html[dir="rtl"] .sidebar{direction:rtl}
 <div class="app-shell">
   <div id="drawerScrim" class="drawer-scrim" hidden></div>
   <aside class="sidebar" id="sidebar" aria-label="Боковое меню">
+    <div class="sidebar-scroll" id="sidebarScroll">
     <div class="sidebar-header">
       <button type="button" class="brand" data-action="home" aria-label="На главную Kaz AI">
         <img class="brand-logo" src="data:image/webp;base64,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" width="28" height="28" alt="" aria-hidden="true"><span class="brand-wordmark">Kaz <b>AI</b></span>
@@ -715,6 +785,7 @@ html[dir="rtl"] .sidebar{direction:rtl}
       <div class="sidebar-recent-header"><span>НЕДАВНИЕ ЧАТЫ</span><svg class="icon"><use href="#ic-clock"/></svg></div>
       <div id="recentChats"><div class="sidebar-empty">Здесь появятся ваши разговоры</div></div>
     </div>
+    </div><!-- /sidebar-scroll: fixed actions stay available while navigation scrolls -->
     <div class="sidebar-footer">
       <div class="ornament-line" aria-hidden="true"></div>
       <button type="button" class="google-button" data-feature="google"><span class="google-g">G</span><span>Войти через Google</span><svg class="icon"><use href="#ic-arrow-right"/></svg></button>

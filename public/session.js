@@ -445,12 +445,15 @@
     for(const bubble of document.querySelectorAll("#chatMessages .message-user")){
       const text=bubble.querySelector(":scope > .session-user-text");
       const toggle=bubble.querySelector(":scope > .session-message-expand");
-      if(!text||!toggle||toggle.getAttribute("aria-expanded")==="true")continue;
+      if(!text||!toggle)continue;
+      // Updating labels must not collapse an already expanded prompt.
+      const expanded=toggle.getAttribute("aria-expanded")==="true";
+      const label=promptLabel(expanded);
+      toggle.querySelector("span").textContent=label;
+      toggle.setAttribute("aria-label",label);
+      if(expanded)continue;
       // scrollHeight is the uncropped text height. Hidden pages have no dimensions.
-      const long=text.scrollHeight>text.clientHeight+2;
-      toggle.hidden=!long;
-      toggle.querySelector("span").textContent=promptLabel(false);
-      toggle.setAttribute("aria-label",promptLabel(false));
+      toggle.hidden=!(text.scrollHeight>text.clientHeight+2);
     }
   }
   const measureLongPrompts=()=>requestAnimationFrame(updateLongPromptButtons);
@@ -1588,5 +1591,8 @@
     }
     for(const control of document.querySelectorAll('#chatMessages [data-session="retry-answer"]'))
       control.textContent=uiText("Повторить ответ");
+    // Existing long prompts retain their expansion and original text while
+    // Show more / Show less follows the newly selected interface language.
+    updateLongPromptButtons();
   }};
 })();

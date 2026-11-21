@@ -1,18 +1,18 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "Added №48 responsive screen direction. Main CSS+HTML adapts sidebar scrolling, fixed Google footer, compact laptop heights, narrow viewport widths and rotated screens without detecting inaccurate physical inches. Added browser regression on 1366x768, 1024x600, 800x500, 390x844, 844x390; standalone preview rebuilt. Also improved recent chat accessibility direction №2. 50/50 priority: screen bug fix and responsive new direction. No device/emulator manual checks in programming tasks.",
+  "basis": "2026-11-21 follow-up 50/50: bug fixes repair two wrong browser regression expectations for Kazakh rename label and numeric chat snapshot counts; improvements include searching 17 languages in tools, responsive sidebar/footer at zoomed short laptop and landscape screens, and regenerated standalone preview. Only meaningful automated checks; no device or emulator tasks.",
   "branch": "main",
   "date": "2026-11-21",
-  "previous": 75.94434782608695,
-  "now": 78.13782608695652,
-  "delta": 2.1934782608695684,
+  "previous": 78.13782608695652,
+  "now": 78.26391304347827,
+  "delta": 0.12608695652174617,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.93100000000001,
-      "now": 92.97600000000001,
-      "delta": 0.045000000000001705
+      "previous": 92.97600000000001,
+      "now": 92.99100000000001,
+      "delta": 0.015000000000000568
     },
     {
       "name": "Интеллект",
@@ -25,15 +25,15 @@
       "name": "Настройки",
       "count": 7,
       "previous": 89.24714285714286,
-      "now": 89.24714285714286,
-      "delta": 0
+      "now": 89.28285714285714,
+      "delta": 0.035714285714277594
     },
     {
       "name": "Экран",
       "count": 1,
-      "previous": 0,
-      "now": 50,
-      "delta": 50
+      "previous": 50,
+      "now": 52.5,
+      "delta": 2.5
     }
   ],
   "items": [
@@ -51,10 +51,10 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 91.47,
-      "now": 91.92,
-      "delta": 0.45000000000000284,
-      "summary": "Недавние чаты доступны через прокрутку левой панели даже на небольших ноутбуках и при увеличенном масштабе.",
+      "previous": 91.92,
+      "now": 92.07,
+      "delta": 0.14999999999999147,
+      "summary": "Список недавних чатов остаётся доступным при уменьшении окна и повороте экрана.",
       "status": "in_progress"
     },
     {
@@ -222,9 +222,9 @@
       "name": "Язык интерфейса",
       "group": "Настройки",
       "previous": 83.78,
-      "now": 83.78,
-      "delta": 0,
-      "summary": "Кнопки Показать полностью/Свернуть переключаются на RU/EN/KK без изменения и сворачивания уже раскрытого сообщения.",
+      "now": 84.03,
+      "delta": 0.25,
+      "summary": "Поиск инструментов учитывает подписи всех 17 поддерживаемых языков, а не только трёх.",
       "status": "in_progress"
     },
     {
@@ -261,10 +261,10 @@
       "id": 48,
       "name": "Расширение экрана",
       "group": "Экран",
-      "previous": 0,
-      "now": 50,
-      "delta": 50,
-      "summary": "Создана адаптивная вёрстка под ширину, высоту, масштаб и ориентацию. Убрано перекрытие недавних чатов и нижней кнопки Google: прокручиваемая навигация отдельно от закреплённой нижней части. Добавлены контрольные размеры экрана и предпросмотр.",
+      "previous": 50,
+      "now": 52.5,
+      "delta": 2.5,
+      "summary": "Улучшена доступность элементов при увеличенном масштабе браузера, коротких окнах и горизонтальной ориентации; тесты проверяют различные размеры и плотности пикселей.",
       "status": "in_progress"
     }
   ],
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 76.94666666666667,
-  "overall_now": 79.04875,
-  "overall_delta": 2.1020833333333258
+  "overall_previous": 79.04875,
+  "overall_now": 79.16958333333334,
+  "overall_delta": 0.12083333333333712
 }

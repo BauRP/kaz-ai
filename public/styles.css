@@ -630,3 +630,72 @@ html[dir="rtl"] .sidebar{direction:rtl}
   html[dir="rtl"] .sidebar{left:auto;right:0;transform:translateX(105%)}
   html[dir="rtl"] .sidebar.open{transform:translateX(0)}
 }
+
+
+/* Direction 48: Расширение экрана. Use available CSS viewport size and zoom,
+   not unreliable physical diagonal inches. Keep all sidebar actions reachable. */
+.app-shell{height:100dvh;min-height:0}
+.sidebar{min-height:0;max-height:100%;overflow:hidden}
+.sidebar-scroll{
+  display:flex;flex-direction:column;flex:1 1 auto;min-height:0;min-width:0;
+  overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent;
+}
+.sidebar-scroll .sidebar-header{flex:none}
+.sidebar-scroll .new-chat-button,.sidebar-scroll .primary-nav{flex:none}
+.sidebar-scroll .sidebar-recent{
+  flex:none;min-height:0;overflow:visible;
+  margin-top:clamp(16px,3.5vh,32px);
+  padding-bottom:12px;
+}
+.sidebar-scroll #recentChats{min-width:0}
+.sidebar-footer{
+  flex:0 0 auto;margin-top:0;min-width:0;
+  padding-bottom:max(2px,env(safe-area-inset-bottom));
+  background:inherit;
+}
+.sidebar-footer .google-button{min-width:0;min-height:44px;height:auto;padding:10px 8px}
+.sidebar-footer .google-button>span{min-width:0}
+.sidebar-footer .footer-note{margin-top:clamp(6px,1.5vh,16px)}
+@media(max-height:740px){
+  .sidebar{padding-top:clamp(9px,2vh,18px);padding-bottom:8px}
+  .sidebar-header{margin-bottom:12px}
+  .primary-nav{margin-top:12px;gap:3px}
+  .sidebar-scroll .sidebar-recent{margin-top:14px}
+  .sidebar-footer .ornament-line{height:6px;margin-bottom:5px}
+  .sidebar-footer .footer-note{margin-top:6px}
+}
+@media(max-height:520px){
+  .sidebar{padding-top:6px;padding-bottom:4px}
+  .sidebar-header{margin-bottom:7px}
+  .primary-nav{margin-top:8px;gap:1px}
+  .sidebar-footer .ornament-line{display:none}
+  .sidebar-footer .google-button{min-height:38px;padding:6px}
+  .sidebar-footer .footer-note{margin-top:4px}
+}
+@media(min-width:761px) and (max-width:980px){
+  :root{--sidebar-width:clamp(210px,24vw,236px)}
+  .topbar{padding-inline:clamp(12px,2vw,24px);gap:7px}
+  .topbar-start,.topbar-actions{gap:6px;min-width:0}
+  .view-panel{padding-inline:clamp(16px,3vw,27px)}
+  .composer-region{width:calc(100% - 28px)}
+}
+@media(max-width:760px){
+  .sidebar{height:100dvh;max-height:100dvh}
+  .sidebar-scroll{min-height:0}
+}
+@media(max-width:460px){
+  .topbar{gap:5px}
+  .topbar-title{font-size:clamp(11px,3.4vw,14px)}
+  .language-pill{padding:7px 5px;gap:4px}
+  .topbar-actions{gap:2px}
+  .composer-region{width:calc(100% - 12px)}
+  .composer-toolbar{gap:3px}
+  .composer-left,.composer-right{gap:3px}
+}
+@media(max-height:470px) and (max-width:760px){
+  .sidebar{padding-top:max(5px,env(safe-area-inset-top));padding-bottom:4px}
+  .sidebar-footer .footer-note{display:none}
+  .composer-region{padding-top:3px;padding-bottom:max(3px,env(safe-area-inset-bottom))}
+  .composer-note{display:none}
+}

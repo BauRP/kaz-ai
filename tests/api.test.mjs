@@ -100,7 +100,7 @@ test('all reasoning levels use compatible Cloudflare schemas for streaming and r
     const {env:streamEnv}=envWithAI(async(_model,args)=>{
       streamCalls.push(args);
       return new ReadableStream({start(c){
-        c.enqueue(new TextEncoder().encode('data: {"response":"OK"}\\n\\ndata: [DONE]\\n\\n'.replaceAll('\\n','\\n')));
+        c.enqueue(new TextEncoder().encode('data: {"response":"OK"}\\n\\ndata: [DONE]\\n\\n'.replaceAll('\\n',String.fromCharCode(10))));
         c.close();
       }});
     });

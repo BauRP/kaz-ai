@@ -963,7 +963,7 @@ test('long user bubbles collapse to ten rendered lines and expand/collapse witho
 
 test('long prompt expand labels switch languages without collapsing or changing the message',async()=>{
   await withPage(async page=>{
-    const prompt=Array.from({length:22},(_,i)=>'Длинная строка '+(i+1)+' с текстом').join('\\n');
+    const prompt=Array.from({length:22},(_,i)=>'Длинная строка '+(i+1)+' с текстом').join('\n');
     await page.locator('#messageInput').fill(prompt);
     await page.locator('#sendButton').click();
     const bubble=page.locator('#chatMessages .message-user').last();

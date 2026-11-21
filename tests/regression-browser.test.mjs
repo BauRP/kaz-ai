@@ -31,6 +31,45 @@ async function makeConversation(page,contents){
   await page.locator('.sidebar [data-screen="history"]').click();
 }
 
+test('responsive sidebar keeps Google, About, and recent chats reachable on short laptops and rotated phones',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill('Разговор для проверки размеров экрана');
+    await page.locator('#sendButton').click();
+    const cases=[
+      {width:1366,height:768,mobile:false},
+      {width:1024,height:600,mobile:false},
+      {width:800,height:500,mobile:false},
+      {width:390,height:844,mobile:true},
+      {width:844,height:390,mobile:false}
+    ];
+    for(const {width,height,mobile} of cases){
+      await page.setViewportSize({width,height});
+      if(mobile)await page.locator('.menu-button').first().click();
+      const metrics=await page.evaluate(()=>{
+        const sidebar=document.querySelector('#sidebar');
+        const scroll=document.querySelector('#sidebarScroll');
+        const footer=document.querySelector('.sidebar-footer');
+        const google=footer.querySelector('.google-button');
+        const recent=document.querySelector('#recentChats');
+        const about=document.querySelector('.sidebar [data-screen="about"]');
+        const rect=el=>{const r=el.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,width:r.width,height:r.height}};
+        return {sidebar:rect(sidebar),scroll:rect(scroll),footer:rect(footer),google:rect(google),recent:rect(recent),about:rect(about),
+          scrollHeight:scroll.scrollHeight,clientHeight:scroll.clientHeight,hasRecent:recent.textContent.includes('Разговор для проверки размеров экрана'),
+          pageWidth:document.documentElement.scrollWidth,viewportWidth:document.documentElement.clientWidth};
+      });
+      assert.ok(metrics.google.height>20,'Google control should remain visible');
+      assert.ok(metrics.footer.top>=metrics.scroll.bottom-2,'Footer must not overlap the scrolling navigation: '+JSON.stringify({width,height,metrics}));
+      assert.ok(metrics.google.bottom<=height+2,'Google must fit within the viewport');
+      assert.ok(metrics.pageWidth<=metrics.viewportWidth+2,'Page must not overflow horizontally');
+      assert.ok(metrics.hasRecent,'Recent conversation must remain in sidebar');
+      assert.ok(metrics.scrollHeight>=metrics.clientHeight,'Navigation must remain scrollable');
+      await page.locator('.sidebar [data-screen="about"]').scrollIntoViewIfNeeded();
+      await page.locator('#recentChats .session-recent').first().scrollIntoViewIfNeeded();
+      if(mobile)await page.locator('[data-action="close-sidebar"]').click();
+    }
+  });
+});
+
 test('normalization expansion and contraction do not shift search highlighting',async()=>{
   await withPage(async page=>{
     const original='\u0344Бe\u0301 ИСКОМОЕ';

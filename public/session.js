@@ -1556,10 +1556,26 @@
   }),compute,sendMessage,refreshLocale:()=>{
     renderHistory();
     renderSessionProjects();
+    // The Stop/Retry and temporary-chat controls are created after the
+    // initial i18n pass. Update them in place, never rerender the AI stream.
+    for(const [selector,key] of [["#sessionStop","Остановить"],["#sessionRetry","Повторить запрос"]]){
+      const control=$(selector);if(control)control.textContent=uiText(key);
+    }
+    const temporary=$("#sessionTemporary");
+    const row=temporary?.closest(".setting-item");
+    if(row){
+      const title=row.querySelector("h2"),description=row.querySelector("p");
+      const caption=temporary.closest("label")?.querySelector("span");
+      if(title)title.textContent=uiText("Временный чат");
+      if(description)description.textContent=uiText("Без добавления в историю текущей вкладки");
+      if(caption)caption.textContent=uiText("Включить");
+    }
     for(const [action,key] of [["rate-up","Положительная оценка ответа"],["rate-down","Отрицательная оценка ответа"]]){
       for(const control of document.querySelectorAll('#chatMessages [data-session="'+action+'"]')){
         control.setAttribute("aria-label",uiText(key));
       }
     }
+    for(const control of document.querySelectorAll('#chatMessages [data-session="retry-answer"]'))
+      control.textContent=uiText("Повторить ответ");
   }};
 })();

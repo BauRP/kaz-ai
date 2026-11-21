@@ -94,6 +94,38 @@ test('reasoning levels map to native Cloudflare SSE options without changing JSO
   assert.deepEqual(calls.map(x=>x[1].reasoning_effort),['low','medium','high'],
     'The selected reasoning effort must still reach the model');
 });
+test('all reasoning levels use compatible Cloudflare schemas for streaming and reviewed drafts',async()=>{
+  for(const effort of ['low','medium','high']){
+    const streamCalls=[];
+    const {env:streamEnv}=envWithAI(async(_model,args)=>{
+      streamCalls.push(args);
+      return new ReadableStream({start(c){
+        c.enqueue(new TextEncoder().encode('data: {"response":"OK"}\\n\\ndata: [DONE]\\n\\n'.replaceAll('\\n','\\n')));
+        c.close();
+      }});
+    });
+    const ordinary=await worker.fetch(post({...good,effort},TOKEN,{Accept:'text/event-stream'}),streamEnv);
+    assert.match(await ordinary.text(),/event: done/);
+    assert.deepEqual(Object.keys(streamCalls[0]).sort(),['max_tokens','messages','reasoning_effort','stream']);
+    assert.equal(streamCalls[0].reasoning_effort,effort);
+    const reviewed=[];
+    const {env:reviewEnv}=envWithAI(async(_model,args)=>{
+      reviewed.push(args);
+      return {output_text:reviewed.length===1?'Полное доказательство.':JSON.stringify({
+        verdict:'pass',checks:{assumptions:true,eliminations:true,lower_bound:true},
+        issues:[],corrected_answer:''
+      })};
+    });
+    const proof=await worker.fetch(post({messages:[{role:'user',content:'Строго докажи 2+2=4'}],effort},TOKEN,{Accept:'text/event-stream'}),reviewEnv);
+    assert.match(await proof.text(),/event: final/);
+    assert.equal(reviewed.length,2);
+    for(const args of reviewed){
+      assert.deepEqual(Object.keys(args).sort(),['input','max_output_tokens','reasoning','stream']);
+      assert.deepEqual(args.reasoning,{effort});
+      assert.equal(args.stream,false);
+    }
+  }
+});
 test('SSE inference errors are delivered as typed events and streams close cleanly',async()=>{
   const {env}=envWithAI(async()=>{throw new Error('Quota exceeded: 429')});
   const response=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);

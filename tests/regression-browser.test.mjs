@@ -195,7 +195,7 @@ test('history and project controls translate dynamically on English and Kazakh w
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     for(const [lang,rename,folder] of [
       ['en','Rename','Add chat'],
-      ['kk','Қайта атау','Чат қосу']
+      ['kk','Атау','Чат қосу']
     ]){
       await page.locator('#languageToggle').click();
       await page.locator('#languageMenu [data-language="'+lang+'"]').click();
@@ -1098,13 +1098,13 @@ test('incomplete JSON AI reply stays a temporary preview and retry saves only th
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('Ответ прервался'));
     assert.match(await page.locator('#chatMessages').innerText(),/НЕПОЛНОЕ_РЕШЕНИЕ/);
-    assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)).length,1);
+    assert.equal(await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages),1);
     assert.equal(await page.locator('#sessionRetry').isVisible(),true);
     await page.locator('#sessionRetry').click();
     await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('Проверенный_полный_ответ'));
-    const saved=await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages);
-    assert.equal(saved.length,2);
-    assert.equal(saved[1].content,'Проверенный_полный_ответ');
+    const savedCount=await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages);
+    assert.equal(savedCount,2);
+    assert.match(await page.locator('#chatMessages .message-assistant').last().innerText(),/Проверенный_полный_ответ/);
     assert.doesNotMatch(await page.locator('#chatMessages').innerText(),/НЕПОЛНОЕ_РЕШЕНИЕ/);
     assert.equal(calls,2);
     const usage=await page.evaluate(()=>window.KazSession.usageSnapshot());

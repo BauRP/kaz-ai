@@ -35,6 +35,7 @@
   let incompleteBubble=null; // Only transient UI; an interrupted draft never enters chat history.
   // In-memory UI state only: do not collapse opened questions when answers arrive.
   const expandedPrompts=new Set();
+  const forgetExpandedPrompts=chat=>{for(const message of chat.messages)expandedPrompts.delete(message.id)};
   let statusRetryable=false;
   const nextId=()=>String(++serial);
   const uiText=value=>window.KazI18n?.translate?.(value)||value;
@@ -214,7 +215,7 @@
     if(abort)abort.abort("navigation");
     abort=null;pending=null;pendingReplaceId=null;
     $("#sessionStop").hidden=true;
-    for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){drafts.delete(threads[i].id);threads.splice(i,1)}
+    for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){forgetExpandedPrompts(threads[i]);drafts.delete(threads[i].id);threads.splice(i,1)}
     if(current&&threads.some(thread=>thread.id===current)){
       if($("#messageInput").value)drafts.set(current,$("#messageInput").value);
       else drafts.delete(current);
@@ -1067,6 +1068,7 @@
       // A detached confirmation can fire twice. Never delete a different chat
       // when its original target has already been removed.
       if(i<0)return;
+      forgetExpandedPrompts(chat);
       threads.splice(i,1);drafts.delete(chat.id);
       if(current===chat.id)sessionNewChat(false,true);
       renderHistory();renderSessionProjects();

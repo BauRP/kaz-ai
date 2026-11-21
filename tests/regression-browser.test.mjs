@@ -1050,7 +1050,7 @@ test('long prompt expand labels switch languages without collapsing or changing 
 });
 test('expanded long prompt stays expanded across assistant response and history navigation',async()=>{
   await withPage(async page=>{
-    const prompt=Array.from({length:24},(_,i)=>'Строка '+i+' с данными').join('\\n'.replaceAll('\\n','\n'));
+    const prompt=Array.from({length:24},(_,i)=>'Строка '+i+' с данными').join('\n');
     await page.locator('#messageInput').fill(prompt);
     await page.locator('#sendButton').click();
     let question=page.locator('#chatMessages .message-user').last();

@@ -673,7 +673,7 @@ test('current 5x8 graph question still receives independently verified facts',as
   const {env,calls}=envWithAI();
   const response=await worker.fetch(post({messages:[{role:'user',content:question}],effort:'low'}),env);
   assert.equal(response.status,200);
-  assert.equal(calls.length,1);
+  assert.equal(calls.length,2,'Math proof mode uses one draft and one independent review');
   assert.match(calls[0][1].input[0].content,/НЕЗАВИСИМАЯ ПРОГРАММНАЯ ПРОВЕРКА МАТЕМАТИКИ/);
 });
 test('ordinary greetings and arithmetic still use one inference call',async()=>{

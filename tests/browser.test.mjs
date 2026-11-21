@@ -17,7 +17,7 @@ test('real browser: interactive Kaz AI design preview', async () => {
     args: ['--no-sandbox', '--disable-dev-shm-usage'],
   });
   try {
-    const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+    const page = await browser.newPage({ locale:'ru-RU', viewport: { width: 1400, height: 900 } });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(appUrl);
@@ -71,7 +71,7 @@ test('real browser: interactive Kaz AI design preview', async () => {
     assert.ok((await page.locator('#chatMessages').innerText()).includes('Пример сообщения'));
     assert.deepEqual(errors, []);
 
-    const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true });
+    const mobile = await browser.newPage({ locale:'ru-RU', viewport: { width: 390, height: 844 }, isMobile: true });
     const mobileErrors = [];
     mobile.on('pageerror', e => mobileErrors.push(e.message));
     await mobile.goto(appUrl);
@@ -554,7 +554,7 @@ test('Kaz AI starts with a clean chat and opens About outside the conversation',
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
     for(const viewport of [{width:1366,height:850},{width:390,height:844}]){
-      const page=await browser.newPage({viewport});
+      const page=await browser.newPage({locale:'ru-RU',viewport});
       const errors=[];page.on('pageerror',e=>errors.push(e.message));
       await page.goto(appUrl);
       assert.equal(await page.title(),'Kaz AI — Казахстанский искусственный интеллект онлайн');
@@ -603,7 +603,7 @@ test('same-tab About keeps existing chat and projects unchanged on desktop and m
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
     for(const mobile of [false,true]){
-      const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile});
+      const context=await browser.newContext({locale:'ru-RU',viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile});
       const page=await context.newPage();
       const errors=[];page.on('pageerror',e=>errors.push(e.message));
       await page.goto(appUrl);
@@ -801,7 +801,7 @@ test('text helpers prepare safe drafts but never send without user confirmation'
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const instance=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
-    const page=await instance.newPage({viewport:{width:1240,height:820}});
+    const page=await instance.newPage({locale:'ru-RU',viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('.sidebar [data-screen="tools"]').click();
@@ -1612,7 +1612,7 @@ test('new About story remains readable, inside the same tab and without horizont
   const browser=await chromium.launch({...(chromePath?{executablePath:chromePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
     for(const viewport of [{width:390,height:844},{width:1366,height:850}]){
-      const page=await browser.newPage({viewport});
+      const page=await browser.newPage({locale:'ru-RU',viewport});
       const errors=[];page.on('pageerror',e=>errors.push(e.message));
       await page.goto(appUrl);
       const before=page.url();
@@ -1725,7 +1725,7 @@ test('isolated calculator completes exact decimal and repeating arithmetic on de
   const browser=await chromium.launch({...(binary?{executablePath:binary}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
   try{
     for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
-      const page=await browser.newPage({viewport});
+      const page=await browser.newPage({locale:'ru-RU',viewport});
       const errors=[];page.on('pageerror',e=>errors.push(e.message));
       await page.goto(appUrl);
       const before=await page.evaluate(()=>JSON.stringify(window.KazSession.snapshot()));

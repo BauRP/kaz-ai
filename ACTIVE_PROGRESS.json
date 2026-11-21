@@ -1,32 +1,32 @@
 {
   "scope": "22 working approved Kaz AI directions and 1 completed calculator = 23 total. The new approved direction is \"внутренности настроек\". Paid billing and Google account integration are excluded from this shell stage.",
-  "basis": "2026-11-21 balanced 50/50 cycle: bug fixes in language switching for dynamically created Stop/Retry/Temporary controls without interrupting streams; development of per-tab attempt/completion/failure/manual-stop usage counts in internal settings. Added targeted browser checks, JavaScript syntax and preview synchronization verified; full browser run and Cloudflare deployment not confirmed. Android/phone and real Google/billing functions excluded from coding tasks.",
+  "basis": "2026-11-21 balanced 50/50 cycle. Fixes: GPT-OSS SSE failed/cancelled terminal handling, startup crash restoring reasoning controls, outdated API checks. Development: safe shared Cloudflare request builder for all three levels and localized expand/collapse controls preserving expanded prompt. Updated browser/API regression tests and synchronized standalone preview. CI status tracked separately; no Cloudflare live inference claimed. Device/emulator checks excluded.",
   "branch": "main",
   "date": "2026-11-21",
-  "previous": 79.13727272727273,
-  "now": 79.33272727272728,
-  "delta": 0.19545454545455243,
+  "previous": 79.33272727272728,
+  "now": 79.39636363636363,
+  "delta": 0.06363636363634839,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.821,
-      "now": 92.906,
-      "delta": 0.08500000000000796
+      "previous": 92.906,
+      "now": 92.93100000000001,
+      "delta": 0.025000000000005684
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 38.346000000000004,
-      "now": 38.396,
-      "delta": 0.04999999999999716
+      "previous": 38.396,
+      "now": 38.53600000000001,
+      "delta": 0.14000000000000767
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 88.72571428571428,
-      "now": 89.18285714285715,
-      "delta": 0.45714285714286973
+      "previous": 89.18285714285715,
+      "now": 89.24714285714286,
+      "delta": 0.06428571428571672
     }
   ],
   "items": [
@@ -35,9 +35,9 @@
       "name": "Новый чат",
       "group": "Чаты",
       "previous": 97,
-      "now": 97,
-      "delta": 0,
-      "summary": "Заголовок даже полностью невидимого первого сообщения получает читаемое название, сам текст сохраняется.",
+      "now": 97.1,
+      "delta": 0.09999999999999432,
+      "summary": "Инициализация кнопок выбора рассуждения больше не прерывает загрузку интерфейса нового чата.",
       "status": "in_progress"
     },
     {
@@ -104,9 +104,9 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 75.59,
+      "previous": 75.84,
       "now": 75.84,
-      "delta": 0.25,
+      "delta": 0,
       "summary": "Согласованы подписи кнопок повтора после смены языка; существующий запрос и ответ не перерисовываются.",
       "status": "in_progress"
     },
@@ -114,10 +114,10 @@
       "id": 10,
       "name": "Остановить ответ",
       "group": "Чаты",
-      "previous": 82,
-      "now": 82.6,
-      "delta": 0.6,
-      "summary": "Кнопка остановки обновляет язык прямо во время сессии, не вмешиваясь в поток ответа.",
+      "previous": 82.6,
+      "now": 82.75,
+      "delta": 0.15000000000000568,
+      "summary": "При сообщениях Cloudflare о failed/cancelled потоковый ответ не признаётся завершённым.",
       "status": "in_progress"
     },
     {
@@ -134,10 +134,10 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 64.02,
-      "now": 64.27,
-      "delta": 0.25,
-      "summary": "Для всех попыток HTTP ИИ ведётся локальная разбивка завершено/ошибка/остановлено без сервера и выдуманных токенов.",
+      "previous": 64.27,
+      "now": 64.62,
+      "delta": 0.3500000000000085,
+      "summary": "Согласованы формы параметров GPT-OSS для обычного потока и проверенных ответов; failed/cancelled SSE не сохраняются как успешные.",
       "status": "in_progress"
     },
     {
@@ -145,9 +145,9 @@
       "name": "Уровни рассуждения",
       "group": "Интеллект",
       "previous": 59.51,
-      "now": 59.51,
-      "delta": 0,
-      "summary": "Выбор низкого, среднего или высокого уровня рассуждения сохраняется локально и восстанавливается без автоматического запроса. Углублённый режим не включён.",
+      "now": 59.86,
+      "delta": 0.3500000000000014,
+      "summary": "Исправлено восстановление выделения уровня рассуждения при старте; обе схемы Cloudflare формируются единообразно для low/medium/high.",
       "status": "in_progress"
     },
     {
@@ -214,10 +214,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 82.53,
-      "now": 83.33,
-      "delta": 0.8,
-      "summary": "Динамические кнопки Stop/Retry, временный чат и повтор ответа обновляются для русского, английского и казахского без перерисовки переписки.",
+      "previous": 83.33,
+      "now": 83.78,
+      "delta": 0.45000000000000284,
+      "summary": "Кнопки Показать полностью/Свернуть переключаются на RU/EN/KK без изменения и сворачивания уже раскрытого сообщения.",
       "status": "in_progress"
     },
     {
@@ -244,9 +244,9 @@
       "id": 47,
       "name": "внутренности настроек",
       "group": "Настройки",
-      "previous": 83.04,
+      "previous": 85.44,
       "now": 85.44,
-      "delta": 2.4,
+      "delta": 0,
       "summary": "Внутреннее использование показывает раздельные точные числа попыток, завершений, ошибок и ручных остановок только за текущую вкладку, без выдуманной статистики токенов.",
       "status": "in_progress"
     }
@@ -268,7 +268,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 80.04434782608696,
-  "overall_now": 80.2313043478261,
-  "overall_delta": 0.18695652173913402
+  "overall_previous": 80.2313043478261,
+  "overall_now": 80.29217391304348,
+  "overall_delta": 0.060869565217387844
 }

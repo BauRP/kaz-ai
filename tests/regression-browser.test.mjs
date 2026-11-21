@@ -1048,6 +1048,19 @@ test('long prompt expand labels switch languages without collapsing or changing 
     assert.equal(await toggle.getAttribute('aria-label'),'Толық көрсету');
   });
 });
+test('mobile navigation scrim closes when zoom or rotation switches to desktop width',async()=>{
+  await withPage(async page=>{
+    await page.setViewportSize({width:390,height:844});
+    await page.locator('[data-action="toggle-sidebar"]').click();
+    assert.equal(await page.locator('#sidebar').getAttribute('class').then(v=>v.includes('open')),true);
+    assert.equal(await page.locator('#drawerScrim').isVisible(),true);
+    await page.setViewportSize({width:1024,height:640});
+    await page.waitForFunction(()=>!document.querySelector('#sidebar').classList.contains('open'));
+    assert.equal(await page.locator('#drawerScrim').isVisible(),false);
+    assert.equal(await page.locator('.sidebar [data-screen="history"]').isVisible(),true);
+  });
+});
+
 test('expanded long prompt stays expanded across assistant response and history navigation',async()=>{
   await withPage(async page=>{
     const prompt=Array.from({length:24},(_,i)=>'Строка '+i+' с данными').join('\n');

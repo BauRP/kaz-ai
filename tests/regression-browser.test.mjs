@@ -1048,6 +1048,28 @@ test('long prompt expand labels switch languages without collapsing or changing 
     assert.equal(await toggle.getAttribute('aria-label'),'Толық көрсету');
   });
 });
+test('expanded long prompt stays expanded across assistant response and history navigation',async()=>{
+  await withPage(async page=>{
+    const prompt=Array.from({length:24},(_,i)=>'Строка '+i+' с данными').join('\\n'.replaceAll('\\n','\n'));
+    await page.locator('#messageInput').fill(prompt);
+    await page.locator('#sendButton').click();
+    let question=page.locator('#chatMessages .message-user').last();
+    let toggle=question.locator('.session-message-expand');
+    await toggle.waitFor({state:'visible'});
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'true');
+    // Opening the conversation later must not discard this display preference.
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').first().click();
+    question=page.locator('#chatMessages .message-user').last();
+    toggle=question.locator('.session-message-expand');
+    assert.equal(await toggle.getAttribute('aria-expanded'),'true');
+    assert.equal(await question.locator('.session-user-text').textContent(),prompt);
+    assert.equal(await toggle.isVisible(),true);
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'false');
+  });
+});
 test('preliminary AI reasoning preview is replaced by finished answer, without saving the draft',async()=>{
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});

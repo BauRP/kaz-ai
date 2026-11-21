@@ -961,6 +961,28 @@ test('long user bubbles collapse to ten rendered lines and expand/collapse witho
   });
 });
 
+test('long prompt expand labels switch languages without collapsing or changing the message',async()=>{
+  await withPage(async page=>{
+    const prompt=Array.from({length:22},(_,i)=>'Длинная строка '+(i+1)+' с текстом').join('\\n');
+    await page.locator('#messageInput').fill(prompt);
+    await page.locator('#sendButton').click();
+    const bubble=page.locator('#chatMessages .message-user').last();
+    const toggle=bubble.locator('.session-message-expand');
+    await toggle.waitFor({state:'visible'});
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'),'true');
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    assert.equal(await toggle.getAttribute('aria-label'),'Show less');
+    assert.equal(await toggle.getAttribute('aria-expanded'),'true');
+    assert.equal(await bubble.locator('.session-user-text').textContent(),prompt);
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-label'),'Show more');
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    assert.equal(await toggle.getAttribute('aria-label'),'Толық көрсету');
+  });
+});
 test('preliminary AI reasoning preview is replaced by finished answer, without saving the draft',async()=>{
   const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
   const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});

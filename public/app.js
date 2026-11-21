@@ -255,6 +255,11 @@ document.addEventListener("keydown",event=>{
   if(!$("#modalOverlay").hidden&&event.key==="Tab"){const controls=$$("#modalOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}
 });
 $("#drawerScrim").addEventListener("click",()=>setDrawer(false));
+// Browser zoom and rotating a phone can cross the drawer breakpoint without
+// any navigation. Remove the old mobile scrim once desktop layout takes over.
+window.addEventListener("resize",()=>{
+  if(window.innerWidth>760&&$("#sidebar").classList.contains("open"))setDrawer(false);
+});
 $("#messageInput").addEventListener("input",resizeInput);
 $("#messageInput").addEventListener("keydown",event=>{
   // Some input methods confirm a character with keyCode 229 after composition.

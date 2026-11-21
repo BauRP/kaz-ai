@@ -1,39 +1,39 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-21 follow-up 50/50: bug fixes repair two wrong browser regression expectations for Kazakh rename label and numeric chat snapshot counts; improvements include searching 17 languages in tools, responsive sidebar/footer at zoomed short laptop and landscape screens, and regenerated standalone preview. Only meaningful automated checks; no device or emulator tasks.",
+  "basis": "50/50 cycle. Fixes: cross-breakpoint mobile drawer overlay, retention of expanded user messages across chat renders, cleanup of transient expanded IDs on chat deletion, truthful GPT-OSS reasoning notice. Feature work: better history continuity, immediate localization of regenerated retry-answer controls, keyboard/browser viewport regression cases, updated complete current progress reference in historical PROGRESS.md. Existing approved functionality and deferred items unchanged. CI verified separately, no live Cloudflare claim.",
   "branch": "main",
   "date": "2026-11-21",
-  "previous": 78.13782608695652,
-  "now": 78.26391304347827,
+  "previous": 78.26391304347827,
+  "now": 78.39000000000001,
   "delta": 0.12608695652174617,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.97600000000001,
-      "now": 92.99100000000001,
-      "delta": 0.015000000000000568
+      "previous": 92.99100000000001,
+      "now": 93.061,
+      "delta": 0.06999999999999318
     },
     {
       "name": "Интеллект",
       "count": 5,
       "previous": 38.53600000000001,
-      "now": 38.53600000000001,
-      "delta": 0
+      "now": 38.57600000000001,
+      "delta": 0.03999999999999915
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 89.24714285714286,
-      "now": 89.28285714285714,
-      "delta": 0.035714285714277594
+      "previous": 89.28285714285714,
+      "now": 89.31857142857143,
+      "delta": 0.035714285714291805
     },
     {
       "name": "Экран",
       "count": 1,
-      "previous": 50,
-      "now": 52.5,
-      "delta": 2.5
+      "previous": 52.5,
+      "now": 54.25,
+      "delta": 1.75
     }
   ],
   "items": [
@@ -51,10 +51,10 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 91.92,
-      "now": 92.07,
-      "delta": 0.14999999999999147,
-      "summary": "Список недавних чатов остаётся доступным при уменьшении окна и повороте экрана.",
+      "previous": 92.07,
+      "now": 92.52,
+      "delta": 0.45000000000000284,
+      "summary": "Длинный вопрос пользователя сохраняет состояние раскрытия после перехода в историю и перерисовки чата; при удалении чата временное состояние очищается.",
       "status": "in_progress"
     },
     {
@@ -112,9 +112,9 @@
       "name": "Повторить ответ",
       "group": "Чаты",
       "previous": 75.84,
-      "now": 75.84,
-      "delta": 0,
-      "summary": "Согласованы подписи кнопок повтора после смены языка; существующий запрос и ответ не перерисовываются.",
+      "now": 76.09,
+      "delta": 0.25,
+      "summary": "Кнопка «Повторить ответ» правильно переводится при создании ответа, а не только после смены языка.",
       "status": "in_progress"
     },
     {
@@ -152,9 +152,9 @@
       "name": "Уровни рассуждения",
       "group": "Интеллект",
       "previous": 59.86,
-      "now": 59.86,
-      "delta": 0,
-      "summary": "Исправлено восстановление выделения уровня рассуждения при старте; обе схемы Cloudflare формируются единообразно для low/medium/high.",
+      "now": 60.06,
+      "delta": 0.20000000000000284,
+      "summary": "Сообщение о выборе уровня рассуждения теперь честно сообщает, что настройка действует на следующий ответ подключённого GPT-OSS.",
       "status": "in_progress"
     },
     {
@@ -221,10 +221,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 83.78,
-      "now": 84.03,
+      "previous": 84.03,
+      "now": 84.28,
       "delta": 0.25,
-      "summary": "Поиск инструментов учитывает подписи всех 17 поддерживаемых языков, а не только трёх.",
+      "summary": "Подпись повтора ответа локализуется сразу после перерисовки переписки на выбранном языке.",
       "status": "in_progress"
     },
     {
@@ -261,10 +261,10 @@
       "id": 48,
       "name": "Расширение экрана",
       "group": "Экран",
-      "previous": 50,
-      "now": 52.5,
-      "delta": 2.5,
-      "summary": "Улучшена доступность элементов при увеличенном масштабе браузера, коротких окнах и горизонтальной ориентации; тесты проверяют различные размеры и плотности пикселей.",
+      "previous": 52.5,
+      "now": 54.25,
+      "delta": 1.75,
+      "summary": "При повороте телефона, изменении масштаба или расширении окна с мобильного до компьютерного режима закрывается прежнее затемнение бокового меню; дополнены автоматические браузерные сценарии.",
       "status": "in_progress"
     }
   ],
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.04875,
-  "overall_now": 79.16958333333334,
+  "overall_previous": 79.16958333333334,
+  "overall_now": 79.29041666666667,
   "overall_delta": 0.12083333333333712
 }

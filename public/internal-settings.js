@@ -76,6 +76,10 @@
     "Осталось токенов":["Tokens remaining","Қалған токендер"],
     "Запросов за период":["Requests this period","Осы кезеңдегі сұраулар"],
     "Попыток запросов ИИ в этой вкладке":["AI request attempts in this tab","Осы қойындыдағы ЖИ сұрауларының әрекеттері"],
+    "Успешных ответов":["Completed responses","Аяқталған жауаптар"],
+    "Ошибок запросов":["Failed requests","Қате сұраулар"],
+    "Остановлено вручную":["Stopped manually","Қолмен тоқтатылды"],
+    "Статистика относится только к этой вкладке и сбрасывается после обновления страницы.":["These counters apply only to this tab and reset on page reload.","Бұл есеп тек осы қойындыға қатысты және бетті жаңартқанда нөлге түседі."],
     "Точная статистика появится после подключения серверного учёта. Сейчас показаны прочерки, а не выдуманные цифры.":["Accurate usage statistics require server-side accounting. Dashes are shown instead of invented numbers.","Нақты статистика серверлік есеп іске қосылғаннан кейін көрсетіледі. Ойдан шығарылған сандардың орнына сызықша көрсетілген."],
     "Оплата и подписки отключены. Никакие деньги не списываются через эти настройки.":["Payments and subscriptions are disabled. These settings cannot charge money.","Төлемдер мен жазылымдар өшірілген. Бұл баптаулар ақша алмайды."],
     "История транзакций":["Transaction history","Төлемдер тарихы"],
@@ -238,7 +242,8 @@
         <section data-is-panel="usage" hidden>
           <h3>Использование</h3>
           <div class="is-row"><div><strong>Текущий план</strong><p>Бесплатная версия, платные тарифы пока не действуют</p></div><button type="button" data-is-dialog="plans">Подключить тариф</button></div>
-          <div class="is-meters"><div><span>Использовано токенов</span><strong>—</strong></div><div><span>Осталось токенов</span><strong>—</strong></div><div><span>Попыток запросов ИИ в этой вкладке</span><strong id="innerRequestsAttempted">0</strong></div></div>
+          <div class="is-meters"><div><span>Использовано токенов</span><strong>—</strong></div><div><span>Осталось токенов</span><strong>—</strong></div><div><span>Попыток запросов ИИ в этой вкладке</span><strong id="innerRequestsAttempted">0</strong></div><div><span>Успешных ответов</span><strong id="innerRequestsSucceeded">0</strong></div><div><span>Ошибок запросов</span><strong id="innerRequestsFailed">0</strong></div><div><span>Остановлено вручную</span><strong id="innerRequestsStopped">0</strong></div></div>
+          <p class="is-footnote">Статистика относится только к этой вкладке и сбрасывается после обновления страницы.</p>
           <p class="is-footnote">Точная статистика появится после подключения серверного учёта. Сейчас показаны прочерки, а не выдуманные цифры.</p>
         </section>
         <section data-is-panel="billing" hidden>
@@ -344,10 +349,13 @@
     qs("#innerLanguage").value=prefs.language;
   };
   const refreshUsage=()=>{
-    const el=qs("#innerRequestsAttempted");
-    if(!el)return;
-    const count=window.KazSession?.usageSnapshot?.()?.requestsAttempted;
-    el.textContent=Number.isSafeInteger(count)&&count>=0?String(count):"—";
+    const usage=window.KazSession?.usageSnapshot?.();
+    for(const [id,key] of [["innerRequestsAttempted","requestsAttempted"],["innerRequestsSucceeded","requestsSucceeded"],["innerRequestsFailed","requestsFailed"],["innerRequestsStopped","requestsStopped"]]){
+      const el=qs("#"+id);
+      if(!el)continue;
+      const count=usage?.[key];
+      el.textContent=Number.isSafeInteger(count)&&count>=0?String(count):"—";
+    }
   };
   const showTab=(name)=>{
     if(!qs('[data-is-panel="'+name+'"]'))return;

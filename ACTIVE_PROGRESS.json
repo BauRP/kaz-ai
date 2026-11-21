@@ -1,32 +1,39 @@
 {
-  "scope": "22 working approved Kaz AI directions and 1 completed calculator = 23 total. The new approved direction is \"внутренности настроек\". Paid billing and Google account integration are excluded from this shell stage.",
-  "basis": "2026-11-21 balanced 50/50 cycle. Fixes: GPT-OSS SSE failed/cancelled terminal handling, startup crash restoring reasoning controls, outdated API checks. Development: safe shared Cloudflare request builder for all three levels and localized expand/collapse controls preserving expanded prompt. Updated browser/API regression tests and synchronized standalone preview. CI status tracked separately; no Cloudflare live inference claimed. Device/emulator checks excluded.",
+  "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
+  "basis": "Added №48 responsive screen direction. Main CSS+HTML adapts sidebar scrolling, fixed Google footer, compact laptop heights, narrow viewport widths and rotated screens without detecting inaccurate physical inches. Added browser regression on 1366x768, 1024x600, 800x500, 390x844, 844x390; standalone preview rebuilt. Also improved recent chat accessibility direction №2. 50/50 priority: screen bug fix and responsive new direction. No device/emulator manual checks in programming tasks.",
   "branch": "main",
   "date": "2026-11-21",
-  "previous": 79.33272727272728,
-  "now": 79.39636363636363,
-  "delta": 0.06363636363634839,
+  "previous": 75.94434782608695,
+  "now": 78.13782608695652,
+  "delta": 2.1934782608695684,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.906,
-      "now": 92.93100000000001,
-      "delta": 0.025000000000005684
+      "previous": 92.93100000000001,
+      "now": 92.97600000000001,
+      "delta": 0.045000000000001705
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 38.396,
+      "previous": 38.53600000000001,
       "now": 38.53600000000001,
-      "delta": 0.14000000000000767
+      "delta": 0
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 89.18285714285715,
+      "previous": 89.24714285714286,
       "now": 89.24714285714286,
-      "delta": 0.06428571428571672
+      "delta": 0
+    },
+    {
+      "name": "Экран",
+      "count": 1,
+      "previous": 0,
+      "now": 50,
+      "delta": 50
     }
   ],
   "items": [
@@ -34,9 +41,9 @@
       "id": 1,
       "name": "Новый чат",
       "group": "Чаты",
-      "previous": 97,
+      "previous": 97.1,
       "now": 97.1,
-      "delta": 0.09999999999999432,
+      "delta": 0,
       "summary": "Инициализация кнопок выбора рассуждения больше не прерывает загрузку интерфейса нового чата.",
       "status": "in_progress"
     },
@@ -45,9 +52,9 @@
       "name": "История чатов",
       "group": "Чаты",
       "previous": 91.47,
-      "now": 91.47,
-      "delta": 0,
-      "summary": "Динамические элементы истории переводятся на выбранный язык: пустые состояния, кнопки действий, недавние чаты и их подписи.",
+      "now": 91.92,
+      "delta": 0.45000000000000284,
+      "summary": "Недавние чаты доступны через прокрутку левой панели даже на небольших ноутбуках и при увеличенном масштабе.",
       "status": "in_progress"
     },
     {
@@ -114,9 +121,9 @@
       "id": 10,
       "name": "Остановить ответ",
       "group": "Чаты",
-      "previous": 82.6,
+      "previous": 82.75,
       "now": 82.75,
-      "delta": 0.15000000000000568,
+      "delta": 0,
       "summary": "При сообщениях Cloudflare о failed/cancelled потоковый ответ не признаётся завершённым.",
       "status": "in_progress"
     },
@@ -134,9 +141,9 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 64.27,
+      "previous": 64.62,
       "now": 64.62,
-      "delta": 0.3500000000000085,
+      "delta": 0,
       "summary": "Согласованы формы параметров GPT-OSS для обычного потока и проверенных ответов; failed/cancelled SSE не сохраняются как успешные.",
       "status": "in_progress"
     },
@@ -144,9 +151,9 @@
       "id": 16,
       "name": "Уровни рассуждения",
       "group": "Интеллект",
-      "previous": 59.51,
+      "previous": 59.86,
       "now": 59.86,
-      "delta": 0.3500000000000014,
+      "delta": 0,
       "summary": "Исправлено восстановление выделения уровня рассуждения при старте; обе схемы Cloudflare формируются единообразно для low/medium/high.",
       "status": "in_progress"
     },
@@ -214,9 +221,9 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 83.33,
+      "previous": 83.78,
       "now": 83.78,
-      "delta": 0.45000000000000284,
+      "delta": 0,
       "summary": "Кнопки Показать полностью/Свернуть переключаются на RU/EN/KK без изменения и сворачивания уже раскрытого сообщения.",
       "status": "in_progress"
     },
@@ -249,13 +256,23 @@
       "delta": 0,
       "summary": "Внутреннее использование показывает раздельные точные числа попыток, завершений, ошибок и ручных остановок только за текущую вкладку, без выдуманной статистики токенов.",
       "status": "in_progress"
+    },
+    {
+      "id": 48,
+      "name": "Расширение экрана",
+      "group": "Экран",
+      "previous": 0,
+      "now": 50,
+      "delta": 50,
+      "summary": "Создана адаптивная вёрстка под ширину, высоту, масштаб и ориентацию. Убрано перекрытие недавних чатов и нижней кнопки Google: прокручиваемая навигация отдельно от закреплённой нижней части. Добавлены контрольные размеры экрана и предпросмотр.",
+      "status": "in_progress"
     }
   ],
   "completed_ids": [
     25
   ],
   "completed_count": 1,
-  "incomplete_count": 22,
+  "incomplete_count": 23,
   "completed_items": [
     {
       "id": 25,
@@ -268,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 80.2313043478261,
-  "overall_now": 80.29217391304348,
-  "overall_delta": 0.060869565217387844
+  "overall_previous": 76.94666666666667,
+  "overall_now": 79.04875,
+  "overall_delta": 2.1020833333333258
 }

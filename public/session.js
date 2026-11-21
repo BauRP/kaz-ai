@@ -19,6 +19,7 @@
   const drafts=new Map();
   let welcomeDraft="";
   let requestsAttempted=0; // Per-tab attempts only; never claim this is token usage.
+  let requestsSucceeded=0,requestsFailed=0,requestsStopped=0;
   let activitySerial=0;
   const touchChat=chat=>{chat.activity=++activitySerial};
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
@@ -771,6 +772,8 @@
       // An outdated answer cannot change the status of a different chat.
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat)||current!==chat.id)return;
       if(!response.ok){
+        requestsFailed++;
+        window.KazInternalSettings?.refreshUsage?.();
         if(data?.code==="AI_QUOTA_EXHAUSTED"){
           // A quota reset must not require resending and duplicating a question.
           // Retrying remains manual: never spend the user's quota automatically.
@@ -820,6 +823,8 @@
       }
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
       showStatus("");
+      requestsSucceeded++;
+      window.KazInternalSettings?.refreshUsage?.();
       window.KazInternalSettings?.notify("completed");
     }catch(e){
       if(abort!==controller)return;
@@ -833,6 +838,8 @@
         }
         // Navigation and deletion must not display stale status messages.
       }else{
+        requestsFailed++;
+        window.KazInternalSettings?.refreshUsage?.();
         retryAnswerId=replaceId;
         const quota=e?.code==="AI_QUOTA_EXHAUSTED";
         const offline=typeof navigator!=="undefined"&&navigator.onLine===false;
@@ -883,6 +890,10 @@
     ));
     // Detach before signalling cancellation: even if the transport ignores Abort,
     // a late answer is rejected by the active-controller identity checks.
+    if(reason==="manual"){
+      requestsStopped++;
+      window.KazInternalSettings?.refreshUsage?.();
+    }
     abort=null;pending=null;pendingReplaceId=null;
     controller.abort(reason);
     $("#sessionStop").hidden=true;
@@ -1550,7 +1561,7 @@
   submitMessage=sendMessage;
   renderHistory();renderChat();renderTools();
   setup();
-  window.KazSession={usageSnapshot:()=>({requestsAttempted}),snapshot:()=>({
+  window.KazSession={usageSnapshot:()=>({requestsAttempted,requestsSucceeded,requestsFailed,requestsStopped}),snapshot:()=>({
     threads:threads.map(c=>({id:c.id,title:c.title,messages:c.messages.length,pinned:c.pinned,temporary:c.temporary,projectId:c.projectId})),
     projects:projects.map(p=>({id:p.id,name:p.name})),active:current,draftCount:drafts.size
   }),compute,sendMessage,refreshLocale:()=>{

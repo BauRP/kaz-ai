@@ -40,7 +40,9 @@ test('responsive sidebar keeps Google, About, and recent chats reachable on shor
       {width:1024,height:600,mobile:false},
       {width:800,height:500,mobile:false},
       {width:390,height:844,mobile:true},
-      {width:844,height:390,mobile:false}
+      {width:844,height:390,mobile:false},
+      {width:960,height:540,mobile:false},
+      {width:768,height:480,mobile:false}
     ];
     for(const {width,height,mobile} of cases){
       await page.setViewportSize({width,height});
@@ -68,6 +70,30 @@ test('responsive sidebar keeps Google, About, and recent chats reachable on shor
       if(mobile)await page.locator('[data-action="close-sidebar"]').click();
     }
   });
+});
+
+test('screen adaptation remains stable across pixel densities and viewport changes',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    for(const density of [1,1.5,2,3]){
+      const context=await browser.newContext({locale:'ru-RU',deviceScaleFactor:density,viewport:{width:1024,height:600}});
+      const page=await context.newPage();
+      const errors=[];page.on('pageerror',e=>errors.push(e.message));
+      await page.goto(appUrl);
+      const measure=async()=>page.evaluate(()=>{
+        const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}};
+        return {scroll:rect('#sidebarScroll'),footer:rect('.sidebar-footer'),google:rect('.google-button'),about:rect('.sidebar [data-screen="about"]'),documentWidth:document.documentElement.scrollWidth,viewport:document.documentElement.clientWidth};
+      });
+      const m=await measure();
+      assert.ok(m.footer.top>=m.scroll.bottom-2,'Footer must not overlap navigation at density '+density);
+      assert.ok(m.google.bottom<=600,'Google must stay reachable at density '+density);
+      assert.ok(m.documentWidth<=m.viewport+2,'No horizontal overflow at density '+density);
+      await page.locator('.sidebar [data-screen="about"]').scrollIntoViewIfNeeded();
+      await context.close();
+      assert.deepEqual(errors,[]);
+    }
+  }finally{await browser.close()}
 });
 
 test('normalization expansion and contraction do not shift search highlighting',async()=>{

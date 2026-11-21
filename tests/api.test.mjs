@@ -1075,6 +1075,20 @@ test('native SSE with partial text and explicit incomplete status is never commi
   assert.match(body,/"code":"AI_OUTPUT_INCOMPLETE"/);
   assert.doesNotMatch(body,/event: final|event: done/);
 });
+test('failed and cancelled SSE terminal events cannot be saved as successful GPT-OSS replies',async()=>{
+  for(const type of ['response.failed','response.cancelled']){
+    const upstream='data: '+JSON.stringify({response:'Черновик ответа'})+'\\n\\n'
+      +'data: '+JSON.stringify({type})+'\\n\\n'+'data: [DONE]\\n\\n';
+    const {env}=envWithAI(async()=>new ReadableStream({start(c){
+      c.enqueue(new TextEncoder().encode(upstream.replaceAll('\\n','\n')));c.close();
+    }}));
+    const response=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+    const body=await response.text();
+    assert.match(body,/event: preview/,type);
+    assert.match(body,/"code":"AI_OUTPUT_INCOMPLETE"/,type);
+    assert.doesNotMatch(body,/event: final|event: done/,type);
+  }
+});
 test('personal instructions retain intentional indentation, newlines and trailing spaces',async()=>{
   const instructions='  Пожалуйста, сохраняй формат:\n    два пробела в начале\n  ';
   const {env,calls}=envWithAI();

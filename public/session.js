@@ -523,7 +523,7 @@
         up.setAttribute("aria-pressed",String(message.rating==="up"));
         down.setAttribute("aria-pressed",String(message.rating==="down"));
         actions.append(up,down);
-        if(!message.localGreeting)actions.append(button("Повторить ответ","retry-answer",message.id));
+        if(!message.localGreeting)actions.append(button(uiText("Повторить ответ"),"retry-answer",message.id));
         bubble.append(actions);
       }
     });

@@ -1168,9 +1168,9 @@ function selectReason(value,quiet=false){
   if(quiet)return;
   const lang=window.KazI18n?.language||"ru";
   const label=window.KazI18n?.translate?.(REASONS[value].name)||REASONS[value].name;
-  if(lang==="en")notify('Reasoning level: '+label+'. This will apply when the AI is connected.');
-  else if(lang==="kk")notify('Ойлау деңгейі: '+label+'. ЖИ қосылғанда қолданылады.');
-  else notify("Выбран уровень «"+label+"». Подключение к модели — на следующем этапе.");
+  if(lang==="en")notify('Reasoning level: '+label+'. It applies to the next AI response.');
+  else if(lang==="kk")notify('Ойлау деңгейі: '+label+'. Келесі ЖИ жауабына қолданылады.');
+  else notify("Выбран уровень «"+label+"». Он применяется к следующему ответу ИИ.");
 }
 function toggleTheme(fromInternalSettings=false){
   state.light=!state.light;

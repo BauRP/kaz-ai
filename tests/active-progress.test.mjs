@@ -25,7 +25,9 @@ test('individual and group progress agrees with the last full baseline',()=>{
     const old=prior.items.find(i=>i.id===item.id);
     if(item.id===48){
       assert.equal(item.name,'Расширение экрана');
-      assert.equal(item.previous,0,'New screen direction must start at zero');
+      // The archived first cycle began at 0%; later cycles must retain prior progress.
+      assert.ok(item.previous>=0&&item.previous<100,'Responsive screen progress remains cumulative');
+      assert.ok(item.now>=item.previous,'Responsive screen progress must not regress');
       assert.ok(item.now>0&&item.now<100);
       close(item.delta,item.now-item.previous);
       continue;

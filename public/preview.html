@@ -1496,6 +1496,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
   const drafts=new Map();
   let welcomeDraft="";
   let requestsAttempted=0; // Per-tab attempts only; never claim this is token usage.
+  let requestsSucceeded=0,requestsFailed=0,requestsStopped=0;
   let activitySerial=0;
   const touchChat=chat=>{chat.activity=++activitySerial};
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
@@ -2248,6 +2249,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
       // An outdated answer cannot change the status of a different chat.
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat)||current!==chat.id)return;
       if(!response.ok){
+        requestsFailed++;
+        window.KazInternalSettings?.refreshUsage?.();
         if(data?.code==="AI_QUOTA_EXHAUSTED"){
           // A quota reset must not require resending and duplicating a question.
           // Retrying remains manual: never spend the user's quota automatically.
@@ -2297,6 +2300,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
       }
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
       showStatus("");
+      requestsSucceeded++;
+      window.KazInternalSettings?.refreshUsage?.();
       window.KazInternalSettings?.notify("completed");
     }catch(e){
       if(abort!==controller)return;
@@ -2310,6 +2315,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
         }
         // Navigation and deletion must not display stale status messages.
       }else{
+        requestsFailed++;
+        window.KazInternalSettings?.refreshUsage?.();
         retryAnswerId=replaceId;
         const quota=e?.code==="AI_QUOTA_EXHAUSTED";
         const offline=typeof navigator!=="undefined"&&navigator.onLine===false;
@@ -2360,6 +2367,10 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
     ));
     // Detach before signalling cancellation: even if the transport ignores Abort,
     // a late answer is rejected by the active-controller identity checks.
+    if(reason==="manual"){
+      requestsStopped++;
+      window.KazInternalSettings?.refreshUsage?.();
+    }
     abort=null;pending=null;pendingReplaceId=null;
     controller.abort(reason);
     $("#sessionStop").hidden=true;
@@ -3027,17 +3038,33 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
   submitMessage=sendMessage;
   renderHistory();renderChat();renderTools();
   setup();
-  window.KazSession={usageSnapshot:()=>({requestsAttempted}),snapshot:()=>({
+  window.KazSession={usageSnapshot:()=>({requestsAttempted,requestsSucceeded,requestsFailed,requestsStopped}),snapshot:()=>({
     threads:threads.map(c=>({id:c.id,title:c.title,messages:c.messages.length,pinned:c.pinned,temporary:c.temporary,projectId:c.projectId})),
     projects:projects.map(p=>({id:p.id,name:p.name})),active:current,draftCount:drafts.size
   }),compute,sendMessage,refreshLocale:()=>{
     renderHistory();
     renderSessionProjects();
+    // The Stop/Retry and temporary-chat controls are created after the
+    // initial i18n pass. Update them in place, never rerender the AI stream.
+    for(const [selector,key] of [["#sessionStop","Остановить"],["#sessionRetry","Повторить запрос"]]){
+      const control=$(selector);if(control)control.textContent=uiText(key);
+    }
+    const temporary=$("#sessionTemporary");
+    const row=temporary?.closest(".setting-item");
+    if(row){
+      const title=row.querySelector("h2"),description=row.querySelector("p");
+      const caption=temporary.closest("label")?.querySelector("span");
+      if(title)title.textContent=uiText("Временный чат");
+      if(description)description.textContent=uiText("Без добавления в историю текущей вкладки");
+      if(caption)caption.textContent=uiText("Включить");
+    }
     for(const [action,key] of [["rate-up","Положительная оценка ответа"],["rate-down","Отрицательная оценка ответа"]]){
       for(const control of document.querySelectorAll('#chatMessages [data-session="'+action+'"]')){
         control.setAttribute("aria-label",uiText(key));
       }
     }
+    for(const control of document.querySelectorAll('#chatMessages [data-session="retry-answer"]'))
+      control.textContent=uiText("Повторить ответ");
   }};
 })();
 
@@ -3902,6 +3929,10 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
     "Осталось токенов":["Tokens remaining","Қалған токендер"],
     "Запросов за период":["Requests this period","Осы кезеңдегі сұраулар"],
     "Попыток запросов ИИ в этой вкладке":["AI request attempts in this tab","Осы қойындыдағы ЖИ сұрауларының әрекеттері"],
+    "Успешных ответов":["Completed responses","Аяқталған жауаптар"],
+    "Ошибок запросов":["Failed requests","Қате сұраулар"],
+    "Остановлено вручную":["Stopped manually","Қолмен тоқтатылды"],
+    "Статистика относится только к этой вкладке и сбрасывается после обновления страницы.":["These counters apply only to this tab and reset on page reload.","Бұл есеп тек осы қойындыға қатысты және бетті жаңартқанда нөлге түседі."],
     "Точная статистика появится после подключения серверного учёта. Сейчас показаны прочерки, а не выдуманные цифры.":["Accurate usage statistics require server-side accounting. Dashes are shown instead of invented numbers.","Нақты статистика серверлік есеп іске қосылғаннан кейін көрсетіледі. Ойдан шығарылған сандардың орнына сызықша көрсетілген."],
     "Оплата и подписки отключены. Никакие деньги не списываются через эти настройки.":["Payments and subscriptions are disabled. These settings cannot charge money.","Төлемдер мен жазылымдар өшірілген. Бұл баптаулар ақша алмайды."],
     "История транзакций":["Transaction history","Төлемдер тарихы"],
@@ -4064,7 +4095,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
         <section data-is-panel="usage" hidden>
           <h3>Использование</h3>
           <div class="is-row"><div><strong>Текущий план</strong><p>Бесплатная версия, платные тарифы пока не действуют</p></div><button type="button" data-is-dialog="plans">Подключить тариф</button></div>
-          <div class="is-meters"><div><span>Использовано токенов</span><strong>—</strong></div><div><span>Осталось токенов</span><strong>—</strong></div><div><span>Попыток запросов ИИ в этой вкладке</span><strong id="innerRequestsAttempted">0</strong></div></div>
+          <div class="is-meters"><div><span>Использовано токенов</span><strong>—</strong></div><div><span>Осталось токенов</span><strong>—</strong></div><div><span>Попыток запросов ИИ в этой вкладке</span><strong id="innerRequestsAttempted">0</strong></div><div><span>Успешных ответов</span><strong id="innerRequestsSucceeded">0</strong></div><div><span>Ошибок запросов</span><strong id="innerRequestsFailed">0</strong></div><div><span>Остановлено вручную</span><strong id="innerRequestsStopped">0</strong></div></div>
+          <p class="is-footnote">Статистика относится только к этой вкладке и сбрасывается после обновления страницы.</p>
           <p class="is-footnote">Точная статистика появится после подключения серверного учёта. Сейчас показаны прочерки, а не выдуманные цифры.</p>
         </section>
         <section data-is-panel="billing" hidden>
@@ -4170,10 +4202,13 @@ $("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").fo
     qs("#innerLanguage").value=prefs.language;
   };
   const refreshUsage=()=>{
-    const el=qs("#innerRequestsAttempted");
-    if(!el)return;
-    const count=window.KazSession?.usageSnapshot?.()?.requestsAttempted;
-    el.textContent=Number.isSafeInteger(count)&&count>=0?String(count):"—";
+    const usage=window.KazSession?.usageSnapshot?.();
+    for(const [id,key] of [["innerRequestsAttempted","requestsAttempted"],["innerRequestsSucceeded","requestsSucceeded"],["innerRequestsFailed","requestsFailed"],["innerRequestsStopped","requestsStopped"]]){
+      const el=qs("#"+id);
+      if(!el)continue;
+      const count=usage?.[key];
+      el.textContent=Number.isSafeInteger(count)&&count>=0?String(count):"—";
+    }
   };
   const showTab=(name)=>{
     if(!qs('[data-is-panel="'+name+'"]'))return;

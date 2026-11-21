@@ -1,32 +1,32 @@
 {
   "scope": "22 working approved Kaz AI directions and 1 completed calculator = 23 total. The new approved direction is \"внутренности настроек\". Paid billing and Google account integration are excluded from this shell stage.",
-  "basis": "2026-11-20 50/50 cycle: reliability fixes for byte-split CRLF and final SSE frames; development improvements to 17-language translation prompts and honest per-tab AI request attempt usage. Unit syntax and preview source equality confirmed; two browser tests added, full execution/Cloudflare deploy unconfirmed. External phone/emulator checks, real Google account and payments excluded from unfinished coding work.",
+  "basis": "2026-11-21 balanced 50/50 cycle: bug fixes in language switching for dynamically created Stop/Retry/Temporary controls without interrupting streams; development of per-tab attempt/completion/failure/manual-stop usage counts in internal settings. Added targeted browser checks, JavaScript syntax and preview synchronization verified; full browser run and Cloudflare deployment not confirmed. Android/phone and real Google/billing functions excluded from coding tasks.",
   "branch": "main",
-  "date": "2026-11-20",
-  "previous": 78.91227272727274,
-  "now": 79.13727272727273,
-  "delta": 0.22499999999999432,
+  "date": "2026-11-21",
+  "previous": 79.13727272727273,
+  "now": 79.33272727272728,
+  "delta": 0.19545454545455243,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.786,
-      "now": 92.821,
-      "delta": 0.03499999999999659
+      "previous": 92.821,
+      "now": 92.906,
+      "delta": 0.08500000000000796
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 37.846000000000004,
-      "now": 38.346000000000004,
-      "delta": 0.5
+      "previous": 38.346000000000004,
+      "now": 38.396,
+      "delta": 0.04999999999999716
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 88.42571428571429,
-      "now": 88.72571428571428,
-      "delta": 0.29999999999998295
+      "previous": 88.72571428571428,
+      "now": 89.18285714285715,
+      "delta": 0.45714285714286973
     }
   ],
   "items": [
@@ -104,10 +104,10 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 75.24,
-      "now": 75.59,
-      "delta": 0.35,
-      "summary": "Повторный запрос после ошибочно разорванного SSE не требуется при корректном завершении, включая раздельные CR/LF.",
+      "previous": 75.59,
+      "now": 75.84,
+      "delta": 0.25,
+      "summary": "Согласованы подписи кнопок повтора после смены языка; существующий запрос и ответ не перерисовываются.",
       "status": "in_progress"
     },
     {
@@ -115,9 +115,9 @@
       "name": "Остановить ответ",
       "group": "Чаты",
       "previous": 82,
-      "now": 82,
-      "delta": 0,
-      "summary": "Без изменений в этом цикле.",
+      "now": 82.6,
+      "delta": 0.6,
+      "summary": "Кнопка остановки обновляет язык прямо во время сессии, не вмешиваясь в поток ответа.",
       "status": "in_progress"
     },
     {
@@ -134,10 +134,10 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 63.07,
-      "now": 64.02,
-      "delta": 0.95,
-      "summary": "Клиент ИИ корректно разбирает SSE-пакеты с разорванными CR/LF, а последний завершённый кадр не теряется при EOF.",
+      "previous": 64.02,
+      "now": 64.27,
+      "delta": 0.25,
+      "summary": "Для всех попыток HTTP ИИ ведётся локальная разбивка завершено/ошибка/остановлено без сервера и выдуманных токенов.",
       "status": "in_progress"
     },
     {
@@ -154,9 +154,9 @@
       "id": 22,
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
-      "previous": 23.05,
+      "previous": 24.6,
       "now": 24.6,
-      "delta": 1.55,
+      "delta": 0,
       "summary": "Все 17 языков перевода имеют естественные названия в русских, казахских и английских инструкциях, вместо англоязычных вставок в RU/KK.",
       "status": "in_progress"
     },
@@ -214,10 +214,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 82.18,
-      "now": 82.53,
-      "delta": 0.35,
-      "summary": "Названия 17 языков перевода согласованы с выбранным языком интерфейса RU, KK, EN и английским fallback.",
+      "previous": 82.53,
+      "now": 83.33,
+      "delta": 0.8,
+      "summary": "Динамические кнопки Stop/Retry, временный чат и повтор ответа обновляются для русского, английского и казахского без перерисовки переписки.",
       "status": "in_progress"
     },
     {
@@ -244,10 +244,10 @@
       "id": 47,
       "name": "внутренности настроек",
       "group": "Настройки",
-      "previous": 81.29,
-      "now": 83.04,
-      "delta": 1.75,
-      "summary": "Раздел использования теперь показывает реальные попытки запросов из текущей вкладки; серверные токены и тарифные лимиты по-прежнему показываются как неизвестные.",
+      "previous": 83.04,
+      "now": 85.44,
+      "delta": 2.4,
+      "summary": "Внутреннее использование показывает раздельные точные числа попыток, завершений, ошибок и ручных остановок только за текущую вкладку, без выдуманной статистики токенов.",
       "status": "in_progress"
     }
   ],
@@ -268,7 +268,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.82913043478261,
-  "overall_now": 80.04434782608696,
-  "overall_delta": 0.2152173913043498
+  "overall_previous": 80.04434782608696,
+  "overall_now": 80.2313043478261,
+  "overall_delta": 0.18695652173913402
 }

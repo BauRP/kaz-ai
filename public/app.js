@@ -255,4 +255,4 @@ try{
   const savedReason=localStorage.getItem("kaz-ai-reason-v1");
   if(["low","medium","high"].includes(savedReason))selectReason(savedReason,true);
 }catch{}
-$("#currentReason").textContent=REASONS[state.reason].name;$("[data-reason]").forEach(button=>{const selected=button.dataset.reason===state.reason;button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");
+$("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").forEach(button=>{const selected=button.dataset.reason===state.reason;button.classList.toggle("selected",selected);if(button.dataset.reason!=="deep")button.setAttribute("aria-pressed",String(selected))});resizeInput();showScreen("welcome");

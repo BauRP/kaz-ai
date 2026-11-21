@@ -175,6 +175,9 @@ test('split-CRLF streaming answer completes and counts only real API attempts',a
     await page.locator('.sidebar [data-screen="settings"]').click();
     await page.locator('#internalSettingsRoot [data-is-tab="usage"]').click();
     assert.equal(await page.locator('#innerRequestsAttempted').innerText(),'1');
+    assert.equal(await page.locator('#innerRequestsSucceeded').innerText(),'1');
+    assert.equal(await page.locator('#innerRequestsFailed').innerText(),'0');
+    assert.equal(await page.locator('#innerRequestsStopped').innerText(),'0');
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });
@@ -811,6 +814,24 @@ test('all active light and medium tool names and descriptions have English and K
   });
 });
 
+test('changing interface language refreshes stop, retry and temporary-chat labels in place',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    for(const [lang,stop,retry,temporary] of [
+      ['en','Stop','Retry request','Temporary chat'],
+      ['kk','Тоқтату','Сұрауды қайталау','Уақытша чат'],
+      ['ru','Остановить','Повторить запрос','Временный чат']
+    ]){
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+lang+'"]').click();
+      assert.equal(await page.locator('#sessionStop').textContent(),stop);
+      assert.equal(await page.locator('#sessionRetry').textContent(),retry);
+      assert.equal(await page.locator('#sessionTemporary').locator('xpath=ancestor::div[contains(@class,"setting-item")]//h2').textContent(),temporary);
+    }
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads.length,0);
+  });
+});
+
 test('language and font tools move keyboard focus from hidden cards onto visible controls',async()=>{
   await withPage(async page=>{
     await page.locator('.sidebar [data-screen="tools"]').click();
@@ -999,6 +1020,8 @@ test('incomplete JSON AI reply stays a temporary preview and retry saves only th
     assert.equal(saved[1].content,'Проверенный_полный_ответ');
     assert.doesNotMatch(await page.locator('#chatMessages').innerText(),/НЕПОЛНОЕ_РЕШЕНИЕ/);
     assert.equal(calls,2);
+    const usage=await page.evaluate(()=>window.KazSession.usageSnapshot());
+    assert.deepEqual(usage,{requestsAttempted:2,requestsSucceeded:1,requestsFailed:1,requestsStopped:0});
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });

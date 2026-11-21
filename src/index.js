@@ -607,7 +607,11 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
                   error.code=providerCode(packet.error)||"AI_MODEL_STREAM_ERROR";
                   throw error;
                 }
-                if(completionState(packet)==="incomplete"||packet?.type==="response.incomplete")
+                // Responses-style terminal failures may identify themselves only by
+                // event type, without a top-level status or finish_reason.
+                // Do not treat a trailing [DONE] as proof of success in that case.
+                if(completionState(packet)==="incomplete"||
+                    ["response.incomplete","response.failed","response.cancelled"].includes(packet?.type))
                   modelIncomplete=true;
                 if(packet?.type==="response.completed"||packet?.choices?.some?.(x=>x?.finish_reason==="stop"))
                   modelCompleted=true;

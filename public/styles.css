@@ -699,3 +699,29 @@ html[dir="rtl"] .sidebar{direction:rtl}
   .composer-region{padding-top:3px;padding-bottom:max(3px,env(safe-area-inset-bottom))}
   .composer-note{display:none}
 }
+
+/* Direction 48: preserve control access at large browser zoom and short windows. */
+.sidebar-footer{z-index:2}
+.sidebar-scroll:focus-within{scroll-behavior:auto}
+.topbar{min-width:0}
+.topbar-start,.topbar-actions{min-width:0}
+.topbar-title{min-width:0;overflow-wrap:anywhere}
+.composer-left,.composer-right{min-width:0}
+@media(max-height:400px){
+  .sidebar{padding-top:4px;padding-bottom:3px}
+  .sidebar-footer .footer-note,.sidebar-footer .ornament-line{display:none}
+  .sidebar-footer .google-button{min-height:35px;padding:5px}
+  .topbar{min-height:44px}
+  .composer textarea{max-height:84px}
+}
+@media(min-width:761px) and (max-width:1100px) and (max-height:650px){
+  .sidebar-scroll .sidebar-recent{margin-top:9px}
+  .sidebar-header{margin-bottom:8px}
+  .sidebar .primary-nav{margin-top:8px}
+}
+@media(max-width:760px) and (orientation:landscape){
+  .sidebar{width:min(72vw,300px)}
+  .topbar{padding-inline:10px}
+  .view-panel{padding-block:15px}
+  .composer-note{display:none}
+}

@@ -1280,6 +1280,11 @@ document.addEventListener("keydown",event=>{
   if(!$("#modalOverlay").hidden&&event.key==="Tab"){const controls=$$("#modalOverlay button:not([disabled])");const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}}
 });
 $("#drawerScrim").addEventListener("click",()=>setDrawer(false));
+// Browser zoom and rotating a phone can cross the drawer breakpoint without
+// any navigation. Remove the old mobile scrim once desktop layout takes over.
+window.addEventListener("resize",()=>{
+  if(window.innerWidth>760&&$("#sidebar").classList.contains("open"))setDrawer(false);
+});
 $("#messageInput").addEventListener("input",resizeInput);
 $("#messageInput").addEventListener("keydown",event=>{
   // Some input methods confirm a character with keyCode 229 after composition.
@@ -1630,6 +1635,9 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   };
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,pendingReplaceId=null,personalInstructions="",retryAnswerId=null;
   let incompleteBubble=null; // Only transient UI; an interrupted draft never enters chat history.
+  // In-memory UI state only: do not collapse opened questions when answers arrive.
+  const expandedPrompts=new Set();
+  const forgetExpandedPrompts=chat=>{for(const message of chat.messages)expandedPrompts.delete(message.id)};
   let statusRetryable=false;
   const nextId=()=>String(++serial);
   const uiText=value=>window.KazI18n?.translate?.(value)||value;
@@ -1809,7 +1817,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     if(abort)abort.abort("navigation");
     abort=null;pending=null;pendingReplaceId=null;
     $("#sessionStop").hidden=true;
-    for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){drafts.delete(threads[i].id);threads.splice(i,1)}
+    for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){forgetExpandedPrompts(threads[i]);drafts.delete(threads[i].id);threads.splice(i,1)}
     if(current&&threads.some(thread=>thread.id===current)){
       if($("#messageInput").value)drafts.set(current,$("#messageInput").value);
       else drafts.delete(current);
@@ -2075,13 +2083,15 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       if(message.role==="user"){
         const plain=bubble.querySelector(":scope > span");
         if(plain){
-          plain.classList.add("session-user-text","is-collapsed");
+          const expanded=expandedPrompts.has(message.id);
+          plain.classList.add("session-user-text");
+          plain.classList.toggle("is-collapsed",!expanded);
           const toggle=make("button","session-message-expand");
           toggle.type="button";
-          toggle.hidden=true;
-          toggle.setAttribute("aria-expanded","false");
-          toggle.setAttribute("aria-label",promptLabel(false));
-          toggle.append(make("span","",promptLabel(false)));
+          toggle.hidden=!expanded;
+          toggle.setAttribute("aria-expanded",String(expanded));
+          toggle.setAttribute("aria-label",promptLabel(expanded));
+          toggle.append(make("span","",promptLabel(expanded)));
           const arrow=document.createElementNS("http://www.w3.org/2000/svg","svg");
           arrow.setAttribute("class","icon");
           arrow.setAttribute("aria-hidden","true");
@@ -2090,6 +2100,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
           arrow.append(use);toggle.append(arrow);
           toggle.addEventListener("click",()=>{
             const expanded=toggle.getAttribute("aria-expanded")!=="true";
+            if(expanded)expandedPrompts.add(message.id);
+            else expandedPrompts.delete(message.id);
             plain.classList.toggle("is-collapsed",!expanded);
             toggle.setAttribute("aria-expanded",String(expanded));
             toggle.setAttribute("aria-label",promptLabel(expanded));
@@ -2114,7 +2126,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         up.setAttribute("aria-pressed",String(message.rating==="up"));
         down.setAttribute("aria-pressed",String(message.rating==="down"));
         actions.append(up,down);
-        if(!message.localGreeting)actions.append(button("Повторить ответ","retry-answer",message.id));
+        if(!message.localGreeting)actions.append(button(uiText("Повторить ответ"),"retry-answer",message.id));
         bubble.append(actions);
       }
     });
@@ -2658,6 +2670,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       // A detached confirmation can fire twice. Never delete a different chat
       // when its original target has already been removed.
       if(i<0)return;
+      forgetExpandedPrompts(chat);
       threads.splice(i,1);drafts.delete(chat.id);
       if(current===chat.id)sessionNewChat(false,true);
       renderHistory();renderSessionProjects();

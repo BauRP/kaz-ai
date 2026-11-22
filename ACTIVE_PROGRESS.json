@@ -1,39 +1,39 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "50/50 cycle. Fixes: cross-breakpoint mobile drawer overlay, retention of expanded user messages across chat renders, cleanup of transient expanded IDs on chat deletion, truthful GPT-OSS reasoning notice. Feature work: better history continuity, immediate localization of regenerated retry-answer controls, keyboard/browser viewport regression cases, updated complete current progress reference in historical PROGRESS.md. Existing approved functionality and deferred items unchanged. CI verified separately, no live Cloudflare claim.",
+  "basis": "50/50 cycle: fixed 3-language fallback for long message expand/collapse; completed translation coverage for stop, retry-request and retry-answer across all 17 allowed interface locales; new UI test for German and Spanish expansion states. Preview synchronized. Prior core UI and all other 21 directions preserved. Device testing excluded from unfinished software work.",
   "branch": "main",
-  "date": "2026-11-21",
-  "previous": 78.26391304347827,
-  "now": 78.39000000000001,
-  "delta": 0.12608695652174617,
+  "date": "2026-11-22",
+  "previous": 78.39000000000001,
+  "now": 78.46608695652175,
+  "delta": 0.0760869565217348,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 92.99100000000001,
-      "now": 93.061,
-      "delta": 0.06999999999999318
+      "previous": 93.061,
+      "now": 93.11100000000002,
+      "delta": 0.05000000000001137
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 38.53600000000001,
+      "previous": 38.57600000000001,
       "now": 38.57600000000001,
-      "delta": 0.03999999999999915
+      "delta": 0
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 89.28285714285714,
-      "now": 89.31857142857143,
-      "delta": 0.035714285714291805
+      "previous": 89.31857142857143,
+      "now": 89.49714285714286,
+      "delta": 0.1785714285714306
     },
     {
       "name": "Экран",
       "count": 1,
-      "previous": 52.5,
+      "previous": 54.25,
       "now": 54.25,
-      "delta": 1.75
+      "delta": 0
     }
   ],
   "items": [
@@ -51,9 +51,9 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 92.07,
+      "previous": 92.52,
       "now": 92.52,
-      "delta": 0.45000000000000284,
+      "delta": 0,
       "summary": "Длинный вопрос пользователя сохраняет состояние раскрытия после перехода в историю и перерисовки чата; при удалении чата временное состояние очищается.",
       "status": "in_progress"
     },
@@ -111,10 +111,10 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 75.84,
-      "now": 76.09,
+      "previous": 76.09,
+      "now": 76.34,
       "delta": 0.25,
-      "summary": "Кнопка «Повторить ответ» правильно переводится при создании ответа, а не только после смены языка.",
+      "summary": "Кнопка «Повторить ответ» получила переводы для всех 17 языков интерфейса.",
       "status": "in_progress"
     },
     {
@@ -122,9 +122,9 @@
       "name": "Остановить ответ",
       "group": "Чаты",
       "previous": 82.75,
-      "now": 82.75,
-      "delta": 0,
-      "summary": "При сообщениях Cloudflare о failed/cancelled потоковый ответ не признаётся завершённым.",
+      "now": 83,
+      "delta": 0.25,
+      "summary": "Кнопки остановки и повторной отправки запроса имеют переводы для всех 17 языков.",
       "status": "in_progress"
     },
     {
@@ -151,9 +151,9 @@
       "id": 16,
       "name": "Уровни рассуждения",
       "group": "Интеллект",
-      "previous": 59.86,
+      "previous": 60.06,
       "now": 60.06,
-      "delta": 0.20000000000000284,
+      "delta": 0,
       "summary": "Сообщение о выборе уровня рассуждения теперь честно сообщает, что настройка действует на следующий ответ подключённого GPT-OSS.",
       "status": "in_progress"
     },
@@ -221,10 +221,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 84.03,
-      "now": 84.28,
-      "delta": 0.25,
-      "summary": "Подпись повтора ответа локализуется сразу после перерисовки переписки на выбранном языке.",
+      "previous": 84.28,
+      "now": 85.53,
+      "delta": 1.25,
+      "summary": "Расширены переводы управляющих кнопок GPT-OSS и длинных сообщений на все 17 языков; общая система перевода используется вместо отдельного словаря трёх языков.",
       "status": "in_progress"
     },
     {
@@ -261,9 +261,9 @@
       "id": 48,
       "name": "Расширение экрана",
       "group": "Экран",
-      "previous": 52.5,
+      "previous": 54.25,
       "now": 54.25,
-      "delta": 1.75,
+      "delta": 0,
       "summary": "При повороте телефона, изменении масштаба или расширении окна с мобильного до компьютерного режима закрывается прежнее затемнение бокового меню; дополнены автоматические браузерные сценарии.",
       "status": "in_progress"
     }
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.16958333333334,
-  "overall_now": 79.29041666666667,
-  "overall_delta": 0.12083333333333712
+  "overall_previous": 79.29041666666667,
+  "overall_now": 79.36333333333334,
+  "overall_delta": 0.0729166666666714
 }

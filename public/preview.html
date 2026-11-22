@@ -2039,12 +2039,9 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   }
   // Keep long user prompts compact without changing their saved or submitted text.
   // Measure the real rendered lines, not a character count (works on narrow screens).
-  const longPromptLabels={
-    ru:["Показать полностью","Свернуть"],
-    en:["Show more","Show less"],
-    kk:["Толық көрсету","Жасыру"]
-  };
-  const promptLabel=expanded=>(longPromptLabels[window.KazI18n?.language]||longPromptLabels.en)[expanded?1:0];
+  // Use the same 17-language UI dictionary as other chat controls.
+  // This also avoids showing English buttons in an otherwise localized session.
+  const promptLabel=expanded=>uiText(expanded?"Свернуть":"Показать полностью");
   function updateLongPromptButtons(){
     if(state.screen!=="chat")return;
     for(const bubble of document.querySelectorAll("#chatMessages .message-user")){
@@ -3215,6 +3212,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
 (function(){
   const dictionary={
     "Не удалось подготовить файл для скачивания. Попробуйте ещё раз.": {"en":"Could not prepare the download. Please try again.","kk":"Жүктеп алу файлын дайындау мүмкін болмады. Қайталап көріңіз."},
+  "Показать полностью": {"en":"Show more","kk":"Толық көрсету","pt":"Mostrar mais","es":"Mostrar más","fr":"Afficher plus","ar":"عرض المزيد","zh":"显示更多","ko":"더 보기","ja":"もっと見る","de":"Mehr anzeigen","it":"Mostra altro","tr":"Daha fazla göster","pl":"Pokaż więcej","hi":"और दिखाएँ","vi":"Xem thêm","id":"Tampilkan selengkapnya"},
+  "Свернуть": {"en":"Show less","kk":"Жасыру","pt":"Mostrar menos","es":"Mostrar menos","fr":"Afficher moins","ar":"عرض أقل","zh":"收起","ko":"접기","ja":"折りたたむ","de":"Weniger anzeigen","it":"Mostra meno","tr":"Daha az göster","pl":"Pokaż mniej","hi":"कम दिखाएँ","vi":"Thu gọn","id":"Tampilkan lebih sedikit"},
   "Закрыть окно": {"en":"Close dialog","kk":"Терезені жабу"},
   "Добавить чат": {"en":"Add chat","kk":"Чат қосу"},
   "Язык перевода": {"en":"Translation language","kk":"Аударма тілі"},
@@ -3649,10 +3648,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     "en": "Branch",
     "kk": "Тармақтау"
   },
-  "Повторить ответ": {
-    "en": "Retry answer",
-    "kk": "Жауапты қайталау"
-  },
+  "Повторить ответ": {"en":"Retry answer","kk":"Жауапты қайталау","pt":"Gerar resposta novamente","es":"Regenerar respuesta","fr":"Régénérer la réponse","ar":"إعادة إنشاء الإجابة","zh":"重新生成回答","ko":"답변 다시 생성","ja":"回答を再生成","de":"Antwort neu erstellen","it":"Rigenera la risposta","tr":"Yanıtı yeniden oluştur","pl":"Wygeneruj odpowiedź ponownie","hi":"उत्तर फिर से बनाएँ","vi":"Tạo lại câu trả lời","id":"Buat ulang jawaban"},
   "Сохранить": {
     "en": "Save",
     "kk": "Сақтау"
@@ -3677,10 +3673,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     "en": "Copy text",
     "kk": "Мәтінді көшіру"
   },
-  "Остановить": {
-    "en": "Stop",
-    "kk": "Тоқтату"
-  },
+  "Остановить": {"en":"Stop","kk":"Тоқтату","pt":"Parar","es":"Detener","fr":"Arrêter","ar":"إيقاف","zh":"停止","ko":"중지","ja":"停止","de":"Stoppen","it":"Interrompi","tr":"Durdur","pl":"Zatrzymaj","hi":"रोकें","vi":"Dừng","id":"Hentikan"},
   "Простой калькулятор": {
     "en": "Simple calculator",
     "kk": "Қарапайым калькулятор"
@@ -3755,7 +3748,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   "Убрать": {"en":"Remove","kk":"Алып тастау"},
   "Очистить": {"en":"Clear","kk":"Тазалау"},
   "Подключить": {"en":"Connect","kk":"Қосу"},
-  "Повторить запрос": {"en":"Retry request","kk":"Сұрауды қайталау"},
+  "Повторить запрос": {"en":"Retry request","kk":"Сұрауды қайталау","pt":"Tentar novamente","es":"Reintentar solicitud","fr":"Réessayer la demande","ar":"إعادة المحاولة","zh":"重试请求","ko":"요청 다시 시도","ja":"リクエストを再試行","de":"Anfrage wiederholen","it":"Riprova la richiesta","tr":"İsteği yeniden dene","pl":"Ponów żądanie","hi":"अनुरोध फिर से करें","vi":"Thử lại yêu cầu","id":"Coba lagi"},
   "Нет переписок": {"en":"No chats","kk":"Чаттар жоқ"},
   "Пока нет чатов": {"en":"No chats yet","kk":"Әзірше чаттар жоқ"},
   "Совпадений не найдено": {"en":"No matches","kk":"Сәйкестіктер табылмады"},

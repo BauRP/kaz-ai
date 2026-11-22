@@ -4,6 +4,8 @@
 (function(){
   const dictionary={
     "Не удалось подготовить файл для скачивания. Попробуйте ещё раз.": {"en":"Could not prepare the download. Please try again.","kk":"Жүктеп алу файлын дайындау мүмкін болмады. Қайталап көріңіз."},
+  "Показать полностью": {"en":"Show more","kk":"Толық көрсету","pt":"Mostrar mais","es":"Mostrar más","fr":"Afficher plus","ar":"عرض المزيد","zh":"显示更多","ko":"더 보기","ja":"もっと見る","de":"Mehr anzeigen","it":"Mostra altro","tr":"Daha fazla göster","pl":"Pokaż więcej","hi":"और दिखाएँ","vi":"Xem thêm","id":"Tampilkan selengkapnya"},
+  "Свернуть": {"en":"Show less","kk":"Жасыру","pt":"Mostrar menos","es":"Mostrar menos","fr":"Afficher moins","ar":"عرض أقل","zh":"收起","ko":"접기","ja":"折りたたむ","de":"Weniger anzeigen","it":"Mostra meno","tr":"Daha az göster","pl":"Pokaż mniej","hi":"कम दिखाएँ","vi":"Thu gọn","id":"Tampilkan lebih sedikit"},
   "Закрыть окно": {"en":"Close dialog","kk":"Терезені жабу"},
   "Добавить чат": {"en":"Add chat","kk":"Чат қосу"},
   "Язык перевода": {"en":"Translation language","kk":"Аударма тілі"},

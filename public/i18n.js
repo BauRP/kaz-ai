@@ -438,10 +438,7 @@
     "en": "Branch",
     "kk": "Тармақтау"
   },
-  "Повторить ответ": {
-    "en": "Retry answer",
-    "kk": "Жауапты қайталау"
-  },
+  "Повторить ответ": {"en":"Retry answer","kk":"Жауапты қайталау","pt":"Gerar resposta novamente","es":"Regenerar respuesta","fr":"Régénérer la réponse","ar":"إعادة إنشاء الإجابة","zh":"重新生成回答","ko":"답변 다시 생성","ja":"回答を再生成","de":"Antwort neu erstellen","it":"Rigenera la risposta","tr":"Yanıtı yeniden oluştur","pl":"Wygeneruj odpowiedź ponownie","hi":"उत्तर फिर से बनाएँ","vi":"Tạo lại câu trả lời","id":"Buat ulang jawaban"},
   "Сохранить": {
     "en": "Save",
     "kk": "Сақтау"
@@ -466,10 +463,7 @@
     "en": "Copy text",
     "kk": "Мәтінді көшіру"
   },
-  "Остановить": {
-    "en": "Stop",
-    "kk": "Тоқтату"
-  },
+  "Остановить": {"en":"Stop","kk":"Тоқтату","pt":"Parar","es":"Detener","fr":"Arrêter","ar":"إيقاف","zh":"停止","ko":"중지","ja":"停止","de":"Stoppen","it":"Interrompi","tr":"Durdur","pl":"Zatrzymaj","hi":"रोकें","vi":"Dừng","id":"Hentikan"},
   "Простой калькулятор": {
     "en": "Simple calculator",
     "kk": "Қарапайым калькулятор"
@@ -544,7 +538,7 @@
   "Убрать": {"en":"Remove","kk":"Алып тастау"},
   "Очистить": {"en":"Clear","kk":"Тазалау"},
   "Подключить": {"en":"Connect","kk":"Қосу"},
-  "Повторить запрос": {"en":"Retry request","kk":"Сұрауды қайталау"},
+  "Повторить запрос": {"en":"Retry request","kk":"Сұрауды қайталау","pt":"Tentar novamente","es":"Reintentar solicitud","fr":"Réessayer la demande","ar":"إعادة المحاولة","zh":"重试请求","ko":"요청 다시 시도","ja":"リクエストを再試行","de":"Anfrage wiederholen","it":"Riprova la richiesta","tr":"İsteği yeniden dene","pl":"Ponów żądanie","hi":"अनुरोध फिर से करें","vi":"Thử lại yêu cầu","id":"Coba lagi"},
   "Нет переписок": {"en":"No chats","kk":"Чаттар жоқ"},
   "Пока нет чатов": {"en":"No chats yet","kk":"Әзірше чаттар жоқ"},
   "Совпадений не найдено": {"en":"No matches","kk":"Сәйкестіктер табылмады"},

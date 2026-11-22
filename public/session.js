@@ -437,12 +437,9 @@
   }
   // Keep long user prompts compact without changing their saved or submitted text.
   // Measure the real rendered lines, not a character count (works on narrow screens).
-  const longPromptLabels={
-    ru:["Показать полностью","Свернуть"],
-    en:["Show more","Show less"],
-    kk:["Толық көрсету","Жасыру"]
-  };
-  const promptLabel=expanded=>(longPromptLabels[window.KazI18n?.language]||longPromptLabels.en)[expanded?1:0];
+  // Use the same 17-language UI dictionary as other chat controls.
+  // This also avoids showing English buttons in an otherwise localized session.
+  const promptLabel=expanded=>uiText(expanded?"Свернуть":"Показать полностью");
   function updateLongPromptButtons(){
     if(state.screen!=="chat")return;
     for(const bubble of document.querySelectorAll("#chatMessages .message-user")){

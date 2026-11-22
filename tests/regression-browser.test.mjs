@@ -1046,6 +1046,16 @@ test('long prompt expand labels switch languages without collapsing or changing 
     await page.locator('#languageToggle').click();
     await page.locator('#languageMenu [data-language="kk"]').click();
     assert.equal(await toggle.getAttribute('aria-label'),'Толық көрсету');
+    // A fourth language must not fall back to English in long chat messages.
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="de"]').click();
+    assert.equal(await toggle.getAttribute('aria-label'),'Mehr anzeigen');
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-label'),'Weniger anzeigen');
+    assert.equal(await bubble.locator('.session-user-text').textContent(),prompt);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="es"]').click();
+    assert.equal(await toggle.getAttribute('aria-label'),'Mostrar menos');
   });
 });
 test('mobile navigation scrim closes when zoom or rotation switches to desktop width',async()=>{

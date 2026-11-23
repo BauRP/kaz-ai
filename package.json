@@ -17,7 +17,7 @@
     "test:http": "node scripts/check-http.mjs"
   },
   "devDependencies": {
-    "wrangler": "4.158.0",
+    "wrangler": "4.165.0",
     "playwright-core": "1.65.0"
   },
   "engines": {

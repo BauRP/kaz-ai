@@ -182,6 +182,9 @@ function selectFont(value,quiet=false){
   });
   closePopovers();
   try{localStorage.setItem("kaz-ai-font-size-v1",value)}catch{}
+  // Recalculate the composer after the font changes; old inline height may clip
+  // enlarged text until the visitor types another character.
+  resizeInput();
   if(!quiet)notify(window.KazI18n?.translate?.("Выбран размер текста для предпросмотра.")||"Выбран размер текста для предпросмотра.");
 }
 function openGoogle(){

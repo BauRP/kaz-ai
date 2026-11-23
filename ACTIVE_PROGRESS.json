@@ -1,18 +1,18 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "50/50 cycle: fixed 3-language fallback for long message expand/collapse; completed translation coverage for stop, retry-request and retry-answer across all 17 allowed interface locales; new UI test for German and Spanish expansion states. Preview synchronized. Prior core UI and all other 21 directions preserved. Device testing excluded from unfinished software work.",
+  "basis": "Balanced 50/50 implementation: fixed a browser regression that incorrectly expected DE/ES inside three-item quick language menu, used real 17-language internal settings path; cleaned temporary-chat expanded-state on navigation. Development: responsive small-height tool dialogs, font scaling for composer/history/tool input with immediate resize, browser regression cases. Full CI checked separately. No physical-inch detection or device/manual tests listed as program work.",
   "branch": "main",
-  "date": "2026-11-22",
-  "previous": 78.39000000000001,
-  "now": 78.46608695652175,
-  "delta": 0.0760869565217348,
+  "date": "2026-11-24",
+  "previous": 78.46608695652175,
+  "now": 78.56391304347827,
+  "delta": 0.09782608695651618,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 93.061,
+      "previous": 93.11100000000002,
       "now": 93.11100000000002,
-      "delta": 0.05000000000001137
+      "delta": 0
     },
     {
       "name": "Интеллект",
@@ -24,16 +24,16 @@
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 89.31857142857143,
-      "now": 89.49714285714286,
-      "delta": 0.1785714285714306
+      "previous": 89.49714285714286,
+      "now": 89.64,
+      "delta": 0.1428571428571388
     },
     {
       "name": "Экран",
       "count": 1,
       "previous": 54.25,
-      "now": 54.25,
-      "delta": 0
+      "now": 55.5,
+      "delta": 1.25
     }
   ],
   "items": [
@@ -111,9 +111,9 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 76.09,
+      "previous": 76.34,
       "now": 76.34,
-      "delta": 0.25,
+      "delta": 0,
       "summary": "Кнопка «Повторить ответ» получила переводы для всех 17 языков интерфейса.",
       "status": "in_progress"
     },
@@ -121,9 +121,9 @@
       "id": 10,
       "name": "Остановить ответ",
       "group": "Чаты",
-      "previous": 82.75,
+      "previous": 83,
       "now": 83,
-      "delta": 0.25,
+      "delta": 0,
       "summary": "Кнопки остановки и повторной отправки запроса имеют переводы для всех 17 языков.",
       "status": "in_progress"
     },
@@ -202,9 +202,9 @@
       "name": "Временный чат",
       "group": "Настройки",
       "previous": 93.95,
-      "now": 93.95,
-      "delta": 0,
-      "summary": "Временные чаты нельзя закрепить в истории; история сохраняет правило приватности временных разговоров.",
+      "now": 94.1,
+      "delta": 0.14999999999999147,
+      "summary": "Временное состояние раскрытых сообщений очищается также при переходе из временного чата в сохранённый; данные не переносятся между чатами.",
       "status": "in_progress"
     },
     {
@@ -221,9 +221,9 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 84.28,
+      "previous": 85.53,
       "now": 85.53,
-      "delta": 1.25,
+      "delta": 0,
       "summary": "Расширены переводы управляющих кнопок GPT-OSS и длинных сообщений на все 17 языков; общая система перевода используется вместо отдельного словаря трёх языков.",
       "status": "in_progress"
     },
@@ -232,9 +232,9 @@
       "name": "Размер текста",
       "group": "Настройки",
       "previous": 83.95,
-      "now": 83.95,
-      "delta": 0,
-      "summary": "Выбранный размер текста теперь сохраняется между перезагрузками и восстанавливается без всплывающего уведомления.",
+      "now": 84.8,
+      "delta": 0.8499999999999943,
+      "summary": "Размер шрифта применяется к полю ввода, недавним перепискам, поиску по истории и текстовым инструментам; высота поля ввода пересчитывается без изменения черновика.",
       "status": "in_progress"
     },
     {
@@ -262,9 +262,9 @@
       "name": "Расширение экрана",
       "group": "Экран",
       "previous": 54.25,
-      "now": 54.25,
-      "delta": 0,
-      "summary": "При повороте телефона, изменении масштаба или расширении окна с мобильного до компьютерного режима закрывается прежнее затемнение бокового меню; дополнены автоматические браузерные сценарии.",
+      "now": 55.5,
+      "delta": 1.25,
+      "summary": "Окна переводчика и остальных текстовых инструментов адаптированы к небольшой высоте ноутбуков, повёрнутым телефонам и узкому экрану; добавлен автоматический контроль границ окна.",
       "status": "in_progress"
     }
   ],
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.29041666666667,
-  "overall_now": 79.36333333333334,
-  "overall_delta": 0.0729166666666714
+  "overall_previous": 79.36333333333334,
+  "overall_now": 79.45708333333333,
+  "overall_delta": 0.09374999999998579
 }

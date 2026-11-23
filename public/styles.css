@@ -745,3 +745,13 @@ html[dir="rtl"] .sidebar{direction:rtl}
   .session-dialog h2{font-size:18px}
   .is-modal{width:calc(100vw - 20px)}
 }
+
+/* Direction 44: font preferences also apply to text entry and chat navigation.
+   Never shrink tap targets or buttons in compact mode. */
+.font-small .composer textarea{font-size:12px}
+.font-large .composer textarea{font-size:17px}
+.font-small .recent-item,.font-small .session-chat-name,.font-small .session-project-chat{font-size:12px}
+.font-large .recent-item,.font-large .session-chat-name,.font-large .session-project-chat{font-size:16px}
+.font-large .session-search-snippet,.font-large .session-history-summary{font-size:15px}
+.font-large .session-textarea,.font-large .session-input{font-size:17px}
+.font-large .session-message-expand{font-size:14px}

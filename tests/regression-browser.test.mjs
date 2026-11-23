@@ -1062,6 +1062,24 @@ test('long prompt expand labels switch languages without collapsing or changing 
     assert.equal(await toggle.getAttribute('aria-label'),'Mostrar menos');
   });
 });
+test('text size setting updates composer and history text without losing draft',async()=>{
+  await withPage(async page=>{
+    const draft='Проверка размера текста в поле ввода';
+    await page.locator('#messageInput').fill(draft);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#fontToggle').click();
+    await page.locator('#fontMenu [data-font="large"]').click();
+    let size=await page.locator('#messageInput').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+    assert.ok(size>=17,'Large text applies to composer');
+    assert.equal(await page.locator('#messageInput').inputValue(),draft);
+    await page.locator('#fontToggle').click();
+    await page.locator('#fontMenu [data-font="small"]').click();
+    size=await page.locator('#messageInput').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+    assert.ok(size<=12,'Compact text applies to composer');
+    assert.equal(await page.locator('#messageInput').inputValue(),draft);
+  });
+});
+
 test('translation dialog remains within short laptop and rotated-phone viewports',async()=>{
   await withPage(async page=>{
     await page.locator('.sidebar [data-screen="tools"]').click();

@@ -1062,6 +1062,24 @@ test('long prompt expand labels switch languages without collapsing or changing 
     assert.equal(await toggle.getAttribute('aria-label'),'Mostrar menos');
   });
 });
+test('translation dialog remains within short laptop and rotated-phone viewports',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    for(const [width,height] of [[1024,500],[800,390],[390,560]]){
+      await page.setViewportSize({width,height});
+      await page.locator('#toolGroups [data-feature="tool-22"]').click();
+      const bounds=await page.locator('#sessionOverlay .session-dialog').evaluate(el=>{
+        const r=el.getBoundingClientRect();
+        return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height};
+      });
+      assert.ok(bounds.top>=-2&&bounds.bottom<=height+2,'Dialog fits height: '+JSON.stringify({width,height,bounds}));
+      assert.ok(bounds.left>=-2&&bounds.right<=width+2,'Dialog fits width: '+JSON.stringify({width,height,bounds}));
+      await page.locator('#sessionClose').click();
+      assert.equal(await page.locator('#sessionOverlay').isVisible(),false);
+    }
+  });
+});
+
 test('mobile navigation scrim closes when zoom or rotation switches to desktop width',async()=>{
   await withPage(async page=>{
     await page.setViewportSize({width:390,height:844});

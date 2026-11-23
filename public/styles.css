@@ -725,3 +725,23 @@ html[dir="rtl"] .sidebar{direction:rtl}
   .view-panel{padding-block:15px}
   .composer-note{display:none}
 }
+
+/* Direction 48: short laptop/landscape viewports also need usable dialogs.
+   Keep dialog actions reachable without changing ordinary desktop layouts. */
+@media(max-height:560px){
+  .session-overlay{padding:max(8px,env(safe-area-inset-top)) 12px max(8px,env(safe-area-inset-bottom))}
+  .session-dialog{
+    max-height:calc(100dvh - 16px);
+    padding:clamp(12px,3vh,22px);
+    overscroll-behavior:contain;
+  }
+  .session-dialog h2{font-size:clamp(16px,3.8vh,20px);margin-bottom:9px}
+  .session-textarea{min-height:65px;max-height:28dvh}
+  .is-modal{max-height:calc(100dvh - 16px)}
+}
+@media(max-width:400px){
+  .session-overlay{padding:10px}
+  .session-dialog{width:100%;padding:16px}
+  .session-dialog h2{font-size:18px}
+  .is-modal{width:calc(100vw - 20px)}
+}

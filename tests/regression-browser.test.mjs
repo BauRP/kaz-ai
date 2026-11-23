@@ -1047,14 +1047,18 @@ test('long prompt expand labels switch languages without collapsing or changing 
     await page.locator('#languageMenu [data-language="kk"]').click();
     assert.equal(await toggle.getAttribute('aria-label'),'Толық көрсету');
     // A fourth language must not fall back to English in long chat messages.
-    await page.locator('#languageToggle').click();
-    await page.locator('#languageMenu [data-language="de"]').click();
+    // The quick language popover is intentionally RU/KK/EN only. The other
+    // 14 supported locales are selected through the internal Settings page.
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#innerLanguage').selectOption('de');
+    await page.locator('#recentChats .session-recent').first().click();
     assert.equal(await toggle.getAttribute('aria-label'),'Mehr anzeigen');
     await toggle.click();
     assert.equal(await toggle.getAttribute('aria-label'),'Weniger anzeigen');
     assert.equal(await bubble.locator('.session-user-text').textContent(),prompt);
-    await page.locator('#languageToggle').click();
-    await page.locator('#languageMenu [data-language="es"]').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#innerLanguage').selectOption('es');
+    await page.locator('#recentChats .session-recent').first().click();
     assert.equal(await toggle.getAttribute('aria-label'),'Mostrar menos');
   });
 });

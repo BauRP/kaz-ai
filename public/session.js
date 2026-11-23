@@ -980,7 +980,7 @@
         showStatus("");
         if(old?.temporary){
           const i=threads.indexOf(old);
-          if(i>=0){threads.splice(i,1);drafts.delete(old.id)}
+          if(i>=0){forgetExpandedPrompts(old);threads.splice(i,1);drafts.delete(old.id)}
           // Temporary drafts must not leak into the welcome composer during navigation.
           welcomeDraft="";
           $("#messageInput").value="";

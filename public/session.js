@@ -933,7 +933,7 @@
   }
   function textDialog(title,label,value,onSave){
     openDialog(title,"",body=>{
-      const field=make("input","session-input");field.type="text";field.maxLength=100;
+      const field=make("input","session-input");field.type="text";field.dir="auto";field.maxLength=100;
       field.value=value;field.setAttribute("aria-label",label);
       body.append(field);
       const save=button("Сохранить","dialog-save",null,"session-primary");
@@ -1229,7 +1229,7 @@
     }
     if(action==="instructions"){
       openDialog("Личные инструкции","Правила действуют только в этой вкладке. Они передаются модели вместе с вашим запросом при подключённом ИИ.",body=>{
-        const area=make("textarea","session-textarea");area.value=personalInstructions;area.maxLength=2000;
+        const area=make("textarea","session-textarea");area.dir="auto";area.value=personalInstructions;area.maxLength=2000;
         area.placeholder="Например: отвечай кратко, на русском языке";
         body.append(area);
         const save=button("Применить","dialog-save",null,"session-primary");
@@ -1268,7 +1268,7 @@
           ?selectedLanguage:"en";
         body.append(languageSelect);
       }
-      const field=make("textarea","session-textarea");field.rows=6;field.maxLength=7800;
+      const field=make("textarea","session-textarea");field.dir="auto";field.rows=6;field.maxLength=7800;
       field.setAttribute("aria-label",kind===22?"Текст для перевода":kind===23?"Задача по программированию":"Описание документа");
       field.placeholder=kind===22?"Введите текст для перевода":kind===23?"Что нужно исправить или написать?":"Например: деловое письмо о встрече";
       body.append(field);

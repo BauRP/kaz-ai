@@ -25,8 +25,21 @@
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
   const projectCountLabel=count=>{
     const lang=window.KazI18n?.language||"ru";
-    if(!["ru","kk"].includes(lang))return count+" "+(count===1?"chat":"chats");
     if(lang==="kk")return count+" чат";
+    if(lang!=="ru"){
+      const unit={
+        en:["chat","chats"],pt:["conversa","conversas"],es:["chat","chats"],
+        fr:["discussion","discussions"],ar:["محادثة","محادثات"],
+        zh:["聊天","聊天"],ko:["채팅","채팅"],ja:["チャット","チャット"],
+        de:["Chat","Chats"],it:["chat","chat"],tr:["sohbet","sohbet"],
+        pl:["czat","czatów"],hi:["चैट","चैट"],vi:["cuộc trò chuyện","cuộc trò chuyện"],
+        id:["obrolan","obrolan"]
+      }[lang]||["chat","chats"];
+      if(lang==="ar"&&count===2)return count+" محادثتان";
+      if(lang==="pl"&&count%10>=2&&count%10<=4&&(count%100<12||count%100>14))
+        return count+" czaty";
+      return count+" "+unit[count===1?0:1];
+    }
     const last=count%10,lastTwo=count%100;
     const suffix=last===1&&lastTwo!==11?"чат":last>=2&&last<=4&&(lastTwo<12||lastTwo>14)?"чата":"чатов";
     return count+" "+suffix;

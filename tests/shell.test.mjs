@@ -263,7 +263,9 @@ test('history and projects safely support all added interface languages',()=>{
   for(const language of ['en','ru','kk','pt','es','fr','ar','zh','ko','ja','de','it','tr','pl','hi','vi','id'])
     assert.ok(session.includes(language+':{note:'),'Missing localized export label: '+language);
   assert.match(session,/\}\[lang\]\|\|\{note:/);
-  assert.match(session,/if\(!\["ru","kk"\]\.includes\(lang\)\)/);
-  assert.match(session,/if\(!\["ru","kk"\]\.includes\(language\)\)/);
+  assert.match(session,/if\(lang!=="ru"\)/);
+  assert.match(session,/const unit=\{/);
+  assert.match(session,/uiText\("Найдено переписок:"\)/);
+  assert.match(session,/uiText\("Переписок в текущей вкладке:"\)/);
   assert.match(settings,/language:"auto",mode:"dark"/);
 });

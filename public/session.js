@@ -405,6 +405,7 @@
           const range=matchingMessage.get(c.id).range;
           const {from,to}=searchExcerptBounds(matched.content,range);
           const snippet=make("div","session-search-snippet");
+          snippet.dir="auto";
           if(from)snippet.append(document.createTextNode("…"));
           highlighted(snippet,matched.content.slice(from,to),
             {start:range.start-from,end:range.end-from});

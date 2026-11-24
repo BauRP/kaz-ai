@@ -444,6 +444,11 @@ test('mixed Arabic and Latin drafts keep automatic text direction without alteri
     await page.locator('#languageMenu [data-language="kk"]').click();
     assert.equal(await input.inputValue(),sample);
     assert.equal(await input.getAttribute('dir'),'auto');
+    // Submitted message text must keep its own direction even when the UI
+    // has switched to an RTL language.
+    await page.locator('#sendButton').click();
+    assert.equal(await page.locator('#chatMessages .session-user-text').first().getAttribute('dir'),'auto');
+    assert.equal(await page.locator('#chatMessages .session-user-text').first().textContent(),sample);
   });
 });
 

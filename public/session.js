@@ -480,6 +480,9 @@
         if(plain){
           const expanded=expandedPrompts.has(message.id);
           plain.classList.add("session-user-text");
+          // Keep each message's original writing direction even when the
+          // interface language is Arabic or the conversation mixes scripts.
+          plain.dir="auto";
           plain.classList.toggle("is-collapsed",!expanded);
           const toggle=make("button","session-message-expand");
           toggle.type="button";

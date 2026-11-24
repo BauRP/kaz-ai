@@ -363,13 +363,10 @@
       matchingMessage.set(c.id,{index,range});
       return Boolean(titleMatch)||index>=0;
     });
-    const language=window.KazI18n?.language||"ru";
     if(summary){
-      summary.textContent=!["ru","kk"].includes(language)
-        ?(value?"Chats found: "+shown.length+" of "+saved.length:"Chats in this tab: "+saved.length)
-        :language==="kk"
-          ?(value?"Табылған чаттар: "+shown.length+" / "+saved.length:"Осы қойындыдағы чаттар: "+saved.length)
-          :(value?"Найдено переписок: "+shown.length+" из "+saved.length:"Переписок в текущей вкладке: "+saved.length);
+      summary.textContent=value
+        ?uiText("Найдено переписок:")+" "+shown.length+" / "+saved.length
+        :uiText("Переписок в текущей вкладке:")+" "+saved.length;
     }
     const clearButton=$("#sessionClearSearch");
     if(clearButton){
@@ -396,6 +393,7 @@
       name.setAttribute("aria-label",uiText(c.pinned?"Закреплённый чат":"Открыть чат")+": "+c.title);
       if(c.pinned)name.append(make("span","session-pin","📌 "));
       const label=make("span","session-chat-label");
+      label.dir="auto";
       highlighted(label,c.title,value?matchingTitle.get(c.id):null);
       name.append(label);
       card.append(name);
@@ -430,6 +428,7 @@
     }
     for(const c of saved.slice(0,6)){
       const entry=button((c.pinned?"📌 ":"")+c.title,"open-chat",c.id,"recent-item session-recent");
+      entry.dir="auto";
       entry.setAttribute("aria-label",uiText(c.pinned?"Закреплённый чат":"Открыть чат")+": "+c.title);
       recent.append(entry);
     }
@@ -556,12 +555,14 @@
       const card=make("section","session-project-card");
       const header=make("div","session-project-title");
       const chats=grouped.get(project.id).sort(newestFirst);
-      header.append(make("h2","",project.name),make("small","",projectCountLabel(chats.length)));
+      const projectName=make("h2","",project.name);projectName.dir="auto";
+      header.append(projectName,make("small","",projectCountLabel(chats.length)));
       card.append(header);
       if(!chats.length)card.append(make("p","session-help",uiText("Пока нет чатов в этом проекте.")));
       for(const c of chats){
         const row=make("div","session-project-chat-row");
         const open=button("↳ "+c.title,"open-chat",c.id,"session-project-chat");
+        open.dir="auto";
         open.setAttribute("aria-label",uiText("Открыть чат")+": "+c.title);
         const remove=button(uiText("Убрать"),"remove-chat-from-project",c.id,"session-button");
         remove.setAttribute("aria-label",uiText("Убрать из проекта")+": "+c.title);
@@ -583,6 +584,7 @@
       box.append(make("h2","",uiText("Без проекта")));
       for(const c of ungrouped){
         const open=button("↳ "+c.title,"open-chat",c.id,"session-project-chat");
+        open.dir="auto";
         open.setAttribute("aria-label",uiText("Открыть чат")+": "+c.title);
         box.append(open);
       }

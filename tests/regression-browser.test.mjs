@@ -55,6 +55,28 @@ test('history counters translate into 17-language settings and preserve Arabic c
   });
 });
 
+test('AI response keeps natural writing direction under Arabic interface',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'English answer with 123 and API references.'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#innerLanguage').selectOption('ar');
+    await page.locator('.sidebar [data-action="new-chat"]').click();
+    await page.locator('#messageInput').fill('Explain this in English');
+    await page.locator('#sendButton').click();
+    await page.locator('#chatMessages .message-assistant .rich-answer').waitFor();
+    const result=page.locator('#chatMessages .message-assistant .rich-answer').last();
+    assert.equal(await result.getAttribute('dir'),'auto');
+    assert.match(await result.innerText(),/English answer with 123/);
+  });
+});
+
 test('responsive sidebar keeps Google, About, and recent chats reachable on short laptops and rotated phones',async()=>{
   await withPage(async page=>{
     await page.locator('#messageInput').fill('Разговор для проверки размеров экрана');

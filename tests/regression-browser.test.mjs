@@ -425,6 +425,28 @@ test('text helpers preserve leading whitespace and trailing newlines without aut
   });
 });
 
+test('mixed Arabic and Latin drafts keep automatic text direction without altering content',async()=>{
+  await withPage(async page=>{
+    const sample='مرحبا Kazakhstan 123 /api/chat';
+    const input=page.locator('#messageInput');
+    assert.equal(await input.getAttribute('dir'),'auto');
+    await input.fill(sample);
+    assert.equal(await input.inputValue(),sample);
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    for(const feature of [22,23,24]){
+      await page.locator('#toolGroups [data-feature="tool-'+feature+'"]').click();
+      const field=page.locator('#sessionBody textarea');
+      assert.equal(await field.getAttribute('dir'),'auto');
+      await page.locator('#sessionClose').click();
+    }
+    assert.equal(await input.inputValue(),sample);
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    assert.equal(await input.inputValue(),sample);
+    assert.equal(await input.getAttribute('dir'),'auto');
+  });
+});
+
 test('IME confirmation does not prematurely rename a chat or create a project',async()=>{
   await withPage(async page=>{
     await page.locator('#messageInput').fill('Исходный чат');

@@ -996,7 +996,7 @@ html[dir="rtl"] .sidebar{direction:rtl}
       <div id="statusBanner" class="status-banner" hidden role="status" aria-live="polite"></div>
       <div class="composer" id="composer">
         <label class="sr-only" for="messageInput">Ваше сообщение Kaz AI</label>
-        <textarea id="messageInput" rows="1" maxlength="8000" placeholder="Напишите сообщение..." aria-describedby="composerNote"></textarea>
+        <textarea id="messageInput" rows="1" maxlength="8000" dir="auto" placeholder="Напишите сообщение..." aria-describedby="composerNote"></textarea>
         <div class="composer-toolbar">
           <div class="composer-left">
             <div class="popover-anchor">
@@ -2115,6 +2115,9 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         if(plain){
           const expanded=expandedPrompts.has(message.id);
           plain.classList.add("session-user-text");
+          // Keep each message's original writing direction even when the
+          // interface language is Arabic or the conversation mixes scripts.
+          plain.dir="auto";
           plain.classList.toggle("is-collapsed",!expanded);
           const toggle=make("button","session-message-expand");
           toggle.type="button";
@@ -2568,7 +2571,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   }
   function textDialog(title,label,value,onSave){
     openDialog(title,"",body=>{
-      const field=make("input","session-input");field.type="text";field.maxLength=100;
+      const field=make("input","session-input");field.type="text";field.dir="auto";field.maxLength=100;
       field.value=value;field.setAttribute("aria-label",label);
       body.append(field);
       const save=button("Сохранить","dialog-save",null,"session-primary");
@@ -2864,7 +2867,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     }
     if(action==="instructions"){
       openDialog("Личные инструкции","Правила действуют только в этой вкладке. Они передаются модели вместе с вашим запросом при подключённом ИИ.",body=>{
-        const area=make("textarea","session-textarea");area.value=personalInstructions;area.maxLength=2000;
+        const area=make("textarea","session-textarea");area.dir="auto";area.value=personalInstructions;area.maxLength=2000;
         area.placeholder="Например: отвечай кратко, на русском языке";
         body.append(area);
         const save=button("Применить","dialog-save",null,"session-primary");
@@ -2903,7 +2906,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
           ?selectedLanguage:"en";
         body.append(languageSelect);
       }
-      const field=make("textarea","session-textarea");field.rows=6;field.maxLength=7800;
+      const field=make("textarea","session-textarea");field.dir="auto";field.rows=6;field.maxLength=7800;
       field.setAttribute("aria-label",kind===22?"Текст для перевода":kind===23?"Задача по программированию":"Описание документа");
       field.placeholder=kind===22?"Введите текст для перевода":kind===23?"Что нужно исправить или написать?":"Например: деловое письмо о встрече";
       body.append(field);

@@ -364,8 +364,10 @@
       return Boolean(titleMatch)||index>=0;
     });
     if(summary){
+      const lang=window.KazI18n?.language||"ru";
+      const separator=lang==="ru"?" из ":lang==="en"?" of ":" / ";
       summary.textContent=value
-        ?uiText("Найдено переписок:")+" "+shown.length+" / "+saved.length
+        ?uiText("Найдено переписок:")+" "+shown.length+separator+saved.length
         :uiText("Переписок в текущей вкладке:")+" "+saved.length;
     }
     const clearButton=$("#sessionClearSearch");

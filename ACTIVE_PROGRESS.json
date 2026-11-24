@@ -1,32 +1,32 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-24 iteration: preserve mixed-script writing direction through auto-direction on composer, chat user messages, rename/project naming, personal instructions, translation/programming/document helpers. Add browser regression for text integrity and direction; standalone preview in sync. No Cloudflare deployment, Google sign-in, payments or deferred tools changed. No device/emulator checks counted as unfinished programming tasks.",
+  "basis": "Cycle 50/50: bug fixes for untranslated history result counters, incorrect direction of user-generated names and formatted AI output under Arabic interface; development adds localized project counts across 17 languages (RU/KK/EN maintained), RTL-safe search snippets and additional regression cases. Updated shell localization expectation. GitHub Actions results documented separately. No new deferred features, no device/emulator tasks.",
   "branch": "main",
   "date": "2026-11-24",
-  "previous": 78.56391304347827,
-  "now": 78.62478260869565,
-  "delta": 0.060869565217387844,
+  "previous": 78.62478260869565,
+  "now": 78.69217391304348,
+  "delta": 0.06739130434782226,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 93.11100000000002,
-      "now": 93.12100000000001,
-      "delta": 0.009999999999990905
+      "previous": 93.12100000000001,
+      "now": 93.20100000000001,
+      "delta": 0.0799999999999983
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 38.57600000000001,
-      "now": 38.736000000000004,
-      "delta": 0.1599999999999966
+      "previous": 38.736000000000004,
+      "now": 38.776,
+      "delta": 0.03999999999999915
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 89.64,
-      "now": 89.71142857142857,
-      "delta": 0.0714285714285694
+      "previous": 89.71142857142857,
+      "now": 89.78999999999999,
+      "delta": 0.07857142857142208
     },
     {
       "name": "Экран",
@@ -51,10 +51,10 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 92.52,
-      "now": 92.62,
-      "delta": 0.10000000000000853,
-      "summary": "Сообщения пользователя сохраняют собственное направление письма при смене языка интерфейса без изменения текста.",
+      "previous": 92.62,
+      "now": 92.82,
+      "delta": 0.19999999999998863,
+      "summary": "В истории чатов пользовательские названия с арабскими, латинскими и кириллическими символами отображаются с правильным направлением письма; имена не изменяются.",
       "status": "in_progress"
     },
     {
@@ -62,9 +62,9 @@
       "name": "Поиск по перепискам",
       "group": "Чаты",
       "previous": 99.99,
-      "now": 99.99,
-      "delta": 0,
-      "summary": "Поисковая выдача, сообщение об отсутствии результатов и очистка поиска согласованы с языком интерфейса без изменения содержимого сообщений.",
+      "now": 100.19,
+      "delta": 0.20000000000000284,
+      "summary": "Счётчик результатов поиска переписок переведён на все 17 языков с сохранением привычных русских и английских форм; фрагменты найденных сообщений имеют автоматическое направление письма.",
       "status": "in_progress"
     },
     {
@@ -102,9 +102,9 @@
       "name": "Папки и проекты",
       "group": "Чаты",
       "previous": 99.99,
-      "now": 99.99,
-      "delta": 0,
-      "summary": "Кнопки папок и проектов теперь локализуются при рендере; названия созданных пользователем папок и чатов остаются неизменными.",
+      "now": 100.39,
+      "delta": 0.4000000000000057,
+      "summary": "Счётчики чатов в проектах переведены на все 17 языков с учётом русских форм и особенностей остальных языков; название папки сохраняет исходное письмо.",
       "status": "in_progress"
     },
     {
@@ -142,9 +142,9 @@
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
       "previous": 64.62,
-      "now": 64.62,
-      "delta": 0,
-      "summary": "Согласованы формы параметров GPT-OSS для обычного потока и проверенных ответов; failed/cancelled SSE не сохраняются как успешные.",
+      "now": 64.82,
+      "delta": 0.19999999999998863,
+      "summary": "Ответы GPT-OSS и временные текстовые потоки отображаются с собственным направлением письма, даже если интерфейс переключён на арабский.",
       "status": "in_progress"
     },
     {
@@ -161,9 +161,9 @@
       "id": 22,
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
-      "previous": 24.6,
+      "previous": 24.9,
       "now": 24.9,
-      "delta": 0.29999999999999716,
+      "delta": 0,
       "summary": "Поле переводчика автоматически определяет направление письма для арабского и смешанного текста, сохраняя исходное содержимое.",
       "status": "in_progress"
     },
@@ -171,9 +171,9 @@
       "id": 23,
       "name": "Программирование с ИИ",
       "group": "Интеллект",
-      "previous": 22.05,
+      "previous": 22.3,
       "now": 22.3,
-      "delta": 0.25,
+      "delta": 0,
       "summary": "Поля задач программирования сохраняют направление смешанного текста и исходные фрагменты кода.",
       "status": "in_progress"
     },
@@ -181,9 +181,9 @@
       "id": 24,
       "name": "Подготовка документов",
       "group": "Интеллект",
-      "previous": 21.55,
+      "previous": 21.8,
       "now": 21.8,
-      "delta": 0.25,
+      "delta": 0,
       "summary": "Ввод исходного текста для подготовки документов поддерживает арабский и смешанное письмо без переформатирования.",
       "status": "in_progress"
     },
@@ -191,9 +191,9 @@
       "id": 40,
       "name": "Личные инструкции",
       "group": "Настройки",
-      "previous": 86.18,
+      "previous": 86.33,
       "now": 86.33,
-      "delta": 0.14999999999999147,
+      "delta": 0,
       "summary": "Текст личных инструкций автоматически выбирает направление письма и сохраняется без изменений.",
       "status": "in_progress"
     },
@@ -221,10 +221,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 85.53,
-      "now": 85.88,
-      "delta": 0.3499999999999943,
-      "summary": "Направление письма в поле ввода и пользовательских сообщениях отделено от языка интерфейса и протестировано на смешанном тексте.",
+      "previous": 85.88,
+      "now": 86.43,
+      "delta": 0.5500000000000114,
+      "summary": "Расширена локализация истории, поиска и проектов на 17 языков, а пользовательский текст и ответы ИИ больше не наследуют направление письма интерфейса.",
       "status": "in_progress"
     },
     {
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.45708333333333,
-  "overall_now": 79.51541666666667,
-  "overall_delta": 0.05833333333333712
+  "overall_previous": 79.51541666666667,
+  "overall_now": 79.58,
+  "overall_delta": 0.06458333333333144
 }

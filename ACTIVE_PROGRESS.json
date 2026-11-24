@@ -1,39 +1,39 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "Balanced 50/50 implementation: fixed a browser regression that incorrectly expected DE/ES inside three-item quick language menu, used real 17-language internal settings path; cleaned temporary-chat expanded-state on navigation. Development: responsive small-height tool dialogs, font scaling for composer/history/tool input with immediate resize, browser regression cases. Full CI checked separately. No physical-inch detection or device/manual tests listed as program work.",
+  "basis": "2026-11-24 iteration: preserve mixed-script writing direction through auto-direction on composer, chat user messages, rename/project naming, personal instructions, translation/programming/document helpers. Add browser regression for text integrity and direction; standalone preview in sync. No Cloudflare deployment, Google sign-in, payments or deferred tools changed. No device/emulator checks counted as unfinished programming tasks.",
   "branch": "main",
   "date": "2026-11-24",
-  "previous": 78.46608695652175,
-  "now": 78.56391304347827,
-  "delta": 0.09782608695651618,
+  "previous": 78.56391304347827,
+  "now": 78.62478260869565,
+  "delta": 0.060869565217387844,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
       "previous": 93.11100000000002,
-      "now": 93.11100000000002,
-      "delta": 0
+      "now": 93.12100000000001,
+      "delta": 0.009999999999990905
     },
     {
       "name": "Интеллект",
       "count": 5,
       "previous": 38.57600000000001,
-      "now": 38.57600000000001,
-      "delta": 0
+      "now": 38.736000000000004,
+      "delta": 0.1599999999999966
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 89.49714285714286,
-      "now": 89.64,
-      "delta": 0.1428571428571388
+      "previous": 89.64,
+      "now": 89.71142857142857,
+      "delta": 0.0714285714285694
     },
     {
       "name": "Экран",
       "count": 1,
-      "previous": 54.25,
+      "previous": 55.5,
       "now": 55.5,
-      "delta": 1.25
+      "delta": 0
     }
   ],
   "items": [
@@ -52,9 +52,9 @@
       "name": "История чатов",
       "group": "Чаты",
       "previous": 92.52,
-      "now": 92.52,
-      "delta": 0,
-      "summary": "Длинный вопрос пользователя сохраняет состояние раскрытия после перехода в историю и перерисовки чата; при удалении чата временное состояние очищается.",
+      "now": 92.62,
+      "delta": 0.10000000000000853,
+      "summary": "Сообщения пользователя сохраняют собственное направление письма при смене языка интерфейса без изменения текста.",
       "status": "in_progress"
     },
     {
@@ -162,9 +162,9 @@
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
       "previous": 24.6,
-      "now": 24.6,
-      "delta": 0,
-      "summary": "Все 17 языков перевода имеют естественные названия в русских, казахских и английских инструкциях, вместо англоязычных вставок в RU/KK.",
+      "now": 24.9,
+      "delta": 0.29999999999999716,
+      "summary": "Поле переводчика автоматически определяет направление письма для арабского и смешанного текста, сохраняя исходное содержимое.",
       "status": "in_progress"
     },
     {
@@ -172,9 +172,9 @@
       "name": "Программирование с ИИ",
       "group": "Интеллект",
       "previous": 22.05,
-      "now": 22.05,
-      "delta": 0,
-      "summary": "Для кода улучшены подписи и результаты копирования, включая английский вариант для новых языков интерфейса.",
+      "now": 22.3,
+      "delta": 0.25,
+      "summary": "Поля задач программирования сохраняют направление смешанного текста и исходные фрагменты кода.",
       "status": "in_progress"
     },
     {
@@ -182,9 +182,9 @@
       "name": "Подготовка документов",
       "group": "Интеллект",
       "previous": 21.55,
-      "now": 21.55,
-      "delta": 0,
-      "summary": "Подготовка документов теперь использует безопасную подсказку для 17 локалей, не создавая undefined в тексте.",
+      "now": 21.8,
+      "delta": 0.25,
+      "summary": "Ввод исходного текста для подготовки документов поддерживает арабский и смешанное письмо без переформатирования.",
       "status": "in_progress"
     },
     {
@@ -192,18 +192,18 @@
       "name": "Личные инструкции",
       "group": "Настройки",
       "previous": 86.18,
-      "now": 86.18,
-      "delta": 0,
-      "summary": "Сервер сохраняет исходное форматирование личных инструкций, включая отступы и завершающие пробелы.",
+      "now": 86.33,
+      "delta": 0.14999999999999147,
+      "summary": "Текст личных инструкций автоматически выбирает направление письма и сохраняется без изменений.",
       "status": "in_progress"
     },
     {
       "id": 41,
       "name": "Временный чат",
       "group": "Настройки",
-      "previous": 93.95,
+      "previous": 94.1,
       "now": 94.1,
-      "delta": 0.14999999999999147,
+      "delta": 0,
       "summary": "Временное состояние раскрытых сообщений очищается также при переходе из временного чата в сохранённый; данные не переносятся между чатами.",
       "status": "in_progress"
     },
@@ -222,18 +222,18 @@
       "name": "Язык интерфейса",
       "group": "Настройки",
       "previous": 85.53,
-      "now": 85.53,
-      "delta": 0,
-      "summary": "Расширены переводы управляющих кнопок GPT-OSS и длинных сообщений на все 17 языков; общая система перевода используется вместо отдельного словаря трёх языков.",
+      "now": 85.88,
+      "delta": 0.3499999999999943,
+      "summary": "Направление письма в поле ввода и пользовательских сообщениях отделено от языка интерфейса и протестировано на смешанном тексте.",
       "status": "in_progress"
     },
     {
       "id": 44,
       "name": "Размер текста",
       "group": "Настройки",
-      "previous": 83.95,
+      "previous": 84.8,
       "now": 84.8,
-      "delta": 0.8499999999999943,
+      "delta": 0,
       "summary": "Размер шрифта применяется к полю ввода, недавним перепискам, поиску по истории и текстовым инструментам; высота поля ввода пересчитывается без изменения черновика.",
       "status": "in_progress"
     },
@@ -261,9 +261,9 @@
       "id": 48,
       "name": "Расширение экрана",
       "group": "Экран",
-      "previous": 54.25,
+      "previous": 55.5,
       "now": 55.5,
-      "delta": 1.25,
+      "delta": 0,
       "summary": "Окна переводчика и остальных текстовых инструментов адаптированы к небольшой высоте ноутбуков, повёрнутым телефонам и узкому экрану; добавлен автоматический контроль границ окна.",
       "status": "in_progress"
     }
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.36333333333334,
-  "overall_now": 79.45708333333333,
-  "overall_delta": 0.09374999999998579
+  "overall_previous": 79.45708333333333,
+  "overall_now": 79.51541666666667,
+  "overall_delta": 0.05833333333333712
 }

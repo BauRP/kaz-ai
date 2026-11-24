@@ -31,6 +31,30 @@ async function makeConversation(page,contents){
   await page.locator('.sidebar [data-screen="history"]').click();
 }
 
+test('history counters translate into 17-language settings and preserve Arabic chat names',async()=>{
+  await withPage(async page=>{
+    const title='مرحبا Kaz AI Қазақша';
+    await page.locator('#messageInput').fill(title);
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
+    assert.equal(await page.locator('#historyList .session-chat-label').first().getAttribute('dir'),'auto');
+    assert.equal(await page.locator('#historyList .session-chat-label').first().textContent(),title);
+    assert.equal(await page.locator('#recentChats .session-recent').first().getAttribute('dir'),'auto');
+    await page.locator('#historySearch').fill('Kaz');
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#innerLanguage').selectOption('es');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    assert.equal(await page.locator('#historySearchSummary').innerText(),'Conversaciones encontradas: 1 / 1');
+    assert.equal(await page.locator('#historyList .session-chat-label').first().textContent(),title);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#innerLanguage').selectOption('ar');
+    await page.locator('.sidebar [data-screen="history"]').click();
+    assert.equal(await page.locator('#historySearchSummary').innerText(),'المحادثات التي تم العثور عليها: 1 / 1');
+    assert.equal(await page.locator('#historyList .session-chat-label').first().getAttribute('dir'),'auto');
+    assert.equal(await page.locator('#historyList .session-chat-label').first().textContent(),title);
+  });
+});
+
 test('responsive sidebar keeps Google, About, and recent chats reachable on short laptops and rotated phones',async()=>{
   await withPage(async page=>{
     await page.locator('#messageInput').fill('Разговор для проверки размеров экрана');

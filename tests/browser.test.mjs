@@ -1363,6 +1363,15 @@ test('project counters use correct Russian forms and live Kazakh/English labels 
     assert.equal(await page.locator('.session-project-title small').first().innerText(),'5 чат');
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Қалталар чаттарды топтастырады.'));
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Настройки'));
+    // Additional languages use the existing full selector in Settings.
+    for(const [locale,expected] of [['es','5 chats'],['fr','5 discussions'],['de','5 Chats'],['ar','5 محادثات']]){
+      await page.locator('.sidebar [data-screen="settings"]').click();
+      await page.locator('#innerLanguage').selectOption(locale);
+      await page.locator('.sidebar [data-screen="projects"]').click();
+      assert.equal(await page.locator('.session-project-title small').first().innerText(),expected);
+      assert.equal(await page.locator('.session-project-title h2').first().textContent(),'Мой проект');
+      assert.equal(await page.locator('.session-project-title h2').first().getAttribute('dir'),'auto');
+    }
     assert.deepEqual(errors,[]);
   }finally{await browser.close()}
 });

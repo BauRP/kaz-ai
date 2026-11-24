@@ -526,7 +526,9 @@
       if(message.role==="assistant"){
         const plain=bubble.querySelector(":scope > span");
         if(plain&&window.KazFormat?.render){
-          plain.replaceWith(window.KazFormat.render(message.content));
+          const formatted=window.KazFormat.render(message.content);
+          formatted.dir="auto";
+          plain.replaceWith(formatted);
         }
         // Local greetings are not AI answers and cannot be rated.
         if(message.localGreeting)return;
@@ -771,6 +773,7 @@
         streamingBubble=make("div","message message-assistant");
         streamingBubble.append(make("div","message-label","Kaz AI"));
         const answerSpan=make("div","session-stream-answer");
+        answerSpan.dir="auto";
         streamingBubble.append(answerSpan);
         $("#chatMessages").append(streamingBubble);
         scrollChatToBottom();
@@ -835,6 +838,7 @@
         streamingBubble=make("div","message message-assistant");
         streamingBubble.append(make("div","message-label","Kaz AI"));
         const partial=make("div","session-stream-answer");
+        partial.dir="auto";
         if(window.KazFormat?.render)partial.append(window.KazFormat.render(data.text));
         else partial.textContent=data.text;
         streamingBubble.append(partial);

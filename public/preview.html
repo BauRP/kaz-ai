@@ -1998,13 +1998,12 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       matchingMessage.set(c.id,{index,range});
       return Boolean(titleMatch)||index>=0;
     });
-    const language=window.KazI18n?.language||"ru";
     if(summary){
-      summary.textContent=!["ru","kk"].includes(language)
-        ?(value?"Chats found: "+shown.length+" of "+saved.length:"Chats in this tab: "+saved.length)
-        :language==="kk"
-          ?(value?"Табылған чаттар: "+shown.length+" / "+saved.length:"Осы қойындыдағы чаттар: "+saved.length)
-          :(value?"Найдено переписок: "+shown.length+" из "+saved.length:"Переписок в текущей вкладке: "+saved.length);
+      const lang=window.KazI18n?.language||"ru";
+      const separator=lang==="ru"?" из ":lang==="en"?" of ":" / ";
+      summary.textContent=value
+        ?uiText("Найдено переписок:")+" "+shown.length+separator+saved.length
+        :uiText("Переписок в текущей вкладке:")+" "+saved.length;
     }
     const clearButton=$("#sessionClearSearch");
     if(clearButton){
@@ -2031,6 +2030,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       name.setAttribute("aria-label",uiText(c.pinned?"Закреплённый чат":"Открыть чат")+": "+c.title);
       if(c.pinned)name.append(make("span","session-pin","📌 "));
       const label=make("span","session-chat-label");
+      label.dir="auto";
       highlighted(label,c.title,value?matchingTitle.get(c.id):null);
       name.append(label);
       card.append(name);
@@ -2040,6 +2040,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
           const range=matchingMessage.get(c.id).range;
           const {from,to}=searchExcerptBounds(matched.content,range);
           const snippet=make("div","session-search-snippet");
+          snippet.dir="auto";
           if(from)snippet.append(document.createTextNode("…"));
           highlighted(snippet,matched.content.slice(from,to),
             {start:range.start-from,end:range.end-from});
@@ -2065,6 +2066,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     }
     for(const c of saved.slice(0,6)){
       const entry=button((c.pinned?"📌 ":"")+c.title,"open-chat",c.id,"recent-item session-recent");
+      entry.dir="auto";
       entry.setAttribute("aria-label",uiText(c.pinned?"Закреплённый чат":"Открыть чат")+": "+c.title);
       recent.append(entry);
     }
@@ -2191,12 +2193,14 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       const card=make("section","session-project-card");
       const header=make("div","session-project-title");
       const chats=grouped.get(project.id).sort(newestFirst);
-      header.append(make("h2","",project.name),make("small","",projectCountLabel(chats.length)));
+      const projectName=make("h2","",project.name);projectName.dir="auto";
+      header.append(projectName,make("small","",projectCountLabel(chats.length)));
       card.append(header);
       if(!chats.length)card.append(make("p","session-help",uiText("Пока нет чатов в этом проекте.")));
       for(const c of chats){
         const row=make("div","session-project-chat-row");
         const open=button("↳ "+c.title,"open-chat",c.id,"session-project-chat");
+        open.dir="auto";
         open.setAttribute("aria-label",uiText("Открыть чат")+": "+c.title);
         const remove=button(uiText("Убрать"),"remove-chat-from-project",c.id,"session-button");
         remove.setAttribute("aria-label",uiText("Убрать из проекта")+": "+c.title);
@@ -2218,6 +2222,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       box.append(make("h2","",uiText("Без проекта")));
       for(const c of ungrouped){
         const open=button("↳ "+c.title,"open-chat",c.id,"session-project-chat");
+        open.dir="auto";
         open.setAttribute("aria-label",uiText("Открыть чат")+": "+c.title);
         box.append(open);
       }
@@ -3250,6 +3255,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     "Не удалось подготовить файл для скачивания. Попробуйте ещё раз.": {"en":"Could not prepare the download. Please try again.","kk":"Жүктеп алу файлын дайындау мүмкін болмады. Қайталап көріңіз."},
   "Показать полностью": {"en":"Show more","kk":"Толық көрсету","pt":"Mostrar mais","es":"Mostrar más","fr":"Afficher plus","ar":"عرض المزيد","zh":"显示更多","ko":"더 보기","ja":"もっと見る","de":"Mehr anzeigen","it":"Mostra altro","tr":"Daha fazla göster","pl":"Pokaż więcej","hi":"और दिखाएँ","vi":"Xem thêm","id":"Tampilkan selengkapnya"},
   "Свернуть": {"en":"Show less","kk":"Жасыру","pt":"Mostrar menos","es":"Mostrar menos","fr":"Afficher moins","ar":"عرض أقل","zh":"收起","ko":"접기","ja":"折りたたむ","de":"Weniger anzeigen","it":"Mostra meno","tr":"Daha az göster","pl":"Pokaż mniej","hi":"कम दिखाएँ","vi":"Thu gọn","id":"Tampilkan lebih sedikit"},
+  "Переписок в текущей вкладке:": {"en":"Chats in this tab:","kk":"Осы қойындыдағы чаттар:","pt":"Conversas nesta aba:","es":"Conversaciones en esta pestaña:","fr":"Conversations dans cet onglet :","ar":"المحادثات في علامة التبويب هذه:","zh":"此标签页中的聊天：","ko":"이 탭의 대화:","ja":"このタブのチャット:","de":"Chats in diesem Tab:","it":"Chat in questa scheda:","tr":"Bu sekmedeki sohbetler:","pl":"Czaty w tej karcie:","hi":"इस टैब में चैट:","vi":"Cuộc trò chuyện trong thẻ này:","id":"Obrolan di tab ini:"},
+  "Найдено переписок:": {"en":"Chats found:","kk":"Табылған чаттар:","pt":"Conversas encontradas:","es":"Conversaciones encontradas:","fr":"Conversations trouvées :","ar":"المحادثات التي تم العثور عليها:","zh":"找到的聊天：","ko":"검색된 대화:","ja":"見つかったチャット:","de":"Gefundene Chats:","it":"Chat trovate:","tr":"Bulunan sohbetler:","pl":"Znalezione czaty:","hi":"मिली चैट:","vi":"Cuộc trò chuyện tìm thấy:","id":"Obrolan ditemukan:"},
   "Закрыть окно": {"en":"Close dialog","kk":"Терезені жабу"},
   "Добавить чат": {"en":"Add chat","kk":"Чат қосу"},
   "Язык перевода": {"en":"Translation language","kk":"Аударма тілі"},

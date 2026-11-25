@@ -2064,3 +2064,52 @@ test('download answer saves the original text rather than formatted HTML',async(
     assert.equal(readFileSync(await file.path(),'utf8').replace(/^\uFEFF/,''),answer);
   });
 });
+
+test('failed chat retains manual retry when another chat is opened',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8');
+    let attempts=0;
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        attempts++;
+        return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({code:'AI_UNAVAILABLE',message:'Test failure'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('First request');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionRetry').waitFor({state:'visible'});
+    await page.locator('#sidebarPrimary').click();
+    await page.locator('#messageInput').fill('Second request');
+    await page.locator('#sendButton').click();
+    await page.locator('#sessionRetry').waitFor({state:'visible'});
+    await page.locator('#recentChats .session-recent').filter({hasText:'First request'}).click();
+    assert.equal(await page.locator('#sessionRetry').isVisible(),true);
+    assert.equal(attempts,2);
+    await page.locator('#sessionRetry').click();
+    await page.locator('#sessionRetry').waitFor({state:'visible'});
+    assert.equal(attempts,3);
+    assert.equal(await page.locator('#chatMessages .message-user').count(),1);
+  });
+});
+test('answer remembers submitted reasoning effort even when preference changes',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8');let actual;
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat'){
+        actual=route.request().postDataJSON().effort;
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Response'})});
+      }
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.evaluate(()=>selectReason('high',true));
+    await page.locator('#messageInput').fill('Test effort');
+    await page.locator('#sendButton').click();
+    await page.locator('.session-answer-effort').waitFor();
+    await page.evaluate(()=>selectReason('low',true));
+    assert.equal(actual,'high');
+    assert.equal(await page.locator('.session-answer-effort').getAttribute('data-effort'),'high');
+  });
+});

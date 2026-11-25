@@ -48,6 +48,7 @@
     return count+" "+suffix;
   };
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,pendingReplaceId=null,personalInstructions="",retryAnswerId=null;
+  let activeStreamingBubble=null;
   let incompleteBubble=null; // Only transient UI; an interrupted draft never enters chat history.
   // In-memory UI state only: do not collapse opened questions when answers arrive.
   const expandedPrompts=new Set();
@@ -797,6 +798,7 @@
       let data=null;
       if(response.ok&&/text\/event-stream/i.test(response.headers.get("content-type")||"")){
         streamingBubble=make("div","message message-assistant");
+        activeStreamingBubble=streamingBubble;
         streamingBubble.append(make("div","message-label","Kaz AI"));
         const answerSpan=make("div","session-stream-answer");
         answerSpan.dir="auto";
@@ -820,6 +822,7 @@
           if(following)area.scrollTop=area.scrollHeight;
           showStatus(status||"ИИ отвечает…");
         });
+        if(abort!==controller||controller.signal.aborted)return;
         if(window.KazFormat?.render)answerSpan.replaceChildren(window.KazFormat.render(streamed));
         else answerSpan.textContent=streamed;
         data={text:streamed};
@@ -904,7 +907,7 @@
         const message=quota?"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."
           :e?.code==="AI_RATE_LIMITED"?"Слишком много запросов за короткое время. Попробуйте позднее."
           :e?.code==="AI_RESPONSE_INTERRUPTED"?"Сервис ИИ прервал обработку ответа. Можно повторить запрос."
-          :e?.code==="AI_PROVIDER_TIMEOUT"?"Cloudflare превысил время обработки ответа. Можно повторить запрос."
+          :e?.code==="AI_PROVIDER_TIMEOUT"||e?.code==="AI_STAGE_TIMEOUT"?"Cloudflare превысил время обработки ответа. Можно повторить запрос."
           :e?.code==="AI_PROVIDER_ABORTED"?"Cloudflare прервал запрос. Можно повторить его позже."
           :e?.code==="AI_CAPACITY_UNAVAILABLE"?"Cloudflare сейчас перегружен. Попробуйте позже."
           :e?.code==="AI_PROVIDER_REQUEST_TOO_LARGE"?"Cloudflare отклонил слишком большой запрос."
@@ -913,7 +916,7 @@
           :e?.code==="AI_STREAM_FRAME_LIMIT"?"Нейросеть вернула повреждённые данные. Попробуйте снова."
           :e?.code==="AI_UNAVAILABLE"?"Сервис ИИ временно недоступен. Это не обязательно проблема вашего интернета."
           :e?.code==="STREAM_INTERRUPTED"?"Ответ от сервера оборвался до завершения. Попробуйте повторить запрос."
-          :e?.code==="STREAM_INVALID"?"Получены повреждённые данные ответа. Часть текста могла не дойти."
+          :e?.code==="STREAM_INVALID"||e?.code==="AI_STREAM_INVALID"?"Получены повреждённые данные ответа. Часть текста могла не дойти."
           :e?.code==="AI_OUTPUT_INCOMPLETE"?"Нейросеть остановилась до завершения ответа. Неполный текст не сохранён, запрос можно повторить."
           :e instanceof TypeError&&offline?"Ваше устройство сейчас не подключено к сети. Проверьте подключение."
           :e instanceof TypeError?"Не удалось связаться с сайтом. Интернет на других сайтах может работать."
@@ -924,6 +927,13 @@
         if(streamingBubble&&streamedPartial.trim()&&current===chat.id){
           keepIncomplete=true;
           incompleteBubble=streamingBubble;
+          // The last network chunk may have arrived during the paint throttle.
+          // Show every received character before adding the interruption notice.
+          const answer=streamingBubble.querySelector(".session-stream-answer");
+          if(answer){
+            if(window.KazFormat?.render)answer.replaceChildren(window.KazFormat.render(streamedPartial));
+            else answer.textContent=streamedPartial;
+          }
           const warning=make("div","session-stream-interrupted",
             "⚠️ Ответ прервался. Текст выше неполный и не сохранён. Нажмите «Повторить запрос».");
           streamingBubble.append(warning);
@@ -935,6 +945,7 @@
       }
     }finally{
       if(!keepIncomplete)streamingBubble?.remove();
+      if(activeStreamingBubble===streamingBubble)activeStreamingBubble=null;
       if(abort===controller){abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput()}
     }
   }
@@ -953,6 +964,7 @@
       window.KazInternalSettings?.refreshUsage?.();
     }
     abort=null;pending=null;pendingReplaceId=null;
+    activeStreamingBubble?.remove();activeStreamingBubble=null;
     controller.abort(reason);
     $("#sessionStop").hidden=true;
     retryAnswerId=replaceId;

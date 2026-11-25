@@ -2046,3 +2046,21 @@ test('export summary shows no messages in an empty session',async()=>{
     assert.equal(await page.locator('#sessionExportSummary').textContent(),'Переписок для экспорта: 0 · Сообщений: 0');
   });
 });
+
+test('download answer saves the original text rather than formatted HTML',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8'),answer='**Original**\n\n1. Source text\n';
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:answer})});
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Test file');
+    await page.locator('#sendButton').click();
+    const pendingDownload=page.waitForEvent('download');
+    await page.locator('#chatMessages [data-session="download-answer"]').click();
+    const file=await pendingDownload;
+    assert.match(file.suggestedFilename(),/-answer\.txt$/);
+    assert.equal(readFileSync(await file.path(),'utf8').replace(/^\uFEFF/,''),answer);
+  });
+});

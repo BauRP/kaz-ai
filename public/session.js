@@ -18,6 +18,9 @@
   const projects=[];
   const drafts=new Map();
   let welcomeDraft="";
+  // Unsaved text-tool drafts belong to the current conversation, not to storage.
+  const helperDrafts=new WeakMap();
+  const welcomeHelperDrafts=new Map();
   let requestsAttempted=0; // Per-tab attempts only; never claim this is token usage.
   let requestsSucceeded=0,requestsFailed=0,requestsStopped=0;
   let activitySerial=0;
@@ -76,6 +79,9 @@
   // A message may start with indentation or end with an intentional newline.
   // Reject whitespace-only input, but do not silently rewrite valid code/text.
   const composeText=()=>$("#messageInput").value;
+  const requestEncoder=new TextEncoder();
+  const requestBytes=payload=>requestEncoder.encode(JSON.stringify(payload)).length;
+  const latestFits=text=>requestBytes({messages:[{role:"user",content:text}],effort:state.reason,instructions:personalInstructions})<=50000;
   function showStatus(text,quota=false,retryable=false){
     const banner=$("#statusBanner");
     banner.textContent=text;
@@ -233,7 +239,7 @@
       if($("#messageInput").value)drafts.set(current,$("#messageInput").value);
       else drafts.delete(current);
     }
-    welcomeDraft="";
+    welcomeDraft="";welcomeHelperDrafts.clear();
     current=null;
     state.chat=[];state.draftTitle="Новый чат";
     $("#messageInput").value="";$("#messageInput").focus();
@@ -244,6 +250,7 @@
     if(temporary)notify("Временный чат не будет добавлен в историю.");
   }
   function newThread(firstMessage){
+    welcomeHelperDrafts.clear();
     const temporary=Boolean($("#sessionTemporary")?.checked);
     // Never cut a surrogate pair in half when the first message contains emoji.
     const candidate=shortText(firstMessage.trimStart(),55);
@@ -729,10 +736,18 @@
       candidates.unshift({role:"user",content:entireHistory[0].content});
     // Preserve full recent messages, but do not exceed the server's 50 KB payload cap.
     // Account for JSON encoding, user instructions and non-ASCII characters.
-    const encoder=new TextEncoder();
-    let budget=39000-encoder.encode(personalInstructions).length;
+    // Count the actual UTF-8 JSON payload, including escaped instructions.
+    // Always reserve space for the newest user question before older context.
+    let budget=50000-requestBytes({messages:[],effort:state.reason,instructions:personalInstructions});
     const history=[];
-    const messageBytes=item=>encoder.encode(JSON.stringify(item)).length+2;
+    const messageBytes=item=>requestBytes(item)+1;
+    const latest=candidates.at(-1);
+    if(!latest||latest.role!=="user"||latest.content.length>20000||
+        !latestFits(latest.content)){
+      showStatus("Запрос слишком большой. Сократите последнее сообщение.",false,true);
+      abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput();
+      return;
+    }
     // Preserve the full answer in the chat. Only the next AI request uses
     // an explicitly abbreviated context when an older reply is too large.
     function fitAssistantContext(item,limitBytes){
@@ -759,11 +774,13 @@
         const compact=fitAssistantContext(item,Math.min(budget,12000));
         if(compact){item=compact;bytes=messageBytes(item)}
       }
-      if(bytes>budget||item.content.length>20000)continue;
-      history.unshift(item);budget-=bytes;
+      // The first message needs no comma in the JSON array.
+      const cost=bytes-(history.length===0?1:0);
+      if(cost>budget||item.content.length>20000)continue;
+      history.unshift(item);budget-=cost;
     }
     while(history.length>1&&history[0].role!=="user")history.shift();
-    if(!history.length||history.at(-1).role!=="user"){
+    if(!history.length||history.at(-1).role!=="user"||history.at(-1).content!==latest.content){
       showStatus("Запрос слишком большой. Сократите последнее сообщение.",false,true);
       abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput();
       return;
@@ -955,6 +972,9 @@
   function sendMessage(){
     const text=composeText();if(!text.trim()||abort)return;
     if(text.length>8000){notify("Сообщение длиннее 8000 символов. Сократите его перед отправкой.");return}
+    if(!isMotherName(text)&&!latestFits(text)){
+      notify("Запрос слишком большой. Сократите последнее сообщение.");return;
+    }
     const chat=(state.screen==="welcome"?newThread(text):selected()||newThread(text));
     const familyGreeting=isMotherName(text);
     chat.messages.push({id:nextId(),role:"user",content:text});
@@ -1283,6 +1303,10 @@
       24:["Помощь с документами","Опишите, какой текст необходимо составить. Файлы Word и PDF здесь пока не создаются."]
     };
     const definition=definitions[kind];if(!definition)return;
+    const owner=selected();
+    let saved=owner?helperDrafts.get(owner):welcomeHelperDrafts;
+    if(!saved){saved=new Map();helperDrafts.set(owner,saved)}
+    const prior=saved.get(kind);
     openDialog(definition[0],definition[1],body=>{
       let languageSelect=null;
       if(kind===22){
@@ -1298,14 +1322,19 @@
           const option=make("option","",label);option.value=value;languageSelect.append(option);
         }
         const selectedLanguage=window.KazI18n?.language||"ru";
-        languageSelect.value=Array.from(languageSelect.options).some(option=>option.value===selectedLanguage)
-          ?selectedLanguage:"en";
+        const preferred=prior?.language||selectedLanguage;
+        languageSelect.value=Array.from(languageSelect.options).some(option=>option.value===preferred)
+          ?preferred:"en";
         body.append(languageSelect);
       }
       const field=make("textarea","session-textarea");field.dir="auto";field.rows=6;field.maxLength=7800;
       field.setAttribute("aria-label",kind===22?"Текст для перевода":kind===23?"Задача по программированию":"Описание документа");
       field.placeholder=kind===22?"Введите текст для перевода":kind===23?"Что нужно исправить или написать?":"Например: деловое письмо о встрече";
+      field.value=prior?.text||"";
       body.append(field);
+      const remember=()=>saved.set(kind,{text:field.value,language:languageSelect?.value});
+      field.addEventListener("input",remember);
+      languageSelect?.addEventListener("change",remember);
       const prepare=button("Подготовить запрос","dialog-save",null,"session-primary");
       // Ctrl/Cmd+Enter prepares text without sending it to GPT-OSS.
       field.addEventListener("keydown",event=>{
@@ -1366,6 +1395,10 @@
           }[promptLocale]+value;
         }
         if(prompt.length>8000){notify("Текст слишком длинный. Сократите описание.");field.focus();return}
+        if(!latestFits(prompt)){notify("Запрос слишком большой. Сократите последнее сообщение.");field.focus();return}
+        // Never move a prepared draft into a different conversation.
+        if(selected()!==owner){closeDialog();return}
+        saved.delete(kind);
         closeDialog();showScreen(selected()?"chat":"welcome");
         input.value=prompt;resizeInput();input.focus();
         notify("Запрос подготовлен. Проверьте текст и нажмите отправку.");

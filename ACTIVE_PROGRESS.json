@@ -1,32 +1,32 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-25: translation intent isolation, normalized provider stream events, client frame validation and cancellation. Implementation estimates; syntax checked; full CI and deployment unconfirmed.",
+  "basis": "2026-11-25: multilingual coding audit routing, translated history isolation, document prompts, code copy locale, new-chat focus and temporary draft cleanup. Syntax checks passed; three regression tests added; full CI and deployment unconfirmed.",
   "branch": "main",
   "date": "2026-11-25",
-  "previous": 79.41826086956522,
-  "now": 79.56173913043476,
-  "delta": 0.14347826086954285,
+  "previous": 79.56173913043476,
+  "now": 79.75304347826086,
+  "delta": 0.1913043478261045,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 93.631,
-      "now": 93.73100000000001,
-      "delta": 0.10000000000000853
+      "previous": 93.73100000000001,
+      "now": 93.781,
+      "delta": 0.04999999999999716
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 40.215999999999994,
-      "now": 40.675999999999995,
-      "delta": 0.46000000000000085
+      "previous": 40.675999999999995,
+      "now": 41.236,
+      "delta": 0.5600000000000023
     },
     {
       "name": "Настройки",
       "count": 7,
       "previous": 90.34714285714286,
-      "now": 90.34714285714286,
-      "delta": 0
+      "now": 90.50428571428571,
+      "delta": 0.15714285714285836
     },
     {
       "name": "Экран",
@@ -42,9 +42,9 @@
       "name": "Новый чат",
       "group": "Чаты",
       "previous": 97.6,
-      "now": 97.6,
-      "delta": 0,
-      "summary": "Черновики инструментов переходят из начального экрана в первую переписку.",
+      "now": 98.1,
+      "delta": 0.5,
+      "summary": "Фокус и размер поля ввода восстанавливаются после показа нового чата.",
       "status": "in_progress"
     },
     {
@@ -111,9 +111,9 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 77.84,
+      "previous": 78.34,
       "now": 78.34,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Повреждённый поток прекращается, не препятствуя последующему повтору.",
       "status": "in_progress"
     },
@@ -121,9 +121,9 @@
       "id": 10,
       "name": "Остановить ответ",
       "group": "Чаты",
-      "previous": 84.2,
+      "previous": 84.7,
       "now": 84.7,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "При ошибке чтения отменяется транспорт ответа.",
       "status": "in_progress"
     },
@@ -141,10 +141,10 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 67.12,
-      "now": 68.02,
-      "delta": 0.8999999999999915,
-      "summary": "Служебные события провайдера изолированы; клиент проверяет завершение и размер отдельных кадров.",
+      "previous": 68.02,
+      "now": 68.52,
+      "delta": 0.5,
+      "summary": "Улучшено распознавание программирования и исключено влияние переведённого текста на аудит следующего запроса.",
       "status": "in_progress"
     },
     {
@@ -161,10 +161,10 @@
       "id": 22,
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
-      "previous": 26.2,
-      "now": 27.6,
-      "delta": 1.4000000000000021,
-      "summary": "Режим перевода отделён от математического и технического аудита; исключены лишние вызовы проверки и внедрение специальных математических фактов.",
+      "previous": 27.6,
+      "now": 28.1,
+      "delta": 0.5,
+      "summary": "История перевода не запускает математический аудит несвязанного продолжения.",
       "status": "in_progress"
     },
     {
@@ -172,9 +172,9 @@
       "name": "Программирование с ИИ",
       "group": "Интеллект",
       "previous": 24.1,
-      "now": 24.1,
-      "delta": 0,
-      "summary": "Черновик кода переносится в первую переписку.",
+      "now": 25.1,
+      "delta": 1,
+      "summary": "Английский и казахский шаблоны программирования распознаются сервером; копирование кода локализовано.",
       "status": "in_progress"
     },
     {
@@ -182,9 +182,9 @@
       "name": "Подготовка документов",
       "group": "Интеллект",
       "previous": 23.1,
-      "now": 23.1,
-      "delta": 0,
-      "summary": "Черновик документа переносится в первую переписку.",
+      "now": 23.9,
+      "delta": 0.7999999999999972,
+      "summary": "Улучшены инструкции по языку документа, структуре и неизвестным реквизитам без сокращения лимита исходного текста.",
       "status": "in_progress"
     },
     {
@@ -202,9 +202,9 @@
       "name": "Временный чат",
       "group": "Настройки",
       "previous": 94.1,
-      "now": 94.1,
-      "delta": 0,
-      "summary": "Временное состояние раскрытых сообщений очищается также при переходе из временного чата в сохранённый; данные не переносятся между чатами.",
+      "now": 94.6,
+      "delta": 0.5,
+      "summary": "Явная очистка черновиков инструментов при удалении временной переписки.",
       "status": "in_progress"
     },
     {
@@ -222,9 +222,9 @@
       "name": "Язык интерфейса",
       "group": "Настройки",
       "previous": 88.13,
-      "now": 88.13,
-      "delta": 0,
-      "summary": "Локализованы уведомления выбора рассуждения на всех 17 языках.",
+      "now": 88.73,
+      "delta": 0.6000000000000085,
+      "summary": "Кнопки копирования кода и их состояния локализованы на 17 языков с обновлением при смене языка.",
       "status": "in_progress"
     },
     {
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 80.27583333333332,
-  "overall_now": 80.41333333333331,
-  "overall_delta": 0.13749999999998863
+  "overall_previous": 80.41333333333331,
+  "overall_now": 80.59666666666666,
+  "overall_delta": 0.18333333333335133
 }

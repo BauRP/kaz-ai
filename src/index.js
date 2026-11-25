@@ -588,12 +588,19 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
             upstreamReader=upstream.getReader();
             while(!closed){
               const {done,value}=await withStageDeadline(()=>upstreamReader.read(),STREAM_IDLE_DEADLINE_MS);
-              if(done){upstreamEnded=true;break}
-              if(!value?.byteLength)continue;
-              upstreamBytesSeen=true;
-              receivedBytes+=value.byteLength;receivedChunks++;
-              sseTail+=decode.decode(value,{stream:true});
-              sseTail=sseTail.replace(/\r\n/g,"\n");
+              if(done){
+                upstreamEnded=true;
+                sseTail+=decode.decode();
+                sseTail=sseTail.replace(/\r\n?/g,"\n");
+              }else{
+                if(!value?.byteLength)continue;
+                upstreamBytesSeen=true;
+                receivedBytes+=value.byteLength;receivedChunks++;
+                sseTail+=decode.decode(value,{stream:true});
+                // SSE permits LF, CRLF and bare CR. Retain a trailing CR until
+                // the next chunk (or EOF) so split CRLF is not counted twice.
+                sseTail=sseTail.replace(/\r\n/g,"\n").replace(/\r(?!$)/g,"\n");
+              }
               let idx;
               while((idx=sseTail.indexOf("\n\n"))!==-1){
                 if(idx>200000){const error=new Error("Upstream SSE frame exceeds safe size");error.code="AI_STREAM_FRAME_LIMIT";throw error}
@@ -638,8 +645,8 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
                 if(!verifyProof)write(frame+"\n\n");
               }
               if(sseTail.length>200000){const error=new Error("Upstream SSE frame exceeds safe size");error.code="AI_STREAM_FRAME_LIMIT";throw error}
+              if(done)break;
             }
-            sseTail+=decode.decode();
             if(sseTail.trim()){
               const error=new Error("Truncated SSE frame at connection close");
               error.code="AI_STREAM_INVALID";throw error;

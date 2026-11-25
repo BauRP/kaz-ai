@@ -14,6 +14,7 @@ const MAX_REVIEW_CHARS=85000;
 const MAX_DISPLAY_CHARS=240000;
 const DRAFT_DEADLINE_MS=240000;
 const REVIEW_DEADLINE_MS=120000;
+const STREAM_IDLE_DEADLINE_MS=120000;
 async function withStageDeadline(task,ms){
   let timer;
   try{return await Promise.race([
@@ -349,7 +350,6 @@ function engineeringNotConfirmed(review,draft=""){
 }
 
 function parseSSEAnswerPiece(frame){
-  if(frame.startsWith(":"))return "";
   const line=frame.split("\n").filter(x=>x.startsWith("data:")).map(x=>x.slice(5).trimStart()).join("\n");
   if(!line||line==="[DONE]")return "";
   try{
@@ -423,6 +423,8 @@ async function independentEngineeringReview(env,question,answer,effort,repair=fa
 }
 function correctionIssues(question,draft,corrected){
   const issues=[];
+  if(corrected.length>MAX_REVIEW_CHARS)
+    issues.push("Исправление превышает безопасный объём проверки; исходное решение сохранено.");
   // A reviewer sometimes returns two sentences instead of the full derivation.
   // Such an answer is useful as criticism, but cannot replace the original work.
   if(corrected.length<Math.max(20,Math.min(Math.round(draft.length*0.45),1600)))
@@ -499,7 +501,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
   // effort changes how the model reasons, not how much answer it may produce.
   // 12,288 is the previously tested high-level budget, now shared by all.
   const opts=gptOssParams(messages,effort,true);
-  let upstreamReader=null,heartbeat=null,closed=false;
+  let upstreamReader=null,heartbeat=null,closed=false,upstreamEnded=false;
   let collected="",sseTail="",upstreamBytesSeen=false,receivedBytes=0,receivedChunks=0;
   let modelCompleted=false,modelIncomplete=false;
   let phase="model_connect";
@@ -552,6 +554,9 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
               error.code="AI_MODEL_EMPTY";
               throw error;
             }
+            if(collected.length>MAX_DISPLAY_CHARS){
+              const error=new Error("Model output exceeds display limit");error.code="AI_REVIEW_OUTPUT_LIMIT";throw error;
+            }
             upstreamBytesSeen=true;
             receivedBytes=encoder.encode(collected).byteLength;receivedChunks=1;
             if(completionState(result)==="incomplete"){
@@ -564,26 +569,34 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
               return;
             }
           }else{
-            const upstream=await env.AI.run("@cf/openai/gpt-oss-120b",opts);
+            let connectionExpired=false;
+            let upstream;
+            try{
+              upstream=await withStageDeadline(async()=>{
+                const stream=await env.AI.run("@cf/openai/gpt-oss-120b",opts);
+                if(connectionExpired||closed){
+                  void stream?.cancel?.("request no longer active")?.catch(()=>{});
+                  return null;
+                }
+                return stream;
+              },DRAFT_DEADLINE_MS);
+            }catch(error){connectionExpired=true;throw error}
             phase="model_read";diagnostic("model_connected");
-            if(closed){await upstream?.cancel?.().catch(()=>{});return}
+            if(closed){void upstream?.cancel?.("client disconnected")?.catch(()=>{});return}
             if(!upstream||typeof upstream.getReader!=="function")
               throw new Error("Workers AI did not provide an SSE stream");
             upstreamReader=upstream.getReader();
             while(!closed){
-              const {done,value}=await upstreamReader.read();
-              if(done)break;
+              const {done,value}=await withStageDeadline(()=>upstreamReader.read(),STREAM_IDLE_DEADLINE_MS);
+              if(done){upstreamEnded=true;break}
               if(!value?.byteLength)continue;
               upstreamBytesSeen=true;
               receivedBytes+=value.byteLength;receivedChunks++;
               sseTail+=decode.decode(value,{stream:true});
               sseTail=sseTail.replace(/\r\n/g,"\n");
-              if(sseTail.length>200000){
-                const error=new Error("Upstream SSE frame exceeds safe size");
-                error.code="AI_STREAM_FRAME_LIMIT";throw error;
-              }
               let idx;
               while((idx=sseTail.indexOf("\n\n"))!==-1){
+                if(idx>200000){const error=new Error("Upstream SSE frame exceeds safe size");error.code="AI_STREAM_FRAME_LIMIT";throw error}
                 const frame=sseTail.slice(0,idx);
                 sseTail=sseTail.slice(idx+2);
                 if(!frame.trim())continue;
@@ -611,7 +624,8 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
                 // event type, without a top-level status or finish_reason.
                 // Do not treat a trailing [DONE] as proof of success in that case.
                 if(completionState(packet)==="incomplete"||
-                    ["response.incomplete","response.failed","response.cancelled"].includes(packet?.type))
+                    ["response.incomplete","response.failed","response.cancelled"].includes(packet?.type)||
+                    (packet?.type==="response.completed"&&completionState(packet.response)==="incomplete"))
                   modelIncomplete=true;
                 if(packet?.type==="response.completed"||packet?.choices?.some?.(x=>x?.finish_reason==="stop"))
                   modelCompleted=true;
@@ -623,6 +637,7 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
                 }
                 if(!verifyProof)write(frame+"\n\n");
               }
+              if(sseTail.length>200000){const error=new Error("Upstream SSE frame exceeds safe size");error.code="AI_STREAM_FRAME_LIMIT";throw error}
             }
             sseTail+=decode.decode();
             if(sseTail.trim()){
@@ -642,6 +657,9 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
               })+"\n\n");
               return;
             }
+          }
+          if(!closed&&!collected.trim()){
+            const error=new Error("Model returned no visible answer");error.code="AI_MODEL_EMPTY";throw error;
           }
           // Proof requests are kept private until draft, review and repair finish.
           // Regular chats still stream each chunk immediately.
@@ -692,7 +710,10 @@ function streamedAIResponse(env,messages,effort,auditMode=null,incidentId=newInc
         }finally{
           // Stop timers and release model transport when processing ends.
           // No automatic retries: a second inference could be billed twice.
-          if(upstreamReader){try{upstreamReader.releaseLock()}catch{}}
+          if(upstreamReader){
+            if(!upstreamEnded&&!closed)void upstreamReader.cancel("stream processing stopped").catch(()=>{});
+            try{upstreamReader.releaseLock()}catch{}
+          }
           finish();
         }
       })();
@@ -784,6 +805,7 @@ export default {
         gptOssParams(messages,input.effort)),DRAFT_DEADLINE_MS);
       const text=answerText(result);
       if(!text.trim())return codeError("AI_EMPTY","Модель не вернула ответ. Попробуйте ещё раз.",502);
+      if(text.length>MAX_DISPLAY_CHARS)return codeError("AI_REVIEW_OUTPUT_LIMIT","Ответ модели превысил объём безопасной проверки.",502);
       const fullQuestion=input.messages.map(m=>(m.role==="user"?"Пользователь: ":"Ранее ответил ИИ: ")+m.content).join("\n\n");
       const incomplete=completionState(result)==="incomplete";
       const finalText=incomplete

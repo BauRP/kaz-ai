@@ -2022,3 +2022,27 @@ test('copy answer passes original Markdown to the clipboard',async()=>{
     assert.equal(await page.evaluate(()=>window.__copied),answer);
   });
 });
+
+test('text tool clear and restore preserves exact source without submitting',async()=>{
+  await withPage(async page=>{
+    await page.locator('#mainNavigation [data-screen="tools"]').click();
+    for(const id of [22,23,24]){
+      await page.locator('#toolGroups [data-feature="tool-'+id+'"]').click();
+      const field=page.locator('#sessionBody textarea'),source='  source '+id+'\n';
+      await field.fill(source);
+      await page.locator('#sessionBody button').filter({hasText:'Очистить'}).click();
+      assert.equal(await field.inputValue(),'');
+      await page.locator('#sessionBody button').filter({hasText:'Восстановить текст'}).click();
+      assert.equal(await field.inputValue(),source);
+      assert.equal(await page.locator('#messageInput').inputValue(),'');
+      await field.press('Escape');
+    }
+  });
+});
+test('export summary shows no messages in an empty session',async()=>{
+  await withPage(async page=>{
+    await page.locator('#mainNavigation [data-screen="settings"]').click();
+    await page.locator('#settingsNavigation [data-is-tab="export"]').click();
+    assert.equal(await page.locator('#sessionExportSummary').textContent(),'Переписок для экспорта: 0 · Сообщений: 0');
+  });
+});

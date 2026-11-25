@@ -1738,3 +1738,36 @@ test('all three text helpers restore unsent modal drafts and clear them after pr
     }
   });
 });
+
+test('internal settings font choice applies to readable settings text and modal',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#fontToggle').click();
+    await page.locator('#fontMenu [data-font="large"]').click();
+    const root=page.locator('#internalSettingsRoot');
+    await root.locator('[data-is-tab="security"]').click();
+    assert.ok(await root.locator('[data-is-panel="security"] .is-row p').first().evaluate(el=>parseFloat(getComputedStyle(el).fontSize))>=15);
+    await root.locator('[data-is-dialog="sessions"]').click();
+    assert.ok(await page.locator('#innerDialogBody').evaluate(el=>parseFloat(getComputedStyle(el).fontSize))>=17);
+    await page.locator('[data-is-dialog-close]').last().click();
+  });
+});
+test('automatic interface language uses the first supported browser preference',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.evaluate(()=>{
+      Object.defineProperty(navigator,'languages',{configurable:true,value:['nl-NL','de-DE','en-US']});
+      document.querySelector('#innerLanguage').value='auto';
+      document.querySelector('#innerLanguage').dispatchEvent(new Event('change',{bubbles:true}));
+    });
+    assert.equal(await page.locator('html').getAttribute('lang'),'de');
+    await page.evaluate(()=>{
+      Object.defineProperty(navigator,'languages',{configurable:true,value:['es-ES','en-US']});
+      window.dispatchEvent(new Event('languagechange'));
+    });
+    assert.equal(await page.locator('html').getAttribute('lang'),'es');
+    await page.locator('#innerLanguage').selectOption('ru');
+    await page.evaluate(()=>window.dispatchEvent(new Event('languagechange')));
+    assert.equal(await page.locator('html').getAttribute('lang'),'ru');
+  });
+});

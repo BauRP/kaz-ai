@@ -1960,3 +1960,32 @@ test('language selector chevron is vertically centered and does not intercept se
     assert.equal(await page.locator('html').getAttribute('lang'),'en');
   });
 });
+
+test('flat sidebar and account buttons retain vertical positions when collapsed',async()=>{
+  await withPage(async page=>{
+    await page.emulateMedia({reducedMotion:'reduce'});
+    for(const size of [{width:1280,height:820},{width:1024,height:450}]){
+      await page.setViewportSize(size);
+      const google=page.locator('.sidebar-footer .google-button');
+      const profile=page.locator('#sidebarProfile');
+      const measure=()=>page.evaluate(()=>{
+        const sidebar=document.querySelector('#sidebar'),footer=sidebar.querySelector('.sidebar-footer');
+        const middle=el=>{const r=el.getBoundingClientRect();return (r.top+r.bottom)/2};
+        return {google:middle(footer.querySelector('.google-g')),profile:middle(footer.querySelector('.profile-avatar')),
+          background:getComputedStyle(sidebar).backgroundImage,footer:getComputedStyle(footer).backgroundColor,
+          ornaments:footer.querySelectorAll('.ornament-line').length};
+      });
+      assert.equal(await profile.locator('.profile-label').textContent(),'Мой профиль');
+      const before=await measure();
+      assert.equal(before.background,'none');assert.equal(before.footer,'rgba(0, 0, 0, 0)');assert.equal(before.ornaments,0);
+      await page.locator('#sidebarCollapse').click();
+      const after=await measure();
+      assert.ok(Math.abs(before.google-after.google)<=1,'Google shifted vertically');
+      assert.ok(Math.abs(before.profile-after.profile)<=1,'Profile shifted vertically');
+      assert.equal(await google.locator('.google-g').isVisible(),true);
+      assert.equal(await profile.locator('.profile-avatar').isVisible(),true);
+      assert.equal(await profile.locator('.profile-label').isVisible(),false);
+      await page.locator('#sidebarCollapse').click();
+    }
+  });
+});

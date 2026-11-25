@@ -1,25 +1,25 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-25 50/50: reject empty and incomplete model streams, cancel failed/stalled transport; improve valid batched frame processing, keep original response when reviewer correction exceeds limit. Six new API regression tests. V8 syntax and targeted helper checks passed; full Node/browser CI and deployment not yet confirmed. Engineering estimates, no device/emulator tasks.",
+  "basis": "2026-11-25 50/50: preserve the latest user message within actual encoded JSON limit; restore unsent text helper drafts per conversation and translation language; add browser regression. Estimates for implementation only; CI and deployment not confirmed.",
   "branch": "main",
   "date": "2026-11-25",
-  "previous": 78.74869565217391,
-  "now": 78.84869565217392,
-  "delta": 0.10000000000000853,
+  "previous": 78.84869565217392,
+  "now": 78.9791304347826,
+  "delta": 0.13043478260868824,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 93.191,
+      "previous": 93.29100000000001,
       "now": 93.29100000000001,
-      "delta": 0.10000000000000853
+      "delta": 0
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 38.836000000000006,
-      "now": 39.096000000000004,
-      "delta": 0.259999999999998
+      "previous": 39.096000000000004,
+      "now": 39.696,
+      "delta": 0.5999999999999943
     },
     {
       "name": "Настройки",
@@ -111,9 +111,9 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 76.34,
+      "previous": 76.84,
       "now": 76.84,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Пустой или повреждённый ответ больше не подтверждается сервером как успешный; поток при повреждении отменяется, чтобы можно было безопасно повторить запрос.",
       "status": "in_progress"
     },
@@ -121,9 +121,9 @@
       "id": 10,
       "name": "Остановить ответ",
       "group": "Чаты",
-      "previous": 83,
+      "previous": 83.5,
       "now": 83.5,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Остановленный или просроченный поток отменяется, включая подключение, завершившееся после отмены. Добавлены ограничения времени ожидания подключения и очередного фрагмента.",
       "status": "in_progress"
     },
@@ -141,10 +141,10 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 65.12,
-      "now": 65.92,
-      "delta": 0.7999999999999972,
-      "summary": "Устранены ложное завершение пустого ответа, потеря фрагментов после комментария SSE и ложный отказ при нескольких крупных допустимых фрагментах в одном сетевом блоке; ограничено ожидание и исправлена обработка вложенного статуса неполного ответа.",
+      "previous": 65.92,
+      "now": 66.52,
+      "delta": 0.5999999999999943,
+      "summary": "Точный размер UTF-8 JSON-запроса учитывает экранирование инструкций; последний вопрос не заменяется старым при превышении лимита.",
       "status": "in_progress"
     },
     {
@@ -162,19 +162,19 @@
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
       "previous": 24.9,
-      "now": 24.9,
-      "delta": 0,
-      "summary": "Поле переводчика автоматически определяет направление письма для арабского и смешанного текста, сохраняя исходное содержимое.",
+      "now": 25.7,
+      "delta": 0.8000000000000007,
+      "summary": "Незавершённый текст и выбранный язык перевода восстанавливаются в пределах текущего чата.",
       "status": "in_progress"
     },
     {
       "id": 23,
       "name": "Программирование с ИИ",
       "group": "Интеллект",
-      "previous": 22.3,
-      "now": 22.8,
-      "delta": 0.5,
-      "summary": "Добавлено ограничение чрезмерного объёма исправления независимого рецензента, чтобы исходное техническое решение сохранялось; большие допустимые потоковые ответы не отклоняются ошибочно.",
+      "previous": 22.8,
+      "now": 23.6,
+      "delta": 0.8000000000000007,
+      "summary": "Незавершённый исходный код и описание задачи восстанавливаются при повторном открытии инструмента.",
       "status": "in_progress"
     },
     {
@@ -182,9 +182,9 @@
       "name": "Подготовка документов",
       "group": "Интеллект",
       "previous": 21.8,
-      "now": 21.8,
-      "delta": 0,
-      "summary": "Ввод исходного текста для подготовки документов поддерживает арабский и смешанное письмо без переформатирования.",
+      "now": 22.6,
+      "delta": 0.8000000000000007,
+      "summary": "Незавершённое описание документа восстанавливается при повторном открытии инструмента.",
       "status": "in_progress"
     },
     {
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.63416666666667,
-  "overall_now": 79.73,
-  "overall_delta": 0.09583333333333144
+  "overall_previous": 79.73,
+  "overall_now": 79.855,
+  "overall_delta": 0.125
 }

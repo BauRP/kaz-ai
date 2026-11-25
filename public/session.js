@@ -68,6 +68,7 @@
   const expandedPrompts=new Set();
   const forgetExpandedPrompts=chat=>{for(const message of chat.messages)expandedPrompts.delete(message.id)};
   let statusRetryable=false;
+  const retryStates=new WeakMap();
   const nextId=()=>String(++serial);
   const uiText=value=>window.KazI18n?.translate?.(value)||value;
   const selected=()=>threads.find(c=>c.id===current)||null;
@@ -107,15 +108,32 @@
   const requestEncoder=new TextEncoder();
   const requestBytes=payload=>requestEncoder.encode(JSON.stringify(payload)).length;
   const latestFits=text=>requestBytes({messages:[{role:"user",content:text}],effort:state.reason,instructions:personalInstructions})<=50000;
-  function showStatus(text,quota=false,retryable=false){
+  function showStatus(text,quota=false,retryable=false,remember=true){
     const banner=$("#statusBanner");
     banner.textContent=text;
     if(!retryable)retryAnswerId=null;
     statusRetryable=Boolean(text&&retryable);
+    const chat=selected();
+    if(remember&&chat){
+      if(statusRetryable)retryStates.set(chat,{text,quota,replaceId:retryAnswerId,lastId:chat.messages.at(-1)?.id});
+      else retryStates.delete(chat);
+    }
     banner.classList.toggle("is-quota",quota);
     banner.hidden=!text||state.screen!=="chat";
     const retry=$("#sessionRetry");
     if(retry)retry.hidden=!statusRetryable||state.screen!=="chat";
+  }
+  function rememberNavigationRetry(){
+    const chat=selected(),last=chat?.messages.at(-1);
+    if(!abort||!chat||chat.temporary||pending!==chat.id||!last)return;
+    if(pendingReplaceId?last.id!==pendingReplaceId:last.role!=="user")return;
+    retryStates.set(chat,{text:"Генерация ответа остановлена.",quota:false,replaceId:pendingReplaceId,lastId:last.id});
+  }
+  function restoreChatRetry(chat){
+    const saved=retryStates.get(chat);
+    if(!saved||saved.lastId!==chat.messages.at(-1)?.id){retryStates.delete(chat);showStatus("");return}
+    retryAnswerId=saved.replaceId;
+    showStatus(saved.text,saved.quota,true,false);
   }
   const baseResizeInput=resizeInput;
   resizeInput=function(){baseResizeInput();if(abort)$("#sendButton").disabled=true};
@@ -257,6 +275,7 @@
       return;
     }
     rememberReadingPosition();
+    rememberNavigationRetry();
     cancelAttempt(abort,"navigation");
     abort=null;pending=null;pendingReplaceId=null;
     activeStreamingBubble?.remove();activeStreamingBubble=null;
@@ -605,6 +624,11 @@
         }
         // Local greetings are not AI answers and cannot be rated.
         if(message.localGreeting)return;
+        if(["low","medium","high"].includes(message.effort)){
+          const level=make("span","session-answer-effort");level.dataset.effort=message.effort;
+          level.textContent=uiText("Выбранный уровень рассуждения")+": "+uiText(REASONS[message.effort].name);
+          bubble.append(level);
+        }
         const actions=make("div","session-message-actions");
         const up=button("👍","rate-up",message.id),down=button("👎","rate-down",message.id);
         if(message.rating==="up")up.classList.add("selected");
@@ -806,6 +830,7 @@
     // A manual retry or a new request replaces the old temporary preview.
     incompleteBubble?.remove();incompleteBubble=null;
     const previousFocus=document.activeElement;
+    const effort=state.reason,instructions=personalInstructions;
     const controller=new AbortController();abort=controller;pending=chat.id;pendingReplaceId=replaceId;retryAnswerId=null;
     // Do not stop complex inference after an arbitrary 45 seconds.
     // The user retains the explicit Stop button.
@@ -823,7 +848,7 @@
     // Account for JSON encoding, user instructions and non-ASCII characters.
     // Count the actual UTF-8 JSON payload, including escaped instructions.
     // Always reserve space for the newest user question before older context.
-    let budget=50000-requestBytes({messages:[],effort:state.reason,instructions:personalInstructions});
+    let budget=50000-requestBytes({messages:[],effort,instructions});
     const history=[];
     const messageBytes=item=>requestBytes(item)+1;
     const latest=candidates.at(-1);
@@ -879,7 +904,7 @@
       const response=await fetch("/api/chat",{
         method:"POST",headers:{"content-type":"application/json","accept":"text/event-stream"},
         credentials:"same-origin",signal:controller.signal,
-        body:JSON.stringify({messages:history,effort:state.reason,instructions:personalInstructions})
+        body:JSON.stringify({messages:history,effort,instructions})
       });
       // An aborted transport may still resolve its fetch. Do not attach
       // even a temporary response to a different conversation.
@@ -971,9 +996,9 @@
       }
       if(replaceId){
         const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
-        if(existing){existing.content=data.text;existing.rating=null}
+        if(existing){existing.content=data.text;existing.rating=null;existing.effort=effort}
       }else{
-        if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text});
+        if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text,effort});
       }
       if(activeStreamingBubble===streamingBubble)activeStreamingBubble=null;
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
@@ -1132,7 +1157,8 @@
     const chat=threads.find(c=>c.id===id);
     const project=projects.find(p=>p.id===id);
     if(action==="open-chat"&&chat){
-      if(current!==chat.id){
+      const switching=current!==chat.id;
+      if(switching){
         const old=selected();
         // Do not discard an unsent private draft when opening a saved chat.
         const privateWelcome=!old&&Boolean($("#sessionTemporary")?.checked);
@@ -1143,11 +1169,12 @@
           return;
         }
         rememberReadingPosition();
+        rememberNavigationRetry();
         cancelAttempt(abort,"navigation");
         abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;
         activeStreamingBubble?.remove();activeStreamingBubble=null;
         incompleteBubble?.remove();incompleteBubble=null;
-        showStatus("");
+        showStatus("",false,false,false);
         if(privateWelcome){welcomeDraft="";welcomeHelperDrafts.clear();$("#messageInput").value=""}
         if(old?.temporary){
           const i=threads.indexOf(old);
@@ -1160,6 +1187,7 @@
       // Same-chat reopen also retains the current reading position.
       if(current===chat.id)rememberReadingPosition();
       displayThread(chat);renderChat();renderHistory();showScreen("chat");
+      if(switching)restoreChatRetry(chat);
       if(details.matchIndex!==undefined){
         const index=Number(details.matchIndex);
         const bubble=Number.isSafeInteger(index)?$("#chatMessages").children[index]:null;
@@ -1206,6 +1234,7 @@
     }
     if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{
       if(!threads.includes(chat))return false;
+      if(chat.title===v)return;
       chat.title=v;
       if(current===chat.id)state.draftTitle=v;
       renderHistory();renderSessionProjects();
@@ -1214,7 +1243,7 @@
       if(chat.temporary){notify("Временные чаты нельзя закреплять в истории.");return}
       const focused=document.activeElement?.dataset.session==="pin-chat"
         &&document.activeElement.dataset.id===chat.id;
-      chat.pinned=!chat.pinned;renderHistory();
+      chat.pinned=!chat.pinned;renderHistory();renderSessionProjects();
       // Reordering rebuilds the history list. Restore focus to the same action.
       if(focused){
         const next=Array.from(document.querySelectorAll('#historyList [data-session="pin-chat"]'))
@@ -1243,7 +1272,7 @@
       // A detached confirmation can fire twice. Never delete a different chat
       // when its original target has already been removed.
       if(i<0)return;
-      forgetExpandedPrompts(chat);helperDrafts.delete(chat);
+      forgetExpandedPrompts(chat);helperDrafts.delete(chat);retryStates.delete(chat);
       threads.splice(i,1);drafts.delete(chat.id);
       if(current===chat.id)sessionNewChat(false,true);
       renderHistory();renderSessionProjects();
@@ -1847,6 +1876,9 @@
     }
     for(const [action,label] of [["copy-answer","Скопировать текст"],["download-answer","Скачать ответ"]])
       for(const control of document.querySelectorAll('#chatMessages [data-session="'+action+'"]'))control.textContent=uiText(label);
+    for(const level of document.querySelectorAll("#chatMessages .session-answer-effort")){
+      const reason=REASONS[level.dataset.effort];if(reason)level.textContent=uiText("Выбранный уровень рассуждения")+": "+uiText(reason.name);
+    }
     // Existing long prompts retain their expansion and original text while
     // Show more / Show less follows the newly selected interface language.
     updateLongPromptButtons();

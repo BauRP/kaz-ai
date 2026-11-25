@@ -873,3 +873,5 @@ body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .sidebar{background:var(--panel
 
 .settings-navigation .nav-item.selected{background:rgba(51,159,217,.14);border-color:var(--line-strong);color:var(--text)}
 .settings-navigation .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.session-export-summary{font-variant-numeric:tabular-nums;line-height:1.5}

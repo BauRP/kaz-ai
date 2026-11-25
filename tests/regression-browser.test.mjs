@@ -1771,3 +1771,44 @@ test('automatic interface language uses the first supported browser preference',
     assert.equal(await page.locator('html').getAttribute('lang'),'ru');
   });
 });
+
+test('reopening the same conversation retains the live stream until completion',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>route.fulfill({status:200,contentType:'text/html',body:html}));
+    await page.goto('https://kaz-ai.test/');
+    await page.evaluate(()=>{
+      const enc=new TextEncoder();
+      window.fetch=async()=>new Response(new ReadableStream({start(c){
+        c.enqueue(enc.encode('data: {"response":"ЖИВОЙ_ТЕКСТ"}\n\n'));
+        window.finishTestStream=()=>{c.enqueue(enc.encode('data: {"response":"_КОНЕЦ"}\n\nevent: done\ndata: {}\n\n'));c.close()};
+      }}),{headers:{"content-type":"text/event-stream"}});
+    });
+    await page.locator('#messageInput').fill('Вопрос для потока');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('ЖИВОЙ_ТЕКСТ'));
+    await page.locator('.sidebar [data-screen="history"]').click();
+    await page.locator('#historyList [data-session="open-chat"]').first().click();
+    assert.match(await page.locator('#chatMessages').innerText(),/ЖИВОЙ_ТЕКСТ/);
+    await page.evaluate(()=>window.finishTestStream());
+    await page.waitForFunction(()=>document.querySelector('#sessionStop').hidden);
+    assert.equal(await page.locator('#chatMessages .message-assistant').count(),1);
+    assert.match(await page.locator('#chatMessages').innerText(),/ЖИВОЙ_ТЕКСТ_КОНЕЦ/);
+  });
+});
+test('private welcome draft cannot leak when opening a saved chat',async()=>{
+  await withPage(async page=>{
+    await page.locator('#messageInput').fill('Обычная переписка');
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#sessionTemporary').check();
+    await page.locator('#messageInput').fill('Личный черновик');
+    await page.locator('#recentChats .session-recent').first().click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'Личный черновик');
+    assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).active,null);
+    await page.locator('#messageInput').fill('');
+    await page.locator('#recentChats .session-recent').first().click();
+    assert.equal(await page.locator('#messageInput').inputValue(),'');
+    assert.equal(await page.locator('#sessionTemporary').isChecked(),false);
+  });
+});

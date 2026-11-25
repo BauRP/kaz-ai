@@ -227,7 +227,7 @@
           <h3>Общие</h3>
           <div class="is-row">
             <div><strong>Язык интерфейса</strong><p>Автоматически по языку браузера или выбранный вручную. Полный перевод остальных экранов добавляется постепенно.</p></div>
-            <select id="innerLanguage" aria-label="Язык интерфейса"></select>
+            <div class="language-select-shell"><select id="innerLanguage" aria-label="Язык интерфейса"></select><span class="language-select-arrow" aria-hidden="true"><svg class="icon"><use href="#ic-chevron"/></svg></span></div>
           </div>
           <p class="is-footnote">Арабский язык включает направление справа налево. Для остальных экранов пока используется английский перевод там, где нет перевода выбранного языка.</p>
         </section>

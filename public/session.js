@@ -24,6 +24,18 @@
   const welcomeHelperDrafts=new Map();
   let requestsAttempted=0; // Per-tab attempts only; never claim this is token usage.
   let requestsSucceeded=0,requestsFailed=0,requestsStopped=0;
+  const activeAttempts=new WeakSet();
+  function finishAttempt(controller,outcome){
+    if(!controller||!activeAttempts.delete(controller))return;
+    if(outcome==="success")requestsSucceeded++;
+    else if(outcome==="failed")requestsFailed++;
+    else requestsStopped++;
+    window.KazInternalSettings?.refreshUsage?.();
+  }
+  function cancelAttempt(controller,reason){
+    if(!controller)return;
+    finishAttempt(controller,"stopped");controller.abort(reason);
+  }
   let activitySerial=0;
   const touchChat=chat=>{chat.activity=++activitySerial};
   const newestFirst=(a,b)=>(b.activity||0)-(a.activity||0);
@@ -245,7 +257,7 @@
       return;
     }
     rememberReadingPosition();
-    if(abort)abort.abort("navigation");
+    cancelAttempt(abort,"navigation");
     abort=null;pending=null;pendingReplaceId=null;
     activeStreamingBubble?.remove();activeStreamingBubble=null;
     incompleteBubble?.remove();incompleteBubble=null;
@@ -603,7 +615,7 @@
         down.setAttribute("aria-pressed",String(message.rating==="down"));
         actions.append(up,down);
         const copy=button(uiText("Скопировать текст"),"copy-answer",message.id);
-        actions.append(copy);
+        actions.append(copy,button(uiText("Скачать ответ"),"download-answer",message.id));
         const retry=button(uiText("Повторить ответ"),"retry-answer",message.id);
         // Keep the existing control but clearly disable actions that cannot run.
         // Older answers cannot be regenerated without discarding later turns.
@@ -719,7 +731,7 @@
           const event=lines.find(line=>line.startsWith("event:"))?.slice(6).trim()||"message";
           const data=lines.filter(line=>line.startsWith("data:")).map(line=>line.slice(5).trimStart()).join("\n");
           if(event==="done"){
-            if(data!=="{}"){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error}
+            if(finished||data!=="{}"){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error}
             finished=true;continue;
           }
           if(data==="[DONE]")continue; // upstream completion is not the server's final acknowledgement
@@ -736,6 +748,7 @@
             // Preliminary model work remains visible while the optional audit
             // runs. The final event replaces this preview in the saved chat.
             if(typeof packet?.text==="string"&&packet.text.trim()){
+              if(packet.text.length>500000){const error=new Error("STREAM_TOO_LONG");error.code="STREAM_TOO_LONG";throw error}
               preview=packet.text;
               onText(preview,packet?.message||"Проверяю решение…");
             }
@@ -750,7 +763,7 @@
           }
           if(event==="review"){
             const review=typeof packet?.text==="string"?packet.text.slice(0,4500):"";
-            if(review){output+="\n\n---\n\n### Независимая проверка доказательства\n\n"+review;onText(output)}
+            if(review){output+="\n\n---\n\n### Независимая проверка доказательства\n\n"+review;if(output.length>500000){const error=new Error("STREAM_TOO_LONG");error.code="STREAM_TOO_LONG";throw error}onText(output)}
             continue;
           }
           if(event==="error"||packet?.error){
@@ -765,7 +778,7 @@
             packet?.type==="response.output_text.delta"&&typeof packet.delta==="string"?packet.delta:"";
           if(delta){
             output+=delta;
-            if(output.length>500000)throw new Error("STREAM_TOO_LONG");
+            if(output.length>500000){const error=new Error("STREAM_TOO_LONG");error.code="STREAM_TOO_LONG";throw error}
             onText(output);
           }
         }
@@ -861,7 +874,7 @@
     }
     let streamingBubble=null,streamedPartial="",keepIncomplete=false;
     try{
-      requestsAttempted++;
+      requestsAttempted++;activeAttempts.add(controller);
       window.KazInternalSettings?.refreshUsage?.();
       const response=await fetch("/api/chat",{
         method:"POST",headers:{"content-type":"application/json","accept":"text/event-stream"},
@@ -912,8 +925,7 @@
       // An outdated answer cannot change the status of a different chat.
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat)||current!==chat.id)return;
       if(!response.ok){
-        requestsFailed++;
-        window.KazInternalSettings?.refreshUsage?.();
+        finishAttempt(controller,"failed");
         if(data?.code==="AI_QUOTA_EXHAUSTED"){
           // A quota reset must not require resending and duplicating a question.
           // Retrying remains manual: never spend the user's quota automatically.
@@ -942,6 +954,7 @@
       }
       if(abort!==controller||controller.signal.aborted||!threads.includes(chat))return;
       if(!data||typeof data.text!=="string"||!data.text.trim())throw new Error("EMPTY_RESPONSE");
+      if(data.text.length>500000){const error=new Error("STREAM_TOO_LONG");error.code="STREAM_TOO_LONG";throw error}
       if(data.incomplete===true){
         // The JSON fallback must never silently save an unfinished AI answer.
         streamingBubble=make("div","message message-assistant");
@@ -965,8 +978,7 @@
       if(activeStreamingBubble===streamingBubble)activeStreamingBubble=null;
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
       showStatus("");
-      requestsSucceeded++;
-      window.KazInternalSettings?.refreshUsage?.();
+      finishAttempt(controller,"success");
       window.KazInternalSettings?.notify("completed");
     }catch(e){
       if(abort!==controller)return;
@@ -980,8 +992,7 @@
         }
         // Navigation and deletion must not display stale status messages.
       }else{
-        requestsFailed++;
-        window.KazInternalSettings?.refreshUsage?.();
+        finishAttempt(controller,"failed");
         retryAnswerId=replaceId;
         const quota=e?.code==="AI_QUOTA_EXHAUSTED";
         const offline=typeof navigator!=="undefined"&&navigator.onLine===false;
@@ -1029,6 +1040,7 @@
     }finally{
       if(!keepIncomplete)streamingBubble?.remove();
       if(activeStreamingBubble===streamingBubble)activeStreamingBubble=null;
+      if(activeAttempts.has(controller))finishAttempt(controller,controller.signal.aborted?"stopped":"failed");
       if(abort===controller){abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput()}
     }
   }
@@ -1042,10 +1054,7 @@
     ));
     // Detach before signalling cancellation: even if the transport ignores Abort,
     // a late answer is rejected by the active-controller identity checks.
-    if(reason==="manual"){
-      requestsStopped++;
-      window.KazInternalSettings?.refreshUsage?.();
-    }
+    finishAttempt(controller,"stopped");
     abort=null;pending=null;pendingReplaceId=null;
     activeStreamingBubble?.remove();activeStreamingBubble=null;
     controller.abort(reason);
@@ -1134,7 +1143,7 @@
           return;
         }
         rememberReadingPosition();
-        if(abort)abort.abort("navigation");
+        cancelAttempt(abort,"navigation");
         abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;
         activeStreamingBubble?.remove();activeStreamingBubble=null;
         incompleteBubble?.remove();incompleteBubble=null;
@@ -1229,7 +1238,7 @@
       notify("Чат перемещён в «Без проекта».");return
     }
     if(action==="delete-chat"&&chat){confirmDialog("Удалить чат?","Сообщения будут удалены из текущей вкладки.",()=>{
-      if(pending===chat.id){abort?.abort("navigation");abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;showStatus("")}
+      if(pending===chat.id){cancelAttempt(abort,"navigation");abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;showStatus("")}
       const i=threads.indexOf(chat);
       // A detached confirmation can fire twice. Never delete a different chat
       // when its original target has already been removed.
@@ -1329,6 +1338,13 @@
       for(const c of threads)if(c.projectId===project.id)c.projectId=null;
       renderSessionProjects();renderHistory();
     });return}
+    if(action==="download-answer"){
+      const conversation=selected();
+      const message=conversation?.messages.find(m=>m.id===id&&m.role==="assistant"&&!m.localGreeting);
+      if(!message)return;
+      if(download("Kaz-AI-"+safeExportName(conversation.title)+"-answer.txt",message.content,"text/plain;charset=utf-8"))notify(uiText("Файл ответа подготовлен."));
+      return;
+    }
     if(action==="copy-answer"){
       const message=selected()?.messages.find(m=>m.id===id&&m.role==="assistant"&&!m.localGreeting);
       if(!message)return;
@@ -1829,7 +1845,8 @@
       control.textContent=uiText("Повторить ответ");
       if(control.disabled)control.title=uiText("Повторить можно только последний ответ.");
     }
-    for(const control of document.querySelectorAll('#chatMessages [data-session="copy-answer"]'))control.textContent=uiText("Скопировать текст");
+    for(const [action,label] of [["copy-answer","Скопировать текст"],["download-answer","Скачать ответ"]])
+      for(const control of document.querySelectorAll('#chatMessages [data-session="'+action+'"]'))control.textContent=uiText(label);
     // Existing long prompts retain their expansion and original text while
     // Show more / Show less follows the newly selected interface language.
     updateLongPromptButtons();

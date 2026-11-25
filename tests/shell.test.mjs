@@ -43,7 +43,7 @@ test('standalone preview preserves exact active CSS and JavaScript',()=>{
 });
 test('design preview provides interactive menus and an accessible Google dialog',()=>{
   const preview=readFileSync('public/preview.html','utf8');
-  for(const id of ['languageToggle','languageMenu','settingsLanguageToggle','settingsLanguageMenu','fontMenu','googleOverlay','googleDialogTitle','reasonMenu','attachMenu']){
+  for(const id of ['languageToggle','languageMenu','settingsNavigation','sidebarCollapse','sidebarProfile','fontMenu','googleOverlay','googleDialogTitle','reasonMenu','attachMenu']){
     assert.match(html,new RegExp('id="'+id+'"'));
     assert.match(preview,new RegExp('id="'+id+'"'));
   }

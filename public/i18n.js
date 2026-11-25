@@ -664,6 +664,9 @@
   "Скачать свои разговоры": {"en":"Download your conversations","kk":"Әңгімелеріңізді жүктеп алу"}
 };
   Object.assign(dictionary,{
+    "Восстановить текст":{en:"Restore text",kk:"Мәтінді қалпына келтіру",pt:"Restaurar texto",es:"Restaurar texto",fr:"Restaurer le texte",ar:"استعادة النص",zh:"恢复文本",ko:"텍스트 복원",ja:"テキストを復元",de:"Text wiederherstellen",it:"Ripristina testo",tr:"Metni geri yükle",pl:"Przywróć tekst",hi:"पाठ पुनर्स्थापित करें",vi:"Khôi phục văn bản",id:"Pulihkan teks"},
+    "Переписок для экспорта:":{en:"Conversations to export:",kk:"Экспортталатын чаттар:"},
+    "Сообщений:":{en:"Messages:",kk:"Хабарламалар:"},
     "Текст скопирован.":{en:"Text copied.",kk:"Мәтін көшірілді.",pt:"Texto copiado.",es:"Texto copiado.",fr:"Texte copié.",ar:"تم نسخ النص.",zh:"文本已复制。",ko:"텍스트를 복사했습니다.",ja:"テキストをコピーしました。",de:"Text kopiert.",it:"Testo copiato.",tr:"Metin kopyalandı.",pl:"Tekst skopiowany.",hi:"पाठ कॉपी हो गया।",vi:"Đã sao chép văn bản.",id:"Teks disalin."},
     "Не удалось скопировать текст.":{en:"Could not copy text.",kk:"Мәтінді көшіру мүмкін болмады.",pt:"Não foi possível copiar o texto.",es:"No se pudo copiar el texto.",fr:"Impossible de copier le texte.",ar:"تعذر نسخ النص.",zh:"无法复制文本。",ko:"텍스트를 복사하지 못했습니다.",ja:"テキストをコピーできませんでした。",de:"Text konnte nicht kopiert werden.",it:"Impossibile copiare il testo.",tr:"Metin kopyalanamadı.",pl:"Nie udało się skopiować tekstu.",hi:"पाठ कॉपी नहीं हो सका।",vi:"Không thể sao chép văn bản.",id:"Tidak dapat menyalin teks."},
     "Мой профиль":{en:"My profile",kk:"Менің профилім",pt:"Meu perfil",es:"Mi perfil",fr:"Mon profil",ar:"ملفي الشخصي",zh:"我的个人资料",ko:"내 프로필",ja:"マイプロフィール",de:"Mein Profil",it:"Il mio profilo",tr:"Profilim",pl:"Mój profil",hi:"मेरी प्रोफ़ाइल",vi:"Hồ sơ của tôi",id:"Profil saya"},

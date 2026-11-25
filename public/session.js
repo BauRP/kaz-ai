@@ -1486,12 +1486,20 @@
     for(const heading of document.querySelectorAll("#toolGroups .tool-group-title small")){
       const count=Number.parseInt(heading.textContent,10);
       if(!Number.isSafeInteger(count))continue;
-      if(!["ru","kk"].includes(language))heading.textContent=count+" "+(count===1?"function":"functions");
-      else if(language==="kk")heading.textContent=count+" функция";
-      else {
+      if(language==="ru"){
         const last=count%10,lastTwo=count%100;
         const plural=last===1&&lastTwo!==11?"функция":last>=2&&last<=4&&(lastTwo<12||lastTwo>14)?"функции":"функций";
         heading.textContent=count+" "+plural;
+      }else{
+        const units={
+          en:["function","functions"],kk:["функция","функция"],
+          pt:["função","funções"],es:["función","funciones"],fr:["fonction","fonctions"],
+          ar:["وظيفة","وظائف"],zh:["项功能","项功能"],ko:["개 기능","개 기능"],
+          ja:["機能","機能"],de:["Funktion","Funktionen"],it:["funzione","funzioni"],
+          tr:["işlev","işlev"],pl:["funkcja","funkcji"],hi:["सुविधा","सुविधाएँ"],
+          vi:["chức năng","chức năng"],id:["fungsi","fungsi"]
+        }[language]||["function","functions"];
+        heading.textContent=count+" "+units[count===1?0:1];
       }
     }
     // Ratings and instruction input are available, but their real effect still

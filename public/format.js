@@ -77,14 +77,31 @@
     const copyLabels=()=>({
       en:["Copy code","Copied","Unavailable","Copy failed"],
       kk:["Кодты көшіру","Көшірілді","Қолжетімсіз","Көшіру қатесі"],
-      ru:["Копировать код","Скопировано","Недоступно","Ошибка копирования"]
-    })[["ru","kk"].includes(window.KazI18n?.language)?window.KazI18n.language:"en"];
-    button.textContent=copyLabels()[0];
+      ru:["Копировать код","Скопировано","Недоступно","Ошибка копирования"],
+      pt:["Copiar código","Copiado","Indisponível","Falha ao copiar"],
+      es:["Copiar código","Copiado","No disponible","Error al copiar"],
+      fr:["Copier le code","Copié","Indisponible","Échec de la copie"],
+      ar:["نسخ الرمز","تم النسخ","غير متاح","فشل النسخ"],
+      zh:["复制代码","已复制","不可用","复制失败"],
+      ko:["코드 복사","복사됨","사용할 수 없음","복사 실패"],
+      ja:["コードをコピー","コピーしました","利用不可","コピー失敗"],
+      de:["Code kopieren","Kopiert","Nicht verfügbar","Kopieren fehlgeschlagen"],
+      it:["Copia codice","Copiato","Non disponibile","Copia non riuscita"],
+      tr:["Kodu kopyala","Kopyalandı","Kullanılamıyor","Kopyalama başarısız"],
+      pl:["Kopiuj kod","Skopiowano","Niedostępne","Błąd kopiowania"],
+      hi:["कोड कॉपी करें","कॉपी हुआ","उपलब्ध नहीं","कॉपी विफल"],
+      vi:["Sao chép mã","Đã sao chép","Không khả dụng","Sao chép thất bại"],
+      id:["Salin kode","Disalin","Tidak tersedia","Gagal menyalin"]
+    })[window.KazI18n?.language||"ru"]||["Copy code","Copied","Unavailable","Copy failed"];
+    let copyState=0;
+    const refreshCopy=()=>{button.textContent=copyLabels()[copyState]};
+    button.refreshCopyLabel=refreshCopy;
+    refreshCopy();
     button.addEventListener("click",async()=>{
-      const labels=copyLabels();
-      if(!navigator.clipboard?.writeText){button.textContent=labels[2];return}
-      try{await navigator.clipboard.writeText(value);button.textContent=labels[1]}
-      catch{button.textContent=labels[3]}
+      if(!navigator.clipboard?.writeText){copyState=2;refreshCopy();return}
+      try{await navigator.clipboard.writeText(value);copyState=1}
+      catch{copyState=3}
+      refreshCopy();
     });
     bar.append(title,button);section.append(bar);
     const pre=node("pre"),inside=node("code");inside.textContent=value;pre.append(inside);section.append(pre);return section;

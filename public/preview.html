@@ -902,6 +902,8 @@ body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .sidebar{background:var(--panel
 
 .session-export-summary{font-variant-numeric:tabular-nums;line-height:1.5}
 
+.session-answer-effort{display:block;color:var(--muted);font-size:.82em;line-height:1.4;margin-top:10px;overflow-wrap:anywhere}
+
 </style>
   
   
@@ -1915,6 +1917,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   const expandedPrompts=new Set();
   const forgetExpandedPrompts=chat=>{for(const message of chat.messages)expandedPrompts.delete(message.id)};
   let statusRetryable=false;
+  const retryStates=new WeakMap();
   const nextId=()=>String(++serial);
   const uiText=value=>window.KazI18n?.translate?.(value)||value;
   const selected=()=>threads.find(c=>c.id===current)||null;
@@ -1954,15 +1957,32 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   const requestEncoder=new TextEncoder();
   const requestBytes=payload=>requestEncoder.encode(JSON.stringify(payload)).length;
   const latestFits=text=>requestBytes({messages:[{role:"user",content:text}],effort:state.reason,instructions:personalInstructions})<=50000;
-  function showStatus(text,quota=false,retryable=false){
+  function showStatus(text,quota=false,retryable=false,remember=true){
     const banner=$("#statusBanner");
     banner.textContent=text;
     if(!retryable)retryAnswerId=null;
     statusRetryable=Boolean(text&&retryable);
+    const chat=selected();
+    if(remember&&chat){
+      if(statusRetryable)retryStates.set(chat,{text,quota,replaceId:retryAnswerId,lastId:chat.messages.at(-1)?.id});
+      else retryStates.delete(chat);
+    }
     banner.classList.toggle("is-quota",quota);
     banner.hidden=!text||state.screen!=="chat";
     const retry=$("#sessionRetry");
     if(retry)retry.hidden=!statusRetryable||state.screen!=="chat";
+  }
+  function rememberNavigationRetry(){
+    const chat=selected(),last=chat?.messages.at(-1);
+    if(!abort||!chat||chat.temporary||pending!==chat.id||!last)return;
+    if(pendingReplaceId?last.id!==pendingReplaceId:last.role!=="user")return;
+    retryStates.set(chat,{text:"Генерация ответа остановлена.",quota:false,replaceId:pendingReplaceId,lastId:last.id});
+  }
+  function restoreChatRetry(chat){
+    const saved=retryStates.get(chat);
+    if(!saved||saved.lastId!==chat.messages.at(-1)?.id){retryStates.delete(chat);showStatus("");return}
+    retryAnswerId=saved.replaceId;
+    showStatus(saved.text,saved.quota,true,false);
   }
   const baseResizeInput=resizeInput;
   resizeInput=function(){baseResizeInput();if(abort)$("#sendButton").disabled=true};
@@ -2104,6 +2124,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       return;
     }
     rememberReadingPosition();
+    rememberNavigationRetry();
     cancelAttempt(abort,"navigation");
     abort=null;pending=null;pendingReplaceId=null;
     activeStreamingBubble?.remove();activeStreamingBubble=null;
@@ -2452,6 +2473,11 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         }
         // Local greetings are not AI answers and cannot be rated.
         if(message.localGreeting)return;
+        if(["low","medium","high"].includes(message.effort)){
+          const level=make("span","session-answer-effort");level.dataset.effort=message.effort;
+          level.textContent=uiText("Выбранный уровень рассуждения")+": "+uiText(REASONS[message.effort].name);
+          bubble.append(level);
+        }
         const actions=make("div","session-message-actions");
         const up=button("👍","rate-up",message.id),down=button("👎","rate-down",message.id);
         if(message.rating==="up")up.classList.add("selected");
@@ -2653,6 +2679,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     // A manual retry or a new request replaces the old temporary preview.
     incompleteBubble?.remove();incompleteBubble=null;
     const previousFocus=document.activeElement;
+    const effort=state.reason,instructions=personalInstructions;
     const controller=new AbortController();abort=controller;pending=chat.id;pendingReplaceId=replaceId;retryAnswerId=null;
     // Do not stop complex inference after an arbitrary 45 seconds.
     // The user retains the explicit Stop button.
@@ -2670,7 +2697,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     // Account for JSON encoding, user instructions and non-ASCII characters.
     // Count the actual UTF-8 JSON payload, including escaped instructions.
     // Always reserve space for the newest user question before older context.
-    let budget=50000-requestBytes({messages:[],effort:state.reason,instructions:personalInstructions});
+    let budget=50000-requestBytes({messages:[],effort,instructions});
     const history=[];
     const messageBytes=item=>requestBytes(item)+1;
     const latest=candidates.at(-1);
@@ -2726,7 +2753,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       const response=await fetch("/api/chat",{
         method:"POST",headers:{"content-type":"application/json","accept":"text/event-stream"},
         credentials:"same-origin",signal:controller.signal,
-        body:JSON.stringify({messages:history,effort:state.reason,instructions:personalInstructions})
+        body:JSON.stringify({messages:history,effort,instructions})
       });
       // An aborted transport may still resolve its fetch. Do not attach
       // even a temporary response to a different conversation.
@@ -2818,9 +2845,9 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       }
       if(replaceId){
         const existing=chat.messages.find(m=>m.id===replaceId && m.role==="assistant");
-        if(existing){existing.content=data.text;existing.rating=null}
+        if(existing){existing.content=data.text;existing.rating=null;existing.effort=effort}
       }else{
-        if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text});
+        if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text,effort});
       }
       if(activeStreamingBubble===streamingBubble)activeStreamingBubble=null;
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
@@ -2979,7 +3006,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     const chat=threads.find(c=>c.id===id);
     const project=projects.find(p=>p.id===id);
     if(action==="open-chat"&&chat){
-      if(current!==chat.id){
+      const switching=current!==chat.id;
+      if(switching){
         const old=selected();
         // Do not discard an unsent private draft when opening a saved chat.
         const privateWelcome=!old&&Boolean($("#sessionTemporary")?.checked);
@@ -2990,11 +3018,12 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
           return;
         }
         rememberReadingPosition();
+        rememberNavigationRetry();
         cancelAttempt(abort,"navigation");
         abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;
         activeStreamingBubble?.remove();activeStreamingBubble=null;
         incompleteBubble?.remove();incompleteBubble=null;
-        showStatus("");
+        showStatus("",false,false,false);
         if(privateWelcome){welcomeDraft="";welcomeHelperDrafts.clear();$("#messageInput").value=""}
         if(old?.temporary){
           const i=threads.indexOf(old);
@@ -3007,6 +3036,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       // Same-chat reopen also retains the current reading position.
       if(current===chat.id)rememberReadingPosition();
       displayThread(chat);renderChat();renderHistory();showScreen("chat");
+      if(switching)restoreChatRetry(chat);
       if(details.matchIndex!==undefined){
         const index=Number(details.matchIndex);
         const bubble=Number.isSafeInteger(index)?$("#chatMessages").children[index]:null;
@@ -3053,6 +3083,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     }
     if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{
       if(!threads.includes(chat))return false;
+      if(chat.title===v)return;
       chat.title=v;
       if(current===chat.id)state.draftTitle=v;
       renderHistory();renderSessionProjects();
@@ -3061,7 +3092,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       if(chat.temporary){notify("Временные чаты нельзя закреплять в истории.");return}
       const focused=document.activeElement?.dataset.session==="pin-chat"
         &&document.activeElement.dataset.id===chat.id;
-      chat.pinned=!chat.pinned;renderHistory();
+      chat.pinned=!chat.pinned;renderHistory();renderSessionProjects();
       // Reordering rebuilds the history list. Restore focus to the same action.
       if(focused){
         const next=Array.from(document.querySelectorAll('#historyList [data-session="pin-chat"]'))
@@ -3090,7 +3121,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       // A detached confirmation can fire twice. Never delete a different chat
       // when its original target has already been removed.
       if(i<0)return;
-      forgetExpandedPrompts(chat);helperDrafts.delete(chat);
+      forgetExpandedPrompts(chat);helperDrafts.delete(chat);retryStates.delete(chat);
       threads.splice(i,1);drafts.delete(chat.id);
       if(current===chat.id)sessionNewChat(false,true);
       renderHistory();renderSessionProjects();
@@ -3694,6 +3725,9 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     }
     for(const [action,label] of [["copy-answer","Скопировать текст"],["download-answer","Скачать ответ"]])
       for(const control of document.querySelectorAll('#chatMessages [data-session="'+action+'"]'))control.textContent=uiText(label);
+    for(const level of document.querySelectorAll("#chatMessages .session-answer-effort")){
+      const reason=REASONS[level.dataset.effort];if(reason)level.textContent=uiText("Выбранный уровень рассуждения")+": "+uiText(reason.name);
+    }
     // Existing long prompts retain their expansion and original text while
     // Show more / Show less follows the newly selected interface language.
     updateLongPromptButtons();
@@ -4369,6 +4403,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   "Скачать свои разговоры": {"en":"Download your conversations","kk":"Әңгімелеріңізді жүктеп алу"}
 };
   Object.assign(dictionary,{
+    "Выбранный уровень рассуждения":{en:"Selected reasoning level",kk:"Таңдалған ойлау деңгейі",pt:"Nível de raciocínio selecionado",es:"Nivel de razonamiento seleccionado",fr:"Niveau de raisonnement sélectionné",ar:"مستوى الاستدلال المحدد",zh:"所选推理级别",ko:"선택한 추론 수준",ja:"選択した推論レベル",de:"Gewählte Schlussfolgerungsstufe",it:"Livello di ragionamento selezionato",tr:"Seçilen akıl yürütme düzeyi",pl:"Wybrany poziom rozumowania",hi:"चुना गया तर्क स्तर",vi:"Mức suy luận đã chọn",id:"Tingkat penalaran yang dipilih"},
     "Скачать ответ":{en:"Download answer",kk:"Жауапты жүктеу",pt:"Baixar resposta",es:"Descargar respuesta",fr:"Télécharger la réponse",ar:"تنزيل الإجابة",zh:"下载回答",ko:"답변 다운로드",ja:"回答をダウンロード",de:"Antwort herunterladen",it:"Scarica risposta",tr:"Yanıtı indir",pl:"Pobierz odpowiedź",hi:"उत्तर डाउनलोड करें",vi:"Tải câu trả lời",id:"Unduh jawaban"},
     "Файл ответа подготовлен.":{en:"Answer file prepared.",kk:"Жауап файлы дайын.",pt:"Arquivo da resposta preparado.",es:"Archivo de respuesta preparado.",fr:"Fichier de réponse préparé.",ar:"تم تجهيز ملف الإجابة.",zh:"回答文件已准备好。",ko:"답변 파일이 준비되었습니다.",ja:"回答ファイルを準備しました。",de:"Antwortdatei vorbereitet.",it:"File della risposta preparato.",tr:"Yanıt dosyası hazırlandı.",pl:"Plik odpowiedzi przygotowany.",hi:"उत्तर फ़ाइल तैयार है।",vi:"Đã chuẩn bị tệp câu trả lời.",id:"Berkas jawaban siap."},
     "Восстановить текст":{en:"Restore text",kk:"Мәтінді қалпына келтіру",pt:"Restaurar texto",es:"Restaurar texto",fr:"Restaurer le texte",ar:"استعادة النص",zh:"恢复文本",ko:"텍스트 복원",ja:"テキストを復元",de:"Text wiederherstellen",it:"Ripristina testo",tr:"Metni geri yükle",pl:"Przywróć tekst",hi:"पाठ पुनर्स्थापित करें",vi:"Khôi phục văn bản",id:"Pulihkan teks"},

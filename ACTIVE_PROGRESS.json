@@ -1,32 +1,32 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-26: exact answer TXT download, terminal request accounting, response size validation. Five targeted simulated checks passed; syntax checked; full CI and deployment unconfirmed. Engineering estimates.",
+  "basis": "2026-11-26: per-chat manual retry restoration and recorded reasoning level; pin synchronization and unchanged rename optimization. Four focused retry checks and syntax passed. Browser tests added but not executed; deployment unconfirmed. Engineering estimates.",
   "branch": "main",
   "date": "2026-11-25",
-  "previous": 80.39,
-  "now": 80.57260869565216,
-  "delta": 0.18260869565216353,
+  "previous": 80.57260869565216,
+  "now": 80.76826086956521,
+  "delta": 0.19565217391304657,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 94.01100000000001,
-      "now": 94.071,
-      "delta": 0.05999999999998806
+      "previous": 94.071,
+      "now": 94.361,
+      "delta": 0.29000000000000625
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 42.675999999999995,
-      "now": 43.216,
-      "delta": 0.5400000000000063
+      "previous": 43.216,
+      "now": 43.49600000000001,
+      "delta": 0.28000000000000824
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 91.06857142857143,
-      "now": 91.19714285714285,
-      "delta": 0.12857142857141923
+      "previous": 91.19714285714285,
+      "now": 91.22571428571429,
+      "delta": 0.028571428571439128
     },
     {
       "name": "Экран",
@@ -42,9 +42,9 @@
       "name": "Новый чат",
       "group": "Чаты",
       "previous": 98.1,
-      "now": 98.1,
-      "delta": 0,
-      "summary": "Фокус и размер поля ввода восстанавливаются после показа нового чата.",
+      "now": 98.4,
+      "delta": 0.30000000000001137,
+      "summary": "Сохранение возможности повторить незавершённый запрос при создании нового чата.",
       "status": "in_progress"
     },
     {
@@ -52,9 +52,9 @@
       "name": "История чатов",
       "group": "Чаты",
       "previous": 94.52,
-      "now": 94.52,
-      "delta": 0,
-      "summary": "Позиция чтения сохраняется для каждой переписки при навигации.",
+      "now": 95.02,
+      "delta": 0.5,
+      "summary": "Изоляция состояния повторного запроса по перепискам.",
       "status": "in_progress"
     },
     {
@@ -72,9 +72,9 @@
       "name": "Переименовать чат",
       "group": "Чаты",
       "previous": 95.65,
-      "now": 95.65,
-      "delta": 0,
-      "summary": "Счётчик длины названия и защита от устаревшего диалога.",
+      "now": 95.85,
+      "delta": 0.19999999999998863,
+      "summary": "Нет лишней перерисовки при неизменённом названии.",
       "status": "in_progress"
     },
     {
@@ -92,9 +92,9 @@
       "name": "Закрепить чат",
       "group": "Чаты",
       "previous": 94.75,
-      "now": 94.75,
-      "delta": 0,
-      "summary": "Фокус закрепления сохраняется при обновлении истории.",
+      "now": 95.15,
+      "delta": 0.4000000000000057,
+      "summary": "Синхронизация закрепления с проектами.",
       "status": "in_progress"
     },
     {
@@ -112,19 +112,19 @@
       "name": "Повторить ответ",
       "group": "Чаты",
       "previous": 78.84,
-      "now": 78.84,
-      "delta": 0,
-      "summary": "Недоступный повтор старого ответа обозначен отключённой кнопкой.",
+      "now": 79.84,
+      "delta": 1,
+      "summary": "Восстановление ручного повтора при возвращении в чат и защита от устаревшего запроса.",
       "status": "in_progress"
     },
     {
       "id": 10,
       "name": "Остановить ответ",
       "group": "Чаты",
-      "previous": 84.7,
-      "now": 85.3,
-      "delta": 0.5999999999999943,
-      "summary": "Отмена запросов при навигации и ручной остановке учитывается ровно один раз.",
+      "previous": 85.3,
+      "now": 85.8,
+      "delta": 0.5,
+      "summary": "Восстановление отменённого запроса после переключения переписки.",
       "status": "in_progress"
     },
     {
@@ -141,10 +141,10 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 69.72,
-      "now": 70.52,
-      "delta": 0.7999999999999972,
-      "summary": "Скачивание полного ответа в TXT и единая защита размера ответа.",
+      "previous": 70.52,
+      "now": 71.12,
+      "delta": 0.6000000000000085,
+      "summary": "Сохранение уровня рассуждения готового ответа.",
       "status": "in_progress"
     },
     {
@@ -152,18 +152,18 @@
       "name": "Уровни рассуждения",
       "group": "Интеллект",
       "previous": 60.56,
-      "now": 60.56,
-      "delta": 0,
-      "summary": "Уведомление о выбранном уровне переведено на 17 языков.",
+      "now": 61.36,
+      "delta": 0.7999999999999972,
+      "summary": "Отображение выбранного уровня каждого ответа независимо от текущих предпочтений.",
       "status": "in_progress"
     },
     {
       "id": 22,
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
-      "previous": 29.7,
+      "previous": 30.3,
       "now": 30.3,
-      "delta": 0.6000000000000014,
+      "delta": 0,
       "summary": "Готовый перевод можно скачать в TXT без изменения текста.",
       "status": "in_progress"
     },
@@ -171,9 +171,9 @@
       "id": 23,
       "name": "Программирование с ИИ",
       "group": "Интеллект",
-      "previous": 27.2,
+      "previous": 27.8,
       "now": 27.8,
-      "delta": 0.6000000000000014,
+      "delta": 0,
       "summary": "Скачивание ответа с исходным кодом и форматированием.",
       "status": "in_progress"
     },
@@ -181,9 +181,9 @@
       "id": 24,
       "name": "Подготовка документов",
       "group": "Интеллект",
-      "previous": 26.2,
+      "previous": 26.9,
       "now": 26.9,
-      "delta": 0.6999999999999993,
+      "delta": 0,
       "summary": "Скачивание полного текста документа в TXT.",
       "status": "in_progress"
     },
@@ -221,10 +221,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 89.63,
-      "now": 90.03,
-      "delta": 0.4000000000000057,
-      "summary": "Локализация скачивания ответа на 17 языков.",
+      "previous": 90.03,
+      "now": 90.23,
+      "delta": 0.20000000000000284,
+      "summary": "Локализация подписи уровня рассуждения на 17 языков.",
       "status": "in_progress"
     },
     {
@@ -251,9 +251,9 @@
       "id": 47,
       "name": "внутренности настроек",
       "group": "Настройки",
-      "previous": 87.74,
+      "previous": 88.24,
       "now": 88.24,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Точный учёт завершённых, отменённых и неудачных запросов текущей вкладки.",
       "status": "in_progress"
     },
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 81.20708333333333,
-  "overall_now": 81.38208333333333,
-  "overall_delta": 0.17499999999999716
+  "overall_previous": 81.38208333333333,
+  "overall_now": 81.56958333333333,
+  "overall_delta": 0.1875
 }

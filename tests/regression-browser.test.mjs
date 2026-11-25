@@ -1844,3 +1844,12 @@ test('unsent text-tool draft survives creation of its first conversation',async(
     assert.equal(await page.locator('#sessionBody textarea').inputValue(),'  const unfinished = 1;\n');
   });
 });
+
+test('new chat from Tools focuses the visible empty composer',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-1"]').click();
+    assert.equal(await page.locator('#messageInput').evaluate(el=>document.activeElement===el),true);
+    assert.equal(await page.locator('#messageInput').inputValue(),'');
+  });
+});

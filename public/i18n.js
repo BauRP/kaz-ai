@@ -664,6 +664,8 @@
   "Скачать свои разговоры": {"en":"Download your conversations","kk":"Әңгімелеріңізді жүктеп алу"}
 };
   Object.assign(dictionary,{
+    "Текст скопирован.":{en:"Text copied.",kk:"Мәтін көшірілді.",pt:"Texto copiado.",es:"Texto copiado.",fr:"Texte copié.",ar:"تم نسخ النص.",zh:"文本已复制。",ko:"텍스트를 복사했습니다.",ja:"テキストをコピーしました。",de:"Text kopiert.",it:"Testo copiato.",tr:"Metin kopyalandı.",pl:"Tekst skopiowany.",hi:"पाठ कॉपी हो गया।",vi:"Đã sao chép văn bản.",id:"Teks disalin."},
+    "Не удалось скопировать текст.":{en:"Could not copy text.",kk:"Мәтінді көшіру мүмкін болмады.",pt:"Não foi possível copiar o texto.",es:"No se pudo copiar el texto.",fr:"Impossible de copier le texte.",ar:"تعذر نسخ النص.",zh:"无法复制文本。",ko:"텍스트를 복사하지 못했습니다.",ja:"テキストをコピーできませんでした。",de:"Text konnte nicht kopiert werden.",it:"Impossibile copiare il testo.",tr:"Metin kopyalanamadı.",pl:"Nie udało się skopiować tekstu.",hi:"पाठ कॉपी नहीं हो सका।",vi:"Không thể sao chép văn bản.",id:"Tidak dapat menyalin teks."},
     "Мой профиль":{en:"My profile",kk:"Менің профилім",pt:"Meu perfil",es:"Mi perfil",fr:"Mon profil",ar:"ملفي الشخصي",zh:"我的个人资料",ko:"내 프로필",ja:"マイプロフィール",de:"Mein Profil",it:"Il mio profilo",tr:"Profilim",pl:"Mój profil",hi:"मेरी प्रोफ़ाइल",vi:"Hồ sơ của tôi",id:"Profil saya"},
     "Назад":{en:"Back",kk:"Артқа",pt:"Voltar",es:"Atrás",fr:"Retour",ar:"رجوع",zh:"返回",ko:"뒤로",ja:"戻る",de:"Zurück",it:"Indietro",tr:"Geri",pl:"Wstecz",hi:"वापस",vi:"Quay lại",id:"Kembali"},
     "Свернуть меню":{en:"Collapse sidebar",kk:"Мәзірді жинау",pt:"Recolher menu",es:"Contraer menú",fr:"Réduire le menu",ar:"طي القائمة",zh:"收起侧栏",ko:"사이드바 접기",ja:"サイドバーを折りたたむ",de:"Menü einklappen",it:"Comprimi menu",tr:"Menüyü daralt",pl:"Zwiń menu",hi:"मेनू समेटें",vi:"Thu gọn menu",id:"Ciutkan menu"},
@@ -675,7 +677,7 @@
     ".topbar", "#view-history .panel-heading","#view-history .search-bar",
     "#view-projects .panel-heading","#projectsWorkspace","#historyList","#recentChats","#view-tools .panel-heading",
     "#view-tools .search-bar","#view-settings .panel-heading",
-    "#view-settings .settings-list","#toolGroups",
+    '[data-is-panel="general"] .merged-settings-list','[data-is-panel="appearance"] .merged-settings-list','[data-is-panel="personal"] .merged-settings-list','[data-is-panel="export"] .merged-settings-list','[data-is-panel="account"] .merged-settings-list', "#toolGroups",
     "#attachMenu","#reasonMenu","#fontMenu","#languageMenu",
     "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay","#statusBanner","#sessionRetry","#toast"
   ];

@@ -834,7 +834,7 @@ body.light .rich-answer pre code{color:var(--text)}
 .settings-back .icon:first-child{transform:rotate(180deg)}
 html[dir="rtl"] .settings-back .icon:first-child{transform:none}
 .settings-back .button-tail{display:none}
-body.is-settings-screen .sidebar-footer,body.is-settings-screen .sidebar-recent{display:none!important}
+body.is-settings-screen .sidebar-recent{display:none!important}
 body.is-settings-screen .is-workspace{display:block;min-height:0}
 body.is-settings-screen .is-panels{padding:24px}
 body.is-settings-screen .merged-settings-list{border:0;background:none;margin:0}
@@ -854,6 +854,25 @@ body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bo
 @media(max-width:760px){.sidebar-compact .sidebar{width:76px}.sidebar-compact .sidebar-header .close-sidebar{display:inline-flex}.sidebar-header .brand-wordmark{font-size:.9em}.sidebar-header .brand{gap:5px}body.is-settings-screen .is-panels{padding:16px}}
 @media(prefers-reduced-motion:reduce){.sidebar{transition:none!important}}
 
+/* Keep account actions available in both navigation modes and every section. */
+.sidebar-footer .sidebar-profile{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin-top:8px;padding:6px 8px;border:1px solid var(--line);border-radius:13px;background:transparent;color:var(--text);text-align:start;font-size:12px;font-weight:600}
+.sidebar-footer .sidebar-profile:hover{background:rgba(51,159,217,.12);border-color:var(--line-strong)}
+.sidebar-footer .sidebar-profile:focus-visible,.sidebar-footer .google-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.profile-avatar{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--panel2);border:1px solid var(--line-strong);color:var(--text)}
+.profile-avatar>.icon{width:19px;height:19px}
+.sidebar-footer .google-g{flex:none;line-height:1;display:grid;place-items:center;min-width:24px}
+.sidebar-compact .sidebar-footer .profile-label{display:none}
+.sidebar-compact .sidebar-footer .sidebar-profile{justify-content:center;padding:5px;gap:0}
+.sidebar-compact .sidebar-footer .google-button{min-height:44px}
+.sidebar-compact .sidebar-footer .google-g{margin:0}
+@media(max-height:480px){.sidebar-footer .sidebar-profile{min-height:35px;margin-top:4px;padding-block:2px}.profile-avatar{width:28px;height:28px}.sidebar-compact .sidebar-footer .google-button{min-height:35px}}
+/* Keep the native language selector but use a centered, consistent chevron. */
+.language-select-shell{position:relative;flex:none;min-width:150px;max-width:100%;display:flex;align-items:center}
+.is-row .language-select-shell #innerLanguage{appearance:none;-webkit-appearance:none;display:block;width:100%;min-width:150px;max-width:100%;min-height:40px;padding-block:9px;padding-inline-start:14px;padding-inline-end:38px;line-height:1.4}
+.language-select-arrow{position:absolute;inset-block:0;inset-inline-end:0;width:36px;display:grid;place-items:center;pointer-events:none;color:var(--text)}
+.language-select-arrow .icon{display:block;width:16px;height:16px}
+@media(max-width:760px){.language-select-shell{width:100%;min-width:0}.is-row .language-select-shell #innerLanguage{min-width:0}}
+
 </style>
   
   
@@ -867,6 +886,7 @@ body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bo
   <symbol id="logo-mark" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3.1" stroke-linejoin="round"><path d="M24 3 34 13 24 23 14 13Z"/><path d="M45 24 35 34 25 24 35 14Z"/><path d="M24 45 14 35 24 25 34 35Z"/><path d="M3 24 13 14 23 24 13 34Z"/></g></symbol>
   <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
   <symbol id="ic-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="ic-profile" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/></symbol>
   <symbol id="ic-sidebar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></symbol>
   <symbol id="ic-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
   <symbol id="ic-arrow" viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></symbol>
@@ -920,6 +940,7 @@ body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bo
     <div class="sidebar-footer">
       <div class="ornament-line" aria-hidden="true"></div>
       <button type="button" class="google-button" data-feature="google"><span class="google-g">G</span><span>Войти через Google</span><svg class="icon"><use href="#ic-arrow-right"/></svg></button>
+      <button type="button" class="sidebar-profile" id="sidebarProfile" data-action="open-profile" aria-label="Профиль" title="Профиль"><span class="profile-avatar"><svg class="icon" aria-hidden="true"><use href="#ic-profile"/></svg></span><span class="profile-label">Профиль</span></button>
       <div class="footer-note"><span class="online-dot"></span>Текстовый ИИ</div>
 
     </div>
@@ -1210,7 +1231,7 @@ function refreshSidebar(){
   $("#mainNavigation").hidden=settings;
   $("#settingsNavigation").hidden=!settings;
   $(".sidebar-recent").hidden=settings;
-  $(".sidebar-footer").hidden=settings;
+  $(".sidebar-footer").hidden=false;
   document.body.classList.toggle("is-settings-screen",settings);
   const primary=$("#sidebarPrimary");
   const label=settings?"Назад":"Новый чат";
@@ -1228,6 +1249,8 @@ function refreshSidebar(){
   }
   const google=$(".sidebar-footer .google-button");
   if(google){google.setAttribute("aria-label",translate("Войти через Google"));google.title=translate("Войти через Google")}
+  const profile=$("#sidebarProfile");
+  if(profile){profile.setAttribute("aria-label",translate("Профиль"));profile.title=translate("Профиль")}
 }
 function toggleSidebarCompact(){
   document.body.classList.toggle("sidebar-compact");
@@ -1401,6 +1424,7 @@ function showFeature(key){if(key==="google"){openGoogle();return}if(key==="langu
 function handleAction(action,trigger){switch(action){
   case"home":if(state.screen==="settings")leaveSettings();else newChat();break;
   case"leave-settings":leaveSettings();break;
+  case"open-profile":window.KazInternalSettings?.open("account");break;
   case"collapse-sidebar":toggleSidebarCompact();break;
   case"back-to-chat":showScreen(state.aboutReturnScreen||"welcome");$("#mainContent").scrollTop=state.aboutReturnScroll||0;break;
   case"new-chat":newChat();break;
@@ -4265,6 +4289,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   "Скачать свои разговоры": {"en":"Download your conversations","kk":"Әңгімелеріңізді жүктеп алу"}
 };
   Object.assign(dictionary,{
+    "Профиль":{en:"Profile",kk:"Профиль",pt:"Perfil",es:"Perfil",fr:"Profil",ar:"الملف الشخصي",zh:"个人资料",ko:"프로필",ja:"プロフィール",de:"Profil",it:"Profilo",tr:"Profil",pl:"Profil",hi:"प्रोफ़ाइल",vi:"Hồ sơ",id:"Profil"},
     "Назад":{en:"Back",kk:"Артқа",pt:"Voltar",es:"Atrás",fr:"Retour",ar:"رجوع",zh:"返回",ko:"뒤로",ja:"戻る",de:"Zurück",it:"Indietro",tr:"Geri",pl:"Wstecz",hi:"वापस",vi:"Quay lại",id:"Kembali"},
     "Свернуть меню":{en:"Collapse sidebar",kk:"Мәзірді жинау",pt:"Recolher menu",es:"Contraer menú",fr:"Réduire le menu",ar:"طي القائمة",zh:"收起侧栏",ko:"사이드바 접기",ja:"サイドバーを折りたたむ",de:"Menü einklappen",it:"Comprimi menu",tr:"Menüyü daralt",pl:"Zwiń menu",hi:"मेनू समेटें",vi:"Thu gọn menu",id:"Ciutkan menu"},
     "Развернуть меню":{en:"Expand sidebar",kk:"Мәзірді ашу",pt:"Expandir menu",es:"Expandir menú",fr:"Développer le menu",ar:"توسيع القائمة",zh:"展开侧栏",ko:"사이드바 펼치기",ja:"サイドバーを展開",de:"Menü ausklappen",it:"Espandi menu",tr:"Menüyü genişlet",pl:"Rozwiń menu",hi:"मेनू फैलाएँ",vi:"Mở rộng menu",id:"Perluas menu"}
@@ -4615,7 +4640,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
           <h3>Общие</h3>
           <div class="is-row">
             <div><strong>Язык интерфейса</strong><p>Автоматически по языку браузера или выбранный вручную. Полный перевод остальных экранов добавляется постепенно.</p></div>
-            <select id="innerLanguage" aria-label="Язык интерфейса"></select>
+            <div class="language-select-shell"><select id="innerLanguage" aria-label="Язык интерфейса"></select><span class="language-select-arrow" aria-hidden="true"><svg class="icon"><use href="#ic-chevron"/></svg></span></div>
           </div>
           <p class="is-footnote">Арабский язык включает направление справа налево. Для остальных экранов пока используется английский перевод там, где нет перевода выбранного языка.</p>
         </section>

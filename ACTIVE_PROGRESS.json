@@ -1,39 +1,39 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-26: preserve list numbering and action focus, disable unavailable retries, validate theme settings, improve code contrast and responsive controls. Syntax and targeted formatter test passed; full CI and deployment unconfirmed.",
+  "basis": "2026-11-26: per-chat reading position, input length counters, stale dialog guards. Syntax checked; two regression scenarios added; full CI and deployment unconfirmed.",
   "branch": "main",
   "date": "2026-11-25",
-  "previous": 79.75304347826086,
-  "now": 79.94434782608694,
-  "delta": 0.19130434782607608,
+  "previous": 79.94434782608694,
+  "now": 80.1182608695652,
+  "delta": 0.1739130434782652,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 93.781,
-      "now": 93.86100000000002,
-      "delta": 0.0800000000000125
+      "previous": 93.86100000000002,
+      "now": 94.01100000000001,
+      "delta": 0.14999999999999147
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 41.236,
-      "now": 41.57599999999999,
-      "delta": 0.3399999999999963
+      "previous": 41.57599999999999,
+      "now": 41.87599999999999,
+      "delta": 0.29999999999999716
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 90.50428571428571,
-      "now": 90.67571428571429,
-      "delta": 0.17142857142857792
+      "previous": 90.67571428571429,
+      "now": 90.74714285714286,
+      "delta": 0.0714285714285694
     },
     {
       "name": "Экран",
       "count": 1,
-      "previous": 56.8,
-      "now": 57.5,
-      "delta": 0.7000000000000028
+      "previous": 57.5,
+      "now": 58,
+      "delta": 0.5
     }
   ],
   "items": [
@@ -52,9 +52,9 @@
       "name": "История чатов",
       "group": "Чаты",
       "previous": 93.92,
-      "now": 93.92,
-      "delta": 0,
-      "summary": "Сохранение клавиатурного фокуса при обновлении истории.",
+      "now": 94.52,
+      "delta": 0.5999999999999943,
+      "summary": "Позиция чтения сохраняется для каждой переписки при навигации.",
       "status": "in_progress"
     },
     {
@@ -72,9 +72,9 @@
       "name": "Переименовать чат",
       "group": "Чаты",
       "previous": 95.15,
-      "now": 95.15,
-      "delta": 0,
-      "summary": "Фокус действия сохраняется при перестроении списка.",
+      "now": 95.65,
+      "delta": 0.5,
+      "summary": "Счётчик длины названия и защита от устаревшего диалога.",
       "status": "in_progress"
     },
     {
@@ -82,9 +82,9 @@
       "name": "Удалить чат",
       "group": "Чаты",
       "previous": 98.22,
-      "now": 98.22,
-      "delta": 0,
-      "summary": "После подтверждения удаления фокус не попадает на скрытую или удалённую кнопку.",
+      "now": 98.62,
+      "delta": 0.4000000000000057,
+      "summary": "Отключённые подтверждения не могут удалить чат.",
       "status": "in_progress"
     },
     {
@@ -111,9 +111,9 @@
       "id": 9,
       "name": "Повторить ответ",
       "group": "Чаты",
-      "previous": 78.34,
+      "previous": 78.84,
       "now": 78.84,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Недоступный повтор старого ответа обозначен отключённой кнопкой.",
       "status": "in_progress"
     },
@@ -131,9 +131,9 @@
       "id": 13,
       "name": "Оценка ответа",
       "group": "Чаты",
-      "previous": 94.65,
+      "previous": 94.95,
       "now": 94.95,
-      "delta": 0.29999999999999716,
+      "delta": 0,
       "summary": "Сохранение фокуса кнопок оценки при обновлении переписки.",
       "status": "in_progress"
     },
@@ -141,9 +141,9 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 68.52,
+      "previous": 69.02,
       "now": 69.02,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Сохранение исходной нумерации списков в форматированных ответах.",
       "status": "in_progress"
     },
@@ -162,29 +162,29 @@
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
       "previous": 28.1,
-      "now": 28.1,
-      "delta": 0,
-      "summary": "История перевода не запускает математический аудит несвязанного продолжения.",
+      "now": 28.6,
+      "delta": 0.5,
+      "summary": "Счётчик длины исходного текста.",
       "status": "in_progress"
     },
     {
       "id": 23,
       "name": "Программирование с ИИ",
       "group": "Интеллект",
-      "previous": 25.1,
-      "now": 25.6,
+      "previous": 25.6,
+      "now": 26.1,
       "delta": 0.5,
-      "summary": "Улучшено отображение кода в светлой теме и на узких экранах.",
+      "summary": "Счётчик длины кода и защита от устаревшего окна.",
       "status": "in_progress"
     },
     {
       "id": 24,
       "name": "Подготовка документов",
       "group": "Интеллект",
-      "previous": 23.9,
-      "now": 24.6,
-      "delta": 0.7000000000000028,
-      "summary": "Сохранение исходной нумерации пунктов документа.",
+      "previous": 24.6,
+      "now": 25.1,
+      "delta": 0.5,
+      "summary": "Счётчик длины описания документа.",
       "status": "in_progress"
     },
     {
@@ -192,9 +192,9 @@
       "name": "Личные инструкции",
       "group": "Настройки",
       "previous": 87.03,
-      "now": 87.03,
-      "delta": 0,
-      "summary": "Неотправленные изменения инструкций сохраняются в текущей вкладке до применения.",
+      "now": 87.53,
+      "delta": 0.5,
+      "summary": "Счётчик длины личных инструкций.",
       "status": "in_progress"
     },
     {
@@ -211,9 +211,9 @@
       "id": 42,
       "name": "Светлая и тёмная тема",
       "group": "Настройки",
-      "previous": 92.18,
+      "previous": 92.88,
       "now": 92.88,
-      "delta": 0.6999999999999886,
+      "delta": 0,
       "summary": "Улучшена читаемость кода в светлой теме и проверка сохранённой темы.",
       "status": "in_progress"
     },
@@ -251,9 +251,9 @@
       "id": 47,
       "name": "внутренности настроек",
       "group": "Настройки",
-      "previous": 86.14,
+      "previous": 86.64,
       "now": 86.64,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Защита инициализации оформления от недопустимых сохранённых значений.",
       "status": "in_progress"
     },
@@ -261,10 +261,10 @@
       "id": 48,
       "name": "Расширение экрана",
       "group": "Экран",
-      "previous": 56.8,
-      "now": 57.5,
-      "delta": 0.7000000000000028,
-      "summary": "Перенос кнопок копирования и действий ответа на узких экранах.",
+      "previous": 57.5,
+      "now": 58,
+      "delta": 0.5,
+      "summary": "Сохранение позиции чтения и ограничение отложенной прокрутки текущей перепиской.",
       "status": "in_progress"
     }
   ],
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 80.59666666666666,
-  "overall_now": 80.77999999999999,
-  "overall_delta": 0.1833333333333229
+  "overall_previous": 80.77999999999999,
+  "overall_now": 80.94666666666666,
+  "overall_delta": 0.1666666666666714
 }

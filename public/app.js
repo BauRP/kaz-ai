@@ -143,9 +143,26 @@ function selectReason(value,quiet=false){
   if(quiet)return;
   const lang=window.KazI18n?.language||"ru";
   const label=window.KazI18n?.translate?.(REASONS[value].name)||REASONS[value].name;
-  if(lang==="en")notify('Reasoning level: '+label+'. It applies to the next AI response.');
-  else if(lang==="kk")notify('Ойлау деңгейі: '+label+'. Келесі ЖИ жауабына қолданылады.');
-  else notify("Выбран уровень «"+label+"». Он применяется к следующему ответу ИИ.");
+  const notice={
+    ru:"Выбран уровень «"+label+"». Он применяется к следующему ответу ИИ.",
+    en:"Reasoning level: "+label+". It applies to the next AI response.",
+    kk:"Ойлау деңгейі: "+label+". Келесі ЖИ жауабына қолданылады.",
+    pt:"Nível de raciocínio: "+label+". Aplica-se à próxima resposta da IA.",
+    es:"Nivel de razonamiento: "+label+". Se aplica a la siguiente respuesta de la IA.",
+    fr:"Niveau de raisonnement : "+label+". Il s’applique à la prochaine réponse de l’IA.",
+    ar:"مستوى الاستدلال: "+label+". يُطبّق على الرد التالي للذكاء الاصطناعي.",
+    zh:"推理级别："+label+"。将应用于下一次 AI 回复。",
+    ko:"추론 수준: "+label+". 다음 AI 응답에 적용됩니다.",
+    ja:"推論レベル："+label+"。次のAI応答に適用されます。",
+    de:"Schlussfolgerungsstufe: "+label+". Gilt für die nächste KI-Antwort.",
+    it:"Livello di ragionamento: "+label+". Si applica alla prossima risposta dell’IA.",
+    tr:"Akıl yürütme düzeyi: "+label+". Bir sonraki yapay zekâ yanıtına uygulanır.",
+    pl:"Poziom rozumowania: "+label+". Dotyczy następnej odpowiedzi AI.",
+    hi:"तर्क का स्तर: "+label+"। यह अगले AI उत्तर पर लागू होगा।",
+    vi:"Mức suy luận: "+label+". Áp dụng cho câu trả lời AI tiếp theo.",
+    id:"Tingkat penalaran: "+label+". Berlaku untuk respons AI berikutnya."
+  };
+  notify(notice[lang]||notice.en);
 }
 function toggleTheme(fromInternalSettings=false){
   state.light=!state.light;

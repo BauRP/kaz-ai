@@ -1,39 +1,39 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-25 50/50: bug fix preserving reader scroll during same-chat response rerenders; development localizes tools group function counts across 17 active languages and limits very long drafts on short-height screens. Regression cases for delayed AI response, tool counts and compact drafts. Exact CI and deployment status reported separately; no fabricated percentages, no device/emulator tasks included.",
+  "basis": "2026-11-25 50/50: reject empty and incomplete model streams, cancel failed/stalled transport; improve valid batched frame processing, keep original response when reviewer correction exceeds limit. Six new API regression tests. V8 syntax and targeted helper checks passed; full Node/browser CI and deployment not yet confirmed. Engineering estimates, no device/emulator tasks.",
   "branch": "main",
   "date": "2026-11-25",
-  "previous": 78.66608695652174,
-  "now": 78.74869565217391,
-  "delta": 0.08260869565216922,
+  "previous": 78.74869565217391,
+  "now": 78.84869565217392,
+  "delta": 0.10000000000000853,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 93.141,
-      "now": 93.191,
-      "delta": 0.04999999999999716
+      "previous": 93.191,
+      "now": 93.29100000000001,
+      "delta": 0.10000000000000853
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 38.776,
-      "now": 38.836000000000006,
-      "delta": 0.060000000000002274
+      "previous": 38.836000000000006,
+      "now": 39.096000000000004,
+      "delta": 0.259999999999998
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 89.78999999999999,
+      "previous": 89.86142857142856,
       "now": 89.86142857142856,
-      "delta": 0.0714285714285694
+      "delta": 0
     },
     {
       "name": "Экран",
       "count": 1,
-      "previous": 55.5,
+      "previous": 56.1,
       "now": 56.1,
-      "delta": 0.6000000000000014
+      "delta": 0
     }
   ],
   "items": [
@@ -51,9 +51,9 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 92.82,
+      "previous": 93.32,
       "now": 93.32,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "При завершении очередного ответа в той же переписке сохраняется позиция прокрутки пользователя, если он читает старые сообщения. При отправке нового вопроса автопрокрутка к последнему сообщению остаётся.",
       "status": "in_progress"
     },
@@ -112,9 +112,9 @@
       "name": "Повторить ответ",
       "group": "Чаты",
       "previous": 76.34,
-      "now": 76.34,
-      "delta": 0,
-      "summary": "Кнопка «Повторить ответ» получила переводы для всех 17 языков интерфейса.",
+      "now": 76.84,
+      "delta": 0.5,
+      "summary": "Пустой или повреждённый ответ больше не подтверждается сервером как успешный; поток при повреждении отменяется, чтобы можно было безопасно повторить запрос.",
       "status": "in_progress"
     },
     {
@@ -122,9 +122,9 @@
       "name": "Остановить ответ",
       "group": "Чаты",
       "previous": 83,
-      "now": 83,
-      "delta": 0,
-      "summary": "Кнопки остановки и повторной отправки запроса имеют переводы для всех 17 языков.",
+      "now": 83.5,
+      "delta": 0.5,
+      "summary": "Остановленный или просроченный поток отменяется, включая подключение, завершившееся после отмены. Добавлены ограничения времени ожидания подключения и очередного фрагмента.",
       "status": "in_progress"
     },
     {
@@ -141,10 +141,10 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 64.82,
-      "now": 65.12,
-      "delta": 0.30000000000001137,
-      "summary": "Завершение нового ответа GPT-OSS больше не должно перебрасывать читающего предыдущие сообщения пользователя вниз. Добавлен браузерный сценарий для позднего ответа.",
+      "previous": 65.12,
+      "now": 65.92,
+      "delta": 0.7999999999999972,
+      "summary": "Устранены ложное завершение пустого ответа, потеря фрагментов после комментария SSE и ложный отказ при нескольких крупных допустимых фрагментах в одном сетевом блоке; ограничено ожидание и исправлена обработка вложенного статуса неполного ответа.",
       "status": "in_progress"
     },
     {
@@ -172,9 +172,9 @@
       "name": "Программирование с ИИ",
       "group": "Интеллект",
       "previous": 22.3,
-      "now": 22.3,
-      "delta": 0,
-      "summary": "Поля задач программирования сохраняют направление смешанного текста и исходные фрагменты кода.",
+      "now": 22.8,
+      "delta": 0.5,
+      "summary": "Добавлено ограничение чрезмерного объёма исправления независимого рецензента, чтобы исходное техническое решение сохранялось; большие допустимые потоковые ответы не отклоняются ошибочно.",
       "status": "in_progress"
     },
     {
@@ -221,9 +221,9 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 86.43,
+      "previous": 86.93,
       "now": 86.93,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Количество функций в группах инструментов теперь подписывается на каждом из 17 языков, включая немецкий, испанский и французский.",
       "status": "in_progress"
     },
@@ -261,9 +261,9 @@
       "id": 48,
       "name": "Расширение экрана",
       "group": "Экран",
-      "previous": 55.5,
+      "previous": 56.1,
       "now": 56.1,
-      "delta": 0.6000000000000014,
+      "delta": 0,
       "summary": "Для коротких окон и горизонтальных телефонов высота длинного текстового черновика ограничена, поле остаётся прокручиваемым, а переписка сохраняет место на экране.",
       "status": "in_progress"
     }
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 79.55499999999999,
-  "overall_now": 79.63416666666667,
-  "overall_delta": 0.07916666666667993
+  "overall_previous": 79.63416666666667,
+  "overall_now": 79.73,
+  "overall_delta": 0.09583333333333144
 }

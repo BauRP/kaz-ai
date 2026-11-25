@@ -2118,10 +2118,19 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     });
   }
   function renderSessionChat(){
+    // A completed/retried answer redraws the transcript. Preserve the reader's
+    // position when they deliberately scrolled up in this SAME conversation;
+    // otherwise follow the newest answer as before.
+    const viewport=$("#mainContent"),transcript=$("#chatMessages");
+    const chat=selected(),sameThread=chat&&transcript.dataset.renderedThread===chat.id;
+    const distance=viewport.scrollHeight-viewport.scrollTop-viewport.clientHeight;
+    const preserveScroll=state.screen==="chat"&&sameThread&&distance>140;
+    const previousTop=viewport.scrollTop;
     baseRenderChat();
-    const chat=selected();
+    transcript.dataset.renderedThread=chat?.id||"";
+    if(preserveScroll)viewport.scrollTop=previousTop;
     if(!chat)return;
-    const bubbles=Array.from($("#chatMessages").children);
+    const bubbles=Array.from(transcript.children);
     chat.messages.forEach((message,i)=>{
       const bubble=bubbles[i];if(!bubble)return;
       message.id||=nextId();

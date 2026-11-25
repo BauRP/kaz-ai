@@ -31,6 +31,24 @@ async function makeConversation(page,contents){
   await page.locator('.sidebar [data-screen="history"]').click();
 }
 
+test('long drafts stay scrollable and leave chat space on short laptop screens',async()=>{
+  await withPage(async page=>{
+    const draft=Array.from({length:30},(_,i)=>'Исходная строка '+i).join('\n');
+    for(const [width,height] of [[1024,500],[844,390]]){
+      await page.setViewportSize({width,height});
+      await page.locator('#messageInput').fill(draft);
+      const result=await page.locator('#messageInput').evaluate(el=>({
+        height:el.getBoundingClientRect().height,scroll:el.scrollHeight,
+        text:el.value,visible:el.getBoundingClientRect().bottom<=innerHeight+2
+      }));
+      assert.ok(result.height<=122,'Draft should not take over short viewport');
+      assert.ok(result.scroll>result.height,'Draft must stay scrollable');
+      assert.equal(result.text,draft);
+      assert.ok(result.visible,'Composer must remain in the visible viewport');
+    }
+  });
+});
+
 test('tool category counts follow selected language without changing the active tools',async()=>{
   await withPage(async page=>{
     await page.locator('.sidebar [data-screen="tools"]').click();

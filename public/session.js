@@ -522,6 +522,7 @@
     const distance=viewport.scrollHeight-viewport.scrollTop-viewport.clientHeight;
     const preserveScroll=state.screen==="chat"&&sameThread&&distance>140;
     const previousTop=viewport.scrollTop;
+    const restoreFocus=sameThread?captureListFocus(transcript):()=>{};
     baseRenderChat();
     transcript.dataset.renderedThread=chat?.id||"";
     if(!chat)return;
@@ -580,7 +581,13 @@
         up.setAttribute("aria-pressed",String(message.rating==="up"));
         down.setAttribute("aria-pressed",String(message.rating==="down"));
         actions.append(up,down);
-        if(!message.localGreeting)actions.append(button(uiText("Повторить ответ"),"retry-answer",message.id));
+        const retry=button(uiText("Повторить ответ"),"retry-answer",message.id);
+        // Keep the existing control but clearly disable actions that cannot run.
+        // Older answers cannot be regenerated without discarding later turns.
+        const canRetry=i===chat.messages.length-1&&chat.messages[i-1]?.role==="user";
+        retry.disabled=!canRetry;
+        if(!canRetry)retry.title=uiText("Повторить можно только последний ответ.");
+        actions.append(retry);
         bubble.append(actions);
       }
     });
@@ -590,6 +597,7 @@
     if(incompleteBubble?.dataset.thread===chat.id&&incompleteBubble!==activeStreamingBubble)
       transcript.append(incompleteBubble);
     if(preserveScroll)viewport.scrollTop=previousTop;
+    restoreFocus();
     measureLongPrompts();
   }
   function renderSessionProjects(){
@@ -1754,8 +1762,10 @@
         control.setAttribute("aria-label",uiText(key));
       }
     }
-    for(const control of document.querySelectorAll('#chatMessages [data-session="retry-answer"]'))
+    for(const control of document.querySelectorAll('#chatMessages [data-session="retry-answer"]')){
       control.textContent=uiText("Повторить ответ");
+      if(control.disabled)control.title=uiText("Повторить можно только последний ответ.");
+    }
     // Existing long prompts retain their expansion and original text while
     // Show more / Show less follows the newly selected interface language.
     updateLongPromptButtons();

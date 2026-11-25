@@ -1194,3 +1194,26 @@ test('provider event names cannot impersonate the site completion event',async()
   assert.match(body,/AI_OUTPUT_INCOMPLETE/);
   assert.doesNotMatch(body,/event: done/);
 });
+
+test('English and Kazakh programming helpers request technical audit even without language names in source',async()=>{
+  for(const header of [
+    'Help with programming. Ask for missing details. Explain simply and format code clearly. Task:',
+    'Бағдарламалауға көмектес. Ақпарат жетіспесе, нақтылап сұра. Қарапайым тілмен түсіндіріп, кодты түсінікті түрде көрсет. Тапсырма:'
+  ]){
+    const {env,calls}=envWithAI(async()=>({output_text:'Ответ'}));
+    const response=await worker.fetch(post({...good,messages:[{role:'user',content:header+'\n\nAdd a button to the page.'}]}),env);
+    assert.equal(response.status,200);
+    assert.ok(calls.length>=2);
+    assert.match(calls[0][1].input[0].content,/ПРОВЕРКА ПРОГРАММИРОВАНИЯ/);
+  }
+});
+test('previous mathematical translation does not activate proof audit for unrelated follow-up',async()=>{
+  const {env,calls}=envWithAI(async()=>({output_text:'Привет!'}));
+  const response=await worker.fetch(post({...good,messages:[
+    {role:'user',content:'Переведи следующий текст на английский язык. Сохрани смысл, имена и форматирование. Выведи только перевод.\n\nМатрица Лапласа и определитель.'},
+    {role:'assistant',content:'Laplacian matrix and determinant.'},
+    {role:'user',content:'Теперь поздоровайся.'}
+  ]}),env);
+  assert.equal(response.status,200);
+  assert.equal(calls.length,1);
+});

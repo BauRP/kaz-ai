@@ -1217,3 +1217,38 @@ test('previous mathematical translation does not activate proof audit for unrela
   assert.equal(response.status,200);
   assert.equal(calls.length,1);
 });
+
+test('document helper stays in drafting mode even when its subject mentions mathematical proof or source code',async()=>{
+  for(const header of [
+    'Подготовь текст документа по описанию. Структурируй его. Язык описания, если не указан другой. Не выдумывай реквизиты: оставь места для заполнения. Выведи только документ. Описание:',
+    'Draft the document text. Structure it. Use the description language unless specified otherwise. Leave placeholders for unknown details. Return only the document. Description:',
+    'Сипаттамаға сай құжат мәтінін дайында. Жүйелі жаз. Басқа тіл сұралмаса, сипаттама тілін қолдан. Белгісіз деректерге толтырылатын орын қалдыр. Тек құжат мәтінін бер. Сипаттама:'
+  ]){
+    const {env,calls}=envWithAI(async()=>({output_text:'Document'}));
+    const response=await worker.fetch(post({...good,messages:[{role:'user',content:header+'\n\nПисьмо о проверке кода Python, доказательстве теоремы и задаче про 25 лошадей, 5 дорожек и 3 самых быстрых.'}]}),env);
+    assert.equal(response.status,200);assert.equal(calls.length,1);
+    const system=calls[0][1].input[0].content;
+    assert.match(system,/РЕЖИМ ДОКУМЕНТА/);
+    assert.doesNotMatch(system,/МАТЕМАТИЧЕСКИЕ КОНТРОЛЬНЫЕ ФАКТЫ|ПРОВЕРКА ПРОГРАММИРОВАНИЯ И АРХИТЕКТУРЫ/);
+  }
+});
+test('explicit programming helper receives engineering review instead of historical proof audit',async()=>{
+  const {env,calls}=envWithAI(async()=>({output_text:'Response'}));
+  const response=await worker.fetch(post({...good,messages:[
+    {role:'user',content:'Матрица Лапласа: найди определитель.'},
+    {role:'assistant',content:'Previous answer'},
+    {role:'user',content:'Help with programming. Ask for missing details. Explain simply and format code clearly. Task:\n\nAdd a Python function that computes a determinant.'}
+  ]}),env);
+  assert.equal(response.status,200);assert.ok(calls.length>=2);
+  assert.match(calls[0][1].input[0].content,/РЕЖИМ ПРОГРАММИРОВАНИЯ/);
+  assert.doesNotMatch(calls[0][1].input[0].content,/НЕЗАВИСИМАЯ ПРОГРАММНАЯ ПРОВЕРКА МАТЕМАТИКИ/);
+});
+test('an unrelated intermediate turn prevents old mathematical work from reactivating audit',async()=>{
+  const {env,calls}=envWithAI(async()=>({output_text:'Hello'}));
+  const response=await worker.fetch(post({...good,messages:[
+    {role:'user',content:'Матрица Лапласа и определитель.'},{role:'assistant',content:'Previous proof'},
+    {role:'user',content:'Поздоровайся.'},{role:'assistant',content:'Привет!'},
+    {role:'user',content:'Теперь добавь пожелание хорошего дня.'}
+  ]}),env);
+  assert.equal(response.status,200);assert.equal(calls.length,1);
+});

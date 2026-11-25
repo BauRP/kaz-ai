@@ -1097,3 +1097,54 @@ test('personal instructions retain intentional indentation, newlines and trailin
   assert.equal(calls.length,1);
   assert.ok(calls[0][1].input[0].content.includes(instructions),'Instruction formatting was trimmed');
 });
+
+test('completed native stream without visible text is an error, not a successful answer',async()=>{
+  for(const effort of ['low','medium','high']){
+    const {env,calls}=envWithAI(async()=>new ReadableStream({start(c){
+      c.enqueue(new TextEncoder().encode('data: {"response":"   "}\n\ndata: [DONE]\n\n'));c.close();
+    }}));
+    const body=await (await worker.fetch(post({...good,effort},TOKEN,{Accept:'text/event-stream'}),env)).text();
+    assert.match(body,/"code":"AI_MODEL_EMPTY"/);
+    assert.doesNotMatch(body,/event: done/);
+    assert.equal(calls.length,1);
+  }
+});
+test('SSE comment followed by data in one frame does not discard answer text',async()=>{
+  const {env}=envWithAI(async()=>new ReadableStream({start(c){
+    c.enqueue(new TextEncoder().encode(': provider comment\ndata: {"response":"Ответ"}\n\ndata: [DONE]\n\n'));c.close();
+  }}));
+  const body=await (await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env)).text();
+  assert.match(body,/Ответ/);assert.match(body,/event: done/);assert.doesNotMatch(body,/event: error/);
+});
+test('multiple valid large frames in a single network chunk are not mistaken for one oversized frame',async()=>{
+  const part='x'.repeat(105000);
+  const frame='data: '+JSON.stringify({response:part})+'\n\n';
+  const {env}=envWithAI(async()=>new ReadableStream({start(c){
+    c.enqueue(new TextEncoder().encode(frame+frame+'data: [DONE]\n\n'));c.close();
+  }}));
+  const body=await (await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env)).text();
+  assert.match(body,/event: done/);assert.doesNotMatch(body,/event: error/);
+  assert.equal(body.split(part).length,3);
+});
+test('nested incomplete status in a completion event must override a trailing DONE marker',async()=>{
+  const {env}=envWithAI(async()=>new ReadableStream({start(c){
+    c.enqueue(new TextEncoder().encode('data: {"response":"Часть"}\n\ndata: {"type":"response.completed","response":{"status":"incomplete"}}\n\ndata: [DONE]\n\n'));c.close();
+  }}));
+  const body=await (await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env)).text();
+  assert.match(body,/"code":"AI_OUTPUT_INCOMPLETE"/);assert.doesNotMatch(body,/event: done/);
+});
+test('corrupt SSE cancels an open upstream transport instead of leaving inference running',async()=>{
+  let cancelled=false;
+  const {env}=envWithAI(async()=>new ReadableStream({
+    start(c){c.enqueue(new TextEncoder().encode('data: invalid-json\n\n'))},
+    cancel(){cancelled=true}
+  }));
+  const body=await (await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env)).text();
+  assert.match(body,/"code":"AI_STREAM_INVALID"/);assert.equal(cancelled,true);
+});
+test('oversized non-streaming response is rejected consistently with streamed response limit',async()=>{
+  const {env,calls}=envWithAI(async()=>({output_text:'x'.repeat(240001)}));
+  const response=await worker.fetch(post(good),env);
+  assert.equal(response.status,502);assert.equal((await response.json()).code,'AI_REVIEW_OUTPUT_LIMIT');
+  assert.equal(calls.length,1);
+});

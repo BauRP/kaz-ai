@@ -804,6 +804,21 @@ html[dir="rtl"] .sidebar{direction:rtl}
   .is-modal-body{min-height:0;overflow-y:auto;overscroll-behavior:contain}
 }
 
+/* Keep structured answers legible in both themes and on narrow screens. */
+body.light .rich-answer .answer-code-block{background:var(--panel);color:var(--text)}
+body.light .rich-answer pre code{color:var(--text)}
+.rich-answer .answer-code-toolbar{flex-wrap:wrap;min-width:0;gap:8px}
+.rich-answer .answer-code-toolbar>span{min-width:0;overflow-wrap:anywhere}
+.rich-answer .answer-code-copy{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.rich-answer .answer-list{padding-inline-start:1.6em;padding-inline-end:0}
+.rich-answer .answer-list li{padding-inline-start:.15em;padding-inline-end:0}
+.session-message-actions button:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:460px){
+  .rich-answer .answer-code-toolbar{padding:.5em .65em}
+  .rich-answer pre{padding:.7em .65em}
+  .session-message-actions{flex-wrap:wrap}
+}
+
 </style>
   
   
@@ -1558,8 +1573,21 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       }
       if(item(line)){
         const ordered=/^\s{0,6}\d+[.)]\s+/.test(line),list=node(ordered?"ol":"ul","answer-list");
+        let expected=null;
         while(i<ls.length&&item(ls[i])&&(/^\s{0,6}\d+[.)]\s+/.test(ls[i])===ordered)){
-          const li=node("li");inline(li,ls[i++].replace(/^\s{0,6}(?:[-*+]\s+|\d+[.)]\s+)/,""));list.append(li);
+          const source=ls[i++];
+          const li=node("li");
+          if(ordered){
+            const number=Number(source.match(/^\s{0,6}(\d+)[.)]\s+/)?.[1]);
+            // HTML ordered-list values are signed 32-bit integers.
+            // Preserve nonsequential source numbering for documents and code steps.
+            if(Number.isSafeInteger(number)&&number>=0&&number<=2147483647){
+              if(expected===null)list.start=number;
+              else if(number!==expected)li.value=number;
+              expected=number+1;
+            }
+          }
+          inline(li,source.replace(/^\s{0,6}(?:[-*+]\s+|\d+[.)]\s+)/,""));list.append(li);
         }
         root.append(list);continue;
       }
@@ -2213,6 +2241,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     const distance=viewport.scrollHeight-viewport.scrollTop-viewport.clientHeight;
     const preserveScroll=state.screen==="chat"&&sameThread&&distance>140;
     const previousTop=viewport.scrollTop;
+    const restoreFocus=sameThread?captureListFocus(transcript):()=>{};
     baseRenderChat();
     transcript.dataset.renderedThread=chat?.id||"";
     if(!chat)return;
@@ -2271,7 +2300,13 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         up.setAttribute("aria-pressed",String(message.rating==="up"));
         down.setAttribute("aria-pressed",String(message.rating==="down"));
         actions.append(up,down);
-        if(!message.localGreeting)actions.append(button(uiText("Повторить ответ"),"retry-answer",message.id));
+        const retry=button(uiText("Повторить ответ"),"retry-answer",message.id);
+        // Keep the existing control but clearly disable actions that cannot run.
+        // Older answers cannot be regenerated without discarding later turns.
+        const canRetry=i===chat.messages.length-1&&chat.messages[i-1]?.role==="user";
+        retry.disabled=!canRetry;
+        if(!canRetry)retry.title=uiText("Повторить можно только последний ответ.");
+        actions.append(retry);
         bubble.append(actions);
       }
     });
@@ -2281,6 +2316,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     if(incompleteBubble?.dataset.thread===chat.id&&incompleteBubble!==activeStreamingBubble)
       transcript.append(incompleteBubble);
     if(preserveScroll)viewport.scrollTop=previousTop;
+    restoreFocus();
     measureLongPrompts();
   }
   function renderSessionProjects(){
@@ -3445,8 +3481,10 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         control.setAttribute("aria-label",uiText(key));
       }
     }
-    for(const control of document.querySelectorAll('#chatMessages [data-session="retry-answer"]'))
+    for(const control of document.querySelectorAll('#chatMessages [data-session="retry-answer"]')){
       control.textContent=uiText("Повторить ответ");
+      if(control.disabled)control.title=uiText("Повторить можно только последний ответ.");
+    }
     // Existing long prompts retain their expansion and original text while
     // Show more / Show less follows the newly selected interface language.
     updateLongPromptButtons();
@@ -4426,7 +4464,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     if(stored&&typeof stored==="object"){
       if(stored.language==="auto"||codes.has(stored.language))prefs.language=stored.language;
       if(["system","light","dark"].includes(stored.mode))prefs.mode=stored.mode;
-      if(preset[stored.theme])prefs.theme=stored.theme;
+      if(typeof stored.theme==="string"&&Object.prototype.hasOwnProperty.call(preset,stored.theme))prefs.theme=stored.theme;
       for(const k of ["accent","bg","fg"])if(typeof stored[k]==="string"&&/^#[0-9a-fA-F]{6}$/.test(stored[k]))prefs[k]=stored[k];
       if(stored.notifications&&typeof stored.notifications==="object")
         for(const key of Object.keys(prefs.notifications))
@@ -4539,7 +4577,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     delete:["Удалить учётную запись","Сервис аккаунтов ещё не подключён. Поэтому удалять нечего. Мы не выдаём демонстрацию за настоящее удаление."]
   };
   const applyAppearance=()=>{
-    const isLight=prefs.mode==="light"||(prefs.mode==="system"&&matchMedia("(prefers-color-scheme: light)").matches);
+    const isLight=prefs.mode==="light"||(prefs.mode==="system"&&typeof matchMedia==="function"&&matchMedia("(prefers-color-scheme: light)").matches);
     if(typeof state!=="undefined"&&state.light!==isLight&&typeof toggleTheme==="function")toggleTheme(true);
     const color=preset[prefs.theme],bg=prefs.bg||(isLight?"#edf4fb":color.bg),fg=prefs.fg||(isLight?"#11273d":color.fg);
     document.body.dataset.kazTheme=prefs.theme;
@@ -4684,6 +4722,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     });
     language.addEventListener("change",()=>chooseLanguage(language.value));
     qs("#innerTheme").addEventListener("change",event=>{
+      if(!Object.prototype.hasOwnProperty.call(preset,event.target.value))return;
       prefs.theme=event.target.value;prefs.accent=null;prefs.bg=null;prefs.fg=null;applyAppearance();
     });
     for(const [key,id] of [["accent","innerAccent"],["bg","innerBg"],["fg","innerFg"]])

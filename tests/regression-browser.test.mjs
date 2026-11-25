@@ -31,6 +31,20 @@ async function makeConversation(page,contents){
   await page.locator('.sidebar [data-screen="history"]').click();
 }
 
+test('tool category counts follow selected language without changing the active tools',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    const count=await page.locator('#toolGroups [data-feature^="tool-"]').count();
+    for(const [language,word] of [['de','Funktionen'],['es','funciones'],['fr','fonctions']]){
+      await page.locator('.sidebar [data-screen="settings"]').click();
+      await page.locator('#innerLanguage').selectOption(language);
+      await page.locator('.sidebar [data-screen="tools"]').click();
+      assert.ok((await page.locator('#toolGroups .tool-group-title small').allInnerTexts()).some(x=>x.includes(word)));
+      assert.equal(await page.locator('#toolGroups [data-feature^="tool-"]').count(),count);
+    }
+  });
+});
+
 test('history counters translate into 17-language settings and preserve Arabic chat names',async()=>{
   await withPage(async page=>{
     const title='مرحبا Kaz AI Қазақша';

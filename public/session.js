@@ -17,6 +17,7 @@
   const threads=[];
   const projects=[];
   const drafts=new Map();
+  const readingPositions=new WeakMap();
   let welcomeDraft="";
   // Unsaved text-tool drafts belong to the current conversation, not to storage.
   const helperDrafts=new WeakMap();
@@ -58,6 +59,16 @@
   const nextId=()=>String(++serial);
   const uiText=value=>window.KazI18n?.translate?.(value)||value;
   const selected=()=>threads.find(c=>c.id===current)||null;
+  function rememberReadingPosition(){
+    const chat=selected(),area=$("#mainContent");
+    if(!chat||state.screen!=="chat"||$("#chatMessages").dataset.renderedThread!==chat.id)return;
+    readingPositions.set(chat,{top:area.scrollTop,following:area.scrollHeight-area.scrollTop-area.clientHeight<130});
+  }
+  function restoreReadingPosition(){
+    const chat=selected(),area=$("#mainContent");
+    const position=chat&&readingPositions.get(chat);
+    if(position)area.scrollTop=position.following?area.scrollHeight:position.top;
+  }
   const displayThread=c=>{
     const next=c?.id||null;
     const input=$("#messageInput");
@@ -233,6 +244,7 @@
       input.focus();
       return;
     }
+    rememberReadingPosition();
     if(abort)abort.abort("navigation");
     abort=null;pending=null;pendingReplaceId=null;
     activeStreamingBubble?.remove();activeStreamingBubble=null;
@@ -509,8 +521,9 @@
     if(!area||state.screen!=="chat")return;
     area.scrollTop=area.scrollHeight;
     // Ensure screen visibility, bubble layout and expanding text are finalized.
+    const thread=current;
     requestAnimationFrame(()=>{
-      if(state.screen==="chat")area.scrollTop=area.scrollHeight;
+      if(state.screen==="chat"&&current===thread)area.scrollTop=area.scrollHeight;
     });
   }
   function renderSessionChat(){
@@ -1057,13 +1070,21 @@
     if(familyGreeting)showStatus("");
     else runAI(chat);
   }
+  // Use the actual UTF-16 input limit (the same one enforced by the browser).
+  // Numeric counts work in every interface language without changing the draft.
+  function appendLengthCounter(body,field){
+    const count=make("output","session-length-count");
+    count.dir="ltr";count.setAttribute("aria-live","off");
+    const update=()=>{count.textContent=field.value.length+" / "+field.maxLength};
+    field.addEventListener("input",update);update();body.append(count);
+  }
   function textDialog(title,label,value,onSave){
     openDialog(title,"",body=>{
       const field=make("input","session-input");field.type="text";field.dir="auto";field.maxLength=100;
       field.value=value;field.setAttribute("aria-label",label);
-      body.append(field);
+      body.append(field);appendLengthCounter(body,field);
       const save=button("Сохранить","dialog-save",null,"session-primary");
-      save.addEventListener("click",()=>{const next=field.value.trim();if(!hasVisibleName(next)){notify("Введите название.");field.focus();return}if(onSave(next)===false)return;closeDialog()});
+      save.addEventListener("click",()=>{if(!field.isConnected)return;const next=field.value.trim();if(!hasVisibleName(next)){notify("Введите название.");field.focus();return}if(onSave(next)===false)return;closeDialog()});
       // IME confirmation must not save a half-composed Kazakh or other name.
       field.addEventListener("keydown",e=>{
         if(e.key==="Enter"&&!e.isComposing&&e.keyCode!==229){
@@ -1080,7 +1101,7 @@
       // multiple queued clicks or keyboard activations.
       let confirmed=false;
       yes.addEventListener("click",()=>{
-        if(confirmed)return;
+        if(confirmed||!yes.isConnected)return;
         confirmed=true;
         yes.disabled=true;
         try{onYes()}finally{closeDialog()}
@@ -1102,6 +1123,7 @@
           $("#messageInput").focus();
           return;
         }
+        rememberReadingPosition();
         if(abort)abort.abort("navigation");
         abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;
         activeStreamingBubble?.remove();activeStreamingBubble=null;
@@ -1116,6 +1138,8 @@
           $("#messageInput").value="";
         }
       }
+      // Same-chat reopen also retains the current reading position.
+      if(current===chat.id)rememberReadingPosition();
       displayThread(chat);renderChat();renderHistory();showScreen("chat");
       if(details.matchIndex!==undefined){
         const index=Number(details.matchIndex);
@@ -1214,6 +1238,7 @@
         body.append(select);
         const save=button("Сохранить","dialog-save",null,"session-primary");
         save.addEventListener("click",()=>{
+          if(!select.isConnected)return;
           const target=select.value;
           if(!threads.includes(chat)||chat.temporary){notify("Чат больше недоступен для проекта.");closeDialog();return}
           if(target&&!projects.some(p=>p.id===target)){
@@ -1258,6 +1283,7 @@
         body.append(select);
         const save=button("Добавить","dialog-save",null,"session-primary");
         save.addEventListener("click",()=>{
+          if(!select.isConnected)return;
           const chosen=threads.find(c=>c.id===select.value);
           if(!chosen||chosen.temporary||!projects.includes(project)){
             notify("Чат или проект уже недоступен.");return;
@@ -1368,7 +1394,7 @@
         area.addEventListener("input",()=>{instructionsDraft=area.value});
         area.setAttribute("aria-label",uiText("Личные инструкции"));
         area.placeholder="Например: отвечай кратко, на русском языке";
-        body.append(area);
+        body.append(area);appendLengthCounter(body,area);
         const save=button("Применить","dialog-save",null,"session-primary");
         save.addEventListener("click",()=>{
           if(!area.isConnected)return;
@@ -1422,7 +1448,7 @@
       field.setAttribute("aria-label",kind===22?"Текст для перевода":kind===23?"Задача по программированию":"Описание документа");
       field.placeholder=kind===22?"Введите текст для перевода":kind===23?"Что нужно исправить или написать?":"Например: деловое письмо о встрече";
       field.value=prior?.text||"";
-      body.append(field);
+      body.append(field);appendLengthCounter(body,field);
       const remember=()=>saved.set(kind,{text:field.value,language:languageSelect?.value});
       field.addEventListener("input",remember);
       languageSelect?.addEventListener("change",remember);
@@ -1437,6 +1463,7 @@
       prepare.addEventListener("click",()=>{
         // Leading whitespace and final newlines can be meaningful in code or
         // source text. Validate using trim, but preserve the original payload.
+        if(!field.isConnected)return;
         const value=field.value;
         if(!value.trim()){notify("Сначала введите текст или описание задачи.");field.focus();return}
         const input=$("#messageInput");
@@ -1725,7 +1752,9 @@
     baseShowFeature(key);
   };
   showScreen=function(name){
+    if(name!=="chat")rememberReadingPosition();
     baseShowScreen(name);
+    if(name==="chat")restoreReadingPosition();
     // Status and Retry belong to the current conversation, not Settings or Projects.
     const banner=$("#statusBanner"),retry=$("#sessionRetry");
     // A pending request must remain visible when returning from History or Tools.

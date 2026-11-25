@@ -172,8 +172,21 @@
       }
       if(item(line)){
         const ordered=/^\s{0,6}\d+[.)]\s+/.test(line),list=node(ordered?"ol":"ul","answer-list");
+        let expected=null;
         while(i<ls.length&&item(ls[i])&&(/^\s{0,6}\d+[.)]\s+/.test(ls[i])===ordered)){
-          const li=node("li");inline(li,ls[i++].replace(/^\s{0,6}(?:[-*+]\s+|\d+[.)]\s+)/,""));list.append(li);
+          const source=ls[i++];
+          const li=node("li");
+          if(ordered){
+            const number=Number(source.match(/^\s{0,6}(\d+)[.)]\s+/)?.[1]);
+            // HTML ordered-list values are signed 32-bit integers.
+            // Preserve nonsequential source numbering for documents and code steps.
+            if(Number.isSafeInteger(number)&&number>=0&&number<=2147483647){
+              if(expected===null)list.start=number;
+              else if(number!==expected)li.value=number;
+              expected=number+1;
+            }
+          }
+          inline(li,source.replace(/^\s{0,6}(?:[-*+]\s+|\d+[.)]\s+)/,""));list.append(li);
         }
         root.append(list);continue;
       }

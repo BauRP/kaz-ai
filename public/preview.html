@@ -790,6 +790,20 @@ html[dir="rtl"] .sidebar{direction:rtl}
   .composer-region{padding-bottom:max(4px,env(safe-area-inset-bottom))}
 }
 
+/* Settings respect the existing font choice, including descriptive text and dialogs. */
+.font-small .is-row strong,.font-small .is-row p,.font-small .is-meters span,.font-small .is-modal-body,.font-small .is-plan p{font-size:12px}
+.font-large .is-row strong,.font-large .is-nav button,.font-large .is-row button,.font-large .is-modal-body{font-size:17px}
+.font-large .is-row p,.font-large .is-meters span,.font-large .is-plan p,.font-large .is-plan span,.font-large .is-footnote{font-size:15px}
+.is-row>div:first-child,.is-meters>div,.is-plan{min-width:0;overflow-wrap:anywhere}
+@media(max-width:760px){
+  .internal-settings-root[dir=rtl] .is-nav{border-left:0}
+  .is-row select,.is-row button{max-width:100%}
+  .is-nav button{max-width:min(85vw,300px);white-space:normal}
+}
+@media(max-height:560px){
+  .is-modal-body{min-height:0;overflow-y:auto;overscroll-behavior:contain}
+}
+
 </style>
   
   
@@ -1691,6 +1705,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     return count+" "+suffix;
   };
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,pendingReplaceId=null,personalInstructions="",retryAnswerId=null;
+  let activeStreamingBubble=null;
   let incompleteBubble=null; // Only transient UI; an interrupted draft never enters chat history.
   // In-memory UI state only: do not collapse opened questions when answers arrive.
   const expandedPrompts=new Set();
@@ -2440,6 +2455,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       let data=null;
       if(response.ok&&/text\/event-stream/i.test(response.headers.get("content-type")||"")){
         streamingBubble=make("div","message message-assistant");
+        activeStreamingBubble=streamingBubble;
         streamingBubble.append(make("div","message-label","Kaz AI"));
         const answerSpan=make("div","session-stream-answer");
         answerSpan.dir="auto";
@@ -2463,6 +2479,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
           if(following)area.scrollTop=area.scrollHeight;
           showStatus(status||"ИИ отвечает…");
         });
+        if(abort!==controller||controller.signal.aborted)return;
         if(window.KazFormat?.render)answerSpan.replaceChildren(window.KazFormat.render(streamed));
         else answerSpan.textContent=streamed;
         data={text:streamed};
@@ -2547,7 +2564,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         const message=quota?"Дневной лимит ИИ исчерпан. Попробуйте после его обновления."
           :e?.code==="AI_RATE_LIMITED"?"Слишком много запросов за короткое время. Попробуйте позднее."
           :e?.code==="AI_RESPONSE_INTERRUPTED"?"Сервис ИИ прервал обработку ответа. Можно повторить запрос."
-          :e?.code==="AI_PROVIDER_TIMEOUT"?"Cloudflare превысил время обработки ответа. Можно повторить запрос."
+          :e?.code==="AI_PROVIDER_TIMEOUT"||e?.code==="AI_STAGE_TIMEOUT"?"Cloudflare превысил время обработки ответа. Можно повторить запрос."
           :e?.code==="AI_PROVIDER_ABORTED"?"Cloudflare прервал запрос. Можно повторить его позже."
           :e?.code==="AI_CAPACITY_UNAVAILABLE"?"Cloudflare сейчас перегружен. Попробуйте позже."
           :e?.code==="AI_PROVIDER_REQUEST_TOO_LARGE"?"Cloudflare отклонил слишком большой запрос."
@@ -2556,7 +2573,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
           :e?.code==="AI_STREAM_FRAME_LIMIT"?"Нейросеть вернула повреждённые данные. Попробуйте снова."
           :e?.code==="AI_UNAVAILABLE"?"Сервис ИИ временно недоступен. Это не обязательно проблема вашего интернета."
           :e?.code==="STREAM_INTERRUPTED"?"Ответ от сервера оборвался до завершения. Попробуйте повторить запрос."
-          :e?.code==="STREAM_INVALID"?"Получены повреждённые данные ответа. Часть текста могла не дойти."
+          :e?.code==="STREAM_INVALID"||e?.code==="AI_STREAM_INVALID"?"Получены повреждённые данные ответа. Часть текста могла не дойти."
           :e?.code==="AI_OUTPUT_INCOMPLETE"?"Нейросеть остановилась до завершения ответа. Неполный текст не сохранён, запрос можно повторить."
           :e instanceof TypeError&&offline?"Ваше устройство сейчас не подключено к сети. Проверьте подключение."
           :e instanceof TypeError?"Не удалось связаться с сайтом. Интернет на других сайтах может работать."
@@ -2567,6 +2584,13 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         if(streamingBubble&&streamedPartial.trim()&&current===chat.id){
           keepIncomplete=true;
           incompleteBubble=streamingBubble;
+          // The last network chunk may have arrived during the paint throttle.
+          // Show every received character before adding the interruption notice.
+          const answer=streamingBubble.querySelector(".session-stream-answer");
+          if(answer){
+            if(window.KazFormat?.render)answer.replaceChildren(window.KazFormat.render(streamedPartial));
+            else answer.textContent=streamedPartial;
+          }
           const warning=make("div","session-stream-interrupted",
             "⚠️ Ответ прервался. Текст выше неполный и не сохранён. Нажмите «Повторить запрос».");
           streamingBubble.append(warning);
@@ -2578,6 +2602,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       }
     }finally{
       if(!keepIncomplete)streamingBubble?.remove();
+      if(activeStreamingBubble===streamingBubble)activeStreamingBubble=null;
       if(abort===controller){abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput()}
     }
   }
@@ -2596,6 +2621,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       window.KazInternalSettings?.refreshUsage?.();
     }
     abort=null;pending=null;pendingReplaceId=null;
+    activeStreamingBubble?.remove();activeStreamingBubble=null;
     controller.abort(reason);
     $("#sessionStop").hidden=true;
     retryAnswerId=replaceId;
@@ -3881,6 +3907,9 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   "Серверный ИИ ещё не настроен. Повторите запрос после настройки сервера.": {"en":"AI is not configured on the server yet. Retry after server setup.","kk":"Серверде ЖИ әлі бапталмаған. Сервер бапталғаннан кейін сұрауды қайталаңыз."},
   "Для подключения ИИ укажи приватный ключ доступа.": {"en":"Enter a private access key to connect AI.","kk":"ЖИ-ді қосу үшін жеке қолжетімділік кілтін енгізіңіз."},
   "Предпросмотр: настоящий GPT-OSS 120B ещё не подключён. Сообщения никуда не отправляются.": {"en":"Preview: GPT-OSS 120B is not connected. No messages are sent.","kk":"Алдын ала қарау: GPT-OSS 120B қосылмаған. Хабарламалар жіберілмейді."},
+  "Cloudflare превысил время обработки ответа. Можно повторить запрос.": {"en":"Cloudflare took too long to respond. You can retry.","kk":"Cloudflare жауап беру уақытынан асып кетті. Сұрауды қайталауға болады.","de":"Cloudflare hat zu lange gebraucht. Sie können die Anfrage wiederholen.","es":"Cloudflare tardó demasiado en responder. Puedes volver a intentarlo.","fr":"Cloudflare a mis trop de temps à répondre. Vous pouvez réessayer."},
+  "Получены повреждённые данные ответа. Часть текста могла не дойти.": {"en":"Invalid response data received. Some text may be missing.","kk":"Жауап деректері бүлінген. Мәтіннің бір бөлігі келмеуі мүмкін.","de":"Ungültige Antwortdaten empfangen. Ein Teil des Textes fehlt möglicherweise.","es":"Se recibieron datos de respuesta dañados. Puede faltar parte del texto.","fr":"Les données de réponse sont endommagées. Une partie du texte peut manquer."},
+  "Нейросеть не вернула текст решения.": {"en":"The AI returned no answer text.","kk":"ЖИ жауап мәтінін қайтармады.","de":"Die KI hat keinen Antworttext geliefert.","es":"La IA no devolvió texto de respuesta.","fr":"L’IA n’a renvoyé aucun texte de réponse."},
   "Запрос слишком большой. Сократите последнее сообщение.": {"en":"Request is too large. Shorten your latest message.","kk":"Сұрау тым ұзын. Соңғы хабарламаны қысқартыңыз."},
   "Не найден вопрос для повторной отправки.": {"en":"No question found to retry.","kk":"Қайталау үшін сұрақ табылмады."},
   "Запрос подготовлен. Проверьте текст и нажмите отправку.": {"en":"Draft prepared. Review it and press Send.","kk":"Сұрау дайын. Мәтінді тексеріп, Жіберу түймесін басыңыз."},
@@ -4299,8 +4328,12 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   const save=()=>{try{localStorage.setItem("kaz-ai-internal-settings-v1",JSON.stringify(prefs))}catch{}};
   const resolveLanguage=()=>{
     if(prefs.language!=="auto")return prefs.language;
-    const browser=(navigator.languages?.[0]||navigator.language||"ru").toLowerCase().split("-")[0];
-    return codes.has(browser)?browser:"en";
+    // Follow the first supported browser preference, not just its first entry.
+    for(const locale of [...(navigator.languages||[]),navigator.language||"ru"]){
+      const browser=String(locale).toLowerCase().split(/[-_]/)[0];
+      if(codes.has(browser))return browser;
+    }
+    return "en";
   };
   const rootTemplate=String.raw`
     <div class="is-head">
@@ -4567,6 +4600,9 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     // Preserve existing default site language until the visitor explicitly
     // selects an option, so original chat behaviour is not silently rewritten.
     chooseLanguage(prefs.language,true);
+    window.addEventListener("languagechange",()=>{
+      if(prefs.language==="auto")chooseLanguage("auto",true);
+    });
   }
   window.KazInternalSettings={
     refreshUsage,

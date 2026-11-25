@@ -107,7 +107,7 @@ function refreshSidebar(){
   const google=$(".sidebar-footer .google-button");
   if(google){google.setAttribute("aria-label",translate("Войти через Google"));google.title=translate("Войти через Google")}
   const profile=$("#sidebarProfile");
-  if(profile){profile.setAttribute("aria-label",translate("Профиль"));profile.title=translate("Профиль")}
+  if(profile){profile.setAttribute("aria-label",translate("Мой профиль"));profile.title=translate("Мой профиль")}
 }
 function toggleSidebarCompact(){
   document.body.classList.toggle("sidebar-compact");

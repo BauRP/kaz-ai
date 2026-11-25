@@ -777,3 +777,18 @@ html[dir="rtl"] .sidebar{direction:rtl}
 @media(max-height:560px){
   .is-modal-body{min-height:0;overflow-y:auto;overscroll-behavior:contain}
 }
+
+/* Keep structured answers legible in both themes and on narrow screens. */
+body.light .rich-answer .answer-code-block{background:var(--panel);color:var(--text)}
+body.light .rich-answer pre code{color:var(--text)}
+.rich-answer .answer-code-toolbar{flex-wrap:wrap;min-width:0;gap:8px}
+.rich-answer .answer-code-toolbar>span{min-width:0;overflow-wrap:anywhere}
+.rich-answer .answer-code-copy{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.rich-answer .answer-list{padding-inline-start:1.6em;padding-inline-end:0}
+.rich-answer .answer-list li{padding-inline-start:.15em;padding-inline-end:0}
+.session-message-actions button:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:460px){
+  .rich-answer .answer-code-toolbar{padding:.5em .65em}
+  .rich-answer pre{padding:.7em .65em}
+  .session-message-actions{flex-wrap:wrap}
+}

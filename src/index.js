@@ -256,8 +256,13 @@ function horseProofIssues(question,answer){
     issues.push("Не приведена проверяемая универсальная нижняя граница для всех стратегий из шести забегов: нужен противниковый аргумент с непобеждёнными лошадьми и двумя несравнимыми кандидатами на второе место.");
   return issues;
 }
+function isProgrammingHelper(question){
+  const header=String(question||"").split("\n\n",1)[0];
+  return /^(?:Помоги с программированием\. Если информации не хватает, уточни её\. Объясняй простыми словами, а код приводи в удобном виде\. Задача:|Help with programming\. Ask for missing details\. Explain simply and format code clearly\. Task:|Бағдарламалауға көмектес\. Ақпарат жетіспесе, нақтылап сұра\. Қарапайым тілмен түсіндіріп, кодты түсінікті түрде көрсет\. Тапсырма:)$/u.test(header);
+}
 function wantsEngineeringAudit(input){
   const q=input.messages.at(-1)?.content||"";
+  if(isProgrammingHelper(q))return true;
   const architecture=/(?:raft|crdt|rga|hlc|fifo|consensus|консенсус|vector[\s-]*clock|векторн[а-яё]*\s+час|репликаци|архитектур|распредел[её]нн[а-яё]*\s+(?:систем|мессенджер)|согласованност|отказоустойчив|network[\s-]*partition|race[\s-]*condition)/iu.test(q);
   const coding=/(?:код|программирован|исходник|реализуй|напиши\s+функцию|найди\s+баг|исправь\s+ошибку|\b(?:python|javascript|typescript|golang|rust|sql|c\+\+|java)\b)/iu.test(q);
   return architecture||coding;
@@ -278,13 +283,14 @@ function auditKind(input){
   const question=input.messages.at(-1)?.content||"";
   if(isTranslationHelper(question))return null;
   const previousUserText=input.messages.slice(0,-1)
-    .filter(m=>m.role==="user").map(m=>m.content).join("\n\n");
+    .filter(m=>m.role==="user"&&!isTranslationHelper(m.content)).map(m=>m.content).join("\n\n");
   // Short follow-ups such as "теперь докажи и добавь Python" must not
   // detach the request from the original mathematical task.
   const followup=/(?:теперь|продолжи|добавь|докажи|перепроверь|исправь|уточни|повтори|проверь)/iu.test(question);
   if(isMathematicalQuestion(question)||
       (followup&&isMathematicalQuestion(previousUserText)))return "proof";
   if(distributedEngineeringTask(question)&&wantsEngineeringAudit(input))return "engineering";
+  if(isProgrammingHelper(question))return "engineering";
   if(wantsProofAudit(input))return "proof";
   if(wantsEngineeringAudit(input))return "engineering";
   return null;

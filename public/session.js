@@ -392,6 +392,13 @@
         replacement.focus({preventScroll:true});
     };
   }
+  function refreshExportSummary(){
+    const summary=$("#sessionExportSummary");
+    if(!summary)return;
+    const saved=threads.filter(chat=>!chat.temporary&&chat.messages.length);
+    const count=saved.reduce((total,chat)=>total+chat.messages.length,0);
+    summary.textContent=uiText("Переписок для экспорта:")+" "+saved.length+" · "+uiText("Сообщений:")+" "+count;
+  }
   function renderSessionHistory(){
     const list=$("#historyList"),recent=$("#recentChats"),summary=$("#historySearchSummary");
     const restoreFocus=captureListFocus(list,recent);
@@ -491,6 +498,7 @@
       recent.append(entry);
     }
     if(!saved.length)recent.append(make("div","sidebar-empty",uiText("Нет переписок")));
+    refreshExportSummary();
     restoreFocus();
   }
   // Keep long user prompts compact without changing their saved or submitted text.
@@ -1471,6 +1479,18 @@
       const remember=()=>saved.set(kind,{text:field.value,language:languageSelect?.value});
       field.addEventListener("input",remember);
       languageSelect?.addEventListener("change",remember);
+      // Clear only this tool draft, with a reversible action until the dialog closes.
+      let clearedText=null;
+      const clear=make("button","session-button");clear.type="button";
+      const updateClear=()=>{clear.textContent=clearedText!==null?"Восстановить текст":"Очистить";clear.disabled=clearedText===null&&!field.value.length};
+      field.addEventListener("input",()=>{clearedText=null;updateClear()});
+      clear.addEventListener("click",()=>{
+        if(!field.isConnected)return;
+        if(clearedText!==null){field.value=clearedText;clearedText=null;}
+        else if(field.value.length){const previous=field.value;field.value="";field.dispatchEvent(new Event("input",{bubbles:true}));clearedText=previous;updateClear();field.focus();return;}
+        field.dispatchEvent(new Event("input",{bubbles:true}));updateClear();field.focus();
+      });
+      updateClear();body.append(clear);
       const prepare=button("Подготовить запрос","dialog-save",null,"session-primary");
       // Ctrl/Cmd+Enter prepares text without sending it to GPT-OSS.
       field.addEventListener("keydown",event=>{
@@ -1598,6 +1618,8 @@
     const checkbox=make("input","");checkbox.type="checkbox";checkbox.id="sessionTemporary";
     label.append(checkbox,make("span","","Включить"));tempRow.append(label);
     settings?.append(tempRow);
+    const exportRow=settings?.querySelector('[data-settings-destination="export"]');
+    if(exportRow){const summary=make("p","session-export-summary");summary.id="sessionExportSummary";summary.setAttribute("aria-live","polite");exportRow.firstElementChild.append(summary);refreshExportSummary()}
     const overlay=make("div","session-overlay");overlay.id="sessionOverlay";overlay.hidden=true;
     const dialog=make("section","session-dialog");dialog.setAttribute("role","dialog");dialog.setAttribute("aria-modal","true");dialog.setAttribute("aria-labelledby","sessionTitle");
     const close=button("×","dialog-close",null,"session-dialog-close");close.id="sessionClose";
@@ -1796,15 +1818,8 @@
     for(const [selector,key] of [["#sessionStop","Остановить"],["#sessionRetry","Повторить запрос"]]){
       const control=$(selector);if(control)control.textContent=uiText(key);
     }
-    const temporary=$("#sessionTemporary");
-    const row=temporary?.closest(".setting-item");
-    if(row){
-      const title=row.querySelector("h2"),description=row.querySelector("p");
-      const caption=temporary.closest("label")?.querySelector("span");
-      if(title)title.textContent=uiText("Временный чат");
-      if(description)description.textContent=uiText("Без добавления в историю текущей вкладки");
-      if(caption)caption.textContent=uiText("Включить");
-    }
+    // Merged settings text is owned by the i18n walker; do not replace its original labels.
+    refreshExportSummary();
     for(const [action,key] of [["rate-up","Положительная оценка ответа"],["rate-down","Отрицательная оценка ответа"]]){
       for(const control of document.querySelectorAll('#chatMessages [data-session="'+action+'"]')){
         control.setAttribute("aria-label",uiText(key));

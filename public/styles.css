@@ -652,7 +652,7 @@ html[dir="rtl"] .sidebar{direction:rtl}
 .sidebar-footer{
   flex:0 0 auto;margin-top:0;min-width:0;
   padding-bottom:max(2px,env(safe-area-inset-bottom));
-  background:inherit;
+  background:transparent;
 }
 .sidebar-footer .google-button{min-width:0;min-height:44px;height:auto;padding:10px 8px}
 .sidebar-footer .google-button>span{min-width:0}
@@ -818,7 +818,7 @@ body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bo
 .sidebar-compact .sidebar{width:76px;padding-inline:9px}
 .sidebar-compact .sidebar-header{flex-direction:column;gap:8px;align-items:center;margin-bottom:16px}
 .sidebar-compact .sidebar-header .brand{justify-content:center;padding:0;width:44px;height:38px}
-.sidebar-compact .brand-wordmark,.sidebar-compact .new-chat-button>span,.sidebar-compact .new-chat-button .button-tail,.sidebar-compact .nav-item>span,.sidebar-compact .sidebar-recent,.sidebar-compact .footer-note,.sidebar-compact .ornament-line,.sidebar-compact .google-button>span:not(.google-g),.sidebar-compact .google-button>.icon{display:none!important}
+.sidebar-compact .brand-wordmark,.sidebar-compact .new-chat-button>span,.sidebar-compact .new-chat-button .button-tail,.sidebar-compact .nav-item>span,.sidebar-compact .sidebar-recent,.sidebar-compact .ornament-line,.sidebar-compact .google-button>span:not(.google-g),.sidebar-compact .google-button>.icon{display:none!important}
 .sidebar-compact .new-chat-button,.sidebar-compact .nav-item{justify-content:center;padding-inline:0;gap:0}
 .sidebar-compact .nav-item>.icon,.sidebar-compact .new-chat-button>.icon{flex:none;width:21px;height:21px}
 .sidebar-compact .sidebar-footer{padding-inline:0}
@@ -846,3 +846,27 @@ body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bo
 .language-select-arrow{position:absolute;inset-block:0;inset-inline-end:0;width:36px;display:grid;place-items:center;pointer-events:none;color:var(--text)}
 .language-select-arrow .icon{display:block;width:16px;height:16px}
 @media(max-width:760px){.language-select-shell{width:100%;min-width:0}.is-row .language-select-shell #innerLanguage{min-width:0}}
+
+/* One continuous, flat sidebar background. No separate decorative footer surface. */
+.sidebar{background:#081c33;box-shadow:none}
+.sidebar:before{display:none}
+body.light .sidebar{background:#e4f5ff;box-shadow:none}
+body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .sidebar{background:var(--panel);box-shadow:none}
+.sidebar-scroll,.sidebar-footer{background:transparent;box-shadow:none}
+.sidebar-footer{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding-inline:0}
+.sidebar-footer .google-button,.sidebar-footer .sidebar-profile,
+.sidebar-compact .sidebar-footer .google-button,.sidebar-compact .sidebar-footer .sidebar-profile{
+  box-sizing:border-box;height:46px;min-height:46px;max-height:46px;margin:0;padding-block:0;
+}
+.sidebar-footer .google-button{justify-content:flex-start}
+.sidebar-compact .sidebar-footer .google-button,.sidebar-compact .sidebar-footer .sidebar-profile{justify-content:center;gap:0}
+.sidebar-footer .google-button>.google-g{width:32px;min-width:32px;height:32px;margin:0}
+.sidebar-footer .footer-note{height:14px;min-height:14px;margin:0;line-height:14px;white-space:nowrap;overflow:hidden}
+.sidebar-compact .sidebar-footer .footer-note{visibility:hidden;pointer-events:none}
+@media(max-height:480px){
+  .sidebar-footer{gap:4px}
+  .sidebar-footer .google-button,.sidebar-footer .sidebar-profile,
+  .sidebar-compact .sidebar-footer .google-button,.sidebar-compact .sidebar-footer .sidebar-profile{
+    height:36px;min-height:36px;max-height:36px;
+  }
+}

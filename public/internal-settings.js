@@ -135,7 +135,8 @@
   const authoredText=new WeakMap();
   const t=value=>{
     const entry=copy[value];
-    if(!entry||resolveLanguage()==="ru")return value;
+    if(!entry)return window.KazI18n?.translate?.(value)||value;
+    if(resolveLanguage()==="ru")return value;
     return entry[resolveLanguage()==="kk"?1:0];
   };
   function refreshBodyCopy(){
@@ -203,21 +204,24 @@
     }
     return "en";
   };
+  const extraLabels={
+    ru:["Личные инструкции","Экспорт истории"],en:["Personal instructions","Export history"],kk:["Жеке нұсқаулар","Тарихты экспорттау"],
+    pt:["Instruções pessoais","Exportar histórico"],es:["Instrucciones personales","Exportar historial"],fr:["Instructions personnelles","Exporter l’historique"],
+    ar:["التعليمات الشخصية","تصدير السجل"],zh:["个人指令","导出历史"],ko:["개인 지침","기록 내보내기"],ja:["個人用指示","履歴のエクスポート"],
+    de:["Persönliche Anweisungen","Verlauf exportieren"],it:["Istruzioni personali","Esporta cronologia"],tr:["Kişisel talimatlar","Geçmişi dışa aktar"],
+    pl:["Instrukcje osobiste","Eksport historii"],hi:["व्यक्तिगत निर्देश","इतिहास निर्यात"],vi:["Hướng dẫn cá nhân","Xuất lịch sử"],id:["Instruksi pribadi","Ekspor riwayat"]
+  };
+  const tabIcons={general:"settings",account:"chat",security:"lock",usage:"clock",billing:"file",appearance:"sun",notifications:"spark",personal:"edit",export:"file"};
+  const tabOrder=["general","account","security","usage","billing","appearance","notifications","personal","export"];
+  const tabName=(name,lang)=>{
+    const extra=extraLabels[lang]||extraLabels.en;
+    if(name==="personal")return extra[0];
+    if(name==="export")return extra[1];
+    return (labels[lang]||labels.en)[tabOrder.indexOf(name)+1];
+  };
   const rootTemplate=String.raw`
-    <div class="is-head">
-      <h2 id="innerSettingsTitle">внутренности настроек</h2>
-      <p>Параметры интерфейса работают в этом браузере. Аккаунт, платежи и безопасность подключим позже.</p>
-    </div>
+
     <div class="is-workspace">
-      <nav class="is-nav" aria-label="Разделы внутренних настроек">
-        <button type="button" data-is-tab="general" aria-current="page">Общие</button>
-        <button type="button" data-is-tab="account">Учётная запись</button>
-        <button type="button" data-is-tab="security">Безопасность и вход</button>
-        <button type="button" data-is-tab="usage">Использование</button>
-        <button type="button" data-is-tab="billing">Оплата</button>
-        <button type="button" data-is-tab="appearance">Внешний вид</button>
-        <button type="button" data-is-tab="notifications">Уведомления</button>
-      </nav>
       <div class="is-panels">
         <section data-is-panel="general">
           <h3>Общие</h3>
@@ -273,6 +277,8 @@
           </div>
           <button type="button" data-is-action="reset-appearance" class="is-reset">Сбросить оформление</button>
         </section>
+        <section data-is-panel="personal" hidden><h3>Личные инструкции</h3></section>
+        <section data-is-panel="export" hidden><h3>Экспорт истории</h3></section>
         <section data-is-panel="notifications" hidden>
           <h3>Уведомления</h3>
           <label class="is-row is-check"><span><strong>О выполненных задачах ИИ</strong><small>О завершении ответа в открытой вкладке</small></span><input type="checkbox" data-is-notify="completed"></label>
@@ -324,19 +330,26 @@
   };
   const refreshLabels=()=>{
     const lang=resolveLanguage(),translated=labels[lang]||labels.en;
-    qs("#innerSettingsTitle").textContent=translated[0];
-    const tabs=qa("[data-is-tab]");
-    tabs.forEach((tab,i)=>{tab.textContent=translated[i+1]});
+    for(const tab of qa("[data-is-tab]")){
+      const name=tabName(tab.dataset.isTab,lang);
+      qs("span",tab).textContent=name;tab.title=name;tab.setAttribute("aria-label",name);
+    }
     qs("#innerLanguage").options[0].textContent=translated[8];
     const themes=qs("#innerTheme");
     for(const option of themes.options){
       const key=option.value,source=preset[key];
       if(source)option.textContent=lang==="ru"?source.name:(themeNames[key]?.[lang==="kk"?1:0]||source.name);
     }
-    qa("[data-is-panel]").forEach((panel,i)=>{
+    qa("[data-is-panel]").forEach(panel=>{
       const heading=qs("h3",panel);
-      if(heading)heading.textContent=translated[i+1];
+      if(heading)heading.textContent=tabName(panel.dataset.isPanel,lang);
     });
+    const auto=qs('#languageMenu [data-language="auto"] strong');
+    if(auto)auto.textContent=translated[8];
+    for(const choice of qa("#languageMenu [data-language]")){
+      const selected=choice.dataset.language===prefs.language;
+      choice.classList.toggle("selected",selected);choice.setAttribute("aria-pressed",String(selected));
+    }
     document.documentElement.dir=lang==="ar"?"rtl":"ltr";
     qs("#internalSettingsRoot").dir=lang==="ar"?"rtl":"ltr";
     refreshBodyCopy();
@@ -419,6 +432,31 @@
     const root=qs("#internalSettingsRoot");
     if(!root)return;
     root.innerHTML=rootTemplate; // Constant authored markup; never interpolate user or account data.
+    const nav=qs("#settingsNavigation");
+    for(const name of tabOrder){
+      const btn=document.createElement("button");btn.type="button";btn.className="nav-item";btn.dataset.isTab=name;
+      btn.append(icon(tabIcons[name]),document.createElement("span"));nav.append(btn);
+    }
+    nav.addEventListener("click",event=>{
+      const tab=event.target.closest("[data-is-tab]");if(!tab)return;
+      showTab(tab.dataset.isTab);setDrawer(false);qs("#mainContent").scrollTop=0;
+    });
+    // Move existing controls, rather than clone or rebind them. All prior actions stay intact.
+    const legacy=qs("#view-settings > .settings-list");
+    for(const row of qa("[data-settings-destination]",legacy)){
+      const panel=qs('[data-is-panel="'+row.dataset.settingsDestination+'"]',root);
+      if(panel){let list=qs(".settings-list",panel);if(!list){list=document.createElement("div");list.className="settings-list merged-settings-list";panel.append(list)}list.append(row)}
+    }
+    legacy.remove();
+    // The top-bar shortcut uses the same language preference, with all 17 languages and Auto.
+    const menu=qs("#languageMenu"),hint=qs(".popover-hint",menu);
+    for(const [key,name] of [["auto","Автоматически"],...languages]){
+      if(qs('[data-language="'+key+'"]',menu))continue;
+      const btn=document.createElement("button");btn.type="button";btn.className="language-option";btn.dataset.language=key;
+      const code=document.createElement("span");code.className="language-code";code.textContent=key==="auto"?"A":key.toUpperCase();
+      const desc=document.createElement("span"),strong=document.createElement("strong");strong.textContent=name;desc.append(strong);
+      const check=icon("check");check.classList.add("language-check");btn.append(code,desc,check);menu.insertBefore(btn,hint);
+    }
     const dialog=document.createElement("dialog");
     dialog.className="is-modal";dialog.id="innerSettingsDialog";dialog.setAttribute("aria-labelledby","innerDialogTitle");
     dialog.innerHTML=modalMarkup;
@@ -475,6 +513,7 @@
   }
   window.KazInternalSettings={
     refreshUsage,
+    chooseLanguage,
     open:(panel="general")=>{
       if(typeof showScreen==="function")showScreen("settings");
       showTab(panel);

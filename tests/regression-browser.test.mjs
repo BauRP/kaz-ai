@@ -1853,3 +1853,45 @@ test('new chat from Tools focuses the visible empty composer',async()=>{
     assert.equal(await page.locator('#messageInput').inputValue(),'');
   });
 });
+
+test('formatted document retains original ordered list numbering',async()=>{
+  await withPage(async page=>{
+    const result=await page.evaluate(()=>{
+      const root=window.KazFormat.render('4. Первый пункт\n7. Другой пункт\n8. Следующий');
+      const list=root.querySelector('ol');
+      return {start:list.start,second:list.children[1].getAttribute('value'),third:list.children[2].getAttribute('value'),text:list.children[1].textContent};
+    });
+    assert.deepEqual(result,{start:4,second:'7',third:null,text:'Другой пункт'});
+  });
+});
+test('invalid saved theme cannot break appearance initialization',async()=>{
+  await withPage(async page=>{
+    await page.evaluate(()=>localStorage.setItem('kaz-ai-internal-settings-v1',JSON.stringify({theme:'constructor',mode:'light'})));
+    await page.reload();
+    assert.equal(await page.locator('body').getAttribute('data-kaz-theme'),'kaz');
+    assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('light')),true);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#internalSettingsRoot [data-is-tab="appearance"]').click();
+    assert.equal(await page.locator('#innerTheme').inputValue(),'kaz');
+  });
+});
+test('only the latest AI answer offers an enabled repeat action',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8');
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat')
+        return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Ответ модели'})});
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    for(const question of ['Первый вопрос','Второй вопрос']){
+      await page.locator('#messageInput').fill(question);
+      await page.locator('#sendButton').click();
+      await page.waitForFunction(()=>document.querySelector('#sessionStop').hidden);
+    }
+    const retry=page.locator('#chatMessages [data-session="retry-answer"]');
+    assert.equal(await retry.count(),2);
+    assert.equal(await retry.first().isDisabled(),true);
+    assert.equal(await retry.last().isEnabled(),true);
+  });
+});

@@ -1895,3 +1895,30 @@ test('only the latest AI answer offers an enabled repeat action',async()=>{
     assert.equal(await retry.last().isEnabled(),true);
   });
 });
+
+test('returning from settings restores the reading position of the active chat',async()=>{
+  await withPage(async page=>{
+    for(let i=0;i<12;i++){
+      await page.locator('#messageInput').fill('Сообщение '+i+' '+('Длинный текст для проверки прокрутки. '.repeat(20)));
+      await page.locator('#sendButton').click();
+    }
+    await page.locator('#mainContent').evaluate(el=>el.scrollTop=150);
+    const before=await page.locator('#mainContent').evaluate(el=>el.scrollTop);
+    assert.ok(before>0);
+    await page.locator('.sidebar [data-screen="settings"]').click();
+    await page.locator('#recentChats .session-recent').first().click();
+    assert.ok(Math.abs(await page.locator('#mainContent').evaluate(el=>el.scrollTop)-before)<5);
+  });
+});
+test('text helpers and instructions show exact existing character limits',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    for(const id of [22,23,24,40]){
+      await page.locator('#toolGroups [data-feature="tool-'+id+'"]').click();
+      const field=page.locator('#sessionBody textarea');
+      await field.fill('  abc\n');
+      assert.equal(await page.locator('#sessionBody .session-length-count').textContent(),'6 / '+(id===40?2000:7800));
+      await field.press('Escape');
+    }
+  });
+});

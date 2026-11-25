@@ -1989,3 +1989,36 @@ test('flat sidebar and account buttons retain vertical positions when collapsed'
     }
   });
 });
+
+test('active settings section is visibly selected and merged controls stay accessible',async()=>{
+  await withPage(async page=>{
+    await page.locator('#mainNavigation [data-screen="settings"]').click();
+    for(const tab of ['general','appearance','personal','export','account']){
+      const button=page.locator('#settingsNavigation [data-is-tab="'+tab+'"]');
+      await button.click();
+      assert.equal(await button.getAttribute('aria-current'),'page');
+      assert.ok(await button.evaluate(el=>el.classList.contains('active')));
+      assert.equal(await page.locator('[data-is-panel="'+tab+'"]').isVisible(),true);
+    }
+    assert.equal(await page.locator('#settingsNavigation [aria-current="page"]').count(),1);
+    await page.locator('#settingsNavigation [data-is-tab="general"]').click();
+    await page.locator('#innerLanguage').selectOption('en');
+    await page.locator('#settingsNavigation [data-is-tab="personal"]').click();
+    assert.equal(await page.locator('[data-is-panel="personal"] .setting-item h2').first().textContent(),'Personal instructions');
+  });
+});
+test('copy answer passes original Markdown to the clipboard',async()=>{
+  await withPage(async page=>{
+    const html=readFileSync('public/preview.html','utf8'),answer='**Original**\n\n1. Code: `x`\n';
+    await page.route('https://kaz-ai.test/**',route=>{
+      if(new URL(route.request().url()).pathname==='/api/chat')return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:answer})});
+      return route.fulfill({status:200,contentType:'text/html',body:html});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.__copied=value}}}));
+    await page.locator('#messageInput').fill('Test copy');
+    await page.locator('#sendButton').click();
+    await page.locator('#chatMessages [data-session="copy-answer"]').click();
+    assert.equal(await page.evaluate(()=>window.__copied),answer);
+  });
+});

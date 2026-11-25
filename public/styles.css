@@ -755,3 +755,11 @@ html[dir="rtl"] .sidebar{direction:rtl}
 .font-large .session-search-snippet,.font-large .session-history-summary{font-size:15px}
 .font-large .session-textarea,.font-large .session-input{font-size:17px}
 .font-large .session-message-expand{font-size:14px}
+
+/* Direction 48: on short screens the editable composer should not crowd out
+   the transcript. Long drafts remain scrollable inside their own text field. */
+@media(max-height:560px){
+  .composer textarea{max-height:min(120px,28dvh);overflow-y:auto}
+  .composer-toolbar{min-height:44px}
+  .composer-region{padding-bottom:max(4px,env(safe-area-inset-bottom))}
+}

@@ -148,12 +148,14 @@
       const parent=part.parentElement;
       if(!parent||parent.closest("h3,#innerSettingsTitle,[data-is-tab],script,style,option"))continue;
       const original=authoredText.get(part)||part.nodeValue.trim();
+      if(parent.closest(".merged-settings-list"))continue;
       if(!copy[original])continue;
       if(!authoredText.has(part))authoredText.set(part,original);
       const wanted=t(original);
       if(part.nodeValue!==wanted)part.nodeValue=wanted;
     }
     for(const el of root.querySelectorAll("[aria-label]")){
+      if(el.closest(".merged-settings-list"))continue;
       if(!el.dataset.isOriginalAria)el.dataset.isOriginalAria=el.getAttribute("aria-label");
       const result=t(el.dataset.isOriginalAria);
       if(el.getAttribute("aria-label")!==result)el.setAttribute("aria-label",result);
@@ -382,6 +384,7 @@
     qa("[data-is-tab]").forEach(b=>{
       const picked=b.dataset.isTab===name;
       b.classList.toggle("selected",picked);
+      b.classList.toggle("active",picked);
       if(picked)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");
     });
   };

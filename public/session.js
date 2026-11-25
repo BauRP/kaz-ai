@@ -48,6 +48,7 @@
     return count+" "+suffix;
   };
   let current=null,serial=0,modalReturn=null,abort=null,pending=null,pendingReplaceId=null,personalInstructions="",retryAnswerId=null;
+  let instructionsDraft=null;
   let activeStreamingBubble=null;
   let incompleteBubble=null; // Only transient UI; an interrupted draft never enters chat history.
   // In-memory UI state only: do not collapse opened questions when answers arrive.
@@ -253,6 +254,7 @@
     if(temporary)notify("Временный чат не будет добавлен в историю.");
   }
   function newThread(firstMessage){
+    const initialHelpers=new Map(welcomeHelperDrafts);
     welcomeHelperDrafts.clear();
     const temporary=Boolean($("#sessionTemporary")?.checked);
     // Never cut a surrogate pair in half when the first message contains emoji.
@@ -260,6 +262,7 @@
     const title=hasVisibleName(candidate)?candidate:"Новый чат";
     const chat={id:nextId(),title,
       messages:[],pinned:false,projectId:null,temporary};
+    if(initialHelpers.size)helperDrafts.set(chat,initialHelpers);
     touchChat(chat);threads.unshift(chat);displayThread(chat);
     return chat;
   }
@@ -363,8 +366,22 @@
     }
     return {from,to};
   }
+  // Rebuilding lists must not drop keyboard focus when a reply arrives.
+  function captureListFocus(...roots){
+    const focused=document.activeElement;
+    const root=roots.find(node=>node?.contains(focused));
+    if(!root||!focused?.dataset.session)return ()=>{};
+    const {session,id}=focused.dataset;
+    return ()=>{
+      const replacement=Array.from(root.querySelectorAll("[data-session]"))
+        .find(el=>el.dataset.session===session&&el.dataset.id===id);
+      if(replacement?.getClientRects().length&&!replacement.disabled)
+        replacement.focus({preventScroll:true});
+    };
+  }
   function renderSessionHistory(){
     const list=$("#historyList"),recent=$("#recentChats"),summary=$("#historySearchSummary");
+    const restoreFocus=captureListFocus(list,recent);
     list.replaceChildren();recent.replaceChildren();
     const query=($("#historySearch").value||"").trim();
     const value=query.toLocaleLowerCase();
@@ -461,6 +478,7 @@
       recent.append(entry);
     }
     if(!saved.length)recent.append(make("div","sidebar-empty",uiText("Нет переписок")));
+    restoreFocus();
   }
   // Keep long user prompts compact without changing their saved or submitted text.
   // Measure the real rendered lines, not a character count (works on narrow screens).
@@ -575,6 +593,7 @@
   }
   function renderSessionProjects(){
     const target=$("#projectsWorkspace");if(!target)return;
+    const restoreFocus=captureListFocus(target);
     target.replaceChildren();
     // Group saved chats once per render instead of scanning all threads twice
     // for every folder. Unknown/removed folder IDs fall back to "Без проекта".
@@ -634,6 +653,7 @@
       }
       target.append(box);
     }
+    restoreFocus();
   }
   const allowRemote=()=>{
     const hostname=location.hostname;
@@ -754,6 +774,7 @@
     const latest=candidates.at(-1);
     if(!latest||latest.role!=="user"||latest.content.length>20000||
         !latestFits(latest.content)){
+      retryAnswerId=replaceId;
       showStatus("Запрос слишком большой. Сократите последнее сообщение.",false,true);
       abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput();
       return;
@@ -791,6 +812,7 @@
     }
     while(history.length>1&&history[0].role!=="user")history.shift();
     if(!history.length||history.at(-1).role!=="user"||history.at(-1).content!==latest.content){
+      retryAnswerId=replaceId;
       showStatus("Запрос слишком большой. Сократите последнее сообщение.",false,true);
       abort=null;pending=null;pendingReplaceId=null;stop.hidden=true;resizeInput();
       return;
@@ -1322,12 +1344,18 @@
     }
     if(action==="instructions"){
       openDialog("Личные инструкции","Правила действуют только в этой вкладке. Они передаются модели вместе с вашим запросом при подключённом ИИ.",body=>{
-        const area=make("textarea","session-textarea");area.dir="auto";area.value=personalInstructions;area.maxLength=2000;
+        const area=make("textarea","session-textarea");area.dir="auto";area.value=instructionsDraft??personalInstructions;area.maxLength=2000;
+        area.addEventListener("input",()=>{instructionsDraft=area.value});
         area.setAttribute("aria-label",uiText("Личные инструкции"));
         area.placeholder="Например: отвечай кратко, на русском языке";
         body.append(area);
         const save=button("Применить","dialog-save",null,"session-primary");
-        save.addEventListener("click",()=>{personalInstructions=area.value.slice(0,2000);closeDialog();notify("Инструкции применены на текущий сеанс.")});
+        save.addEventListener("click",()=>{
+          if(!area.isConnected)return;
+          personalInstructions=area.value.slice(0,2000);
+          instructionsDraft=null;
+          closeDialog();notify("Инструкции применены на текущий сеанс.");
+        });
         area.addEventListener("keydown",event=>{
           if(!event.isComposing&&event.keyCode!==229&&event.key==="Enter"&&(event.ctrlKey||event.metaKey)&&!event.altKey){event.preventDefault();save.click()}
         });

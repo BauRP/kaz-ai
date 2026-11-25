@@ -186,7 +186,7 @@
     if(stored&&typeof stored==="object"){
       if(stored.language==="auto"||codes.has(stored.language))prefs.language=stored.language;
       if(["system","light","dark"].includes(stored.mode))prefs.mode=stored.mode;
-      if(preset[stored.theme])prefs.theme=stored.theme;
+      if(typeof stored.theme==="string"&&Object.prototype.hasOwnProperty.call(preset,stored.theme))prefs.theme=stored.theme;
       for(const k of ["accent","bg","fg"])if(typeof stored[k]==="string"&&/^#[0-9a-fA-F]{6}$/.test(stored[k]))prefs[k]=stored[k];
       if(stored.notifications&&typeof stored.notifications==="object")
         for(const key of Object.keys(prefs.notifications))
@@ -299,7 +299,7 @@
     delete:["Удалить учётную запись","Сервис аккаунтов ещё не подключён. Поэтому удалять нечего. Мы не выдаём демонстрацию за настоящее удаление."]
   };
   const applyAppearance=()=>{
-    const isLight=prefs.mode==="light"||(prefs.mode==="system"&&matchMedia("(prefers-color-scheme: light)").matches);
+    const isLight=prefs.mode==="light"||(prefs.mode==="system"&&typeof matchMedia==="function"&&matchMedia("(prefers-color-scheme: light)").matches);
     if(typeof state!=="undefined"&&state.light!==isLight&&typeof toggleTheme==="function")toggleTheme(true);
     const color=preset[prefs.theme],bg=prefs.bg||(isLight?"#edf4fb":color.bg),fg=prefs.fg||(isLight?"#11273d":color.fg);
     document.body.dataset.kazTheme=prefs.theme;
@@ -444,6 +444,7 @@
     });
     language.addEventListener("change",()=>chooseLanguage(language.value));
     qs("#innerTheme").addEventListener("change",event=>{
+      if(!Object.prototype.hasOwnProperty.call(preset,event.target.value))return;
       prefs.theme=event.target.value;prefs.accent=null;prefs.bg=null;prefs.fg=null;applyAppearance();
     });
     for(const [key,id] of [["accent","innerAccent"],["bg","innerBg"],["fg","innerFg"]])

@@ -69,12 +69,12 @@ function icon(id){const svg = document.createElementNS("http://www.w3.org/2000/s
 function node(tag,className,text){const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e}
 function notify(message){const toast=$("#toast");clearTimeout(state.toastTimer);toast.textContent=message;toast.hidden=false;state.toastTimer=setTimeout(()=>{toast.hidden=true},3800)}
 function closePopovers(){
-  for(const id of ["attachMenu","reasonMenu","languageMenu","settingsLanguageMenu","fontMenu"]){const panel=$("#"+id);if(panel)panel.hidden=true}
-  for(const id of ["attachToggle","reasonToggle","languageToggle","settingsLanguageToggle","fontToggle"]){const button=$("#"+id);if(button)button.setAttribute("aria-expanded","false")}
+  for(const id of ["attachMenu","reasonMenu","languageMenu","fontMenu"]){const panel=$("#"+id);if(panel)panel.hidden=true}
+  for(const id of ["attachToggle","reasonToggle","languageToggle","fontToggle"]){const button=$("#"+id);if(button)button.setAttribute("aria-expanded","false")}
 }
 function togglePopover(kind,trigger){
   let menuId,button;
-  if(kind==="language"){button=trigger&&trigger.closest('[data-action="toggle-language"]')||$("#languageToggle");menuId=button.id==="settingsLanguageToggle"?"settingsLanguageMenu":"languageMenu"}
+  if(kind==="language"){button=$("#languageToggle");menuId="languageMenu"}
   else if(kind==="font"){button=$("#fontToggle");menuId="fontMenu"}
   else{menuId=kind+"Menu";button=$("#"+(kind==="attach"?"attachToggle":"reasonToggle"))}
   const menu=$("#"+menuId);if(!menu||!button)return;
@@ -82,7 +82,48 @@ function togglePopover(kind,trigger){
   if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
 }
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
-function showScreen(screen){if(!viewNames.includes(screen))return;if(screen==="about"&&state.screen!=="about"){state.aboutReturnScreen=state.screen;state.aboutReturnScroll=$("#mainContent").scrollTop}state.screen=screen;document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>{
+function refreshSidebar(){
+  const settings=state.screen==="settings",compact=document.body.classList.contains("sidebar-compact");
+  const translate=value=>window.KazI18n?.translate?.(value)||value;
+  $("#mainNavigation").hidden=settings;
+  $("#settingsNavigation").hidden=!settings;
+  $(".sidebar-recent").hidden=settings;
+  $(".sidebar-footer").hidden=settings;
+  document.body.classList.toggle("is-settings-screen",settings);
+  const primary=$("#sidebarPrimary");
+  const label=settings?"Назад":"Новый чат";
+  primary.dataset.action=settings?"leave-settings":"new-chat";
+  if(primary.dataset.sidebarLabel!==label){primary.dataset.sidebarLabel=label;primary.querySelector("span").textContent=label;}
+  primary.setAttribute("aria-label",translate(label));primary.title=translate(label);
+  primary.querySelector("svg use").setAttribute("href",settings?"#ic-arrow-right":"#ic-plus");
+  primary.classList.toggle("settings-back",settings);
+  const toggle=$("#sidebarCollapse"),toggleLabel=compact?"Развернуть меню":"Свернуть меню";
+  toggle.setAttribute("aria-label",translate(toggleLabel));toggle.title=translate(toggleLabel);
+  toggle.setAttribute("aria-expanded",String(!compact));
+  for(const btn of $$("#mainNavigation .nav-item")){
+    const text=translate(viewLabels[btn.dataset.screen]||btn.textContent.trim());
+    btn.setAttribute("aria-label",text);btn.title=text;
+  }
+  const google=$(".sidebar-footer .google-button");
+  if(google){google.setAttribute("aria-label",translate("Войти через Google"));google.title=translate("Войти через Google")}
+}
+function toggleSidebarCompact(){
+  document.body.classList.toggle("sidebar-compact");
+  refreshSidebar();
+  try{localStorage.setItem("kaz-ai-sidebar-compact-v1",document.body.classList.contains("sidebar-compact")?"1":"0")}catch{}
+}
+function leaveSettings(){
+  if(state.screen!=="settings")return;
+  const target=state.settingsReturnScreen||"welcome",top=state.settingsReturnScroll||0;
+  showScreen(target);
+  if(target!=="chat")$("#mainContent").scrollTop=top;
+  if(window.innerWidth>760)$("#mainNavigation [data-screen='settings']")?.focus({preventScroll:true});
+}
+function showScreen(screen){if(!viewNames.includes(screen))return;
+  if(screen==="settings"&&state.screen!=="settings"){
+    state.settingsReturnScreen=state.screen;
+    state.settingsReturnScroll=$("#mainContent").scrollTop;
+  }if(screen==="about"&&state.screen!=="about"){state.aboutReturnScreen=state.screen;state.aboutReturnScroll=$("#mainContent").scrollTop}state.screen=screen;refreshSidebar();document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>{
   const active=button.dataset.screen===screen;
   button.classList.toggle("active",active);
   if(active)button.setAttribute("aria-current","page");
@@ -167,13 +208,14 @@ function selectReason(value,quiet=false){
 function toggleTheme(fromInternalSettings=false){
   state.light=!state.light;
   document.body.classList.toggle("light",state.light);
-  $("#themeLabel").textContent=state.light?"Светлая":"Тёмная";
+  
   $$('[data-action="toggle-theme"]').forEach(button=>button.setAttribute("aria-pressed",String(state.light)));
   $$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"));
   if(!fromInternalSettings)window.KazInternalSettings?.onLegacyThemeToggle(state.light);
 }
 const languages={en:"English",ru:"Русский",kk:"Қазақша",pt:"Português",es:"Español",fr:"Français",ar:"العربية",zh:"中文",ko:"한국어",ja:"日本語",de:"Deutsch",it:"Italiano",tr:"Türkçe",pl:"Polski",hi:"हिन्दी",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
 function selectLanguage(value,quiet=false){
+  if(value==="auto"){window.KazInternalSettings?.chooseLanguage("auto",quiet);return}
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
   state.language=value;
   $$(".language-current").forEach(el=>{el.textContent=languages[value]});
@@ -181,6 +223,7 @@ function selectLanguage(value,quiet=false){
   closePopovers();
   window.KazI18n?.set(value);
   window.KazInternalSettings?.syncLanguage(value);
+  refreshSidebar();
   if(window.KazSession?.refreshLocale)window.KazSession.refreshLocale();
   else renderHistory();
   renderTools($("#toolsSearch").value);
@@ -234,7 +277,9 @@ function featureModal(title,description){state.dialogTrigger=document.activeElem
 function closeModal(){$("#modalOverlay").hidden=true;if(state.dialogTrigger&&typeof state.dialogTrigger.focus==="function")state.dialogTrigger.focus();state.dialogTrigger=null}
 function showFeature(key){if(key==="google"){openGoogle();return}if(key==="languages"){togglePopover("language",$("#languageToggle"));return}const data=featureDescriptions[key];if(data)featureModal(...data);else if(key.startsWith("tool-")){const n=Number(key.slice(5));const item=FEATURE_GROUPS.flatMap(g=>g.items).find(i=>i[0]===n);if(item)featureModal(item[1],item[2]+". Сейчас подготовлена только кнопка и место в интерфейсе. Реализация — на согласованном этапе.")}else featureModal("Функция появится позже","Сейчас разрабатывается только оболочка сайта.")}
 function handleAction(action,trigger){switch(action){
-  case"home":newChat();break;
+  case"home":if(state.screen==="settings")leaveSettings();else newChat();break;
+  case"leave-settings":leaveSettings();break;
+  case"collapse-sidebar":toggleSidebarCompact();break;
   case"back-to-chat":showScreen(state.aboutReturnScreen||"welcome");$("#mainContent").scrollTop=state.aboutReturnScroll||0;break;
   case"new-chat":newChat();break;
   case"close-sidebar":setDrawer(false);break;
@@ -295,6 +340,7 @@ $("#messageInput").addEventListener("input",()=>{
   if($("#sessionStop")?.hidden===false||$("#sessionRetry")?.hidden===false)return;
   banner.hidden=true;
 });
+try{if(localStorage.getItem("kaz-ai-sidebar-compact-v1")==="1")document.body.classList.add("sidebar-compact")}catch{}
 renderTools();renderHistory();renderChat();try{
   const savedFont=localStorage.getItem("kaz-ai-font-size-v1");
   if(["small","normal","large"].includes(savedFont))selectFont(savedFont,true);

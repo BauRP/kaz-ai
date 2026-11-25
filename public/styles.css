@@ -796,3 +796,34 @@ body.light .rich-answer pre code{color:var(--text)}
 /* Text length feedback uses the actual existing limits, not a new restriction. */
 .session-length-count{font-size:12px;color:var(--muted);text-align:end;font-variant-numeric:tabular-nums;line-height:1.3;align-self:flex-end}
 .font-large .session-length-count{font-size:15px}
+
+/* Agreed navigation layout: original brand and icons, compact rail, settings in the same sidebar. */
+.sidebar-header{gap:6px;justify-content:space-between}
+.sidebar-header .brand{min-width:0;gap:8px}
+.sidebar-collapse{display:inline-flex;flex:none;width:34px;height:34px;align-items:center;justify-content:center;border-radius:9px;color:var(--muted)}
+.sidebar-collapse:hover{background:rgba(51,159,217,.15);color:var(--text)}
+.sidebar-collapse:focus-visible,.sidebarPrimary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.settings-navigation{margin-top:18px}
+.settings-navigation .nav-item .icon{flex:none}
+.settings-back .icon:first-child{transform:rotate(180deg)}
+html[dir="rtl"] .settings-back .icon:first-child{transform:none}
+.settings-back .button-tail{display:none}
+body.is-settings-screen .sidebar-footer,body.is-settings-screen .sidebar-recent{display:none!important}
+body.is-settings-screen .is-workspace{display:block;min-height:0}
+body.is-settings-screen .is-panels{padding:24px}
+body.is-settings-screen .merged-settings-list{border:0;background:none;margin:0}
+body.is-settings-screen .merged-settings-list .setting-item{padding:15px 0}
+body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bottom:0}
+#languageMenu{max-height:min(65dvh,560px);overflow-y:auto;overscroll-behavior:contain}
+.sidebar-compact .sidebar{width:76px;padding-inline:9px}
+.sidebar-compact .sidebar-header{flex-direction:column;gap:8px;align-items:center;margin-bottom:16px}
+.sidebar-compact .sidebar-header .brand{justify-content:center;padding:0;width:44px;height:38px}
+.sidebar-compact .brand-wordmark,.sidebar-compact .new-chat-button>span,.sidebar-compact .new-chat-button .button-tail,.sidebar-compact .nav-item>span,.sidebar-compact .sidebar-recent,.sidebar-compact .footer-note,.sidebar-compact .ornament-line,.sidebar-compact .google-button>span:not(.google-g),.sidebar-compact .google-button>.icon{display:none!important}
+.sidebar-compact .new-chat-button,.sidebar-compact .nav-item{justify-content:center;padding-inline:0;gap:0}
+.sidebar-compact .nav-item>.icon,.sidebar-compact .new-chat-button>.icon{flex:none;width:21px;height:21px}
+.sidebar-compact .sidebar-footer{padding-inline:0}
+.sidebar-compact .google-button{justify-content:center;padding:6px}
+.sidebar-compact .sidebar-collapse .icon{transform:scaleX(-1)}
+@media(min-width:761px){.sidebar{transition:width .22s ease,padding .22s ease}}
+@media(max-width:760px){.sidebar-compact .sidebar{width:76px}.sidebar-compact .sidebar-header .close-sidebar{display:inline-flex}.sidebar-header .brand-wordmark{font-size:.9em}.sidebar-header .brand{gap:5px}body.is-settings-screen .is-panels{padding:16px}}
+@media(prefers-reduced-motion:reduce){.sidebar{transition:none!important}}

@@ -1148,3 +1148,19 @@ test('oversized non-streaming response is rejected consistently with streamed re
   assert.equal(response.status,502);assert.equal((await response.json()).code,'AI_REVIEW_OUTPUT_LIMIT');
   assert.equal(calls.length,1);
 });
+
+test('native model stream accepts bare CR, split CRLF and final CR at EOF',async()=>{
+  for(const chunks of [
+    ['data: {"response":"Ответ"}\r\r','data: [DONE]\r\r'],
+    ['data: {"response":"Ответ"}\r','\n\r','\ndata: [DONE]\r','\n\r','\n']
+  ]){
+    const {env}=envWithAI(async()=>new ReadableStream({start(controller){
+      for(const chunk of chunks)controller.enqueue(new TextEncoder().encode(chunk));
+      controller.close();
+    }}));
+    const body=await (await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env)).text();
+    assert.match(body,/Ответ/);
+    assert.match(body,/event: done/);
+    assert.doesNotMatch(body,/event: error/);
+  }
+});

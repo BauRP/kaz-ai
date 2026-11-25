@@ -663,6 +663,11 @@
   "Удобное чтение": {"en":"Comfortable reading","kk":"Ыңғайлы оқу"},
   "Скачать свои разговоры": {"en":"Download your conversations","kk":"Әңгімелеріңізді жүктеп алу"}
 };
+  Object.assign(dictionary,{
+    "Назад":{en:"Back",kk:"Артқа",pt:"Voltar",es:"Atrás",fr:"Retour",ar:"رجوع",zh:"返回",ko:"뒤로",ja:"戻る",de:"Zurück",it:"Indietro",tr:"Geri",pl:"Wstecz",hi:"वापस",vi:"Quay lại",id:"Kembali"},
+    "Свернуть меню":{en:"Collapse sidebar",kk:"Мәзірді жинау",pt:"Recolher menu",es:"Contraer menú",fr:"Réduire le menu",ar:"طي القائمة",zh:"收起侧栏",ko:"사이드바 접기",ja:"サイドバーを折りたたむ",de:"Menü einklappen",it:"Comprimi menu",tr:"Menüyü daralt",pl:"Zwiń menu",hi:"मेनू समेटें",vi:"Thu gọn menu",id:"Ciutkan menu"},
+    "Развернуть меню":{en:"Expand sidebar",kk:"Мәзірді ашу",pt:"Expandir menu",es:"Expandir menú",fr:"Développer le menu",ar:"توسيع القائمة",zh:"展开侧栏",ko:"사이드바 펼치기",ja:"サイドバーを展開",de:"Menü ausklappen",it:"Espandi menu",tr:"Menüyü genişlet",pl:"Rozwiń menu",hi:"मेनू फैलाएँ",vi:"Mở rộng menu",id:"Perluas menu"}
+  });
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",
     "#view-about",
@@ -670,7 +675,7 @@
     "#view-projects .panel-heading","#projectsWorkspace","#historyList","#recentChats","#view-tools .panel-heading",
     "#view-tools .search-bar","#view-settings .panel-heading",
     "#view-settings .settings-list","#toolGroups",
-    "#attachMenu","#reasonMenu","#fontMenu","#languageMenu","#settingsLanguageMenu",
+    "#attachMenu","#reasonMenu","#fontMenu","#languageMenu",
     "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay","#statusBanner","#sessionRetry","#toast"
   ];
   const captured=new WeakMap();

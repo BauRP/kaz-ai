@@ -1,39 +1,39 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-26: per-chat reading position, input length counters, stale dialog guards. Syntax checked; two regression scenarios added; full CI and deployment unconfirmed.",
+  "basis": "2026-11-26: resumed active directions; exact answer copy and settings navigation/localization fixes. Syntax verified, browser tests added but not executed; deployment unconfirmed. Engineering estimates.",
   "branch": "main",
   "date": "2026-11-25",
-  "previous": 79.94434782608694,
-  "now": 80.1182608695652,
-  "delta": 0.1739130434782652,
+  "previous": 80.1182608695652,
+  "now": 80.28347826086956,
+  "delta": 0.16521739130435265,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 93.86100000000002,
+      "previous": 94.01100000000001,
       "now": 94.01100000000001,
-      "delta": 0.14999999999999147
+      "delta": 0
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 41.57599999999999,
-      "now": 41.87599999999999,
-      "delta": 0.29999999999999716
+      "previous": 41.87599999999999,
+      "now": 42.37599999999999,
+      "delta": 0.5
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 90.67571428571429,
-      "now": 90.74714285714286,
-      "delta": 0.0714285714285694
+      "previous": 90.74714285714286,
+      "now": 90.93285714285715,
+      "delta": 0.18571428571428328
     },
     {
       "name": "Экран",
       "count": 1,
-      "previous": 57.5,
+      "previous": 58,
       "now": 58,
-      "delta": 0.5
+      "delta": 0
     }
   ],
   "items": [
@@ -51,9 +51,9 @@
       "id": 2,
       "name": "История чатов",
       "group": "Чаты",
-      "previous": 93.92,
+      "previous": 94.52,
       "now": 94.52,
-      "delta": 0.5999999999999943,
+      "delta": 0,
       "summary": "Позиция чтения сохраняется для каждой переписки при навигации.",
       "status": "in_progress"
     },
@@ -71,9 +71,9 @@
       "id": 4,
       "name": "Переименовать чат",
       "group": "Чаты",
-      "previous": 95.15,
+      "previous": 95.65,
       "now": 95.65,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Счётчик длины названия и защита от устаревшего диалога.",
       "status": "in_progress"
     },
@@ -81,9 +81,9 @@
       "id": 5,
       "name": "Удалить чат",
       "group": "Чаты",
-      "previous": 98.22,
+      "previous": 98.62,
       "now": 98.62,
-      "delta": 0.4000000000000057,
+      "delta": 0,
       "summary": "Отключённые подтверждения не могут удалить чат.",
       "status": "in_progress"
     },
@@ -142,9 +142,9 @@
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
       "previous": 69.02,
-      "now": 69.02,
-      "delta": 0,
-      "summary": "Сохранение исходной нумерации списков в форматированных ответах.",
+      "now": 69.72,
+      "delta": 0.7000000000000028,
+      "summary": "Копирование полного исходного ответа с обработкой ошибок буфера обмена.",
       "status": "in_progress"
     },
     {
@@ -161,39 +161,39 @@
       "id": 22,
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
-      "previous": 28.1,
-      "now": 28.6,
-      "delta": 0.5,
-      "summary": "Счётчик длины исходного текста.",
+      "previous": 28.6,
+      "now": 29.2,
+      "delta": 0.5999999999999979,
+      "summary": "Копирование готового перевода без изменения исходного текста.",
       "status": "in_progress"
     },
     {
       "id": 23,
       "name": "Программирование с ИИ",
       "group": "Интеллект",
-      "previous": 25.6,
-      "now": 26.1,
-      "delta": 0.5,
-      "summary": "Счётчик длины кода и защита от устаревшего окна.",
+      "previous": 26.1,
+      "now": 26.7,
+      "delta": 0.5999999999999979,
+      "summary": "Копирование полного ответа с кодом и Markdown.",
       "status": "in_progress"
     },
     {
       "id": 24,
       "name": "Подготовка документов",
       "group": "Интеллект",
-      "previous": 24.6,
-      "now": 25.1,
-      "delta": 0.5,
-      "summary": "Счётчик длины описания документа.",
+      "previous": 25.1,
+      "now": 25.7,
+      "delta": 0.5999999999999979,
+      "summary": "Копирование готового документа целиком.",
       "status": "in_progress"
     },
     {
       "id": 40,
       "name": "Личные инструкции",
       "group": "Настройки",
-      "previous": 87.03,
+      "previous": 87.53,
       "now": 87.53,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Счётчик длины личных инструкций.",
       "status": "in_progress"
     },
@@ -222,9 +222,9 @@
       "name": "Язык интерфейса",
       "group": "Настройки",
       "previous": 88.73,
-      "now": 88.73,
-      "delta": 0,
-      "summary": "Кнопки копирования кода и их состояния локализованы на 17 языков с обновлением при смене языка.",
+      "now": 89.33,
+      "delta": 0.5999999999999943,
+      "summary": "Перевод перенесённых настроек и сообщений копирования.",
       "status": "in_progress"
     },
     {
@@ -252,18 +252,18 @@
       "name": "внутренности настроек",
       "group": "Настройки",
       "previous": 86.64,
-      "now": 86.64,
-      "delta": 0,
-      "summary": "Защита инициализации оформления от недопустимых сохранённых значений.",
+      "now": 87.34,
+      "delta": 0.7000000000000028,
+      "summary": "Выделение активной вкладки и устранение двойного перевода настроек.",
       "status": "in_progress"
     },
     {
       "id": 48,
       "name": "Расширение экрана",
       "group": "Экран",
-      "previous": 57.5,
+      "previous": 58,
       "now": 58,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Сохранение позиции чтения и ограничение отложенной прокрутки текущей перепиской.",
       "status": "in_progress"
     }
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 80.77999999999999,
-  "overall_now": 80.94666666666666,
-  "overall_delta": 0.1666666666666714
+  "overall_previous": 80.94666666666666,
+  "overall_now": 81.10499999999999,
+  "overall_delta": 0.15833333333333144
 }

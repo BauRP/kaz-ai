@@ -823,6 +823,37 @@ body.light .rich-answer pre code{color:var(--text)}
 .session-length-count{font-size:12px;color:var(--muted);text-align:end;font-variant-numeric:tabular-nums;line-height:1.3;align-self:flex-end}
 .font-large .session-length-count{font-size:15px}
 
+/* Agreed navigation layout: original brand and icons, compact rail, settings in the same sidebar. */
+.sidebar-header{gap:6px;justify-content:space-between}
+.sidebar-header .brand{min-width:0;gap:8px}
+.sidebar-collapse{display:inline-flex;flex:none;width:34px;height:34px;align-items:center;justify-content:center;border-radius:9px;color:var(--muted)}
+.sidebar-collapse:hover{background:rgba(51,159,217,.15);color:var(--text)}
+.sidebar-collapse:focus-visible,.sidebarPrimary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.settings-navigation{margin-top:18px}
+.settings-navigation .nav-item .icon{flex:none}
+.settings-back .icon:first-child{transform:rotate(180deg)}
+html[dir="rtl"] .settings-back .icon:first-child{transform:none}
+.settings-back .button-tail{display:none}
+body.is-settings-screen .sidebar-footer,body.is-settings-screen .sidebar-recent{display:none!important}
+body.is-settings-screen .is-workspace{display:block;min-height:0}
+body.is-settings-screen .is-panels{padding:24px}
+body.is-settings-screen .merged-settings-list{border:0;background:none;margin:0}
+body.is-settings-screen .merged-settings-list .setting-item{padding:15px 0}
+body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bottom:0}
+#languageMenu{max-height:min(65dvh,560px);overflow-y:auto;overscroll-behavior:contain}
+.sidebar-compact .sidebar{width:76px;padding-inline:9px}
+.sidebar-compact .sidebar-header{flex-direction:column;gap:8px;align-items:center;margin-bottom:16px}
+.sidebar-compact .sidebar-header .brand{justify-content:center;padding:0;width:44px;height:38px}
+.sidebar-compact .brand-wordmark,.sidebar-compact .new-chat-button>span,.sidebar-compact .new-chat-button .button-tail,.sidebar-compact .nav-item>span,.sidebar-compact .sidebar-recent,.sidebar-compact .footer-note,.sidebar-compact .ornament-line,.sidebar-compact .google-button>span:not(.google-g),.sidebar-compact .google-button>.icon{display:none!important}
+.sidebar-compact .new-chat-button,.sidebar-compact .nav-item{justify-content:center;padding-inline:0;gap:0}
+.sidebar-compact .nav-item>.icon,.sidebar-compact .new-chat-button>.icon{flex:none;width:21px;height:21px}
+.sidebar-compact .sidebar-footer{padding-inline:0}
+.sidebar-compact .google-button{justify-content:center;padding:6px}
+.sidebar-compact .sidebar-collapse .icon{transform:scaleX(-1)}
+@media(min-width:761px){.sidebar{transition:width .22s ease,padding .22s ease}}
+@media(max-width:760px){.sidebar-compact .sidebar{width:76px}.sidebar-compact .sidebar-header .close-sidebar{display:inline-flex}.sidebar-header .brand-wordmark{font-size:.9em}.sidebar-header .brand{gap:5px}body.is-settings-screen .is-panels{padding:16px}}
+@media(prefers-reduced-motion:reduce){.sidebar{transition:none!important}}
+
 </style>
   
   
@@ -836,6 +867,7 @@ body.light .rich-answer pre code{color:var(--text)}
   <symbol id="logo-mark" viewBox="0 0 48 48"><g fill="none" stroke="currentColor" stroke-width="3.1" stroke-linejoin="round"><path d="M24 3 34 13 24 23 14 13Z"/><path d="M45 24 35 34 25 24 35 14Z"/><path d="M24 45 14 35 24 25 34 35Z"/><path d="M3 24 13 14 23 24 13 34Z"/></g></symbol>
   <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
   <symbol id="ic-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="ic-sidebar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></symbol>
   <symbol id="ic-close" viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19"/></symbol>
   <symbol id="ic-arrow" viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></symbol>
   <symbol id="ic-arrow-right" viewBox="0 0 24 24"><path d="M4 12h16m-7-7 7 7-7 7"/></symbol>
@@ -868,16 +900,18 @@ body.light .rich-answer pre code{color:var(--text)}
       <button type="button" class="brand" data-action="home" aria-label="На главную Kaz AI">
         <img class="brand-logo" src="data:image/webp;base64,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" width="28" height="28" alt="" aria-hidden="true"><span class="brand-wordmark">Kaz <b>AI</b></span>
       </button>
+      <button type="button" id="sidebarCollapse" class="icon-button sidebar-collapse" data-action="collapse-sidebar" aria-label="Свернуть меню" aria-expanded="true" aria-controls="sidebar" title="Свернуть меню"><svg class="icon" aria-hidden="true"><use href="#ic-sidebar"/></svg></button>
       <button type="button" class="icon-button close-sidebar" data-action="close-sidebar" aria-label="Закрыть меню"><svg class="icon"><use href="#ic-close"/></svg></button>
     </div>
-    <button class="new-chat-button" type="button" data-action="new-chat"><svg class="icon"><use href="#ic-plus"/></svg><span>Новый чат</span><svg class="icon button-tail"><use href="#ic-arrow-right"/></svg></button>
-    <nav class="primary-nav" aria-label="Разделы">
+    <button id="sidebarPrimary" class="new-chat-button" type="button" data-action="new-chat" aria-label="Новый чат" title="Новый чат"><svg class="icon"><use href="#ic-plus"/></svg><span>Новый чат</span><svg class="icon button-tail"><use href="#ic-arrow-right"/></svg></button>
+    <nav id="mainNavigation" class="primary-nav" aria-label="Разделы">
       <button type="button" data-screen="history" class="nav-item"><svg class="icon"><use href="#ic-chat"/></svg><span>Чаты</span></button>
       <button type="button" data-screen="projects" class="nav-item"><svg class="icon"><use href="#ic-folder"/></svg><span>Проекты</span></button>
       <button type="button" data-screen="tools" class="nav-item"><svg class="icon"><use href="#ic-grid"/></svg><span>Инструменты</span><span class="nav-count">41</span></button>
       <button type="button" data-screen="settings" class="nav-item"><svg class="icon"><use href="#ic-settings"/></svg><span>Настройки</span></button>
       <button type="button" data-screen="about" class="nav-item about-nav-link" aria-controls="view-about"><svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>О проекте</span></button>
     </nav>
+    <nav id="settingsNavigation" class="primary-nav settings-navigation" aria-label="Разделы настроек" hidden></nav>
     <div class="sidebar-recent">
       <div class="sidebar-recent-header"><span>НЕДАВНИЕ ЧАТЫ</span><svg class="icon"><use href="#ic-clock"/></svg></div>
       <div id="recentChats"><div class="sidebar-empty">Здесь появятся ваши разговоры</div></div>
@@ -895,7 +929,6 @@ body.light .rich-answer pre code{color:var(--text)}
       <div class="topbar-start">
         <button type="button" class="icon-button menu-button" data-action="toggle-sidebar" aria-label="Открыть меню" aria-controls="sidebar" aria-expanded="false"><svg class="icon"><use href="#ic-menu"/></svg></button>
         <span id="pageTitle" class="topbar-title">Kaz AI</span>
-        <span class="preview-pill"><span class="online-dot"></span>GPT-OSS 120B</span>
       </div>
       <div class="topbar-actions">
         <button type="button" class="icon-button" data-action="toggle-theme" aria-pressed="false" aria-label="Переключить тему" title="Переключить тему"><svg class="icon icon-theme"><use href="#ic-sun"/></svg></button>
@@ -931,20 +964,13 @@ body.light .rich-answer pre code{color:var(--text)}
       </section>
       <section id="view-settings" class="view view-panel" hidden aria-labelledby="settingsHeading">
         <div class="panel-heading"><span class="eyebrow">ЛИЧНОЕ ПРОСТРАНСТВО</span><h1 id="settingsHeading">Настройки</h1><p>Основные параметры вашего будущего Kaz AI.</p></div>
-        <div id="internalSettingsRoot" class="internal-settings-root" aria-label="Внутренности настроек"></div>
+        <div id="internalSettingsRoot" class="internal-settings-root" aria-label="Разделы настроек"></div>
         <div class="settings-list">
-          <div class="setting-item"><div><h2>Оформление</h2><p>Светлая или тёмная тема</p></div><button class="setting-control" data-action="toggle-theme" aria-pressed="false"><svg class="icon"><use href="#ic-sun"/></svg><span id="themeLabel">Тёмная</span></button></div>
-          <div class="setting-item"><div><h2>Язык интерфейса</h2><p>Русский, қазақша, English</p></div><div class="popover-anchor settings-popover-anchor language-anchor"><button type="button" class="setting-control" id="settingsLanguageToggle" data-action="toggle-language" aria-expanded="false" aria-controls="settingsLanguageMenu"><span class="language-current">Русский</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div id="settingsLanguageMenu" class="popover-menu language-menu" hidden>
-                <p class="popover-title">Язык интерфейса</p>
-                <button type="button" data-language="ru" class="language-option selected"><span class="language-code">RU</span><span><strong>Русский</strong><small>Русский язык</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
-                <button type="button" data-language="kk" class="language-option"><span class="language-code">KZ</span><span><strong>Қазақша</strong><small>Қазақ тілі</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
-                <button type="button" data-language="en" class="language-option"><span class="language-code">EN</span><span><strong>English</strong><small>English language</small></span><svg class="icon language-check"><use href="#ic-check"/></svg></button>
-                <p class="popover-hint">Переведены основные элементы сайта. Остальные тексты добавляются поэтапно.</p></div></div></div>
-          <div class="setting-item"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><div class="popover-anchor settings-popover-anchor"><button type="button" class="setting-control" data-action="toggle-font" id="fontToggle" aria-expanded="false" aria-controls="fontMenu"><span id="fontLabel">Обычный</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div class="popover-menu font-menu" id="fontMenu" hidden><p class="popover-title">Размер текста</p><button type="button" data-font="small" aria-pressed="false">Компактный</button><button type="button" data-font="normal" class="selected" aria-pressed="true">Обычный</button><button type="button" data-font="large" aria-pressed="false">Крупный</button><p class="popover-hint">Пример оформления для проверки дизайна.</p></div></div></div>
-          <div class="setting-item"><div><h2>Личные инструкции</h2><p>Как ИИ должен отвечать именно вам</p></div><button class="setting-control" data-feature="instructions">Настроить <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
-          <div class="setting-item"><div><h2>Память ИИ</h2><p>Запоминание предпочтений — позже</p></div><button class="setting-control" data-feature="memory">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
-          <div class="setting-item"><div><h2>Экспорт истории</h2><p>Скачать историю текущей вкладки</p></div><button class="setting-control" data-feature="export">Скачать <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
-          <div class="setting-item"><div><h2>Аккаунт</h2><p>Вход через Google будет подключён позже</p></div><button class="setting-control" data-feature="google">Войти <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
+          <div class="setting-item" data-settings-destination="appearance"><div><h2>Размер текста</h2><p>Удобное чтение на любом экране</p></div><div class="popover-anchor settings-popover-anchor"><button type="button" class="setting-control" data-action="toggle-font" id="fontToggle" aria-expanded="false" aria-controls="fontMenu"><span id="fontLabel">Обычный</span><svg class="icon"><use href="#ic-chevron"/></svg></button><div class="popover-menu font-menu" id="fontMenu" hidden><p class="popover-title">Размер текста</p><button type="button" data-font="small" aria-pressed="false">Компактный</button><button type="button" data-font="normal" class="selected" aria-pressed="true">Обычный</button><button type="button" data-font="large" aria-pressed="false">Крупный</button><p class="popover-hint">Пример оформления для проверки дизайна.</p></div></div></div>
+          <div class="setting-item" data-settings-destination="personal"><div><h2>Личные инструкции</h2><p>Как ИИ должен отвечать именно вам</p></div><button class="setting-control" data-feature="instructions">Настроить <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
+          <div class="setting-item" data-settings-destination="personal"><div><h2>Память ИИ</h2><p>Запоминание предпочтений — позже</p></div><button class="setting-control" data-feature="memory">Скоро <svg class="icon"><use href="#ic-lock"/></svg></button></div>
+          <div class="setting-item" data-settings-destination="export"><div><h2>Экспорт истории</h2><p>Скачать историю текущей вкладки</p></div><button class="setting-control" data-feature="export">Скачать <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
+          <div class="setting-item" data-settings-destination="account"><div><h2>Вход через Google</h2><p>Вход через Google будет подключён позже</p></div><button class="setting-control" data-feature="google">Войти <svg class="icon"><use href="#ic-arrow-right"/></svg></button></div>
         </div>
       </section>
       <section id="view-about" class="view view-panel view-about" hidden aria-labelledby="aboutHeading">
@@ -1165,12 +1191,12 @@ function icon(id){const svg = document.createElementNS("http://www.w3.org/2000/s
 function node(tag,className,text){const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e}
 function notify(message){const toast=$("#toast");clearTimeout(state.toastTimer);toast.textContent=message;toast.hidden=false;state.toastTimer=setTimeout(()=>{toast.hidden=true},3800)}
 function closePopovers(){
-  for(const id of ["attachMenu","reasonMenu","languageMenu","settingsLanguageMenu","fontMenu"]){const panel=$("#"+id);if(panel)panel.hidden=true}
-  for(const id of ["attachToggle","reasonToggle","languageToggle","settingsLanguageToggle","fontToggle"]){const button=$("#"+id);if(button)button.setAttribute("aria-expanded","false")}
+  for(const id of ["attachMenu","reasonMenu","languageMenu","fontMenu"]){const panel=$("#"+id);if(panel)panel.hidden=true}
+  for(const id of ["attachToggle","reasonToggle","languageToggle","fontToggle"]){const button=$("#"+id);if(button)button.setAttribute("aria-expanded","false")}
 }
 function togglePopover(kind,trigger){
   let menuId,button;
-  if(kind==="language"){button=trigger&&trigger.closest('[data-action="toggle-language"]')||$("#languageToggle");menuId=button.id==="settingsLanguageToggle"?"settingsLanguageMenu":"languageMenu"}
+  if(kind==="language"){button=$("#languageToggle");menuId="languageMenu"}
   else if(kind==="font"){button=$("#fontToggle");menuId="fontMenu"}
   else{menuId=kind+"Menu";button=$("#"+(kind==="attach"?"attachToggle":"reasonToggle"))}
   const menu=$("#"+menuId);if(!menu||!button)return;
@@ -1178,7 +1204,48 @@ function togglePopover(kind,trigger){
   if(opening){menu.hidden=false;button.setAttribute("aria-expanded","true")}
 }
 function setDrawer(open){const sidebar=$("#sidebar");const scrim=$("#drawerScrim");sidebar.classList.toggle("open",open);scrim.hidden=!open;const toggle=$('[data-action="toggle-sidebar"]');toggle.setAttribute("aria-expanded",String(open))}
-function showScreen(screen){if(!viewNames.includes(screen))return;if(screen==="about"&&state.screen!=="about"){state.aboutReturnScreen=state.screen;state.aboutReturnScroll=$("#mainContent").scrollTop}state.screen=screen;document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>{
+function refreshSidebar(){
+  const settings=state.screen==="settings",compact=document.body.classList.contains("sidebar-compact");
+  const translate=value=>window.KazI18n?.translate?.(value)||value;
+  $("#mainNavigation").hidden=settings;
+  $("#settingsNavigation").hidden=!settings;
+  $(".sidebar-recent").hidden=settings;
+  $(".sidebar-footer").hidden=settings;
+  document.body.classList.toggle("is-settings-screen",settings);
+  const primary=$("#sidebarPrimary");
+  const label=settings?"Назад":"Новый чат";
+  primary.dataset.action=settings?"leave-settings":"new-chat";
+  if(primary.dataset.sidebarLabel!==label){primary.dataset.sidebarLabel=label;primary.querySelector("span").textContent=label;}
+  primary.setAttribute("aria-label",translate(label));primary.title=translate(label);
+  primary.querySelector("svg use").setAttribute("href",settings?"#ic-arrow-right":"#ic-plus");
+  primary.classList.toggle("settings-back",settings);
+  const toggle=$("#sidebarCollapse"),toggleLabel=compact?"Развернуть меню":"Свернуть меню";
+  toggle.setAttribute("aria-label",translate(toggleLabel));toggle.title=translate(toggleLabel);
+  toggle.setAttribute("aria-expanded",String(!compact));
+  for(const btn of $$("#mainNavigation .nav-item")){
+    const text=translate(viewLabels[btn.dataset.screen]||btn.textContent.trim());
+    btn.setAttribute("aria-label",text);btn.title=text;
+  }
+  const google=$(".sidebar-footer .google-button");
+  if(google){google.setAttribute("aria-label",translate("Войти через Google"));google.title=translate("Войти через Google")}
+}
+function toggleSidebarCompact(){
+  document.body.classList.toggle("sidebar-compact");
+  refreshSidebar();
+  try{localStorage.setItem("kaz-ai-sidebar-compact-v1",document.body.classList.contains("sidebar-compact")?"1":"0")}catch{}
+}
+function leaveSettings(){
+  if(state.screen!=="settings")return;
+  const target=state.settingsReturnScreen||"welcome",top=state.settingsReturnScroll||0;
+  showScreen(target);
+  if(target!=="chat")$("#mainContent").scrollTop=top;
+  if(window.innerWidth>760)$("#mainNavigation [data-screen='settings']")?.focus({preventScroll:true});
+}
+function showScreen(screen){if(!viewNames.includes(screen))return;
+  if(screen==="settings"&&state.screen!=="settings"){
+    state.settingsReturnScreen=state.screen;
+    state.settingsReturnScroll=$("#mainContent").scrollTop;
+  }if(screen==="about"&&state.screen!=="about"){state.aboutReturnScreen=state.screen;state.aboutReturnScroll=$("#mainContent").scrollTop}state.screen=screen;refreshSidebar();document.body.classList.toggle("is-about-screen",screen==="about");viewNames.forEach(name=>{$("#view-"+name).hidden=name!==screen});$("#pageTitle").textContent=viewLabels[screen];$$(".primary-nav [data-screen]").forEach(button=>{
   const active=button.dataset.screen===screen;
   button.classList.toggle("active",active);
   if(active)button.setAttribute("aria-current","page");
@@ -1263,13 +1330,14 @@ function selectReason(value,quiet=false){
 function toggleTheme(fromInternalSettings=false){
   state.light=!state.light;
   document.body.classList.toggle("light",state.light);
-  $("#themeLabel").textContent=state.light?"Светлая":"Тёмная";
+  
   $$('[data-action="toggle-theme"]').forEach(button=>button.setAttribute("aria-pressed",String(state.light)));
   $$(".icon-theme use").forEach(use=>use.setAttribute("href",state.light?"#ic-moon":"#ic-sun"));
   if(!fromInternalSettings)window.KazInternalSettings?.onLegacyThemeToggle(state.light);
 }
 const languages={en:"English",ru:"Русский",kk:"Қазақша",pt:"Português",es:"Español",fr:"Français",ar:"العربية",zh:"中文",ko:"한국어",ja:"日本語",de:"Deutsch",it:"Italiano",tr:"Türkçe",pl:"Polski",hi:"हिन्दी",vi:"Tiếng Việt",id:"Bahasa Indonesia"};
 function selectLanguage(value,quiet=false){
+  if(value==="auto"){window.KazInternalSettings?.chooseLanguage("auto",quiet);return}
   if(!Object.prototype.hasOwnProperty.call(languages,value))return;
   state.language=value;
   $$(".language-current").forEach(el=>{el.textContent=languages[value]});
@@ -1277,6 +1345,7 @@ function selectLanguage(value,quiet=false){
   closePopovers();
   window.KazI18n?.set(value);
   window.KazInternalSettings?.syncLanguage(value);
+  refreshSidebar();
   if(window.KazSession?.refreshLocale)window.KazSession.refreshLocale();
   else renderHistory();
   renderTools($("#toolsSearch").value);
@@ -1330,7 +1399,9 @@ function featureModal(title,description){state.dialogTrigger=document.activeElem
 function closeModal(){$("#modalOverlay").hidden=true;if(state.dialogTrigger&&typeof state.dialogTrigger.focus==="function")state.dialogTrigger.focus();state.dialogTrigger=null}
 function showFeature(key){if(key==="google"){openGoogle();return}if(key==="languages"){togglePopover("language",$("#languageToggle"));return}const data=featureDescriptions[key];if(data)featureModal(...data);else if(key.startsWith("tool-")){const n=Number(key.slice(5));const item=FEATURE_GROUPS.flatMap(g=>g.items).find(i=>i[0]===n);if(item)featureModal(item[1],item[2]+". Сейчас подготовлена только кнопка и место в интерфейсе. Реализация — на согласованном этапе.")}else featureModal("Функция появится позже","Сейчас разрабатывается только оболочка сайта.")}
 function handleAction(action,trigger){switch(action){
-  case"home":newChat();break;
+  case"home":if(state.screen==="settings")leaveSettings();else newChat();break;
+  case"leave-settings":leaveSettings();break;
+  case"collapse-sidebar":toggleSidebarCompact();break;
   case"back-to-chat":showScreen(state.aboutReturnScreen||"welcome");$("#mainContent").scrollTop=state.aboutReturnScroll||0;break;
   case"new-chat":newChat();break;
   case"close-sidebar":setDrawer(false);break;
@@ -1391,6 +1462,7 @@ $("#messageInput").addEventListener("input",()=>{
   if($("#sessionStop")?.hidden===false||$("#sessionRetry")?.hidden===false)return;
   banner.hidden=true;
 });
+try{if(localStorage.getItem("kaz-ai-sidebar-compact-v1")==="1")document.body.classList.add("sidebar-compact")}catch{}
 renderTools();renderHistory();renderChat();try{
   const savedFont=localStorage.getItem("kaz-ai-font-size-v1");
   if(["small","normal","large"].includes(savedFont))selectFont(savedFont,true);
@@ -3296,7 +3368,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       const workspace=make("div","session-projects");workspace.id="projectsWorkspace";projectsView.append(workspace);
     }
     const settings=$("#view-settings .settings-list");
-    const tempRow=make("div","setting-item");tempRow.append(make("div","",undefined));
+    const tempRow=make("div","setting-item");tempRow.dataset.settingsDestination="general";tempRow.append(make("div","",undefined));
     tempRow.firstChild.append(make("h2","","Временный чат"),make("p","","Без добавления в историю текущей вкладки"));
     const label=make("label","session-checkbox-label");
     const checkbox=make("input","");checkbox.type="checkbox";checkbox.id="sessionTemporary";
@@ -3452,7 +3524,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       if([22,23,24].includes(number)){openTextHelper(number);return}
       if(number===25){showCalculator();return}
       if(number===40)return handle("instructions");
-      if(number===41){showScreen("settings");$("#sessionTemporary").focus();return}
+      if(number===41){window.KazInternalSettings?.open("general");$("#sessionTemporary").focus();return}
       if(number===42){toggleTheme();return}
       if(number===43){
         // The tool card becomes hidden behind a menu. Focus the visible trigger.
@@ -3461,7 +3533,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         return;
       }
       if(number===44){
-        showScreen("settings");
+        window.KazInternalSettings?.open("appearance");
         togglePopover("font");
         $("#fontToggle").focus();
         return;
@@ -4192,6 +4264,11 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   "Удобное чтение": {"en":"Comfortable reading","kk":"Ыңғайлы оқу"},
   "Скачать свои разговоры": {"en":"Download your conversations","kk":"Әңгімелеріңізді жүктеп алу"}
 };
+  Object.assign(dictionary,{
+    "Назад":{en:"Back",kk:"Артқа",pt:"Voltar",es:"Atrás",fr:"Retour",ar:"رجوع",zh:"返回",ko:"뒤로",ja:"戻る",de:"Zurück",it:"Indietro",tr:"Geri",pl:"Wstecz",hi:"वापस",vi:"Quay lại",id:"Kembali"},
+    "Свернуть меню":{en:"Collapse sidebar",kk:"Мәзірді жинау",pt:"Recolher menu",es:"Contraer menú",fr:"Réduire le menu",ar:"طي القائمة",zh:"收起侧栏",ko:"사이드바 접기",ja:"サイドバーを折りたたむ",de:"Menü einklappen",it:"Comprimi menu",tr:"Menüyü daralt",pl:"Zwiń menu",hi:"मेनू समेटें",vi:"Thu gọn menu",id:"Ciutkan menu"},
+    "Развернуть меню":{en:"Expand sidebar",kk:"Мәзірді ашу",pt:"Expandir menu",es:"Expandir menú",fr:"Développer le menu",ar:"توسيع القائمة",zh:"展开侧栏",ko:"사이드바 펼치기",ja:"サイドバーを展開",de:"Menü ausklappen",it:"Espandi menu",tr:"Menüyü genişlet",pl:"Rozwiń menu",hi:"मेनू फैलाएँ",vi:"Mở rộng menu",id:"Perluas menu"}
+  });
   const selectors=[
     ".primary-nav", ".sidebar-header", ".new-chat-button",".sidebar-footer",".sidebar-recent-header",
     "#view-about",
@@ -4199,7 +4276,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     "#view-projects .panel-heading","#projectsWorkspace","#historyList","#recentChats","#view-tools .panel-heading",
     "#view-tools .search-bar","#view-settings .panel-heading",
     "#view-settings .settings-list","#toolGroups",
-    "#attachMenu","#reasonMenu","#fontMenu","#languageMenu","#settingsLanguageMenu",
+    "#attachMenu","#reasonMenu","#fontMenu","#languageMenu",
     "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay","#statusBanner","#sessionRetry","#toast"
   ];
   const captured=new WeakMap();
@@ -4446,7 +4523,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   const authoredText=new WeakMap();
   const t=value=>{
     const entry=copy[value];
-    if(!entry||resolveLanguage()==="ru")return value;
+    if(!entry)return window.KazI18n?.translate?.(value)||value;
+    if(resolveLanguage()==="ru")return value;
     return entry[resolveLanguage()==="kk"?1:0];
   };
   function refreshBodyCopy(){
@@ -4514,21 +4592,24 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     }
     return "en";
   };
+  const extraLabels={
+    ru:["Личные инструкции","Экспорт истории"],en:["Personal instructions","Export history"],kk:["Жеке нұсқаулар","Тарихты экспорттау"],
+    pt:["Instruções pessoais","Exportar histórico"],es:["Instrucciones personales","Exportar historial"],fr:["Instructions personnelles","Exporter l’historique"],
+    ar:["التعليمات الشخصية","تصدير السجل"],zh:["个人指令","导出历史"],ko:["개인 지침","기록 내보내기"],ja:["個人用指示","履歴のエクスポート"],
+    de:["Persönliche Anweisungen","Verlauf exportieren"],it:["Istruzioni personali","Esporta cronologia"],tr:["Kişisel talimatlar","Geçmişi dışa aktar"],
+    pl:["Instrukcje osobiste","Eksport historii"],hi:["व्यक्तिगत निर्देश","इतिहास निर्यात"],vi:["Hướng dẫn cá nhân","Xuất lịch sử"],id:["Instruksi pribadi","Ekspor riwayat"]
+  };
+  const tabIcons={general:"settings",account:"chat",security:"lock",usage:"clock",billing:"file",appearance:"sun",notifications:"spark",personal:"edit",export:"file"};
+  const tabOrder=["general","account","security","usage","billing","appearance","notifications","personal","export"];
+  const tabName=(name,lang)=>{
+    const extra=extraLabels[lang]||extraLabels.en;
+    if(name==="personal")return extra[0];
+    if(name==="export")return extra[1];
+    return (labels[lang]||labels.en)[tabOrder.indexOf(name)+1];
+  };
   const rootTemplate=String.raw`
-    <div class="is-head">
-      <h2 id="innerSettingsTitle">внутренности настроек</h2>
-      <p>Параметры интерфейса работают в этом браузере. Аккаунт, платежи и безопасность подключим позже.</p>
-    </div>
+
     <div class="is-workspace">
-      <nav class="is-nav" aria-label="Разделы внутренних настроек">
-        <button type="button" data-is-tab="general" aria-current="page">Общие</button>
-        <button type="button" data-is-tab="account">Учётная запись</button>
-        <button type="button" data-is-tab="security">Безопасность и вход</button>
-        <button type="button" data-is-tab="usage">Использование</button>
-        <button type="button" data-is-tab="billing">Оплата</button>
-        <button type="button" data-is-tab="appearance">Внешний вид</button>
-        <button type="button" data-is-tab="notifications">Уведомления</button>
-      </nav>
       <div class="is-panels">
         <section data-is-panel="general">
           <h3>Общие</h3>
@@ -4584,6 +4665,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
           </div>
           <button type="button" data-is-action="reset-appearance" class="is-reset">Сбросить оформление</button>
         </section>
+        <section data-is-panel="personal" hidden><h3>Личные инструкции</h3></section>
+        <section data-is-panel="export" hidden><h3>Экспорт истории</h3></section>
         <section data-is-panel="notifications" hidden>
           <h3>Уведомления</h3>
           <label class="is-row is-check"><span><strong>О выполненных задачах ИИ</strong><small>О завершении ответа в открытой вкладке</small></span><input type="checkbox" data-is-notify="completed"></label>
@@ -4635,19 +4718,26 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   };
   const refreshLabels=()=>{
     const lang=resolveLanguage(),translated=labels[lang]||labels.en;
-    qs("#innerSettingsTitle").textContent=translated[0];
-    const tabs=qa("[data-is-tab]");
-    tabs.forEach((tab,i)=>{tab.textContent=translated[i+1]});
+    for(const tab of qa("[data-is-tab]")){
+      const name=tabName(tab.dataset.isTab,lang);
+      qs("span",tab).textContent=name;tab.title=name;tab.setAttribute("aria-label",name);
+    }
     qs("#innerLanguage").options[0].textContent=translated[8];
     const themes=qs("#innerTheme");
     for(const option of themes.options){
       const key=option.value,source=preset[key];
       if(source)option.textContent=lang==="ru"?source.name:(themeNames[key]?.[lang==="kk"?1:0]||source.name);
     }
-    qa("[data-is-panel]").forEach((panel,i)=>{
+    qa("[data-is-panel]").forEach(panel=>{
       const heading=qs("h3",panel);
-      if(heading)heading.textContent=translated[i+1];
+      if(heading)heading.textContent=tabName(panel.dataset.isPanel,lang);
     });
+    const auto=qs('#languageMenu [data-language="auto"] strong');
+    if(auto)auto.textContent=translated[8];
+    for(const choice of qa("#languageMenu [data-language]")){
+      const selected=choice.dataset.language===prefs.language;
+      choice.classList.toggle("selected",selected);choice.setAttribute("aria-pressed",String(selected));
+    }
     document.documentElement.dir=lang==="ar"?"rtl":"ltr";
     qs("#internalSettingsRoot").dir=lang==="ar"?"rtl":"ltr";
     refreshBodyCopy();
@@ -4730,6 +4820,31 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     const root=qs("#internalSettingsRoot");
     if(!root)return;
     root.innerHTML=rootTemplate; // Constant authored markup; never interpolate user or account data.
+    const nav=qs("#settingsNavigation");
+    for(const name of tabOrder){
+      const btn=document.createElement("button");btn.type="button";btn.className="nav-item";btn.dataset.isTab=name;
+      btn.append(icon(tabIcons[name]),document.createElement("span"));nav.append(btn);
+    }
+    nav.addEventListener("click",event=>{
+      const tab=event.target.closest("[data-is-tab]");if(!tab)return;
+      showTab(tab.dataset.isTab);setDrawer(false);qs("#mainContent").scrollTop=0;
+    });
+    // Move existing controls, rather than clone or rebind them. All prior actions stay intact.
+    const legacy=qs("#view-settings > .settings-list");
+    for(const row of qa("[data-settings-destination]",legacy)){
+      const panel=qs('[data-is-panel="'+row.dataset.settingsDestination+'"]',root);
+      if(panel){let list=qs(".settings-list",panel);if(!list){list=document.createElement("div");list.className="settings-list merged-settings-list";panel.append(list)}list.append(row)}
+    }
+    legacy.remove();
+    // The top-bar shortcut uses the same language preference, with all 17 languages and Auto.
+    const menu=qs("#languageMenu"),hint=qs(".popover-hint",menu);
+    for(const [key,name] of [["auto","Автоматически"],...languages]){
+      if(qs('[data-language="'+key+'"]',menu))continue;
+      const btn=document.createElement("button");btn.type="button";btn.className="language-option";btn.dataset.language=key;
+      const code=document.createElement("span");code.className="language-code";code.textContent=key==="auto"?"A":key.toUpperCase();
+      const desc=document.createElement("span"),strong=document.createElement("strong");strong.textContent=name;desc.append(strong);
+      const check=icon("check");check.classList.add("language-check");btn.append(code,desc,check);menu.insertBefore(btn,hint);
+    }
     const dialog=document.createElement("dialog");
     dialog.className="is-modal";dialog.id="innerSettingsDialog";dialog.setAttribute("aria-labelledby","innerDialogTitle");
     dialog.innerHTML=modalMarkup;
@@ -4786,6 +4901,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   }
   window.KazInternalSettings={
     refreshUsage,
+    chooseLanguage,
     open:(panel="general")=>{
       if(typeof showScreen==="function")showScreen("settings");
       showTab(panel);

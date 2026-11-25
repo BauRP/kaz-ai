@@ -594,6 +594,8 @@
         up.setAttribute("aria-pressed",String(message.rating==="up"));
         down.setAttribute("aria-pressed",String(message.rating==="down"));
         actions.append(up,down);
+        const copy=button(uiText("Скопировать текст"),"copy-answer",message.id);
+        actions.append(copy);
         const retry=button(uiText("Повторить ответ"),"retry-answer",message.id);
         // Keep the existing control but clearly disable actions that cannot run.
         // Older answers cannot be regenerated without discarding later turns.
@@ -1319,6 +1321,23 @@
       for(const c of threads)if(c.projectId===project.id)c.projectId=null;
       renderSessionProjects();renderHistory();
     });return}
+    if(action==="copy-answer"){
+      const message=selected()?.messages.find(m=>m.id===id&&m.role==="assistant"&&!m.localGreeting);
+      if(!message)return;
+      const text=message.content;
+      // Copy the exact original, not the visually transformed Markdown.
+      (async()=>{
+        try{
+          if(!navigator.clipboard?.writeText)throw new Error("Clipboard unavailable");
+          await navigator.clipboard.writeText(text);
+          notify(uiText("Текст скопирован."));
+        }catch{
+          // A denied clipboard permission must not be reported as success.
+          notify(uiText("Не удалось скопировать текст."));
+        }
+      })();
+      return;
+    }
     if(action==="rate-up"||action==="rate-down"||action==="retry-answer"){
       const c=selected(),index=c?.messages.findIndex(m=>m.id===id)??-1;
       if(index<0)return;
@@ -1795,6 +1814,7 @@
       control.textContent=uiText("Повторить ответ");
       if(control.disabled)control.title=uiText("Повторить можно только последний ответ.");
     }
+    for(const control of document.querySelectorAll('#chatMessages [data-session="copy-answer"]'))control.textContent=uiText("Скопировать текст");
     // Existing long prompts retain their expansion and original text while
     // Show more / Show less follows the newly selected interface language.
     updateLongPromptButtons();

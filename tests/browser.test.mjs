@@ -50,16 +50,18 @@ test('real browser: interactive Kaz AI design preview', async () => {
     await page.locator('[data-action="close-google"]').first().click();
     assert.equal(await page.locator('#googleOverlay').isVisible(), false);
 
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     assert.equal(await page.locator('#view-settings').isVisible(), true);
+    if(!await page.locator('#fontToggle').isVisible()&&await page.locator('#settingsNavigation').isVisible())await page.locator('#settingsNavigation [data-is-tab="appearance"]').click();
     await page.locator('#fontToggle').click();
     assert.equal(await page.locator('#fontMenu').isVisible(), true);
     await page.locator('[data-font="large"]').click();
     assert.equal(await page.locator('body').getAttribute('class'), 'font-large');
-    await page.locator('#settingsLanguageToggle').click();
-    assert.equal(await page.locator('#settingsLanguageMenu').isVisible(), true);
-    await page.locator('#settingsLanguageMenu [data-language="en"]').click();
-    assert.equal(await page.locator('#settingsLanguageToggle .language-current').textContent(), 'English');
+    await page.locator('#languageToggle').click();
+    assert.equal(await page.locator('#languageMenu').isVisible(), true);
+    await page.locator('#languageMenu [data-language="en"]').click();
+    assert.equal(await page.locator('#languageToggle .language-current').textContent(), 'English');
 
     for (const screen of ['history', 'projects', 'tools', 'settings']) {
       await page.locator('.sidebar [data-screen="' + screen + '"]').click();
@@ -108,6 +110,7 @@ test('real browser: session chats, search, project folders, export and calculato
     await page.locator('#sendButton').click();
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].messages)),2);
     const chatId=await page.evaluate(()=>window.KazSession.snapshot().threads[0].id);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('Второе сообщение проекта');
     assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
@@ -120,28 +123,34 @@ test('real browser: session chats, search, project folders, export and calculato
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].title)),'Тема для проекта');
     await page.locator('#historyList [data-session="pin-chat"]').click();
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads[0].pinned)),true);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Мои разработки');
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().projects.length)),1);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="assign-chat"]').click();
     await page.locator('#sessionBody select').selectOption({index:1});
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     assert.ok((await page.evaluate(()=>window.KazSession.snapshot().threads[0].projectId)));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Тема для проекта'));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="open-chat"]').click();
     assert.equal(await page.locator('#chatMessages .message-user').count(),2);
     assert.equal(await page.locator('#chatMessages .message-user .session-message-actions').count(),0);
     for(const action of ['copy-message','edit-message','branch-message'])assert.equal(await page.locator('[data-session="'+action+'"]').count(),0);
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads)).length,1);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     await page.locator('[data-feature="instructions"]').click();
     await page.locator('#sessionBody textarea').fill('Отвечай просто');
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-25"]').click();
     await page.locator('#sessionBody input').fill('(10+5)*2');
@@ -149,11 +158,13 @@ test('real browser: session chats, search, project folders, export and calculato
     assert.ok((await page.locator('.session-calc-output').innerText()).includes('30'));
     await page.locator('#sessionClose').click();
     assert.equal(await page.evaluate(()=>window.KazSession.compute('3+4*2')),11);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     await page.locator('#sessionTemporary').check();
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().active)),null);
     await page.locator('#messageInput').fill('Временный текст');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     assert.ok(!(await page.locator('#historyList').innerText()).includes('Временный текст'));
     assert.deepEqual(errors,[]);
@@ -175,15 +186,16 @@ test('real browser: Russian English Kazakh navigation and safe temporary chats',
     await page.locator('#languageMenu [data-language="en"]').click();
     assert.equal(await page.locator('.primary-nav [data-screen="history"] span').first().innerText(),'Chats');
     assert.equal(await page.locator('#messageInput').getAttribute('placeholder'),'Type a message...');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     assert.equal(await page.locator('#settingsHeading').innerText(),'Settings');
-    await page.locator('#settingsLanguageToggle').click();
-    await page.locator('#settingsLanguageMenu [data-language="kk"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
     assert.equal(await page.locator('.primary-nav [data-screen="history"] span').first().innerText(),'Чаттар');
     assert.equal(await page.locator('#settingsHeading').innerText(),'Баптаулар');
     assert.equal(await page.locator('#messageInput').getAttribute('placeholder'),'Хабарлама жазыңыз...');
-    await page.locator('#settingsLanguageToggle').click();
-    await page.locator('#settingsLanguageMenu [data-language="ru"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="ru"]').click();
     assert.equal(await page.locator('#settingsHeading').innerText(),'Настройки');
 
     await page.locator('#sessionTemporary').check();
@@ -191,6 +203,7 @@ test('real browser: Russian English Kazakh navigation and safe temporary chats',
     await page.locator('#sendButton').click();
     let current=await page.evaluate(()=>window.KazSession.snapshot());
     assert.equal(current.threads.filter(c=>c.temporary).length,1);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     assert.ok(!(await page.locator('#historyList').innerText()).includes('Секретный временный вопрос'));
     await page.locator('.sidebar [data-action="new-chat"]').click();
@@ -508,6 +521,7 @@ test('keyboard modal: focus stays inside dialog and returns to opening control',
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1200,height:780}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     const trigger=page.locator('[data-feature="instructions"]');
     await trigger.click();
@@ -612,7 +626,8 @@ test('same-tab About keeps existing chat and projects unchanged on desktop and m
       const before=await page.evaluate(()=>JSON.stringify(window.KazSession.snapshot()));
       assert.ok(await page.locator('#view-chat').isVisible());
       if(mobile)await page.locator('[data-action="toggle-sidebar"]').click();
-      await page.locator('.sidebar [data-screen="about"]').click();
+      if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
+    await page.locator('.sidebar [data-screen="about"]').click();
       assert.ok(await page.locator('#view-about').isVisible());
       assert.equal(await page.locator('.composer-region').isVisible(),false);
       assert.equal(await page.locator('#pageTitle').innerText(),'О проекте');
@@ -640,6 +655,7 @@ test('drafts stay with their conversation and About never clears the composer',a
     await page.locator('#messageInput').fill('Первый чат');
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Черновик первого чата');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="about"]').click();
     assert.equal(await page.locator('#view-about').isVisible(),true);
     await page.locator('#aboutHelp summary').click();
@@ -649,9 +665,11 @@ test('drafts stay with their conversation and About never clears the composer',a
     await page.locator('#messageInput').fill('Второй чат');
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Черновик второго чата');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="open-chat"]').last().click();
     assert.equal(await page.locator('#messageInput').inputValue(),'Черновик первого чата');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="open-chat"]').first().click();
     assert.equal(await page.locator('#messageInput').inputValue(),'Черновик второго чата');
@@ -673,6 +691,7 @@ test('search highlights matching message safely while pinned and recent chats re
     await page.locator('.sidebar [data-action="new-chat"]').click();
     await page.locator('#messageInput').fill('Второй разговор');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const recent=await page.locator('#recentChats').innerText();
     await page.locator('#historySearch').fill('пароль');
@@ -705,6 +724,7 @@ test('project names cannot be duplicated by case and modal remains editable',asy
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Мой проект');
@@ -736,10 +756,12 @@ test('history TXT export keeps Cyrillic readable and excludes temporary chats',a
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Қазақша и русский: проверка');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     await page.locator('#sessionTemporary').check();
     await page.locator('#messageInput').fill('PRIVATE TEMP NEVER EXPORT');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     const downloading=page.waitForEvent('download');
     await page.locator('[data-feature="export"]').click();
@@ -773,6 +795,7 @@ test('real browser: match navigation, in-place project organization and individu
     await page.locator('#historyList [data-session="open-chat"]').click();
     assert.equal(await page.locator('#chatMessages .session-jump-hit').count(),1);
     assert.ok((await page.locator('.session-jump-hit').innerText()).includes('Важный фрагмент'));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#sessionClearSearch').click();
     const downloading=page.waitForEvent('download');
@@ -781,6 +804,7 @@ test('real browser: match navigation, in-place project organization and individu
     assert.ok(file.suggestedFilename().endsWith('.txt'));
     assert.ok(readFileSync(await file.path(),'utf8').startsWith('\uFEFF'));
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads)).length,2);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Мой рабочий проект');
@@ -804,6 +828,7 @@ test('text helpers prepare safe drafts but never send without user confirmation'
     const page=await instance.newPage({locale:'ru-RU',viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-22"]').click();
     await page.locator('#sessionBody select').selectOption('en');
@@ -813,6 +838,7 @@ test('text helpers prepare safe drafts but never send without user confirmation'
     assert.ok((await page.locator('#messageInput').inputValue()).includes('английский'));
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot().threads)).length,0,'text helper must not send a request automatically');
     const firstDraft=await page.locator('#messageInput').inputValue();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-23"]').click();
     await page.locator('#sessionBody textarea').fill('Объясни функцию JavaScript');
@@ -821,6 +847,7 @@ test('text helpers prepare safe drafts but never send without user confirmation'
     assert.ok(await page.locator('#sessionOverlay').isVisible(),'unsent draft keeps helper dialog open');
     await page.locator('#sessionClose').click();
     await page.locator('#messageInput').fill('');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-24"]').click();
     await page.locator('#sessionBody textarea').fill('Письмо о встрече');
@@ -845,6 +872,7 @@ test('recent chats reorder by activity while pinned chats remain at the top',asy
     await page.locator('#messageInput').fill('Обновление первого чата');
     await page.locator('#sendButton').click();
     assert.ok((await page.locator('#recentChats .session-recent').first().innerText()).includes('Первый чат'));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList .session-chat-row').filter({hasText:'Второй чат'}).locator('[data-session="pin-chat"]').click();
     assert.ok((await page.locator('#recentChats .session-recent').first().innerText()).includes('Второй чат'));
@@ -858,6 +886,7 @@ test('public chat has no key dialog; temporary draft is deleted only after clear
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:800}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     assert.equal(await page.locator('[data-session="ai-access"]').count(),0);
     assert.equal(await page.locator('#sessionBody input[type=password]').count(),0);
@@ -888,6 +917,7 @@ test('project TXT export downloads only saved project conversations',async()=>{
     await page.locator('#messageInput').fill('ПЕРВЫЙ ТЕКСТ ПРОЕКТА');await page.locator('#sendButton').click();
     await page.locator('.sidebar [data-action="new-chat"]').click();
     await page.locator('#messageInput').fill('ВТОРОЙ ТЕКСТ ВНЕ ПРОЕКТА');await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Рабочие идеи');
@@ -1081,6 +1111,7 @@ test('deleting the selected conversation clears its private draft and leaves oth
     await page.locator('#messageInput').fill('Чат для удаления');
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('ЛИЧНЫЙ НЕСОХРАНЁННЫЙ ЧЕРНОВИК');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList .session-chat-row').filter({hasText:'Чат для удаления'}).locator('[data-session="delete-chat"]').click();
     await page.locator('#sessionBody [data-session="dialog-confirm"]').click();
@@ -1113,6 +1144,7 @@ test('home starts fresh chat without erasing the previous conversation or its dr
     assert.equal(before.threads.length,2);
     assert.equal(before.threads.find(x=>x.title==='Первый пользовательский вопрос').messages,1);
     assert.equal(before.threads.find(x=>x.title==='Второй пользовательский вопрос').messages,1);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList .session-chat-row').filter({hasText:'Первый пользовательский вопрос'}).locator('[data-session="open-chat"]').click();
     assert.equal(await page.locator('#messageInput').inputValue(),'Черновик старого чата');
@@ -1130,6 +1162,7 @@ test('search opens highlighted message text safely, including special characters
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Здесь есть <script>НЕ_ИСПОЛНЯТЬ</script> в середине');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('<script>');
     await page.locator('#historyList [data-session="open-chat"]').click();
@@ -1149,6 +1182,7 @@ test('ratings and pin controls expose their toggled state to assistive technolog
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Для закрепления');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const pin=page.locator('#historyList [data-session="pin-chat"]').first();
     assert.equal(await pin.getAttribute('aria-pressed'),'false');
@@ -1167,6 +1201,7 @@ test('temporary drafts require explicit clearing before opening saved chats',asy
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Обычный чат сохранён в истории');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     await page.locator('#sessionTemporary').check();
     await page.locator('#messageInput').fill('Временная переписка');
@@ -1229,6 +1264,7 @@ test('project selection opens with keyboard focus on the choice, not Save',async
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Переписка для проекта');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Рабочая папка');
@@ -1279,6 +1315,7 @@ test('projects reject equivalent Unicode names without changing an existing proj
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Work');
@@ -1302,7 +1339,9 @@ test('all three existing font settings change composer and dialog text without a
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Сохраняемый черновик');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
+    if(!await page.locator('#fontToggle').isVisible()&&await page.locator('#settingsNavigation').isVisible())await page.locator('#settingsNavigation [data-is-tab="appearance"]').click();
     await page.locator('#fontToggle').click();
     await page.locator('#fontMenu [data-font="large"]').click();
     const large=await page.locator('#messageInput').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
@@ -1311,11 +1350,13 @@ test('all three existing font settings change composer and dialog text without a
     assert.equal(large,17);
     assert.equal(dlg,17);
     await page.locator('#sessionClose').click();
+    if(!await page.locator('#fontToggle').isVisible()&&await page.locator('#settingsNavigation').isVisible())await page.locator('#settingsNavigation [data-is-tab="appearance"]').click();
     await page.locator('#fontToggle').click();
     await page.locator('#fontMenu [data-font="small"]').click();
     const small=await page.locator('#messageInput').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
     assert.equal(small,12);
     assert.equal(await page.locator('#messageInput').inputValue(),'Сохраняемый черновик');
+    if(!await page.locator('#fontToggle').isVisible()&&await page.locator('#settingsNavigation').isVisible())await page.locator('#settingsNavigation [data-is-tab="appearance"]').click();
     await page.locator('#fontToggle').click();
     await page.locator('#fontMenu [data-font="normal"]').click();
     const normal=await page.locator('#messageInput').evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
@@ -1331,6 +1372,7 @@ test('project counters use correct Russian forms and live Kazakh/English labels 
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Мой проект');
@@ -1340,34 +1382,41 @@ test('project counters use correct Russian forms and live Kazakh/English labels 
       await page.locator('.sidebar [data-action="new-chat"]').click();
       await page.locator('#messageInput').fill(i===0?'Настройки':'Сообщение №'+(i+1));
       await page.locator('#sendButton').click();
-      await page.locator('.sidebar [data-screen="projects"]').click();
+      if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
       await page.locator('[data-session="add-chat-to-project"]').click();
       await page.locator('#sessionBody select').selectOption({label:i===0?'Настройки':'Сообщение №'+(i+1)});
       await page.locator('#sessionBody [data-session="dialog-save"]').click();
       const expected=['1 чат','2 чата','3 чата','4 чата','5 чатов'][i];
       assert.equal(await page.locator('.session-project-title small').first().innerText(),expected);
     }
-    await page.locator('#settingsLanguageToggle').count(); // same global session, switch from settings
+    await page.locator('#languageToggle').count(); // same global session, switch from settings
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('#settingsLanguageToggle').click();
-    await page.locator('#settingsLanguageMenu [data-language="en"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     assert.equal(await page.locator('.session-project-title small').first().innerText(),'5 chats');
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Folders organize chats.'));
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('＋ Add chat'));
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Настройки'),'User chat title must remain in its original language');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('#settingsLanguageToggle').click();
-    await page.locator('#settingsLanguageMenu [data-language="kk"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     assert.equal(await page.locator('.session-project-title small').first().innerText(),'5 чат');
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Қалталар чаттарды топтастырады.'));
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Настройки'));
     // Additional languages use the existing full selector in Settings.
     for(const [locale,expected] of [['es','5 chats'],['fr','5 discussions'],['de','5 Chats'],['ar','5 محادثات']]){
-      await page.locator('.sidebar [data-screen="settings"]').click();
+      if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
       await page.locator('#innerLanguage').selectOption(locale);
-      await page.locator('.sidebar [data-screen="projects"]').click();
+      if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
+    await page.locator('.sidebar [data-screen="projects"]').click();
       assert.equal(await page.locator('.session-project-title small').first().innerText(),expected);
       assert.equal(await page.locator('.session-project-title h2').first().textContent(),'Мой проект');
       assert.equal(await page.locator('.session-project-title h2').first().getAttribute('dir'),'auto');
@@ -1386,12 +1435,15 @@ test('changing language does not translate user-written history search snippets 
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Настройки');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('Настройки');
     assert.ok((await page.locator('#historyList .session-search-snippet').innerText()).includes('Настройки'));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('#settingsLanguageToggle').click();
-    await page.locator('#settingsLanguageMenu [data-language="en"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     assert.ok((await page.locator('#historyList .session-search-snippet').innerText()).includes('Настройки'));
     assert.equal(await page.locator('#historyList .session-search-snippet mark').innerText(),'Настройки');
@@ -1447,10 +1499,12 @@ test('failed AI request does not leak Retry into settings and restores it on ret
     await page.locator('#messageInput').fill('Вопрос для повтора');
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Временный отказ сервера'));
     assert.equal(await page.locator('#statusBanner').isVisible(),false);
     assert.equal(await page.locator('#sessionRetry').isVisible(),false);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="open-chat"]').first().click();
     assert.equal(await page.locator('#statusBanner').isVisible(),true);
@@ -1470,9 +1524,11 @@ test('text helpers use EN and KK prompts while preserving user drafts and never 
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('#settingsLanguageToggle').click();
-    await page.locator('#settingsLanguageMenu [data-language="en"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('[data-feature="tool-22"]').click();
     await page.locator('#sessionBody select').selectOption('kk');
@@ -1480,15 +1536,18 @@ test('text helpers use EN and KK prompts while preserving user drafts and never 
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     assert.ok((await page.locator('#messageInput').inputValue()).startsWith('Translate the following text into Kazakh.'));
     await page.locator('#messageInput').fill('');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('[data-feature="tool-23"]').click();
     await page.locator('#sessionBody textarea').fill('JavaScript problem');
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     assert.ok((await page.locator('#messageInput').inputValue()).startsWith('Help with programming.'));
     await page.locator('#messageInput').fill('');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('#settingsLanguageToggle').click();
-    await page.locator('#settingsLanguageMenu [data-language="kk"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('[data-feature="tool-24"]').click();
     await page.locator('#sessionBody textarea').fill('Кездесу туралы хат');
@@ -1506,7 +1565,8 @@ test('calculator result and errors use selected RU EN and KK',async()=>{
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     async function calculate(input){
-      await page.locator('.sidebar [data-screen="tools"]').click();
+      if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
       await page.locator('[data-feature="tool-25"]').click();
       await page.locator('#sessionBody input').fill(input);
       await page.locator('#sessionBody [data-session="calc-run"]').click();
@@ -1514,9 +1574,10 @@ test('calculator result and errors use selected RU EN and KK',async()=>{
       await page.locator('#sessionClose').click();return output;
     }
     async function language(lang){
-      await page.locator('.sidebar [data-screen="settings"]').click();
-      await page.locator('#settingsLanguageToggle').click();
-      await page.locator('#settingsLanguageMenu [data-language="'+lang+'"]').click();
+      if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+lang+'"]').click();
     }
     assert.equal(await calculate('12*5'),'Ответ: 60');
     await language('en');
@@ -1535,13 +1596,16 @@ test('tools search supports translated names and correct group counts',async()=>
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolsSearch').fill('Переводчик');
     assert.equal(await page.locator('#toolGroups .tool-card').count(),1);
     assert.equal(await page.locator('#toolGroups .tool-group-title small').innerText(),'1 функция');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('#settingsLanguageToggle').click();
-    await page.locator('#settingsLanguageMenu [data-language="en"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="en"]').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolsSearch').fill('Translator');
     assert.equal(await page.locator('#toolGroups .tool-card').count(),1);
@@ -1549,9 +1613,11 @@ test('tools search supports translated names and correct group counts',async()=>
     await page.locator('#toolsSearch').fill('chat');
     assert.ok((await page.locator('#toolGroups .tool-card').count())>=2);
     assert.ok((await page.locator('#toolGroups').innerText()).includes('functions'));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
-    await page.locator('#settingsLanguageToggle').click();
-    await page.locator('#settingsLanguageMenu [data-language="kk"]').click();
+    await page.locator('#languageToggle').click();
+    await page.locator('#languageMenu [data-language="kk"]').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolsSearch').fill('Аудармашы');
     assert.equal(await page.locator('#toolGroups .tool-card').count(),1);
@@ -1570,6 +1636,7 @@ test('calculator rejects inputs and intermediate results beyond safe numeric pre
     assert.equal(await page.evaluate(()=>window.KazSession.compute('9007199254740991')),9007199254740991);
     assert.equal(await page.evaluate(()=>window.KazSession.compute('0,1+0,2')),0.3);
     assert.equal(await page.evaluate(()=>window.KazSession.compute('1/10000000000')),1e-10);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-25"]').click();
     for(const expr of ['9007199254740992','9007199254740991+1','9007199254740991*2']){
@@ -1604,6 +1671,7 @@ test('existing Retry answer tool recovers the latest unanswered question without
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelector('#statusBanner')?.textContent.includes('Временный отказ'));
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===true);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-9"]').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Ответ после повторной попытки'));
@@ -1663,6 +1731,7 @@ test('returning from About restores the previous reading position in the same ch
     });
     assert.ok(before.maximum>100,'Long conversation must create a scrollable reading area');
     assert.ok(before.position>0);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="about"]').click();
     assert.equal(await page.locator('#view-about').isVisible(),true);
     await page.locator('[data-action="back-to-chat"]').click();
@@ -1685,10 +1754,12 @@ test('TXT export retains original messages while localizing headers and user lab
       ['en','Current conversation export (not saved to the cloud)','You: '],
       ['kk','Ағымдағы әңгіме экспорты (бұлтта сақталмайды)','Сіз: ']
     ]){
-      await page.locator('.sidebar [data-screen="settings"]').click();
-      await page.locator('#settingsLanguageToggle').click();
-      await page.locator('#settingsLanguageMenu [data-language="'+lang+'"]').click();
-      await page.locator('.sidebar [data-screen="history"]').click();
+      if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
+    await page.locator('.sidebar [data-screen="settings"]').click();
+      await page.locator('#languageToggle').click();
+      await page.locator('#languageMenu [data-language="'+lang+'"]').click();
+      if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
+    await page.locator('.sidebar [data-screen="history"]').click();
       const started=page.waitForEvent('download');
       await page.locator('#historyList [data-session="export-chat"]').first().click();
       const download=await started;
@@ -1722,6 +1793,7 @@ test('reasoning effort buttons announce selection and send existing low-medium-h
     await page.locator('[data-reason="low"]').click();
     assert.ok((await page.locator('#toast').innerText()).includes('Reasoning level:'));
     assert.equal(await page.locator('[data-reason="low"]').getAttribute('aria-pressed'),'true');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     assert.equal(await page.locator('.primary-nav [data-screen="settings"]').getAttribute('aria-current'),'page');
     assert.equal(await page.locator('.primary-nav [data-screen="tools"]').getAttribute('aria-current'),null);
@@ -1739,7 +1811,8 @@ test('isolated calculator completes exact decimal and repeating arithmetic on de
       await page.goto(appUrl);
       const before=await page.evaluate(()=>JSON.stringify(window.KazSession.snapshot()));
       if(viewport.width<760)await page.locator('[data-action="toggle-sidebar"]').click();
-      await page.locator('.sidebar [data-screen="tools"]').click();
+      if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
       await page.locator('#toolGroups [data-feature="tool-25"]').click();
       assert.equal(await page.locator('#sessionOverlay').isVisible(),true);
       async function check(expr,result){
@@ -1770,6 +1843,7 @@ test('Tools reasoning entry opens the visible composer control without losing ch
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Несохранённый черновик');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-16"]').click();
     assert.equal(await page.locator('#view-welcome').isVisible(),true);
@@ -1783,6 +1857,7 @@ test('Tools reasoning entry opens the visible composer control without losing ch
     await page.locator('#sendButton').click();
     const snapshot=await page.evaluate(()=>JSON.stringify(window.KazSession.snapshot()));
     await page.locator('#messageInput').fill('Черновик текущего чата');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-16"]').click();
     assert.equal(await page.locator('#view-chat').isVisible(),true);
@@ -1808,6 +1883,7 @@ test('Rating entry from Tools focuses the latest AI rating rather than rating th
     await page.locator('#messageInput').fill('Вопрос для оценки');
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Проверяемый ответ модели'));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-13"]').click();
     assert.equal(await page.locator('#view-chat').isVisible(),true);
@@ -1828,6 +1904,7 @@ test('Rating entry is truthful when the latest chat has no generated assistant r
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Вопрос без подключения модели');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-13"]').click();
     assert.equal(await page.locator('#view-chat').isVisible(),true);
@@ -1849,12 +1926,14 @@ test('existing tools show localized warnings without altering drafts or automati
       await page.locator('#languageMenu [data-language="'+value+'"]').click();
     }
     await language('en');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-22"]').click();
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     await page.waitForFunction(()=>document.querySelector('#toast')?.textContent==='Enter a text or task description first.');
     await page.locator('#sessionClose').click();
     await page.locator('#messageInput').fill('PREEXISTING PRIVATE DRAFT');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-23"]').click();
     await page.locator('#sessionBody textarea').fill('test');
@@ -1883,6 +1962,7 @@ test('history search highlights case-expanding Unicode letters at correct origin
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('До İSTANBUL и далее');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('istan');
     assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
@@ -1917,6 +1997,7 @@ test('Stop response from Tools returns to visible chat and offers retry without 
     await page.locator('#messageInput').fill('Отменить через инструменты');
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     await page.locator('#toolGroups [data-feature="tool-10"]').click();
     assert.equal(await page.locator('#view-chat').isVisible(),true);
@@ -1947,18 +2028,23 @@ test('theme and font settings announce their current state across navigation and
     await theme.click();
     assert.equal(await theme.getAttribute('aria-pressed'),'true');
     assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('light')),true);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     assert.equal(await settingsTheme.getAttribute('aria-pressed'),'true');
     await settingsTheme.click();
     assert.equal(await theme.getAttribute('aria-pressed'),'false');
     assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('light')),false);
+    if(!await page.locator('#fontToggle').isVisible()&&await page.locator('#settingsNavigation').isVisible())await page.locator('#settingsNavigation [data-is-tab="appearance"]').click();
     await page.locator('#fontToggle').click();
     assert.equal(await page.locator('[data-font="normal"]').getAttribute('aria-pressed'),'true');
     await page.locator('[data-font="large"]').click();
     assert.equal(await page.locator('[data-font="large"]').getAttribute('aria-pressed'),'true');
     assert.equal(await page.locator('[data-font="normal"]').getAttribute('aria-pressed'),'false');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
+    if(!await page.locator('#fontToggle').isVisible()&&await page.locator('#settingsNavigation').isVisible())await page.locator('#settingsNavigation [data-is-tab="appearance"]').click();
     await page.locator('#fontToggle').click();
     assert.equal(await page.locator('[data-font="large"]').getAttribute('aria-pressed'),'true');
     assert.equal(await page.locator('#messageInput').inputValue(),'Текст оставляем без изменений');
@@ -1976,6 +2062,7 @@ test('history search Escape clears the filter without losing chat or draft',asyn
     await page.locator('#messageInput').fill('Павлодар и университет');
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Этот черновик не потерять');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('нет такого совпадения');
     assert.equal(await page.locator('#historyList .session-chat-row').count(),0);
@@ -1998,6 +2085,7 @@ test('tools show accurate localized readiness and accessible labels after langua
     await page.locator('#languageToggle').click();
     await page.locator('#languageMenu [data-language="en"]').click();
     assert.equal(await page.locator('#toast').textContent(),'Interface language: English');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="tools"]').click();
     assert.match(await page.locator('#toolGroups [data-feature="tool-1"]').getAttribute('aria-label'),/Working$/);
     assert.match(await page.locator('#toolGroups [data-feature="tool-15"]').getAttribute('aria-label'),/Partly working$/);
@@ -2027,6 +2115,7 @@ test('chat pins and reply ratings have localized accessible names without changi
     await page.locator('#messageInput').fill('Настройки проекта');
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelector('.message-assistant')?.textContent.includes('Надёжный ответ'));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     assert.equal(await page.locator('#historyList .session-chat-name').getAttribute('aria-label'),'Открыть чат: Настройки проекта');
     await page.locator('#historyList [data-session="pin-chat"]').click();
@@ -2072,6 +2161,7 @@ test('pinning preserves keyboard focus after history cards reorder',async()=>{
     await page.locator('.sidebar [data-action="new-chat"]').click();
     await page.locator('#messageInput').fill('Второй чат');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const pin=page.locator('#historyList [data-session="pin-chat"]').last();
     await pin.click();
@@ -2094,6 +2184,7 @@ test('project changes and removing chats restore visible keyboard focus',async()
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Задачи команды');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Работа');
@@ -2120,6 +2211,7 @@ test('deleting active chat returns keyboard focus to the clean composer',async()
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Удалить только этот чат');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="delete-chat"]').click();
     await page.locator('#sessionBody [data-session="dialog-confirm"]').click();
@@ -2152,6 +2244,7 @@ test('pending AI status reappears on returning to the same chat without duplicat
     await page.locator('#messageInput').fill('Проверяем возврат к ответу');
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     assert.equal(await page.locator('#statusBanner').isVisible(),false);
     await page.evaluate(()=>showScreen('chat'));
@@ -2178,6 +2271,7 @@ test('Unicode search matches precomposed and decomposed letters while showing or
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Cafe\u0301 рядом с ёлкой');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('CAFÉ');
     assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
@@ -2185,6 +2279,7 @@ test('Unicode search matches precomposed and decomposed letters while showing or
     await page.locator('#historyList [data-session="open-chat"]').click();
     assert.equal(await page.locator('#chatMessages .session-jump-hit mark').textContent(),'Cafe\u0301');
     assert.ok((await page.locator('#chatMessages').innerText()).includes('Cafe\u0301 рядом'));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('Е\u0308ЛКОЙ');
     assert.equal(await page.locator('#historyList .session-search-snippet mark').textContent(),'ёлкой');
@@ -2276,6 +2371,7 @@ test('Unicode search preserves accent highlights when Intl.Segmenter is unavaila
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Cafe\u0301 and more');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('CAFÉ');
     assert.equal(await page.locator('#historyList .session-search-snippet mark').textContent(),'Cafe\u0301');
@@ -2369,10 +2465,12 @@ test('opening a saved chat after a temporary chat switches off temporary mode sa
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Сохранённая тема');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     await page.locator('#sessionTemporary').check();
     await page.locator('#messageInput').fill('Временная секретная тема');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="open-chat"]').first().click();
     assert.equal(await page.locator('#sessionTemporary').isChecked(),false);
@@ -2414,6 +2512,7 @@ test('projects show ungrouped chats before any folder and after deleting the las
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Обычная переписка без папки');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Пока нет проектов'));
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Без проекта'));
@@ -2443,6 +2542,7 @@ test('individual TXT export does not split an emoji in long filenames',async()=>
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Проверка длинного имени файла');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="rename-chat"]').click();
     const longName='Я'.repeat(69)+'😀'+'конец';
@@ -2466,6 +2566,7 @@ test('clear-history-search accessible label follows RU EN KK and preserves searc
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('қарапайым');
     assert.equal(await page.locator('#sessionClearSearch').getAttribute('aria-label'),'Очистить поиск переписок');
@@ -2489,12 +2590,14 @@ test('renaming a chat and a project restores focus to the same action after rebu
     await page.locator('#messageInput').fill('Первый вопрос');
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Черновик, который нельзя потерять');
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="rename-chat"]').click();
     await page.locator('#sessionBody input').fill('Новое имя чата');
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'rename-chat');
     assert.ok((await page.locator('#historyList').innerText()).includes('Новое имя чата'));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Проект номер один');
@@ -2504,6 +2607,7 @@ test('renaming a chat and a project restores focus to the same action after rebu
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
     assert.equal(await page.evaluate(()=>document.activeElement?.dataset.session),'rename-project');
     assert.ok((await page.locator('#projectsWorkspace').innerText()).includes('Переименованная папка'));
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="open-chat"]').click();
     assert.equal(await page.locator('#messageInput').inputValue(),'Черновик, который нельзя потерять');
@@ -2520,6 +2624,7 @@ test('adding a chat to a project preserves keyboard focus and its saved conversa
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('План на неделю');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Рабочий проект');
@@ -2547,6 +2652,7 @@ test('compound emoji remain whole in first-message titles and exported TXT filen
     await page.locator('#messageInput').fill(title);
     await page.locator('#sendButton').click();
     assert.equal((await page.evaluate(()=>window.KazSession.snapshot())).threads[0].title,'З'.repeat(54)+family);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="rename-chat"]').click();
     const joined='👩🏽‍💻';
@@ -2635,6 +2741,7 @@ test('long request remains pending across History navigation and is cancellable 
     await page.locator('#messageInput').fill('Проверяем фоновый тайм-аут');
     await page.locator('#sendButton').click();
     await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.waitForTimeout(800);
     assert.equal(await page.locator('#sessionRetry').isVisible(),false);
@@ -2683,6 +2790,7 @@ test('public chat has no secret-key setting',async()=>{
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     assert.equal(await page.locator('[data-session="ai-access"]').count(),0);
     assert.equal(await page.locator('input[type=password]').count(),0);
@@ -2797,6 +2905,7 @@ test('export sanitizes invisible direction overrides in chat filename, preservin
     await page.goto(appUrl);
     await page.locator('#messageInput').fill(original);
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const download=page.waitForEvent('download');
     await page.locator('#historyList [data-session="export-chat"]').click();
@@ -2923,6 +3032,7 @@ test('duplicate project warning follows selected Kaz AI language',async()=>{
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('#projectsWorkspace [data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Тест жобасы');
@@ -2954,6 +3064,7 @@ test('history search treats Russian е and ё as the same while highlighting ori
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Всё готово, ёлка наряжена');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('все');
     assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
@@ -2977,6 +3088,7 @@ test('chat export removes additional invisible filename controls but preserves o
     const original='Отчёт\u200b\u2060\ufeff\u2028\u2029\u00ad\u034f\u007f и символы 👩‍💻';
     await page.locator('#messageInput').fill(original);
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const [download]=await Promise.all([
       page.waitForEvent('download'),
@@ -3001,6 +3113,7 @@ test('high readiness: Unicode compatibility search highlights the exact original
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Офис: ﬁnal');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('final');
     assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
@@ -3021,6 +3134,7 @@ test('high readiness: long emoji export title stays within 255 UTF-8 bytes and k
     const userText='Важный текст для сохранения';
     await page.locator('#messageInput').fill(userText);
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const longTitle='👩🏽‍💻'.repeat(14);
     await page.locator('#historyList [data-session="rename-chat"]').click();
@@ -3051,6 +3165,7 @@ test('high readiness: deleting a chat removes it from its project and leaves oth
     await page.locator('.sidebar [data-action="new-chat"]').click();
     await page.locator('#messageInput').fill('Второй чат');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('#projectsWorkspace [data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Рабочая папка');
@@ -3058,6 +3173,7 @@ test('high readiness: deleting a chat removes it from its project and leaves oth
     await page.locator('#projectsWorkspace [data-session="add-chat-to-project"]').click();
     await page.locator('#sessionBody select').selectOption({index:1});
     await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const row=page.locator('#historyList .session-chat-row').filter({hasText:'Первый чат'});
     await row.locator('[data-session="delete-chat"]').click();
@@ -3066,6 +3182,7 @@ test('high readiness: deleting a chat removes it from its project and leaves oth
     assert.equal(threads.length,1);
     assert.equal(threads[0].title,'Второй чат');
     assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     const project=page.locator('#projectsWorkspace .session-project-card').filter({hasText:'Рабочая папка'});
     assert.equal(await project.locator('.session-project-chat-row').count(),0);
@@ -3081,6 +3198,7 @@ test('high readiness: invisible formatting characters cannot create duplicate pr
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1240,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('#projectsWorkspace [data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('Мой проект');
@@ -3104,6 +3222,7 @@ test('97 percent directions: projects reject names made entirely of invisible Un
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('#projectsWorkspace [data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('\u200b\u2060\u00ad\ufeff');
@@ -3135,6 +3254,7 @@ test('97 percent directions: double confirmation cannot delete another chat',asy
     await page.locator('.sidebar [data-action="new-chat"]').click();
     await page.locator('#messageInput').fill('Второй сохранённый чат');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const toDelete=page.locator('#historyList .session-chat-row').filter({hasText:'Первый сохранённый чат'});
     await toDelete.locator('[data-session="delete-chat"]').click();
@@ -3162,6 +3282,7 @@ test('97 percent directions: cached history search preserves title and message m
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Праздничная ёлка рядом');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historySearch').fill('елку');
     assert.equal(await page.locator('#historyList .session-chat-row').count(),1);
@@ -3189,6 +3310,7 @@ test('high readiness: multi-chat history export keeps separators, BOM, and Unico
     await page.locator('.sidebar [data-action="new-chat"]').click();
     await page.locator('#messageInput').fill('Екінші қазақша 🇰🇿 разговор');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="settings"]').click();
     const [download]=await Promise.all([page.waitForEvent('download'),page.locator('[data-feature="export"]').click()]);
     const body=readFileSync(await download.path(),'utf8');
@@ -3213,6 +3335,7 @@ test('high readiness: chunked individual TXT export preserves exact original sep
     await page.locator('#sendButton').click();
     await page.locator('#messageInput').fill('Следующая\n  строка 🇰🇿');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#historyList [data-session="export-chat"]').click()]);
     const text=readFileSync(await download.path(),'utf8');
@@ -3239,6 +3362,7 @@ test('high readiness: multiple projects retain exact counts and chat isolation a
       await page.locator('#messageInput').fill(title);
       await page.locator('#sendButton').click();
     }
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     for(const name of ['Проект Альфа','Проект Бета']){
       await page.locator('#projectsWorkspace [data-session="new-project"]').click();
@@ -3279,6 +3403,7 @@ test('new invisible Unicode characters do not create hidden or duplicate project
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     for(const hidden of ['\u034f','\u180e','\u2061\u2062\u2063\u2064']){
@@ -3308,6 +3433,7 @@ test('TXT export preserves invisible characters in content but cleans file name'
     const original='Важное\u034f\u180e\u2061\u2062\u2063\u2064 содержание 🇰🇿';
     await page.locator('#messageInput').fill(original);
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     const [started]=await Promise.all([page.waitForEvent('download'),page.locator('#historyList [data-session="export-chat"]').click()]);
     const filename=started.suggestedFilename();
@@ -3335,6 +3461,7 @@ test('new chat title stops after 55 complete graphemes even for a long input',as
     assert.equal(snapshot.threads[0].title,'А'.repeat(54)+family);
     assert.equal(snapshot.threads[0].messages,1,'session snapshot reports the message count without exposing private message text');
     assert.equal(await page.locator('#chatMessages .message-user > span').textContent(),initial);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     assert.equal(await page.locator('#historyList .session-chat-label').textContent(),'А'.repeat(54)+family);
     assert.deepEqual(errors,[]);
@@ -3351,6 +3478,7 @@ test('invisible-only chat rename is rejected without changing saved messages',as
     await page.goto(appUrl);
     await page.locator('#messageInput').fill('Важный разговор');
     await page.locator('#sendButton').click();
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="history"]').click();
     await page.locator('#historyList [data-session="rename-chat"]').click();
     for(const invisible of ['\u200d','\u200c','\ufe0f']){
@@ -3393,6 +3521,7 @@ test('invisible-only project names are rejected while joined emoji names remain 
     const page=await browser.newPage({locale:"ru-RU",viewport:{width:1280,height:820}});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(appUrl);
+    if(await page.locator('#sidebarPrimary[data-action="leave-settings"]').isVisible())await page.locator('#sidebarPrimary').click();
     await page.locator('.sidebar [data-screen="projects"]').click();
     await page.locator('[data-session="new-project"]').click();
     await page.locator('#sessionBody input').fill('\u200d\u200c');

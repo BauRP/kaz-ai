@@ -88,7 +88,7 @@ function refreshSidebar(){
   $("#mainNavigation").hidden=settings;
   $("#settingsNavigation").hidden=!settings;
   $(".sidebar-recent").hidden=settings;
-  $(".sidebar-footer").hidden=settings;
+  $(".sidebar-footer").hidden=false;
   document.body.classList.toggle("is-settings-screen",settings);
   const primary=$("#sidebarPrimary");
   const label=settings?"Назад":"Новый чат";
@@ -106,6 +106,8 @@ function refreshSidebar(){
   }
   const google=$(".sidebar-footer .google-button");
   if(google){google.setAttribute("aria-label",translate("Войти через Google"));google.title=translate("Войти через Google")}
+  const profile=$("#sidebarProfile");
+  if(profile){profile.setAttribute("aria-label",translate("Профиль"));profile.title=translate("Профиль")}
 }
 function toggleSidebarCompact(){
   document.body.classList.toggle("sidebar-compact");
@@ -279,6 +281,7 @@ function showFeature(key){if(key==="google"){openGoogle();return}if(key==="langu
 function handleAction(action,trigger){switch(action){
   case"home":if(state.screen==="settings")leaveSettings();else newChat();break;
   case"leave-settings":leaveSettings();break;
+  case"open-profile":window.KazInternalSettings?.open("account");break;
   case"collapse-sidebar":toggleSidebarCompact();break;
   case"back-to-chat":showScreen(state.aboutReturnScreen||"welcome");$("#mainContent").scrollTop=state.aboutReturnScroll||0;break;
   case"new-chat":newChat();break;

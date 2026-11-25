@@ -875,3 +875,5 @@ body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .sidebar{background:var(--panel
 .settings-navigation .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .session-export-summary{font-variant-numeric:tabular-nums;line-height:1.5}
+
+.session-answer-effort{display:block;color:var(--muted);font-size:.82em;line-height:1.4;margin-top:10px;overflow-wrap:anywhere}

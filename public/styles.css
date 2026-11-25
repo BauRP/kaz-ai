@@ -763,3 +763,17 @@ html[dir="rtl"] .sidebar{direction:rtl}
   .composer-toolbar{min-height:44px}
   .composer-region{padding-bottom:max(4px,env(safe-area-inset-bottom))}
 }
+
+/* Settings respect the existing font choice, including descriptive text and dialogs. */
+.font-small .is-row strong,.font-small .is-row p,.font-small .is-meters span,.font-small .is-modal-body,.font-small .is-plan p{font-size:12px}
+.font-large .is-row strong,.font-large .is-nav button,.font-large .is-row button,.font-large .is-modal-body{font-size:17px}
+.font-large .is-row p,.font-large .is-meters span,.font-large .is-plan p,.font-large .is-plan span,.font-large .is-footnote{font-size:15px}
+.is-row>div:first-child,.is-meters>div,.is-plan{min-width:0;overflow-wrap:anywhere}
+@media(max-width:760px){
+  .internal-settings-root[dir=rtl] .is-nav{border-left:0}
+  .is-row select,.is-row button{max-width:100%}
+  .is-nav button{max-width:min(85vw,300px);white-space:normal}
+}
+@media(max-height:560px){
+  .is-modal-body{min-height:0;overflow-y:auto;overscroll-behavior:contain}
+}

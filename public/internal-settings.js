@@ -196,8 +196,12 @@
   const save=()=>{try{localStorage.setItem("kaz-ai-internal-settings-v1",JSON.stringify(prefs))}catch{}};
   const resolveLanguage=()=>{
     if(prefs.language!=="auto")return prefs.language;
-    const browser=(navigator.languages?.[0]||navigator.language||"ru").toLowerCase().split("-")[0];
-    return codes.has(browser)?browser:"en";
+    // Follow the first supported browser preference, not just its first entry.
+    for(const locale of [...(navigator.languages||[]),navigator.language||"ru"]){
+      const browser=String(locale).toLowerCase().split(/[-_]/)[0];
+      if(codes.has(browser))return browser;
+    }
+    return "en";
   };
   const rootTemplate=String.raw`
     <div class="is-head">
@@ -464,6 +468,9 @@
     // Preserve existing default site language until the visitor explicitly
     // selects an option, so original chat behaviour is not silently rewritten.
     chooseLanguage(prefs.language,true);
+    window.addEventListener("languagechange",()=>{
+      if(prefs.language==="auto")chooseLanguage("auto",true);
+    });
   }
   window.KazInternalSettings={
     refreshUsage,

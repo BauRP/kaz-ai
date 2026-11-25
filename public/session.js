@@ -238,7 +238,7 @@
     activeStreamingBubble?.remove();activeStreamingBubble=null;
     incompleteBubble?.remove();incompleteBubble=null;
     $("#sessionStop").hidden=true;
-    for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){forgetExpandedPrompts(threads[i]);drafts.delete(threads[i].id);threads.splice(i,1)}
+    for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){forgetExpandedPrompts(threads[i]);helperDrafts.delete(threads[i]);drafts.delete(threads[i].id);threads.splice(i,1)}
     if(current&&threads.some(thread=>thread.id===current)){
       if($("#messageInput").value)drafts.set(current,$("#messageInput").value);
       else drafts.delete(current);
@@ -246,11 +246,12 @@
     welcomeDraft="";welcomeHelperDrafts.clear();
     current=null;
     state.chat=[];state.draftTitle="Новый чат";
-    $("#messageInput").value="";$("#messageInput").focus();
+    $("#messageInput").value="";
     $("#sendButton").disabled=true;
     const temp=$("#sessionTemporary");if(temp)temp.checked=temporary;
     showStatus("");
     renderHistory();renderChat();showScreen("welcome");
+    resizeInput();$("#messageInput").focus();
     if(temporary)notify("Временный чат не будет добавлен в историю.");
   }
   function newThread(firstMessage){
@@ -1101,7 +1102,7 @@
         if(privateWelcome){welcomeDraft="";welcomeHelperDrafts.clear();$("#messageInput").value=""}
         if(old?.temporary){
           const i=threads.indexOf(old);
-          if(i>=0){forgetExpandedPrompts(old);threads.splice(i,1);drafts.delete(old.id)}
+          if(i>=0){forgetExpandedPrompts(old);helperDrafts.delete(old);threads.splice(i,1);drafts.delete(old.id)}
           // Temporary drafts must not leak into the welcome composer during navigation.
           welcomeDraft="";
           $("#messageInput").value="";
@@ -1470,10 +1471,12 @@
             kk:"Бағдарламалауға көмектес. Ақпарат жетіспесе, нақтылап сұра. Қарапайым тілмен түсіндіріп, кодты түсінікті түрде көрсет. Тапсырма:\n\n"
           }[promptLocale]+value;
         }else{
+          // The English fallback is only an instruction language, not the
+          // requested output language. Keep the user's document language.
           prompt={
-            ru:"Подготовь текст документа по следующему описанию. Сделай его понятным и аккуратно структурированным. Не выдумывай неизвестные данные. Описание:\n\n",
-            en:"Draft the document text described below. Organize it clearly and do not invent missing details. Description:\n\n",
-            kk:"Төмендегі сипаттамаға сай құжат мәтінін дайында. Түсінікті әрі жүйелі жаз. Белгісіз мәліметтерді ойдан қоспа. Сипаттама:\n\n"
+            ru:"Подготовь текст документа по описанию. Структурируй его. Язык описания, если не указан другой. Не выдумывай реквизиты: оставь места для заполнения. Выведи только документ. Описание:\n\n",
+            en:"Draft the document text. Structure it. Use the description language unless specified otherwise. Leave placeholders for unknown details. Return only the document. Description:\n\n",
+            kk:"Сипаттамаға сай құжат мәтінін дайында. Жүйелі жаз. Басқа тіл сұралмаса, сипаттама тілін қолдан. Белгісіз деректерге толтырылатын орын қалдыр. Тек құжат мәтінін бер. Сипаттама:\n\n"
           }[promptLocale]+value;
         }
         if(prompt.length>8000){notify("Текст слишком длинный. Сократите описание.");field.focus();return}
@@ -1756,5 +1759,6 @@
     // Existing long prompts retain their expansion and original text while
     // Show more / Show less follows the newly selected interface language.
     updateLongPromptButtons();
+    for(const control of document.querySelectorAll("#chatMessages .answer-code-copy"))control.refreshCopyLabel?.();
   }};
 })();

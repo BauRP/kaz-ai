@@ -1,39 +1,39 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-25: multilingual coding audit routing, translated history isolation, document prompts, code copy locale, new-chat focus and temporary draft cleanup. Syntax checks passed; three regression tests added; full CI and deployment unconfirmed.",
+  "basis": "2026-11-26: preserve list numbering and action focus, disable unavailable retries, validate theme settings, improve code contrast and responsive controls. Syntax and targeted formatter test passed; full CI and deployment unconfirmed.",
   "branch": "main",
   "date": "2026-11-25",
-  "previous": 79.56173913043476,
-  "now": 79.75304347826086,
-  "delta": 0.1913043478261045,
+  "previous": 79.75304347826086,
+  "now": 79.94434782608694,
+  "delta": 0.19130434782607608,
   "groups": [
     {
       "name": "Чаты",
       "count": 10,
-      "previous": 93.73100000000001,
-      "now": 93.781,
-      "delta": 0.04999999999999716
+      "previous": 93.781,
+      "now": 93.86100000000002,
+      "delta": 0.0800000000000125
     },
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 40.675999999999995,
-      "now": 41.236,
-      "delta": 0.5600000000000023
+      "previous": 41.236,
+      "now": 41.57599999999999,
+      "delta": 0.3399999999999963
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 90.34714285714286,
-      "now": 90.50428571428571,
-      "delta": 0.15714285714285836
+      "previous": 90.50428571428571,
+      "now": 90.67571428571429,
+      "delta": 0.17142857142857792
     },
     {
       "name": "Экран",
       "count": 1,
       "previous": 56.8,
-      "now": 56.8,
-      "delta": 0
+      "now": 57.5,
+      "delta": 0.7000000000000028
     }
   ],
   "items": [
@@ -41,9 +41,9 @@
       "id": 1,
       "name": "Новый чат",
       "group": "Чаты",
-      "previous": 97.6,
+      "previous": 98.1,
       "now": 98.1,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Фокус и размер поля ввода восстанавливаются после показа нового чата.",
       "status": "in_progress"
     },
@@ -112,9 +112,9 @@
       "name": "Повторить ответ",
       "group": "Чаты",
       "previous": 78.34,
-      "now": 78.34,
-      "delta": 0,
-      "summary": "Повреждённый поток прекращается, не препятствуя последующему повтору.",
+      "now": 78.84,
+      "delta": 0.5,
+      "summary": "Недоступный повтор старого ответа обозначен отключённой кнопкой.",
       "status": "in_progress"
     },
     {
@@ -132,19 +132,19 @@
       "name": "Оценка ответа",
       "group": "Чаты",
       "previous": 94.65,
-      "now": 94.65,
-      "delta": 0,
-      "summary": "Локальные приветствия больше не получают кнопки оценок и повтора ИИ; защита действует и на уровне обработчика действий.",
+      "now": 94.95,
+      "delta": 0.29999999999999716,
+      "summary": "Сохранение фокуса кнопок оценки при обновлении переписки.",
       "status": "in_progress"
     },
     {
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 68.02,
-      "now": 68.52,
+      "previous": 68.52,
+      "now": 69.02,
       "delta": 0.5,
-      "summary": "Улучшено распознавание программирования и исключено влияние переведённого текста на аудит следующего запроса.",
+      "summary": "Сохранение исходной нумерации списков в форматированных ответах.",
       "status": "in_progress"
     },
     {
@@ -161,9 +161,9 @@
       "id": 22,
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
-      "previous": 27.6,
+      "previous": 28.1,
       "now": 28.1,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "История перевода не запускает математический аудит несвязанного продолжения.",
       "status": "in_progress"
     },
@@ -171,20 +171,20 @@
       "id": 23,
       "name": "Программирование с ИИ",
       "group": "Интеллект",
-      "previous": 24.1,
-      "now": 25.1,
-      "delta": 1,
-      "summary": "Английский и казахский шаблоны программирования распознаются сервером; копирование кода локализовано.",
+      "previous": 25.1,
+      "now": 25.6,
+      "delta": 0.5,
+      "summary": "Улучшено отображение кода в светлой теме и на узких экранах.",
       "status": "in_progress"
     },
     {
       "id": 24,
       "name": "Подготовка документов",
       "group": "Интеллект",
-      "previous": 23.1,
-      "now": 23.9,
-      "delta": 0.7999999999999972,
-      "summary": "Улучшены инструкции по языку документа, структуре и неизвестным реквизитам без сокращения лимита исходного текста.",
+      "previous": 23.9,
+      "now": 24.6,
+      "delta": 0.7000000000000028,
+      "summary": "Сохранение исходной нумерации пунктов документа.",
       "status": "in_progress"
     },
     {
@@ -201,9 +201,9 @@
       "id": 41,
       "name": "Временный чат",
       "group": "Настройки",
-      "previous": 94.1,
+      "previous": 94.6,
       "now": 94.6,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Явная очистка черновиков инструментов при удалении временной переписки.",
       "status": "in_progress"
     },
@@ -212,18 +212,18 @@
       "name": "Светлая и тёмная тема",
       "group": "Настройки",
       "previous": 92.18,
-      "now": 92.18,
-      "delta": 0,
-      "summary": "Сброс оформления возвращает исходный тёмный режим Kaz AI, а также тему и пользовательские цвета.",
+      "now": 92.88,
+      "delta": 0.6999999999999886,
+      "summary": "Улучшена читаемость кода в светлой теме и проверка сохранённой темы.",
       "status": "in_progress"
     },
     {
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 88.13,
+      "previous": 88.73,
       "now": 88.73,
-      "delta": 0.6000000000000085,
+      "delta": 0,
       "summary": "Кнопки копирования кода и их состояния локализованы на 17 языков с обновлением при смене языка.",
       "status": "in_progress"
     },
@@ -252,9 +252,9 @@
       "name": "внутренности настроек",
       "group": "Настройки",
       "previous": 86.14,
-      "now": 86.14,
-      "delta": 0,
-      "summary": "Внутренние настройки учитывают автоматический язык браузера и размер текста.",
+      "now": 86.64,
+      "delta": 0.5,
+      "summary": "Защита инициализации оформления от недопустимых сохранённых значений.",
       "status": "in_progress"
     },
     {
@@ -262,9 +262,9 @@
       "name": "Расширение экрана",
       "group": "Экран",
       "previous": 56.8,
-      "now": 56.8,
-      "delta": 0,
-      "summary": "Улучшены переносы длинного текста, узкие окна и прокрутка диалогов настроек.",
+      "now": 57.5,
+      "delta": 0.7000000000000028,
+      "summary": "Перенос кнопок копирования и действий ответа на узких экранах.",
       "status": "in_progress"
     }
   ],
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 80.41333333333331,
-  "overall_now": 80.59666666666666,
-  "overall_delta": 0.18333333333335133
+  "overall_previous": 80.59666666666666,
+  "overall_now": 80.77999999999999,
+  "overall_delta": 0.1833333333333229
 }

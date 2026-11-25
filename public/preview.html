@@ -900,6 +900,8 @@ body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .sidebar{background:var(--panel
 .settings-navigation .nav-item.selected{background:rgba(51,159,217,.14);border-color:var(--line-strong);color:var(--text)}
 .settings-navigation .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
+.session-export-summary{font-variant-numeric:tabular-nums;line-height:1.5}
+
 </style>
   
   
@@ -2237,6 +2239,13 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         replacement.focus({preventScroll:true});
     };
   }
+  function refreshExportSummary(){
+    const summary=$("#sessionExportSummary");
+    if(!summary)return;
+    const saved=threads.filter(chat=>!chat.temporary&&chat.messages.length);
+    const count=saved.reduce((total,chat)=>total+chat.messages.length,0);
+    summary.textContent=uiText("Переписок для экспорта:")+" "+saved.length+" · "+uiText("Сообщений:")+" "+count;
+  }
   function renderSessionHistory(){
     const list=$("#historyList"),recent=$("#recentChats"),summary=$("#historySearchSummary");
     const restoreFocus=captureListFocus(list,recent);
@@ -2336,6 +2345,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       recent.append(entry);
     }
     if(!saved.length)recent.append(make("div","sidebar-empty",uiText("Нет переписок")));
+    refreshExportSummary();
     restoreFocus();
   }
   // Keep long user prompts compact without changing their saved or submitted text.
@@ -3316,6 +3326,18 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       const remember=()=>saved.set(kind,{text:field.value,language:languageSelect?.value});
       field.addEventListener("input",remember);
       languageSelect?.addEventListener("change",remember);
+      // Clear only this tool draft, with a reversible action until the dialog closes.
+      let clearedText=null;
+      const clear=make("button","session-button");clear.type="button";
+      const updateClear=()=>{clear.textContent=clearedText!==null?"Восстановить текст":"Очистить";clear.disabled=clearedText===null&&!field.value.length};
+      field.addEventListener("input",()=>{clearedText=null;updateClear()});
+      clear.addEventListener("click",()=>{
+        if(!field.isConnected)return;
+        if(clearedText!==null){field.value=clearedText;clearedText=null;}
+        else if(field.value.length){const previous=field.value;field.value="";field.dispatchEvent(new Event("input",{bubbles:true}));clearedText=previous;updateClear();field.focus();return;}
+        field.dispatchEvent(new Event("input",{bubbles:true}));updateClear();field.focus();
+      });
+      updateClear();body.append(clear);
       const prepare=button("Подготовить запрос","dialog-save",null,"session-primary");
       // Ctrl/Cmd+Enter prepares text without sending it to GPT-OSS.
       field.addEventListener("keydown",event=>{
@@ -3443,6 +3465,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     const checkbox=make("input","");checkbox.type="checkbox";checkbox.id="sessionTemporary";
     label.append(checkbox,make("span","","Включить"));tempRow.append(label);
     settings?.append(tempRow);
+    const exportRow=settings?.querySelector('[data-settings-destination="export"]');
+    if(exportRow){const summary=make("p","session-export-summary");summary.id="sessionExportSummary";summary.setAttribute("aria-live","polite");exportRow.firstElementChild.append(summary);refreshExportSummary()}
     const overlay=make("div","session-overlay");overlay.id="sessionOverlay";overlay.hidden=true;
     const dialog=make("section","session-dialog");dialog.setAttribute("role","dialog");dialog.setAttribute("aria-modal","true");dialog.setAttribute("aria-labelledby","sessionTitle");
     const close=button("×","dialog-close",null,"session-dialog-close");close.id="sessionClose";
@@ -3641,15 +3665,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     for(const [selector,key] of [["#sessionStop","Остановить"],["#sessionRetry","Повторить запрос"]]){
       const control=$(selector);if(control)control.textContent=uiText(key);
     }
-    const temporary=$("#sessionTemporary");
-    const row=temporary?.closest(".setting-item");
-    if(row){
-      const title=row.querySelector("h2"),description=row.querySelector("p");
-      const caption=temporary.closest("label")?.querySelector("span");
-      if(title)title.textContent=uiText("Временный чат");
-      if(description)description.textContent=uiText("Без добавления в историю текущей вкладки");
-      if(caption)caption.textContent=uiText("Включить");
-    }
+    // Merged settings text is owned by the i18n walker; do not replace its original labels.
+    refreshExportSummary();
     for(const [action,key] of [["rate-up","Положительная оценка ответа"],["rate-down","Отрицательная оценка ответа"]]){
       for(const control of document.querySelectorAll('#chatMessages [data-session="'+action+'"]')){
         control.setAttribute("aria-label",uiText(key));
@@ -4335,6 +4352,9 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   "Скачать свои разговоры": {"en":"Download your conversations","kk":"Әңгімелеріңізді жүктеп алу"}
 };
   Object.assign(dictionary,{
+    "Восстановить текст":{en:"Restore text",kk:"Мәтінді қалпына келтіру",pt:"Restaurar texto",es:"Restaurar texto",fr:"Restaurer le texte",ar:"استعادة النص",zh:"恢复文本",ko:"텍스트 복원",ja:"テキストを復元",de:"Text wiederherstellen",it:"Ripristina testo",tr:"Metni geri yükle",pl:"Przywróć tekst",hi:"पाठ पुनर्स्थापित करें",vi:"Khôi phục văn bản",id:"Pulihkan teks"},
+    "Переписок для экспорта:":{en:"Conversations to export:",kk:"Экспортталатын чаттар:"},
+    "Сообщений:":{en:"Messages:",kk:"Хабарламалар:"},
     "Текст скопирован.":{en:"Text copied.",kk:"Мәтін көшірілді.",pt:"Texto copiado.",es:"Texto copiado.",fr:"Texte copié.",ar:"تم نسخ النص.",zh:"文本已复制。",ko:"텍스트를 복사했습니다.",ja:"テキストをコピーしました。",de:"Text kopiert.",it:"Testo copiato.",tr:"Metin kopyalandı.",pl:"Tekst skopiowany.",hi:"पाठ कॉपी हो गया।",vi:"Đã sao chép văn bản.",id:"Teks disalin."},
     "Не удалось скопировать текст.":{en:"Could not copy text.",kk:"Мәтінді көшіру мүмкін болмады.",pt:"Não foi possível copiar o texto.",es:"No se pudo copiar el texto.",fr:"Impossible de copier le texte.",ar:"تعذر نسخ النص.",zh:"无法复制文本。",ko:"텍스트를 복사하지 못했습니다.",ja:"テキストをコピーできませんでした。",de:"Text konnte nicht kopiert werden.",it:"Impossibile copiare il testo.",tr:"Metin kopyalanamadı.",pl:"Nie udało się skopiować tekstu.",hi:"पाठ कॉपी नहीं हो सका।",vi:"Không thể sao chép văn bản.",id:"Tidak dapat menyalin teks."},
     "Мой профиль":{en:"My profile",kk:"Менің профилім",pt:"Meu perfil",es:"Mi perfil",fr:"Mon profil",ar:"ملفي الشخصي",zh:"我的个人资料",ko:"내 프로필",ja:"マイプロフィール",de:"Mein Profil",it:"Il mio profilo",tr:"Profilim",pl:"Mój profil",hi:"मेरी प्रोफ़ाइल",vi:"Hồ sơ của tôi",id:"Profil saya"},

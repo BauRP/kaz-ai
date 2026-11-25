@@ -2340,7 +2340,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   async function readAIStream(response,onText){
     const reader=response.body?.getReader();
     if(!reader)throw new Error("STREAM_UNAVAILABLE");
-    let buffer="",output="",preview="",finished=false;
+    let buffer="",output="",preview="",finished=false,ended=false;
     const decoder=new TextDecoder("utf-8");
     try{
       while(true){
@@ -2350,18 +2350,23 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         // until the following chunk is available.
         if(done)buffer+=decoder.decode();
         else buffer+=decoder.decode(value,{stream:true});
-        if(buffer.length>1_000_000)throw new Error("STREAM_INVALID");
+
         buffer=done?buffer.replace(/\r\n?/g,"\n")
           :buffer.replace(/\r\n/g,"\n").replace(/\r(?!$)/g,"\n");
         let boundary;
         while((boundary=buffer.indexOf("\n\n"))>=0){
+          if(boundary>1_000_000){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error}
           const frame=buffer.slice(0,boundary);buffer=buffer.slice(boundary+2);
           const lines=frame.split("\n");
           const event=lines.find(line=>line.startsWith("event:"))?.slice(6).trim()||"message";
           const data=lines.filter(line=>line.startsWith("data:")).map(line=>line.slice(5).trimStart()).join("\n");
-          if(event==="done"){finished=true;continue}
+          if(event==="done"){
+            if(data!=="{}"){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error}
+            finished=true;continue;
+          }
           if(data==="[DONE]")continue; // upstream completion is not the server's final acknowledgement
           if(!data)continue;
+          if(finished){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error}
           let packet;
           try{packet=JSON.parse(data)}
           catch{const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error}
@@ -2380,6 +2385,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
           }
           if(event==="final"){
             if(typeof packet?.text!=="string"||!packet.text.trim())throw new Error("EMPTY_RESPONSE");
+            if(packet.text.length>500000){const error=new Error("STREAM_TOO_LONG");error.code="STREAM_TOO_LONG";throw error}
             output=packet.text;preview="";
             onText(output);
             continue;
@@ -2405,13 +2411,17 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
             onText(output);
           }
         }
-        if(done)break;
+        if(buffer.length>1_000_000){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error}
+        if(done){ended=true;break}
       }
       if(buffer.trim()){const error=new Error("STREAM_INVALID");error.code="STREAM_INVALID";throw error;}
       if(!finished){const error=new Error("STREAM_INTERRUPTED");error.code="STREAM_INTERRUPTED";throw error;}
       if(!output.trim())throw new Error("EMPTY_RESPONSE");
       return output;
-    }finally{try{reader.releaseLock()}catch{}}
+    }finally{
+      if(!ended)void reader.cancel("invalid or interrupted response").catch(()=>{});
+      try{reader.releaseLock()}catch{}
+    }
   }
 
   async function runAI(chat,replaceId=null){
@@ -2624,7 +2634,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
           :e?.code==="AI_PROVIDER_ABORTED"?"Cloudflare прервал запрос. Можно повторить его позже."
           :e?.code==="AI_CAPACITY_UNAVAILABLE"?"Cloudflare сейчас перегружен. Попробуйте позже."
           :e?.code==="AI_PROVIDER_REQUEST_TOO_LARGE"?"Cloudflare отклонил слишком большой запрос."
-          :e?.code==="AI_MODEL_EMPTY"?"Нейросеть не вернула текст решения."
+          :e?.code==="AI_MODEL_EMPTY"||e?.code==="AI_EMPTY"?"Нейросеть не вернула текст решения."
+          :e?.code==="STREAM_TOO_LONG"?"Решение слишком длинное для проверки. Попробуйте уточнить задание."
           :e?.code==="AI_REVIEW_OUTPUT_LIMIT"?"Решение слишком длинное для проверки. Попробуйте уточнить задание."
           :e?.code==="AI_STREAM_FRAME_LIMIT"?"Нейросеть вернула повреждённые данные. Попробуйте снова."
           :e?.code==="AI_UNAVAILABLE"?"Сервис ИИ временно недоступен. Это не обязательно проблема вашего интернета."

@@ -1,11 +1,11 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-26: resumed active directions; exact answer copy and settings navigation/localization fixes. Syntax verified, browser tests added but not executed; deployment unconfirmed. Engineering estimates.",
+  "basis": "2026-11-26: reversible text draft clearing, export count summary, merged settings locale ownership, partial browser test migration. Syntax checked, browser execution and deployment unconfirmed. Engineering estimates.",
   "branch": "main",
   "date": "2026-11-25",
-  "previous": 80.1182608695652,
-  "now": 80.28347826086956,
-  "delta": 0.16521739130435265,
+  "previous": 80.28347826086956,
+  "now": 80.39,
+  "delta": 0.10652173913044294,
   "groups": [
     {
       "name": "Чаты",
@@ -17,16 +17,16 @@
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 41.87599999999999,
-      "now": 42.37599999999999,
-      "delta": 0.5
+      "previous": 42.37599999999999,
+      "now": 42.675999999999995,
+      "delta": 0.30000000000000426
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 90.74714285714286,
-      "now": 90.93285714285715,
-      "delta": 0.18571428571428328
+      "previous": 90.93285714285715,
+      "now": 91.06857142857143,
+      "delta": 0.13571428571428612
     },
     {
       "name": "Экран",
@@ -141,9 +141,9 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 69.02,
+      "previous": 69.72,
       "now": 69.72,
-      "delta": 0.7000000000000028,
+      "delta": 0,
       "summary": "Копирование полного исходного ответа с обработкой ошибок буфера обмена.",
       "status": "in_progress"
     },
@@ -161,30 +161,30 @@
       "id": 22,
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
-      "previous": 28.6,
-      "now": 29.2,
-      "delta": 0.5999999999999979,
-      "summary": "Копирование готового перевода без изменения исходного текста.",
+      "previous": 29.2,
+      "now": 29.7,
+      "delta": 0.5,
+      "summary": "Обратимая очистка исходного текста в открытом инструменте.",
       "status": "in_progress"
     },
     {
       "id": 23,
       "name": "Программирование с ИИ",
       "group": "Интеллект",
-      "previous": 26.1,
-      "now": 26.7,
-      "delta": 0.5999999999999979,
-      "summary": "Копирование полного ответа с кодом и Markdown.",
+      "previous": 26.7,
+      "now": 27.2,
+      "delta": 0.5,
+      "summary": "Восстановление очищенного кода без отправки запроса.",
       "status": "in_progress"
     },
     {
       "id": 24,
       "name": "Подготовка документов",
       "group": "Интеллект",
-      "previous": 25.1,
-      "now": 25.7,
-      "delta": 0.5999999999999979,
-      "summary": "Копирование готового документа целиком.",
+      "previous": 25.7,
+      "now": 26.2,
+      "delta": 0.5,
+      "summary": "Восстановление очищенного описания документа.",
       "status": "in_progress"
     },
     {
@@ -221,10 +221,10 @@
       "id": 43,
       "name": "Язык интерфейса",
       "group": "Настройки",
-      "previous": 88.73,
-      "now": 89.33,
-      "delta": 0.5999999999999943,
-      "summary": "Перевод перенесённых настроек и сообщений копирования.",
+      "previous": 89.33,
+      "now": 89.63,
+      "delta": 0.29999999999999716,
+      "summary": "Локализация восстановления текста и устранение двойного перевода.",
       "status": "in_progress"
     },
     {
@@ -242,19 +242,19 @@
       "name": "Экспорт истории",
       "group": "Настройки",
       "previous": 99.25,
-      "now": 99.25,
-      "delta": 0,
-      "summary": "Исправлен сбой экспорта на 14 дополнительных языках, добавлены переведённые TXT-заголовки и подписи авторов на всех 17 языках; есть новые регрессионные тесты.",
+      "now": 99.5,
+      "delta": 0.25,
+      "summary": "Отображение количества доступных для экспорта чатов и сообщений, исключая временные.",
       "status": "in_progress"
     },
     {
       "id": 47,
       "name": "внутренности настроек",
       "group": "Настройки",
-      "previous": 86.64,
-      "now": 87.34,
-      "delta": 0.7000000000000028,
-      "summary": "Выделение активной вкладки и устранение двойного перевода настроек.",
+      "previous": 87.34,
+      "now": 87.74,
+      "delta": 0.3999999999999915,
+      "summary": "Единый механизм перевода перенесённых параметров и сводка экспорта.",
       "status": "in_progress"
     },
     {
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 80.94666666666666,
-  "overall_now": 81.10499999999999,
-  "overall_delta": 0.15833333333333144
+  "overall_previous": 81.10499999999999,
+  "overall_now": 81.20708333333333,
+  "overall_delta": 0.10208333333333997
 }

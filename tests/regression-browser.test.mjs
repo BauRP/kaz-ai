@@ -1064,6 +1064,43 @@ test('sending a message in a long conversation keeps the chat scrollbar at the n
       'Новое сообщение, которое должно остаться внизу');
   });
 });
+test('receiving a late AI response keeps the position when reading older chat messages',async()=>{
+  const executablePath=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+  const browser=await chromium.launch({...(executablePath?{executablePath}:{channel:'chrome'}),headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  try{
+    const page=await browser.newPage({locale:'ru-RU',viewport:{width:1280,height:720}});
+    const errors=[];page.on('pageerror',e=>errors.push(e.message));
+    const html=readFileSync('public/preview.html','utf8');
+    let requests=0;
+    let finishSecond;
+    const gate=new Promise(resolve=>{finishSecond=resolve});
+    await page.route('https://kaz-ai.test/**',async route=>{
+      if(new URL(route.request().url()).pathname!=='/api/chat')
+        return route.fulfill({status:200,contentType:'text/html',body:html});
+      requests++;
+      if(requests===2)await gate;
+      return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+        text:requests===1?Array.from({length:100},(_,i)=>'Старая строка ответа '+i).join('\n'):'НОВЫЙ_ОТВЕТ'
+      })});
+    });
+    await page.goto('https://kaz-ai.test/');
+    await page.locator('#messageInput').fill('Первый вопрос');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('Старая строка ответа 99'));
+    await page.locator('#messageInput').fill('Второй вопрос');
+    await page.locator('#sendButton').click();
+    await page.waitForFunction(()=>document.querySelector('#sessionStop')?.hidden===false);
+    await page.locator('#mainContent').evaluate(el=>{el.scrollTop=0});
+    const before=await page.locator('#mainContent').evaluate(el=>el.scrollTop);
+    finishSecond();
+    await page.waitForFunction(()=>document.querySelector('#chatMessages')?.textContent.includes('НОВЫЙ_ОТВЕТ'));
+    const after=await page.locator('#mainContent').evaluate(el=>el.scrollTop);
+    assert.ok(after<=before+4,'Reader must not jump down on response completion: '+JSON.stringify({before,after}));
+    assert.equal(requests,2);
+    assert.deepEqual(errors,[]);
+  }finally{await browser.close()}
+});
+
 test('long user bubbles collapse to ten rendered lines and expand/collapse without losing text',async()=>{
   await withPage(async page=>{
     const prompt=Array.from({length:22},(_,i)=>'Строка '+(i+1)+': полное содержание сообщения').join('\n');

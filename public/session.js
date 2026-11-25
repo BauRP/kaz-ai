@@ -1573,7 +1573,7 @@
       const workspace=make("div","session-projects");workspace.id="projectsWorkspace";projectsView.append(workspace);
     }
     const settings=$("#view-settings .settings-list");
-    const tempRow=make("div","setting-item");tempRow.append(make("div","",undefined));
+    const tempRow=make("div","setting-item");tempRow.dataset.settingsDestination="general";tempRow.append(make("div","",undefined));
     tempRow.firstChild.append(make("h2","","Временный чат"),make("p","","Без добавления в историю текущей вкладки"));
     const label=make("label","session-checkbox-label");
     const checkbox=make("input","");checkbox.type="checkbox";checkbox.id="sessionTemporary";
@@ -1729,7 +1729,7 @@
       if([22,23,24].includes(number)){openTextHelper(number);return}
       if(number===25){showCalculator();return}
       if(number===40)return handle("instructions");
-      if(number===41){showScreen("settings");$("#sessionTemporary").focus();return}
+      if(number===41){window.KazInternalSettings?.open("general");$("#sessionTemporary").focus();return}
       if(number===42){toggleTheme();return}
       if(number===43){
         // The tool card becomes hidden behind a menu. Focus the visible trigger.
@@ -1738,7 +1738,7 @@
         return;
       }
       if(number===44){
-        showScreen("settings");
+        window.KazInternalSettings?.open("appearance");
         togglePopover("font");
         $("#fontToggle").focus();
         return;

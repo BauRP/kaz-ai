@@ -1812,3 +1812,35 @@ test('private welcome draft cannot leak when opening a saved chat',async()=>{
     assert.equal(await page.locator('#sessionTemporary').isChecked(),false);
   });
 });
+
+ test('personal instruction edits survive closing without applying automatically',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    const tool=page.locator('#toolGroups [data-feature="tool-40"]');
+    await tool.click();
+    const area=page.locator('#sessionBody textarea');
+    await area.fill('  Незавершённые инструкции\n');
+    await area.press('Escape');
+    await tool.click();
+    assert.equal(await area.inputValue(),'  Незавершённые инструкции\n');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await tool.click();
+    assert.equal(await area.inputValue(),'  Незавершённые инструкции\n');
+    await area.press('Escape');
+  });
+});
+test('unsent text-tool draft survives creation of its first conversation',async()=>{
+  await withPage(async page=>{
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-23"]').click();
+    await page.locator('#sessionBody textarea').fill('  const unfinished = 1;\n');
+    await page.locator('#sessionClose').click();
+    await page.locator('#toolGroups [data-feature="tool-24"]').click();
+    await page.locator('#sessionBody textarea').fill('Описание письма');
+    await page.locator('#sessionBody [data-session="dialog-save"]').click();
+    await page.locator('#sendButton').click();
+    await page.locator('.sidebar [data-screen="tools"]').click();
+    await page.locator('#toolGroups [data-feature="tool-23"]').click();
+    assert.equal(await page.locator('#sessionBody textarea').inputValue(),'  const unfinished = 1;\n');
+  });
+});

@@ -897,6 +897,9 @@ body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .sidebar{background:var(--panel
   }
 }
 
+.settings-navigation .nav-item.selected{background:rgba(51,159,217,.14);border-color:var(--line-strong);color:var(--text)}
+.settings-navigation .nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
 </style>
   
   
@@ -2436,6 +2439,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         up.setAttribute("aria-pressed",String(message.rating==="up"));
         down.setAttribute("aria-pressed",String(message.rating==="down"));
         actions.append(up,down);
+        const copy=button(uiText("Скопировать текст"),"copy-answer",message.id);
+        actions.append(copy);
         const retry=button(uiText("Повторить ответ"),"retry-answer",message.id);
         // Keep the existing control but clearly disable actions that cannot run.
         // Older answers cannot be regenerated without discarding later turns.
@@ -3161,6 +3166,23 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       for(const c of threads)if(c.projectId===project.id)c.projectId=null;
       renderSessionProjects();renderHistory();
     });return}
+    if(action==="copy-answer"){
+      const message=selected()?.messages.find(m=>m.id===id&&m.role==="assistant"&&!m.localGreeting);
+      if(!message)return;
+      const text=message.content;
+      // Copy the exact original, not the visually transformed Markdown.
+      (async()=>{
+        try{
+          if(!navigator.clipboard?.writeText)throw new Error("Clipboard unavailable");
+          await navigator.clipboard.writeText(text);
+          notify(uiText("Текст скопирован."));
+        }catch{
+          // A denied clipboard permission must not be reported as success.
+          notify(uiText("Не удалось скопировать текст."));
+        }
+      })();
+      return;
+    }
     if(action==="rate-up"||action==="rate-down"||action==="retry-answer"){
       const c=selected(),index=c?.messages.findIndex(m=>m.id===id)??-1;
       if(index<0)return;
@@ -3637,6 +3659,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       control.textContent=uiText("Повторить ответ");
       if(control.disabled)control.title=uiText("Повторить можно только последний ответ.");
     }
+    for(const control of document.querySelectorAll('#chatMessages [data-session="copy-answer"]'))control.textContent=uiText("Скопировать текст");
     // Existing long prompts retain their expansion and original text while
     // Show more / Show less follows the newly selected interface language.
     updateLongPromptButtons();
@@ -4312,6 +4335,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   "Скачать свои разговоры": {"en":"Download your conversations","kk":"Әңгімелеріңізді жүктеп алу"}
 };
   Object.assign(dictionary,{
+    "Текст скопирован.":{en:"Text copied.",kk:"Мәтін көшірілді.",pt:"Texto copiado.",es:"Texto copiado.",fr:"Texte copié.",ar:"تم نسخ النص.",zh:"文本已复制。",ko:"텍스트를 복사했습니다.",ja:"テキストをコピーしました。",de:"Text kopiert.",it:"Testo copiato.",tr:"Metin kopyalandı.",pl:"Tekst skopiowany.",hi:"पाठ कॉपी हो गया।",vi:"Đã sao chép văn bản.",id:"Teks disalin."},
+    "Не удалось скопировать текст.":{en:"Could not copy text.",kk:"Мәтінді көшіру мүмкін болмады.",pt:"Não foi possível copiar o texto.",es:"No se pudo copiar el texto.",fr:"Impossible de copier le texte.",ar:"تعذر نسخ النص.",zh:"无法复制文本。",ko:"텍스트를 복사하지 못했습니다.",ja:"テキストをコピーできませんでした。",de:"Text konnte nicht kopiert werden.",it:"Impossibile copiare il testo.",tr:"Metin kopyalanamadı.",pl:"Nie udało się skopiować tekstu.",hi:"पाठ कॉपी नहीं हो सका।",vi:"Không thể sao chép văn bản.",id:"Tidak dapat menyalin teks."},
     "Мой профиль":{en:"My profile",kk:"Менің профилім",pt:"Meu perfil",es:"Mi perfil",fr:"Mon profil",ar:"ملفي الشخصي",zh:"我的个人资料",ko:"내 프로필",ja:"マイプロフィール",de:"Mein Profil",it:"Il mio profilo",tr:"Profilim",pl:"Mój profil",hi:"मेरी प्रोफ़ाइल",vi:"Hồ sơ của tôi",id:"Profil saya"},
     "Назад":{en:"Back",kk:"Артқа",pt:"Voltar",es:"Atrás",fr:"Retour",ar:"رجوع",zh:"返回",ko:"뒤로",ja:"戻る",de:"Zurück",it:"Indietro",tr:"Geri",pl:"Wstecz",hi:"वापस",vi:"Quay lại",id:"Kembali"},
     "Свернуть меню":{en:"Collapse sidebar",kk:"Мәзірді жинау",pt:"Recolher menu",es:"Contraer menú",fr:"Réduire le menu",ar:"طي القائمة",zh:"收起侧栏",ko:"사이드바 접기",ja:"サイドバーを折りたたむ",de:"Menü einklappen",it:"Comprimi menu",tr:"Menüyü daralt",pl:"Zwiń menu",hi:"मेनू समेटें",vi:"Thu gọn menu",id:"Ciutkan menu"},
@@ -4323,7 +4348,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     ".topbar", "#view-history .panel-heading","#view-history .search-bar",
     "#view-projects .panel-heading","#projectsWorkspace","#historyList","#recentChats","#view-tools .panel-heading",
     "#view-tools .search-bar","#view-settings .panel-heading",
-    "#view-settings .settings-list","#toolGroups",
+    '[data-is-panel="general"] .merged-settings-list','[data-is-panel="appearance"] .merged-settings-list','[data-is-panel="personal"] .merged-settings-list','[data-is-panel="export"] .merged-settings-list','[data-is-panel="account"] .merged-settings-list', "#toolGroups",
     "#attachMenu","#reasonMenu","#fontMenu","#languageMenu",
     "#modalOverlay","#googleOverlay",".composer-region","#sessionOverlay","#statusBanner","#sessionRetry","#toast"
   ];
@@ -4584,12 +4609,14 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       const parent=part.parentElement;
       if(!parent||parent.closest("h3,#innerSettingsTitle,[data-is-tab],script,style,option"))continue;
       const original=authoredText.get(part)||part.nodeValue.trim();
+      if(parent.closest(".merged-settings-list"))continue;
       if(!copy[original])continue;
       if(!authoredText.has(part))authoredText.set(part,original);
       const wanted=t(original);
       if(part.nodeValue!==wanted)part.nodeValue=wanted;
     }
     for(const el of root.querySelectorAll("[aria-label]")){
+      if(el.closest(".merged-settings-list"))continue;
       if(!el.dataset.isOriginalAria)el.dataset.isOriginalAria=el.getAttribute("aria-label");
       const result=t(el.dataset.isOriginalAria);
       if(el.getAttribute("aria-label")!==result)el.setAttribute("aria-label",result);
@@ -4818,6 +4845,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     qa("[data-is-tab]").forEach(b=>{
       const picked=b.dataset.isTab===name;
       b.classList.toggle("selected",picked);
+      b.classList.toggle("active",picked);
       if(picked)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");
     });
   };

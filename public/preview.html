@@ -1891,6 +1891,8 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     }
     if(abort)abort.abort("navigation");
     abort=null;pending=null;pendingReplaceId=null;
+    activeStreamingBubble?.remove();activeStreamingBubble=null;
+    incompleteBubble?.remove();incompleteBubble=null;
     $("#sessionStop").hidden=true;
     for(let i=threads.length-1;i>=0;i--)if(threads[i].temporary){forgetExpandedPrompts(threads[i]);drafts.delete(threads[i].id);threads.splice(i,1)}
     if(current&&threads.some(thread=>thread.id===current)){
@@ -2071,6 +2073,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       const matchIndex=value?(matchingMessage.get(c.id)?.index??-1):-1;
       if(matchIndex>=0)name.dataset.matchIndex=String(matchIndex);
       name.setAttribute("aria-label",uiText(c.pinned?"Закреплённый чат":"Открыть чат")+": "+c.title);
+      if(c.id===current)name.setAttribute("aria-current","true");
       if(c.pinned)name.append(make("span","session-pin","📌 "));
       const label=make("span","session-chat-label");
       label.dir="auto";
@@ -2110,6 +2113,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     for(const c of saved.slice(0,6)){
       const entry=button((c.pinned?"📌 ":"")+c.title,"open-chat",c.id,"recent-item session-recent");
       entry.dir="auto";
+      if(c.id===current)entry.setAttribute("aria-current","true");
       entry.setAttribute("aria-label",uiText(c.pinned?"Закреплённый чат":"Открыть чат")+": "+c.title);
       recent.append(entry);
     }
@@ -2158,7 +2162,6 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     const previousTop=viewport.scrollTop;
     baseRenderChat();
     transcript.dataset.renderedThread=chat?.id||"";
-    if(preserveScroll)viewport.scrollTop=previousTop;
     if(!chat)return;
     const bubbles=Array.from(transcript.children);
     chat.messages.forEach((message,i)=>{
@@ -2219,6 +2222,12 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         bubble.append(actions);
       }
     });
+    // Reopening the same chat must not detach its live response or its
+    // unsaved interrupted preview. Neither belongs to saved chat.messages.
+    if(activeStreamingBubble&&pending===chat.id)transcript.append(activeStreamingBubble);
+    if(incompleteBubble?.dataset.thread===chat.id&&incompleteBubble!==activeStreamingBubble)
+      transcript.append(incompleteBubble);
+    if(preserveScroll)viewport.scrollTop=previousTop;
     measureLongPrompts();
   }
   function renderSessionProjects(){
@@ -2452,10 +2461,17 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         credentials:"same-origin",signal:controller.signal,
         body:JSON.stringify({messages:history,effort:state.reason,instructions:personalInstructions})
       });
+      // An aborted transport may still resolve its fetch. Do not attach
+      // even a temporary response to a different conversation.
+      if(abort!==controller||controller.signal.aborted||current!==chat.id||!threads.includes(chat)){
+        if(response.body&&!response.body.locked)void response.body.cancel().catch(()=>{});
+        return;
+      }
       let data=null;
       if(response.ok&&/text\/event-stream/i.test(response.headers.get("content-type")||"")){
         streamingBubble=make("div","message message-assistant");
         activeStreamingBubble=streamingBubble;
+        streamingBubble.dataset.thread=chat.id;
         streamingBubble.append(make("div","message-label","Kaz AI"));
         const answerSpan=make("div","session-stream-answer");
         answerSpan.dir="auto";
@@ -2539,6 +2555,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       }else{
         if(threads.includes(chat))chat.messages.push({id:nextId(),role:"assistant",content:data.text});
       }
+      if(activeStreamingBubble===streamingBubble)activeStreamingBubble=null;
       if(current===chat.id){touchChat(chat);displayThread(chat);renderChat();renderHistory()}
       showStatus("");
       requestsSucceeded++;
@@ -2584,6 +2601,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
         if(streamingBubble&&streamedPartial.trim()&&current===chat.id){
           keepIncomplete=true;
           incompleteBubble=streamingBubble;
+          incompleteBubble.dataset.thread=chat.id;
           // The last network chunk may have arrived during the paint throttle.
           // Show every received character before adding the interruption notice.
           const answer=streamingBubble.querySelector(".session-stream-answer");
@@ -2692,15 +2710,19 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       if(current!==chat.id){
         const old=selected();
         // Do not discard an unsent private draft when opening a saved chat.
-        if(old?.temporary&&$("#messageInput").value.length){
+        const privateWelcome=!old&&Boolean($("#sessionTemporary")?.checked);
+        if((old?.temporary||privateWelcome)&&$("#messageInput").value.length){
           notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");
-          showScreen("chat");
+          showScreen(old?"chat":"welcome");
           $("#messageInput").focus();
           return;
         }
         if(abort)abort.abort("navigation");
         abort=null;pending=null;pendingReplaceId=null;$("#sessionStop").hidden=true;
+        activeStreamingBubble?.remove();activeStreamingBubble=null;
+        incompleteBubble?.remove();incompleteBubble=null;
         showStatus("");
+        if(privateWelcome){welcomeDraft="";welcomeHelperDrafts.clear();$("#messageInput").value=""}
         if(old?.temporary){
           const i=threads.indexOf(old);
           if(i>=0){forgetExpandedPrompts(old);threads.splice(i,1);drafts.delete(old.id)}
@@ -2754,7 +2776,12 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       }
       return
     }
-    if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{chat.title=v;renderHistory();renderSessionProjects()});return}
+    if(action==="rename-chat"&&chat){textDialog("Переименовать чат","Название",chat.title,v=>{
+      if(!threads.includes(chat))return false;
+      chat.title=v;
+      if(current===chat.id)state.draftTitle=v;
+      renderHistory();renderSessionProjects();
+    });return}
     if(action==="pin-chat"&&chat){
       if(chat.temporary){notify("Временные чаты нельзя закреплять в истории.");return}
       const focused=document.activeElement?.dataset.session==="pin-chat"
@@ -2788,7 +2815,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
       // A detached confirmation can fire twice. Never delete a different chat
       // when its original target has already been removed.
       if(i<0)return;
-      forgetExpandedPrompts(chat);
+      forgetExpandedPrompts(chat);helperDrafts.delete(chat);
       threads.splice(i,1);drafts.delete(chat.id);
       if(current===chat.id)sessionNewChat(false,true);
       renderHistory();renderSessionProjects();
@@ -2953,10 +2980,14 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
     if(action==="instructions"){
       openDialog("Личные инструкции","Правила действуют только в этой вкладке. Они передаются модели вместе с вашим запросом при подключённом ИИ.",body=>{
         const area=make("textarea","session-textarea");area.dir="auto";area.value=personalInstructions;area.maxLength=2000;
+        area.setAttribute("aria-label",uiText("Личные инструкции"));
         area.placeholder="Например: отвечай кратко, на русском языке";
         body.append(area);
         const save=button("Применить","dialog-save",null,"session-primary");
         save.addEventListener("click",()=>{personalInstructions=area.value.slice(0,2000);closeDialog();notify("Инструкции применены на текущий сеанс.")});
+        area.addEventListener("keydown",event=>{
+          if(!event.isComposing&&event.keyCode!==229&&event.key==="Enter"&&(event.ctrlKey||event.metaKey)&&!event.altKey){event.preventDefault();save.click()}
+        });
         body.append(save);
       });return;
     }

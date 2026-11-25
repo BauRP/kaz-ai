@@ -1922,3 +1922,41 @@ test('text helpers and instructions show exact existing character limits',async(
     }
   });
 });
+
+test('Google and profile remain accessible in expanded and compact settings sidebar',async()=>{
+  await withPage(async page=>{
+    const google=page.locator('.sidebar-footer .google-button');
+    const profile=page.locator('#sidebarProfile');
+    await page.locator('#mainNavigation [data-screen="settings"]').click();
+    assert.equal(await google.isVisible(),true);
+    assert.equal(await profile.isVisible(),true);
+    await page.locator('#sidebarCollapse').click();
+    assert.equal(await google.locator('.google-g').isVisible(),true);
+    assert.equal(await google.locator('span:not(.google-g)').isVisible(),false);
+    assert.equal(await profile.locator('.profile-avatar').isVisible(),true);
+    assert.equal(await profile.locator('.profile-label').isVisible(),false);
+    await profile.click();
+    assert.equal(await page.locator('[data-is-panel="account"]').isVisible(),true);
+    await google.click();
+    assert.equal(await page.locator('#googleOverlay').isVisible(),true);
+    await page.locator('.google-close').click();
+    await page.locator('#sidebarCollapse').click();
+    assert.equal(await profile.locator('.profile-label').isVisible(),true);
+  });
+});
+test('language selector chevron is vertically centered and does not intercept selection',async()=>{
+  await withPage(async page=>{
+    await page.locator('#mainNavigation [data-screen="settings"]').click();
+    await page.locator('#settingsNavigation [data-is-tab="general"]').click();
+    const geometry=await page.locator('.language-select-shell').evaluate(el=>{
+      const select=el.querySelector('select'),arrow=el.querySelector('.language-select-arrow .icon');
+      const a=select.getBoundingClientRect(),b=arrow.getBoundingClientRect();
+      return {difference:Math.abs((a.top+a.bottom)/2-(b.top+b.bottom)/2),appearance:getComputedStyle(select).appearance,pointer:getComputedStyle(arrow).pointerEvents};
+    });
+    assert.ok(geometry.difference<=1);
+    assert.equal(geometry.appearance,'none');
+    assert.equal(geometry.pointer,'none');
+    await page.locator('#innerLanguage').selectOption('en');
+    assert.equal(await page.locator('html').getAttribute('lang'),'en');
+  });
+});

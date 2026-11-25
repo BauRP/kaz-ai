@@ -678,7 +678,7 @@ html[dir="rtl"] .sidebar{direction:rtl}
 .sidebar-footer{
   flex:0 0 auto;margin-top:0;min-width:0;
   padding-bottom:max(2px,env(safe-area-inset-bottom));
-  background:inherit;
+  background:transparent;
 }
 .sidebar-footer .google-button{min-width:0;min-height:44px;height:auto;padding:10px 8px}
 .sidebar-footer .google-button>span{min-width:0}
@@ -844,7 +844,7 @@ body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bo
 .sidebar-compact .sidebar{width:76px;padding-inline:9px}
 .sidebar-compact .sidebar-header{flex-direction:column;gap:8px;align-items:center;margin-bottom:16px}
 .sidebar-compact .sidebar-header .brand{justify-content:center;padding:0;width:44px;height:38px}
-.sidebar-compact .brand-wordmark,.sidebar-compact .new-chat-button>span,.sidebar-compact .new-chat-button .button-tail,.sidebar-compact .nav-item>span,.sidebar-compact .sidebar-recent,.sidebar-compact .footer-note,.sidebar-compact .ornament-line,.sidebar-compact .google-button>span:not(.google-g),.sidebar-compact .google-button>.icon{display:none!important}
+.sidebar-compact .brand-wordmark,.sidebar-compact .new-chat-button>span,.sidebar-compact .new-chat-button .button-tail,.sidebar-compact .nav-item>span,.sidebar-compact .sidebar-recent,.sidebar-compact .ornament-line,.sidebar-compact .google-button>span:not(.google-g),.sidebar-compact .google-button>.icon{display:none!important}
 .sidebar-compact .new-chat-button,.sidebar-compact .nav-item{justify-content:center;padding-inline:0;gap:0}
 .sidebar-compact .nav-item>.icon,.sidebar-compact .new-chat-button>.icon{flex:none;width:21px;height:21px}
 .sidebar-compact .sidebar-footer{padding-inline:0}
@@ -872,6 +872,30 @@ body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bo
 .language-select-arrow{position:absolute;inset-block:0;inset-inline-end:0;width:36px;display:grid;place-items:center;pointer-events:none;color:var(--text)}
 .language-select-arrow .icon{display:block;width:16px;height:16px}
 @media(max-width:760px){.language-select-shell{width:100%;min-width:0}.is-row .language-select-shell #innerLanguage{min-width:0}}
+
+/* One continuous, flat sidebar background. No separate decorative footer surface. */
+.sidebar{background:#081c33;box-shadow:none}
+.sidebar:before{display:none}
+body.light .sidebar{background:#e4f5ff;box-shadow:none}
+body[data-kaz-theme]:not([data-kaz-theme="kaz"]) .sidebar{background:var(--panel);box-shadow:none}
+.sidebar-scroll,.sidebar-footer{background:transparent;box-shadow:none}
+.sidebar-footer{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding-inline:0}
+.sidebar-footer .google-button,.sidebar-footer .sidebar-profile,
+.sidebar-compact .sidebar-footer .google-button,.sidebar-compact .sidebar-footer .sidebar-profile{
+  box-sizing:border-box;height:46px;min-height:46px;max-height:46px;margin:0;padding-block:0;
+}
+.sidebar-footer .google-button{justify-content:flex-start}
+.sidebar-compact .sidebar-footer .google-button,.sidebar-compact .sidebar-footer .sidebar-profile{justify-content:center;gap:0}
+.sidebar-footer .google-button>.google-g{width:32px;min-width:32px;height:32px;margin:0}
+.sidebar-footer .footer-note{height:14px;min-height:14px;margin:0;line-height:14px;white-space:nowrap;overflow:hidden}
+.sidebar-compact .sidebar-footer .footer-note{visibility:hidden;pointer-events:none}
+@media(max-height:480px){
+  .sidebar-footer{gap:4px}
+  .sidebar-footer .google-button,.sidebar-footer .sidebar-profile,
+  .sidebar-compact .sidebar-footer .google-button,.sidebar-compact .sidebar-footer .sidebar-profile{
+    height:36px;min-height:36px;max-height:36px;
+  }
+}
 
 </style>
   
@@ -938,9 +962,8 @@ body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bo
     </div>
     </div><!-- /sidebar-scroll: fixed actions stay available while navigation scrolls -->
     <div class="sidebar-footer">
-      <div class="ornament-line" aria-hidden="true"></div>
       <button type="button" class="google-button" data-feature="google"><span class="google-g">G</span><span>Войти через Google</span><svg class="icon"><use href="#ic-arrow-right"/></svg></button>
-      <button type="button" class="sidebar-profile" id="sidebarProfile" data-action="open-profile" aria-label="Профиль" title="Профиль"><span class="profile-avatar"><svg class="icon" aria-hidden="true"><use href="#ic-profile"/></svg></span><span class="profile-label">Профиль</span></button>
+      <button type="button" class="sidebar-profile" id="sidebarProfile" data-action="open-profile" aria-label="Мой профиль" title="Мой профиль"><span class="profile-avatar"><svg class="icon" aria-hidden="true"><use href="#ic-profile"/></svg></span><span class="profile-label">Мой профиль</span></button>
       <div class="footer-note"><span class="online-dot"></span>Текстовый ИИ</div>
 
     </div>
@@ -1250,7 +1273,7 @@ function refreshSidebar(){
   const google=$(".sidebar-footer .google-button");
   if(google){google.setAttribute("aria-label",translate("Войти через Google"));google.title=translate("Войти через Google")}
   const profile=$("#sidebarProfile");
-  if(profile){profile.setAttribute("aria-label",translate("Профиль"));profile.title=translate("Профиль")}
+  if(profile){profile.setAttribute("aria-label",translate("Мой профиль"));profile.title=translate("Мой профиль")}
 }
 function toggleSidebarCompact(){
   document.body.classList.toggle("sidebar-compact");
@@ -4289,7 +4312,7 @@ $("#currentReason").textContent=REASONS[state.reason].name;$$("[data-reason]").f
   "Скачать свои разговоры": {"en":"Download your conversations","kk":"Әңгімелеріңізді жүктеп алу"}
 };
   Object.assign(dictionary,{
-    "Профиль":{en:"Profile",kk:"Профиль",pt:"Perfil",es:"Perfil",fr:"Profil",ar:"الملف الشخصي",zh:"个人资料",ko:"프로필",ja:"プロフィール",de:"Profil",it:"Profilo",tr:"Profil",pl:"Profil",hi:"प्रोफ़ाइल",vi:"Hồ sơ",id:"Profil"},
+    "Мой профиль":{en:"My profile",kk:"Менің профилім",pt:"Meu perfil",es:"Mi perfil",fr:"Mon profil",ar:"ملفي الشخصي",zh:"我的个人资料",ko:"내 프로필",ja:"マイプロフィール",de:"Mein Profil",it:"Il mio profilo",tr:"Profilim",pl:"Mój profil",hi:"मेरी प्रोफ़ाइल",vi:"Hồ sơ của tôi",id:"Profil saya"},
     "Назад":{en:"Back",kk:"Артқа",pt:"Voltar",es:"Atrás",fr:"Retour",ar:"رجوع",zh:"返回",ko:"뒤로",ja:"戻る",de:"Zurück",it:"Indietro",tr:"Geri",pl:"Wstecz",hi:"वापस",vi:"Quay lại",id:"Kembali"},
     "Свернуть меню":{en:"Collapse sidebar",kk:"Мәзірді жинау",pt:"Recolher menu",es:"Contraer menú",fr:"Réduire le menu",ar:"طي القائمة",zh:"收起侧栏",ko:"사이드바 접기",ja:"サイドバーを折りたたむ",de:"Menü einklappen",it:"Comprimi menu",tr:"Menüyü daralt",pl:"Zwiń menu",hi:"मेनू समेटें",vi:"Thu gọn menu",id:"Ciutkan menu"},
     "Развернуть меню":{en:"Expand sidebar",kk:"Мәзірді ашу",pt:"Expandir menu",es:"Expandir menú",fr:"Développer le menu",ar:"توسيع القائمة",zh:"展开侧栏",ko:"사이드바 펼치기",ja:"サイドバーを展開",de:"Menü ausklappen",it:"Espandi menu",tr:"Menüyü genişlet",pl:"Rozwiń menu",hi:"मेनू फैलाएँ",vi:"Mở rộng menu",id:"Perluas menu"}

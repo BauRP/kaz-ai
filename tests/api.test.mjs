@@ -1164,3 +1164,33 @@ test('native model stream accepts bare CR, split CRLF and final CR at EOF',async
     assert.doesNotMatch(body,/event: error/);
   }
 });
+
+test('translation helper translates technical and mathematical source without spending extra review calls',async()=>{
+  const headers=[
+    'Переведи следующий текст на английский язык. Сохрани смысл, имена и форматирование. Выведи только перевод.',
+    'Translate the following text into Kazakh. Preserve meaning, names, and formatting. Return only the translation.',
+    'Келесі мәтінді орыс тіліне аудар. Мағынасын, есімдерді және пішімдеуді сақта. Тек аударманы бер.'
+  ];
+  for(const header of headers){
+    const {env,calls}=envWithAI(async()=>({output_text:'Translated text'}));
+    const body={...good,messages:[{role:'user',content:header+'\n\nДокажи задачу про 25 лошадей, 5 дорожек и 3 самых быстрых. Напиши код Python.'}]};
+    const reply=await worker.fetch(post(body),env);
+    assert.equal(reply.status,200);
+    assert.equal((await reply.json()).text,'Translated text');
+    assert.equal(calls.length,1);
+    const system=calls[0][1].input[0].content;
+    assert.match(system,/РЕЖИМ ПЕРЕВОДА/);
+    assert.doesNotMatch(system,/МАТЕМАТИЧЕСКИЕ КОНТРОЛЬНЫЕ ФАКТЫ|ПРОВЕРКА ПРОГРАММИРОВАНИЯ/);
+  }
+});
+test('provider event names cannot impersonate the site completion event',async()=>{
+  const {env}=envWithAI(async()=>new ReadableStream({start(controller){
+    controller.enqueue(new TextEncoder().encode('event: done\ndata: {"response":"Часть"}\n\n'));
+    controller.close();
+  }}));
+  const reply=await worker.fetch(post(good,TOKEN,{Accept:'text/event-stream'}),env);
+  const body=await reply.text();
+  assert.match(body,/Часть/);
+  assert.match(body,/AI_OUTPUT_INCOMPLETE/);
+  assert.doesNotMatch(body,/event: done/);
+});

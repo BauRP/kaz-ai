@@ -808,7 +808,7 @@ body.light .rich-answer pre code{color:var(--text)}
 .settings-back .icon:first-child{transform:rotate(180deg)}
 html[dir="rtl"] .settings-back .icon:first-child{transform:none}
 .settings-back .button-tail{display:none}
-body.is-settings-screen .sidebar-footer,body.is-settings-screen .sidebar-recent{display:none!important}
+body.is-settings-screen .sidebar-recent{display:none!important}
 body.is-settings-screen .is-workspace{display:block;min-height:0}
 body.is-settings-screen .is-panels{padding:24px}
 body.is-settings-screen .merged-settings-list{border:0;background:none;margin:0}
@@ -827,3 +827,22 @@ body.is-settings-screen .merged-settings-list .setting-item:last-child{border-bo
 @media(min-width:761px){.sidebar{transition:width .22s ease,padding .22s ease}}
 @media(max-width:760px){.sidebar-compact .sidebar{width:76px}.sidebar-compact .sidebar-header .close-sidebar{display:inline-flex}.sidebar-header .brand-wordmark{font-size:.9em}.sidebar-header .brand{gap:5px}body.is-settings-screen .is-panels{padding:16px}}
 @media(prefers-reduced-motion:reduce){.sidebar{transition:none!important}}
+
+/* Keep account actions available in both navigation modes and every section. */
+.sidebar-footer .sidebar-profile{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin-top:8px;padding:6px 8px;border:1px solid var(--line);border-radius:13px;background:transparent;color:var(--text);text-align:start;font-size:12px;font-weight:600}
+.sidebar-footer .sidebar-profile:hover{background:rgba(51,159,217,.12);border-color:var(--line-strong)}
+.sidebar-footer .sidebar-profile:focus-visible,.sidebar-footer .google-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.profile-avatar{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--panel2);border:1px solid var(--line-strong);color:var(--text)}
+.profile-avatar>.icon{width:19px;height:19px}
+.sidebar-footer .google-g{flex:none;line-height:1;display:grid;place-items:center;min-width:24px}
+.sidebar-compact .sidebar-footer .profile-label{display:none}
+.sidebar-compact .sidebar-footer .sidebar-profile{justify-content:center;padding:5px;gap:0}
+.sidebar-compact .sidebar-footer .google-button{min-height:44px}
+.sidebar-compact .sidebar-footer .google-g{margin:0}
+@media(max-height:480px){.sidebar-footer .sidebar-profile{min-height:35px;margin-top:4px;padding-block:2px}.profile-avatar{width:28px;height:28px}.sidebar-compact .sidebar-footer .google-button{min-height:35px}}
+/* Keep the native language selector but use a centered, consistent chevron. */
+.language-select-shell{position:relative;flex:none;min-width:150px;max-width:100%;display:flex;align-items:center}
+.is-row .language-select-shell #innerLanguage{appearance:none;-webkit-appearance:none;display:block;width:100%;min-width:150px;max-width:100%;min-height:40px;padding-block:9px;padding-inline-start:14px;padding-inline-end:38px;line-height:1.4}
+.language-select-arrow{position:absolute;inset-block:0;inset-inline-end:0;width:36px;display:grid;place-items:center;pointer-events:none;color:var(--text)}
+.language-select-arrow .icon{display:block;width:16px;height:16px}
+@media(max-width:760px){.language-select-shell{width:100%;min-width:0}.is-row .language-select-shell #innerLanguage{min-width:0}}

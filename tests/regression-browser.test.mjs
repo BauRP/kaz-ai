@@ -1713,3 +1713,28 @@ test('updated history remains localized in English after adding and searching a 
     assert.match(await page.locator('#historyList .empty-card').innerText(),/No matches/);
   });
 });
+
+test('all three text helpers restore unsent modal drafts and clear them after preparation',async()=>{
+  await withPage(async page=>{
+    for(const id of [22,23,24]){
+      await page.locator('.sidebar [data-screen="tools"]').click();
+      const tool=page.locator('#toolGroups [data-feature="tool-'+id+'"]');
+      await tool.click();
+      const field=page.locator('#sessionBody textarea');
+      const source='  Исходный текст '+id+'\n';
+      await field.fill(source);
+      if(id===22)await page.locator('#sessionBody select').selectOption('ja');
+      await field.press('Escape');
+      await tool.click();
+      assert.equal(await field.inputValue(),source);
+      if(id===22)assert.equal(await page.locator('#sessionBody select').inputValue(),'ja');
+      await page.locator('#sessionBody [data-session="dialog-save"]').click();
+      assert.ok((await page.locator('#messageInput').inputValue()).endsWith(source));
+      await page.locator('#messageInput').fill('');
+      await page.locator('.sidebar [data-screen="tools"]').click();
+      await tool.click();
+      assert.equal(await field.inputValue(),'');
+      await field.press('Escape');
+    }
+  });
+});

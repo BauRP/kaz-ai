@@ -664,6 +664,12 @@
   "Скачать свои разговоры": {"en":"Download your conversations","kk":"Әңгімелеріңізді жүктеп алу"}
 };
   Object.assign(dictionary,{
+    "Загрузить текстовый файл":{en:"Load text file",kk:"Мәтіндік файлды жүктеу",pt:"Carregar arquivo de texto",es:"Cargar archivo de texto",fr:"Charger un fichier texte",ar:"تحميل ملف نصي",zh:"加载文本文件",ko:"텍스트 파일 불러오기",ja:"テキストファイルを読み込む",de:"Textdatei laden",it:"Carica file di testo",tr:"Metin dosyası yükle",pl:"Wczytaj plik tekstowy",hi:"टेक्स्ट फ़ाइल लोड करें",vi:"Tải tệp văn bản",id:"Muat file teks"},
+    "Сначала очистите поле текста.":{en:"Clear the text field first.",kk:"Алдымен мәтін өрісін тазалаңыз."},
+    "Текст загружен. Проверьте его перед отправкой.":{en:"Text loaded. Review it before sending.",kk:"Мәтін жүктелді. Жібермес бұрын тексеріңіз."},
+    "Текстовый файл слишком большой.":{en:"The text file is too large.",kk:"Мәтіндік файл тым үлкен."},
+    "Текстовый файл пуст.":{en:"The text file is empty.",kk:"Мәтіндік файл бос."},
+    "Не удалось прочитать текстовый файл UTF-8.":{en:"Could not read the UTF-8 text file.",kk:"UTF-8 мәтіндік файлын оқу мүмкін болмады."},
     "Выбранный уровень рассуждения":{en:"Selected reasoning level",kk:"Таңдалған ойлау деңгейі",pt:"Nível de raciocínio selecionado",es:"Nivel de razonamiento seleccionado",fr:"Niveau de raisonnement sélectionné",ar:"مستوى الاستدلال المحدد",zh:"所选推理级别",ko:"선택한 추론 수준",ja:"選択した推論レベル",de:"Gewählte Schlussfolgerungsstufe",it:"Livello di ragionamento selezionato",tr:"Seçilen akıl yürütme düzeyi",pl:"Wybrany poziom rozumowania",hi:"चुना गया तर्क स्तर",vi:"Mức suy luận đã chọn",id:"Tingkat penalaran yang dipilih"},
     "Скачать ответ":{en:"Download answer",kk:"Жауапты жүктеу",pt:"Baixar resposta",es:"Descargar respuesta",fr:"Télécharger la réponse",ar:"تنزيل الإجابة",zh:"下载回答",ko:"답변 다운로드",ja:"回答をダウンロード",de:"Antwort herunterladen",it:"Scarica risposta",tr:"Yanıtı indir",pl:"Pobierz odpowiedź",hi:"उत्तर डाउनलोड करें",vi:"Tải câu trả lời",id:"Unduh jawaban"},
     "Файл ответа подготовлен.":{en:"Answer file prepared.",kk:"Жауап файлы дайын.",pt:"Arquivo da resposta preparado.",es:"Archivo de respuesta preparado.",fr:"Fichier de réponse préparé.",ar:"تم تجهيز ملف الإجابة.",zh:"回答文件已准备好。",ko:"답변 파일이 준비되었습니다.",ja:"回答ファイルを準備しました。",de:"Antwortdatei vorbereitet.",it:"File della risposta preparato.",tr:"Yanıt dosyası hazırlandı.",pl:"Plik odpowiedzi przygotowany.",hi:"उत्तर फ़ाइल तैयार है।",vi:"Đã chuẩn bị tệp câu trả lời.",id:"Berkas jawaban siap."},

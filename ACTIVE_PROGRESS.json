@@ -1,11 +1,11 @@
 {
   "scope": "23 active directions and 1 completed calculator = 24 directions total. New direction №48: «Расширение экрана». The new responsive direction starts at 0% and this cycle tracks its implemented code separately from old 23-direction totals.",
-  "basis": "2026-11-26: server task routing isolation; eight focused classification/context checks passed, syntax checked. API integration tests added but not executed; deployment unconfirmed. Engineering estimates.",
+  "basis": "2026-11-26: local UTF-8 text import for translation/programming/document tools, live prompt-size feedback, ResizeObserver-based responsive remeasurement. Seven focused file checks and syntax passed; browser integration test added but not executed; CI/deployment unconfirmed. Engineering estimates.",
   "branch": "main",
   "date": "2026-11-25",
-  "previous": 80.76826086956521,
-  "now": 80.94652173913042,
-  "delta": 0.17826086956520726,
+  "previous": 80.94652173913042,
+  "now": 81.08565217391303,
+  "delta": 0.139130434782615,
   "groups": [
     {
       "name": "Чаты",
@@ -17,23 +17,23 @@
     {
       "name": "Интеллект",
       "count": 5,
-      "previous": 43.49600000000001,
-      "now": 44.236000000000004,
-      "delta": 0.7399999999999949
+      "previous": 44.236000000000004,
+      "now": 44.696000000000005,
+      "delta": 0.46000000000000085
     },
     {
       "name": "Настройки",
       "count": 7,
-      "previous": 91.22571428571429,
-      "now": 91.28285714285714,
-      "delta": 0.057142857142849834
+      "previous": 91.28285714285714,
+      "now": 91.32571428571428,
+      "delta": 0.04285714285714448
     },
     {
       "name": "Экран",
       "count": 1,
       "previous": 58,
-      "now": 58,
-      "delta": 0
+      "now": 58.6,
+      "delta": 0.6000000000000014
     }
   ],
   "items": [
@@ -141,9 +141,9 @@
       "id": 15,
       "name": "Обычный чат с GPT-OSS",
       "group": "Интеллект",
-      "previous": 71.12,
+      "previous": 71.62,
       "now": 71.62,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Изолирована классификация явных текстовых инструментов от устаревших математических задач.",
       "status": "in_progress"
     },
@@ -151,9 +151,9 @@
       "id": 16,
       "name": "Уровни рассуждения",
       "group": "Интеллект",
-      "previous": 61.36,
+      "previous": 61.86,
       "now": 61.86,
-      "delta": 0.5,
+      "delta": 0,
       "summary": "Убраны ошибочные дополнительные проверки документов без изменения выбранного уровня рассуждения.",
       "status": "in_progress"
     },
@@ -161,39 +161,39 @@
       "id": 22,
       "name": "Переводчик с ИИ",
       "group": "Интеллект",
-      "previous": 30.3,
-      "now": 31,
+      "previous": 31,
+      "now": 31.7,
       "delta": 0.6999999999999993,
-      "summary": "Явный режим перевода имеет приоритет над несовместимыми общими предпочтениями; исключены математические проверки исходного текста.",
+      "summary": "Локальная загрузка UTF-8 текста, контроль размера до подготовки перевода и сохранение черновика.",
       "status": "in_progress"
     },
     {
       "id": 23,
       "name": "Программирование с ИИ",
       "group": "Интеллект",
-      "previous": 27.8,
-      "now": 28.7,
-      "delta": 0.8999999999999986,
-      "summary": "Явная задача программирования получает техническую проверку вместо математической; ревью изолировано от старых задач.",
+      "previous": 28.7,
+      "now": 29.5,
+      "delta": 0.8000000000000007,
+      "summary": "Импорт исходников и кода из текстовых файлов с проверкой UTF-8 и лимита запроса.",
       "status": "in_progress"
     },
     {
       "id": 24,
       "name": "Подготовка документов",
       "group": "Интеллект",
-      "previous": 26.9,
-      "now": 28,
-      "delta": 1.1000000000000014,
-      "summary": "Отдельный серверный режим подготовки документов без случайных математических и программных проверок, с защитой от выдуманных реквизитов.",
+      "previous": 28,
+      "now": 28.8,
+      "delta": 0.8000000000000007,
+      "summary": "Импорт текстового содержания документов локально, без отправки файла до явного подтверждения.",
       "status": "in_progress"
     },
     {
       "id": 40,
       "name": "Личные инструкции",
       "group": "Настройки",
-      "previous": 87.53,
+      "previous": 87.93,
       "now": 87.93,
-      "delta": 0.4000000000000057,
+      "delta": 0,
       "summary": "Уточнён приоритет явных требований перевода и документа над несовместимыми общими предпочтениями.",
       "status": "in_progress"
     },
@@ -222,9 +222,9 @@
       "name": "Язык интерфейса",
       "group": "Настройки",
       "previous": 90.23,
-      "now": 90.23,
-      "delta": 0,
-      "summary": "Локализация подписи уровня рассуждения на 17 языков.",
+      "now": 90.53,
+      "delta": 0.29999999999999716,
+      "summary": "Кнопка локального импорта текста переведена на 17 языков.",
       "status": "in_progress"
     },
     {
@@ -262,9 +262,9 @@
       "name": "Расширение экрана",
       "group": "Экран",
       "previous": 58,
-      "now": 58,
-      "delta": 0,
-      "summary": "Сохранение позиции чтения и ограничение отложенной прокрутки текущей перепиской.",
+      "now": 58.6,
+      "delta": 0.6000000000000014,
+      "summary": "Пересчёт длинных сообщений при фактическом изменении ширины рабочей области, включая боковую панель.",
       "status": "in_progress"
     }
   ],
@@ -285,7 +285,7 @@
       "status": "completed"
     }
   ],
-  "overall_previous": 81.56958333333333,
-  "overall_now": 81.74041666666665,
-  "overall_delta": 0.17083333333332007
+  "overall_previous": 81.74041666666665,
+  "overall_now": 81.87374999999999,
+  "overall_delta": 0.13333333333333997
 }

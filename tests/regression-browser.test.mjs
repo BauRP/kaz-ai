@@ -2113,3 +2113,21 @@ test('answer remembers submitted reasoning effort even when preference changes',
     assert.equal(await page.locator('.session-answer-effort').getAttribute('data-effort'),'high');
   });
 });
+
+test('text tools import a UTF-8 file locally without replacing existing text',async()=>{
+  await withPage(async page=>{
+    await page.locator('#mainNavigation [data-screen="tools"]').click();
+    for(const id of [22,23,24]){
+      await page.locator('#toolGroups [data-feature="tool-'+id+'"]').click();
+      const field=page.locator('#sessionBody textarea'),picker=page.locator('#sessionBody input[type="file"]');
+      const original='  Қазақша / code '+id+'\n';
+      await picker.setInputFiles({name:'source.txt',mimeType:'text/plain',buffer:Buffer.from(original,'utf8')});
+      await page.waitForFunction(value=>document.querySelector('#sessionBody textarea')?.value===value,original);
+      assert.equal(await page.locator('#messageInput').inputValue(),'');
+      await picker.setInputFiles({name:'another.txt',mimeType:'text/plain',buffer:Buffer.from('overwrite')});
+      await page.waitForFunction(()=>!document.querySelector('#sessionBody button.session-button:last-of-type')?.disabled);
+      assert.equal(await field.inputValue(),original);
+      await field.press('Escape');
+    }
+  });
+});

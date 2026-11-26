@@ -553,8 +553,22 @@
       toggle.hidden=!(text.scrollHeight>text.clientHeight+2);
     }
   }
-  const measureLongPrompts=()=>requestAnimationFrame(updateLongPromptButtons);
+  let promptMeasureFrame=0;
+  const measureLongPrompts=()=>{
+    if(promptMeasureFrame)return;
+    promptMeasureFrame=requestAnimationFrame(()=>{promptMeasureFrame=0;updateLongPromptButtons()});
+  };
   window.addEventListener("resize",measureLongPrompts);
+  if(typeof ResizeObserver==="function"){
+    let previousWidth=-1;
+    const observer=new ResizeObserver(entries=>{
+      const width=entries[0]?.contentRect.width;
+      if(!Number.isFinite(width)||Math.abs(width-previousWidth)<1)return;
+      previousWidth=width;measureLongPrompts();
+      if(state.screen==="chat"||state.screen==="welcome")resizeInput();
+    });
+    const area=$("#mainContent");if(area)observer.observe(area);
+  }
   function scrollChatToBottom(){
     const area=$("#mainContent");
     if(!area||state.screen!=="chat")return;
@@ -1484,6 +1498,22 @@
   }
   const compute=window.KazCalculator.compute;
 
+  // Read bounded UTF-8 text locally. No file is sent to the Worker by the picker.
+  async function readHelperTextFile(file,limit){
+    if(!file||!Number.isSafeInteger(file.size)||file.size<1||file.size>limit*4+3)
+      throw new Error("FILE_SIZE");
+    const bytes=await file.arrayBuffer();
+    if(bytes.byteLength>limit*4+3)throw new Error("FILE_SIZE");
+    let text;
+    try{text=new TextDecoder("utf-8",{fatal:true}).decode(bytes)}
+    catch{throw new Error("FILE_ENCODING")}
+    if(/[\x00-\x08\x0b\x0c\x0e-\x1f]/u.test(text))throw new Error("FILE_ENCODING");
+    // A textarea normalizes line endings; validate the same representation.
+    text=text.replace(/\r\n?/g,"\n");
+    if(text.length>limit)throw new Error("FILE_SIZE");
+    if(!text.trim())throw new Error("FILE_EMPTY");
+    return text;
+  }
   // These text tools only prepare a draft. They never send it automatically.
   function openTextHelper(kind){
     const definitions={
@@ -1527,7 +1557,7 @@
       // Clear only this tool draft, with a reversible action until the dialog closes.
       let clearedText=null;
       const clear=make("button","session-button");clear.type="button";
-      const updateClear=()=>{clear.textContent=clearedText!==null?"Восстановить текст":"Очистить";clear.disabled=clearedText===null&&!field.value.length};
+      const updateClear=()=>{clear.textContent=uiText(clearedText!==null?"Восстановить текст":"Очистить");clear.disabled=clearedText===null&&!field.value.length};
       field.addEventListener("input",()=>{clearedText=null;updateClear()});
       clear.addEventListener("click",()=>{
         if(!field.isConnected)return;
@@ -1537,21 +1567,7 @@
       });
       updateClear();body.append(clear);
       const prepare=button("Подготовить запрос","dialog-save",null,"session-primary");
-      // Ctrl/Cmd+Enter prepares text without sending it to GPT-OSS.
-      field.addEventListener("keydown",event=>{
-        if(event.isComposing||event.keyCode===229)return;
-        if(event.key==="Enter"&&(event.ctrlKey||event.metaKey)&&!event.altKey){
-          event.preventDefault();prepare.click();
-        }
-      });
-      prepare.addEventListener("click",()=>{
-        // Leading whitespace and final newlines can be meaningful in code or
-        // source text. Validate using trim, but preserve the original payload.
-        if(!field.isConnected)return;
-        const value=field.value;
-        if(!value.trim()){notify("Сначала введите текст или описание задачи.");field.focus();return}
-        const input=$("#messageInput");
-        if(input.value.length){notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");return}
+      function buildPrompt(value){
         let prompt="";
         const ui=window.KazI18n?.language||"ru";
         // Every supported interface locale can use these tools. Their existing
@@ -1576,7 +1592,7 @@
               hi:"хинди",vi:"вьетнам",id:"индонезия"}
           };
           const target=(promptLocale==="en"?englishNames:localNames[promptLocale])?.[targetCode];
-          if(!target){notify("Выберите язык перевода.");languageSelect.focus();return}
+          if(!target)return null;
           const prefix={
             ru:"Переведи следующий текст на "+target+" язык. Сохрани смысл, имена и форматирование. Выведи только перевод.\n\n",
             en:"Translate the following text into "+target+". Preserve meaning, names, and formatting. Return only the translation.\n\n",
@@ -1598,6 +1614,63 @@
             kk:"Сипаттамаға сай құжат мәтінін дайында. Жүйелі жаз. Басқа тіл сұралмаса, сипаттама тілін қолдан. Белгісіз деректерге толтырылатын орын қалдыр. Тек құжат мәтінін бер. Сипаттама:\n\n"
           }[promptLocale]+value;
         }
+        return prompt;
+      }
+      const capacity=make("p","session-helper-capacity");capacity.setAttribute("aria-live","polite");
+      const updateCapacity=()=>{
+        const prompt=buildPrompt(field.value);
+        const tooLong=prompt!==null&&(prompt.length>8000||!latestFits(prompt));
+        capacity.textContent=tooLong?uiText("Текст слишком длинный. Сократите описание."):"";
+        capacity.hidden=!tooLong;
+        field.setAttribute("aria-invalid",String(tooLong));
+      };
+      field.addEventListener("input",updateCapacity);languageSelect?.addEventListener("change",updateCapacity);
+      updateCapacity();body.append(capacity);
+      const picker=make("input","session-helper-file");picker.type="file";picker.hidden=true;
+      picker.accept="text/*,.txt,.md,.csv,.json,.xml,.html,.css,.js,.ts,.py,.java,.kt,.c,.cpp,.h,.hpp,.rs,.go,.sql,.sh,.yaml,.yml,.log";
+      const importButton=make("button","session-button",uiText("Загрузить текстовый файл"));importButton.type="button";
+      body.append(picker,importButton);
+      let revision=0;
+      field.addEventListener("input",()=>revision++);
+      importButton.addEventListener("click",()=>{
+        if(!field.isConnected)return;
+        if(field.value.length){notify("Сначала очистите поле текста.");field.focus();return}
+        picker.click();
+      });
+      picker.addEventListener("change",async()=>{
+        const file=picker.files?.[0];picker.value="";if(!file||!field.isConnected)return;
+        const before=revision;importButton.disabled=true;
+        try{
+          const text=await readHelperTextFile(file,field.maxLength);
+          // Do not overwrite typing, a newly opened dialog or another chat.
+          if(!field.isConnected||selected()!==owner||revision!==before||field.value.length)return;
+          const prompt=buildPrompt(text);
+          if(prompt===null||prompt.length>8000||!latestFits(prompt))throw new Error("FILE_SIZE");
+          field.value=text;field.dispatchEvent(new Event("input",{bubbles:true}));field.focus();
+          notify("Текст загружен. Проверьте его перед отправкой.");
+        }catch(error){
+          if(field.isConnected&&selected()===owner){
+            notify(error?.message==="FILE_SIZE"?"Текстовый файл слишком большой.":error?.message==="FILE_EMPTY"?"Текстовый файл пуст.": "Не удалось прочитать текстовый файл UTF-8.");
+          }
+        }finally{if(importButton.isConnected)importButton.disabled=false}
+      });
+      // Ctrl/Cmd+Enter prepares text without sending it to GPT-OSS.
+      field.addEventListener("keydown",event=>{
+        if(event.isComposing||event.keyCode===229)return;
+        if(event.key==="Enter"&&(event.ctrlKey||event.metaKey)&&!event.altKey){
+          event.preventDefault();prepare.click();
+        }
+      });
+      prepare.addEventListener("click",()=>{
+        // Leading whitespace and final newlines can be meaningful in code or
+        // source text. Validate using trim, but preserve the original payload.
+        if(!field.isConnected)return;
+        const value=field.value;
+        if(!value.trim()){notify("Сначала введите текст или описание задачи.");field.focus();return}
+        const input=$("#messageInput");
+        if(input.value.length){notify("В поле сообщения есть черновик. Сначала отправьте или очистите его.");return}
+        const prompt=buildPrompt(value);
+        if(prompt===null){notify("Выберите язык перевода.");languageSelect?.focus();return}
         if(prompt.length>8000){notify("Текст слишком длинный. Сократите описание.");field.focus();return}
         if(!latestFits(prompt)){notify("Запрос слишком большой. Сократите последнее сообщение.");field.focus();return}
         // Never move a prepared draft into a different conversation.
